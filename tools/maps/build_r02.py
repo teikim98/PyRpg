@@ -31,6 +31,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (  # noqa: E402
     ROOT,
     RegionSpec,
+    check_runes_before_monsters,
     reachable,
     removed_before,
     run,
@@ -38,7 +39,8 @@ from common import (  # noqa: E402
     validate_stages,
 )
 
-OUT = ROOT / "content" / "regions" / "r02-crossroad-forest" / "map.tmj"
+REGION_DIR = ROOT / "content" / "regions" / "r02-crossroad-forest"
+OUT = REGION_DIR / "map.tmj"
 
 # ── 도면(구역별 블록, 높이 24) ──────────────────────────────────────────────
 ZONE1 = r"""
@@ -374,6 +376,8 @@ def validate(info: dict, verbose: bool) -> list[str]:
     # 개울: 디딤돌 줄에서만 건넌다(m_P0207이 첫 디딤돌 위)
     if info["rows"][pos["m_P0207"][1]][pos["m_P0207"][0] + 1] != "o":
         errors.append("m_P0207 should block the stepping-stone crossing")
+    # 몬스터가 요구하는 이 지역 주문서의 비석은 그 몬스터보다 먼저 닿아야 한다
+    errors += check_runes_before_monsters(info, STAGES, REGION_DIR)
     # 바닥이 비지 않았다
     if any(v == 0 for v in info["ground"]):
         errors.append("ground layer has empty tiles")

@@ -16,6 +16,8 @@ import {
   generalLimitMs,
   isTimeBarrier,
   isReferenceStale,
+  needsTleConfirmation,
+  phaseStopsOnTle,
   referenceFromSamples,
   testLimitMs,
   testPhase,
@@ -421,6 +423,10 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
     let fatal = false;
     /** 이 판정 이후 남은 테스트는 실행하지 않고 같은 판정으로 채운다 */
     let stopVerdict: Verdict | null = null;
+    /** 이 채점에서 시간 결계 TLE가 확정됐는지(뒤 시간 결계 테스트는 재확인 없이 한 번으로 판정) */
+    let barrierTleConfirmed = false;
+    /** stopOnTle 페이즈에서 TLE가 확정되면 그 페이즈의 남은 테스트는 실행하지 않고 TLE */
+    const skipTlePhases = new Set<number>();
 
     for (const { t, index } of selected) {
       const base = {
@@ -434,12 +440,15 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
       let result: TestResult;
       if (stopVerdict) {
         result = { ...base, verdict: stopVerdict, timeMs: 0, actual: "" };
+      } else if (skipTlePhases.has(base.phase)) {
+        result = { ...base, verdict: "TLE", timeMs: 0, actual: "" };
       } else {
         const budget = usesBudget(problem, t);
         const limit = testLimitMs(problem, t, refMs);
         let one = await runOneTest(problem, code, t, limit);
-        // 시간 결계 경계에서는 한 번 더 실행해서 두 번 다 넘을 때만 TLE(§9.6 4단계)
-        if (budget && one.exceeded && !one.fatal) {
+        // 시간 결계 경계에서는 한 번 더 실행해서 두 번 다 넘을 때만 TLE(§9.6 4단계).
+        // 같은 채점에서 이미 시간 결계 TLE가 확정됐으면 다시 확인하지 않는다
+        if (one.exceeded && !one.fatal && needsTleConfirmation(problem, t, barrierTleConfirmed)) {
           const again = await runOneTest(problem, code, t, limit);
           if (!again.exceeded || again.fatal) one = again;
         }
@@ -458,6 +467,9 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
           // 일반 제한(넉넉함)을 넘긴 코드는 남은 테스트도 넘길 것이므로 건너뛴다.
           // 보스 시간 결계는 테스트마다 입력 크기가 달라서(작은 입력은 통과 가능) 계속 채점한다
           if (!budget && !isTimeBarrier(problem, t)) stopVerdict = "TLE";
+          // 시간 결계 제한(budget)으로 확정된 TLE: 두 번 다 넘었거나, 이미 확정된 뒤의 한 번
+          if (budget && isTimeBarrier(problem, t)) barrierTleConfirmed = true;
+          if (phaseStopsOnTle(problem, t)) skipTlePhases.add(base.phase);
         } else if (one.internalError || !one.reply) {
           result = {
             ...base,

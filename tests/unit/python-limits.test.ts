@@ -10,6 +10,8 @@ import {
   isReferenceStale,
   isTimeBarrier,
   median,
+  needsTleConfirmation,
+  phaseStopsOnTle,
   referenceFromSamples,
   testLimitMs,
   usesBudget,
@@ -80,6 +82,31 @@ describe("시간 결계(isTimeBarrier)", () => {
     expect(p.tests.some((t) => isTimeBarrier(p, t))).toBe(false);
     const q: Problem = { ...p, tests: p.tests.map((t) => ({ ...t, phase: 2 })) };
     expect(q.tests.some((t) => isTimeBarrier(q, t))).toBe(false);
+  });
+});
+
+describe("시간 결계 TLE 재확인과 stopOnTle(§9.6 4단계)", () => {
+  const p = SAMPLE_PROBLEMS.P0105!;
+  it("시간 결계 TLE가 확정되기 전에는 재확인, 확정된 뒤에는 한 번으로", () => {
+    expect(p.tests.map((t) => needsTleConfirmation(p, t, false))).toEqual([false, false, false, true, true, true]);
+    expect(p.tests.map((t) => needsTleConfirmation(p, t, true))).toEqual([false, false, false, false, false, false]);
+    // 페이즈 없는 문제의 budgetUnits 테스트는 시간 결계가 아니므로 늘 재확인
+    const q: Problem = { ...SAMPLE_PROBLEMS.P0101!, budgetUnits: 3 };
+    expect(needsTleConfirmation(q, q.tests[0]!, true)).toBe(true);
+    // budgetUnits가 없으면 재확인하지 않는다(일반 제한)
+    const noBudget: Problem = { ...p, budgetUnits: undefined };
+    expect(needsTleConfirmation(noBudget, noBudget.tests[3]!, false)).toBe(false);
+  });
+  it("stopOnTle는 그 페이즈의 시간 결계 테스트에만", () => {
+    expect(p.tests.some((t) => phaseStopsOnTle(p, t))).toBe(false);
+    const phases = (p.phases ?? [{ phase: 1, name: "1" }, { phase: 2, name: "2" }]).map((x) =>
+      x.phase === 2 ? { ...x, stopOnTle: true } : x,
+    );
+    const s: Problem = { ...p, phases };
+    expect(s.tests.map((t) => phaseStopsOnTle(s, t))).toEqual([false, false, false, true, true, true]);
+    // 1페이즈에 붙여도 시간 결계가 아니므로 무시
+    const s1: Problem = { ...p, phases: phases.map((x) => ({ ...x, stopOnTle: x.phase === 1 })) };
+    expect(s1.tests.some((t) => phaseStopsOnTle(s1, t))).toBe(false);
   });
 });
 

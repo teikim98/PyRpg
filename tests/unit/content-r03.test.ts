@@ -121,7 +121,7 @@ describe.skipIf(!hasPython)("gen parity (CPython)", () => {
     expect(rows).toHaveLength(4);
     for (const row of rows) {
       expect(row.same, row.arg).toBe(true);
-      expect(row.n).toBe("200000");
+      expect(row.n).toBe("100000");
       // 게임 워커의 stdout 상한(1 MiB, src/python/worker.ts OUTPUT_LIMIT)보다 작아야 출력이 잘리지 않는다
       expect(row.outLen).toBeLessThan(1 << 20);
     }

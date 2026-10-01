@@ -24,13 +24,12 @@
                  숨겨진 길: 북쪽 벽 앞면의 두 얼어붙은 횃불 한가운데(웅덩이 한가운데의 바로 북쪽)에 지나갈 수 있는
                  바위 틈(cave_crack) 하나가 있다. 그 너머 좁은 굴 끝에 chest_hidden_pool과 선택 m_P0309.
                  이 틈이 그 굴의 유일한 입구다.
-  5 벽화의 방    북쪽 벽에 바랜 벽화(mural_wall), 그 앞에 sign_mural, rune_L3-5. 동쪽 1칸 통로:
+  5 벽화의 방    북쪽 벽에 바랜 벽화(mural_wall), 그 앞에 sign_mural, rune_L3-5, 보스 앞 쉼터 campfire_mural. 동쪽 1칸 통로:
                  m_P0310 → t_boss_intro → 빈칸 → (6구역) 보스(트리거는 보스 두 칸 앞, 피할 수 없음)
   6 족장의 왕좌  1칸 통로를 막은 보스 m_P0311 뒤로 보물이 쌓인 왕좌의 방, 동쪽 끝에 warp_east
 """
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
@@ -39,6 +38,7 @@ from common import (  # noqa: E402
     D4,
     ROOT,
     RegionSpec,
+    check_runes_before_monsters,
     reachable,
     removed_before,
     run,
@@ -138,7 +138,7 @@ ZONE5 = r"""
 ##..*.....5.####
 ##..........####
 ............####
-##..b.......####
+##..b...Q...####
 ##...........vV.
 ##..........####
 """
@@ -244,6 +244,8 @@ OBJECTS = {
     # 5 벽화의 방
     "5": ("rune_L3-5", "rune", {"lesson": "L3-5"}, None),
     "A": ("sign_mural", "sign", {"dialogue": "sign_mural"}, None),
+    # 보스 앞에서 체력을 채우는 캠프파이어(창고 뒤 4~6구역에 쉴 곳이 없던 것을 보완)
+    "Q": ("campfire_mural", "campfire", {}, None),
     "v": ("m_P0310", "monster", {"problem": "P0310"}, None),
     "V": ("t_boss_intro", "trigger", {"dialogue": "boss_intro", "once": True}, None),
     # 6 족장의 왕좌
@@ -264,7 +266,7 @@ STAGES: list[tuple[str | None, list[str], list[str]]] = [
     ("m_P0304", ["rune_L3-3", "m_P0306"], []),
     ("m_P0306", ["npc_goblin_clerk", "chest_storeroom", "board_shadow_r03", "campfire_storeroom", "m_P0307"], []),
     ("m_P0307", ["rune_L3-4", "m_P0309", "chest_hidden_pool", "m_P0308"], []),
-    ("m_P0308", ["rune_L3-5", "sign_mural", "m_P0310"], []),
+    ("m_P0308", ["rune_L3-5", "sign_mural", "campfire_mural", "m_P0310"], []),
     ("m_P0310", ["t_boss_intro", "m_P0311"], []),
     ("m_P0311", ["warp_east"], []),
 ]
@@ -304,7 +306,7 @@ ZONE_OF = {  # 오브젝트 → 구역 번호(1부터), 명세 §4 표
     2: ["rune_L3-2", "sign_tunnels", "m_P0305", "m_P0304"],
     3: ["rune_L3-3", "npc_goblin_clerk", "chest_storeroom", "board_shadow_r03", "campfire_storeroom", "m_P0306", "m_P0307"],
     4: ["rune_L3-4", "m_P0309", "chest_hidden_pool", "m_P0308"],
-    5: ["rune_L3-5", "sign_mural", "m_P0310", "t_boss_intro"],
+    5: ["rune_L3-5", "sign_mural", "campfire_mural", "m_P0310", "t_boss_intro"],
     6: ["m_P0311", "warp_east"],
 }
 # 1칸 길목을 막는 필수 몬스터(구역 출구 포함)
@@ -371,6 +373,12 @@ def validate(info: dict, verbose: bool) -> list[str]:
     for oid in ("board_shadow_r03", "campfire_storeroom"):
         if touches(info, reachable(info, removed_before(STAGES, "m_P0306") - {"m_P0306"}), oid):
             errors.append(f"{oid} reachable before m_P0306")
+    # 보스 앞 캠프파이어: 벽화의 방(m_P0308 뒤)에 있고, 보스 트리거를 밟거나 m_P0310을 치우기 전에 닿는다
+    pre_intro = removed_before(STAGES, "m_P0310") - {"m_P0310"}
+    if not touches(info, reachable(info, pre_intro, {pos["t_boss_intro"]}), "campfire_mural"):
+        errors.append("campfire_mural should be reachable before t_boss_intro (without passing m_P0310)")
+    if touches(info, reachable(info, removed_before(STAGES, "m_P0308") - {"m_P0308"}), "campfire_mural"):
+        errors.append("campfire_mural reachable before m_P0308")
     # 벽 앞면 변형(횃불·벽화·틈)은 앞면 자리에만: 아래 칸이 벽이 아니다
     for y, r in enumerate(rows):
         for x, ch in enumerate(r):
@@ -404,23 +412,8 @@ def validate(info: dict, verbose: bool) -> list[str]:
             errors.append(f"{oid} reachable without the cave crack")
     if not touches(info, closed, "m_P0308"):
         errors.append("the rest of the mirror-pool zone should not need the crack")
-    # 몬스터가 요구하는 이 지역 주문서의 비석은 그 몬스터보다 먼저(몬스터를 치우기 전에) 닿아야 한다.
-    # 아니면 주문서 없이 길목에 막혀 진행할 수 없다(need_scroll)
-    rune_of = {}
-    for lj in sorted((REGION_DIR / "lessons").glob("*/lesson.json")):
-        lesson = json.loads(lj.read_text(encoding="utf-8"))
-        rune_of[lesson["scroll"]["id"]] = f"rune_{lesson['id']}"
-    for o in info["objects"]:
-        if o["type"] != "monster":
-            continue
-        oid = o["name"]
-        pid = next(p["value"] for p in o.get("properties", []) if p["name"] == "problem")
-        problem = json.loads((REGION_DIR / "problems" / pid / "problem.json").read_text(encoding="utf-8"))
-        area = reachable(info, removed_before(STAGES, oid) - {oid})
-        for scroll in problem.get("requires", []):
-            rune = rune_of.get(scroll)
-            if rune and not touches(info, area, rune):
-                errors.append(f"{oid} needs {scroll}, but {rune} is not reachable before {oid}")
+    # 몬스터가 요구하는 이 지역 주문서의 비석은 그 몬스터보다 먼저 닿아야 한다
+    errors += check_runes_before_monsters(info, STAGES, REGION_DIR)
     # 바닥이 비지 않았다
     if any(v == 0 for v in info["ground"]):
         errors.append("ground layer has empty tiles")

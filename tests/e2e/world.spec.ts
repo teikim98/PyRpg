@@ -290,7 +290,8 @@ test.describe("world (dev/world.html?map=r03)", () => {
     expect(byId.get("board_shadow_r03")?.type).toBe("board");
     expect(byId.get("npc_goblin_clerk")?.props).toEqual({ dialogue: "npc_goblin_clerk", sprite: "npc_goblin" });
     expect(byId.get("m_P0311")?.props).toEqual({ problem: "P0311" });
-    expect(objs).toHaveLength(29);
+    expect(byId.get("campfire_mural")?.type).toBe("campfire");
+    expect(objs).toHaveLength(30);
 
     // 거울 웅덩이 북쪽 벽: 두 칸 아래에서 위로 걸어 틈을 지나 숨겨진 굴로 들어간다
     const chest = byId.get("chest_hidden_pool")!;

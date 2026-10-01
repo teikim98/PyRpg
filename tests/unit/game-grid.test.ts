@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { manifest, tileIndex } from "../../src/contracts/assets";
@@ -22,6 +22,12 @@ const map = parseTiledMap(
 );
 const grid = buildCollisionGrid(map, ts);
 const objById = new Map(map.objects.map((o) => [o.id, o]));
+
+const get = (id: string): MapObjectDef => {
+  const o = objById.get(id);
+  if (!o) throw new Error(`missing object ${id}`);
+  return o;
+};
 
 function indexWithout(removed: Set<string>): ObjectIndex {
   const idx = new ObjectIndex(map.width);
@@ -105,6 +111,36 @@ describe("region-1 progression (zones open in order)", () => {
     });
     // 선택 몬스터는 한 번도 치우지 않았다
     for (const id of ["m_P0108", "m_P0109", "m_P0110"]) expect(removed.has(id)).toBe(false);
+  });
+
+  it("every monster's required region-1 scroll can be learned before reaching it (no need_scroll dead end)", () => {
+    const regionDir = resolve(__dirname, "../../content/regions/r01-echo-village");
+    const runeOf = new Map<string, string>();
+    for (const id of readdirSync(resolve(regionDir, "lessons"))) {
+      const l = JSON.parse(readFileSync(resolve(regionDir, "lessons", id, "lesson.json"), "utf-8")) as { id: string; scroll: { id: string } };
+      runeOf.set(l.scroll.id, `rune_${l.id}`);
+    }
+    expect(runeOf.size).toBeGreaterThan(0);
+    const removed = new Set<string>();
+    let checked = 0;
+    for (const [remove, reachable] of stages) {
+      if (remove) removed.add(remove);
+      for (const id of reachable.filter((r) => get(r).type === "monster")) {
+        const before = new Set([...removed].filter((r) => r !== id));
+        const area = reachableTiles(map, grid, indexWithout(before), get("spawn"));
+        const pid = String(get(id).props.problem);
+        const problem = JSON.parse(readFileSync(resolve(regionDir, "problems", pid, "problem.json"), "utf-8")) as {
+          requires: string[];
+        };
+        for (const scroll of problem.requires) {
+          const rune = runeOf.get(scroll);
+          if (!rune) continue;
+          checked++;
+          expect(touches(area, get(rune)), `${id} needs ${scroll} (${rune})`).toBe(true);
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
   });
 
   it("the boss intro trigger is two tiles in front of the boss and cannot be bypassed", () => {

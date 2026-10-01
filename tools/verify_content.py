@@ -37,6 +37,8 @@ EMOTIONS = {"neutral", "happy", "worried", "surprised", "serious"}
 WHEN_KEYS = {"outputMatches", "exception", "messageMatches", "verdict", "onlyHiddenFail"}
 RECOMMENDED_KEYS = {"site", "id", "title", "level"}
 MAX_DIGITS = 4300
+# 정답으로 인정하는 답안(accepted[])을 보스 시간 결계 테스트에서 돌릴 때 timeLimitMs에 곱하는 배수(judge() 참고)
+ACCEPTED_BARRIER_SCALE = 10
 
 # docs/phase2/region1-spec.md §5. 레슨별 lesson_<ID>_intro/_done은 레슨 목록에서 만든다
 REQUIRED_REGION_DIALOGUES = {
@@ -504,6 +506,24 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
         ph = p.get("phases")
         if not isinstance(ph, list) or [x.get("phase") for x in ph] != phases or len(phases) < 2:
             rep.error(where, f"보스 phases가 테스트 페이즈 {phases}와 맞지 않음")
+        # stopOnTle(src/python/runner.ts): 첫 확정 TLE 뒤 그 페이즈의 남은 테스트를 TLE로 건너뛴다.
+        # 결과가 뻔할 때만 쓰도록, 시간 결계 페이즈(2 이상)이고 그 페이즈 테스트가 모두 같은 생성기에서 같은 크기로 나와야 한다
+        for x in ph if isinstance(ph, list) else []:
+            if "stopOnTle" not in x:
+                continue
+            pw = f"{where} phases[{x.get('phase')}].stopOnTle"
+            if not isinstance(x["stopOnTle"], bool):
+                rep.error(pw, "true/false")
+            elif x["stopOnTle"]:
+                same = [t for t in tests if t.get("phase", 1) == x.get("phase")]
+                if x.get("phase", 1) < 2:
+                    rep.error(pw, "시간 결계 페이즈(2 이상)에만 쓸 수 있음")
+                elif not same or len({t.get("gen") for t in same}) != 1 or same[0].get("gen") is None:
+                    rep.error(pw, "그 페이즈의 테스트가 모두 같은 생성기(gen)여야 함")
+                else:
+                    sizes = {t.get("in", "").split("\n", 1)[0] for t in same}
+                    if len(sizes) != 1:
+                        rep.error(pw, f"그 페이즈의 테스트 크기(첫 줄)가 모두 같아야 함: {sorted(sizes)}")
         if "slow.py" not in files:
             rep.error(where, "보스에 slow.py(비효율 답안)가 없음")
     elif p.get("phases"):
@@ -551,15 +571,19 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
         if f.startswith("alt_") and f not in accepted_files:
             rep.error(where, f"{f}가 problem.json의 accepted[]에 없음")
 
-    def judge(code_file, test_list=None):
+    def judge(code_file, test_list=None, barrier_scale=1):
+        """barrier_scale: 보스 시간 결계 테스트(2페이즈 이상)에 줄 제한 배수. 게임의 시간 결계 제한은 timeLimitMs가 아니라
+        budgetUnits(Pyodide에서 잰 값, tests/e2e/content.spec.ts가 확인)로 정하므로, 정답으로 인정하는 느린 답안
+        (예: P0311 문자열 +=)은 여기서는 넉넉한 제한으로 정확성만 본다."""
         path = os.path.join(folder, code_file)
         jobs = []
         for t in tests if test_list is None else test_list:
+            tl = limit * barrier_scale if p.get("boss") and t.get("phase", 1) >= 2 else limit
             if kind == "stdin":
-                jobs.append(pool.submit(runner.run, path, "stdin", stdin=t["in"], expect=t["out"], timeout=limit))
+                jobs.append(pool.submit(runner.run, path, "stdin", stdin=t["in"], expect=t["out"], timeout=tl))
             else:
                 jobs.append(pool.submit(runner.run, path, "function", entry=entry, args=t["args"],
-                                        expect=t["expect"], timeout=limit, compare=compare))
+                                        expect=t["expect"], timeout=tl, compare=compare))
         return [j.result() for j in jobs]
 
     def diagnose(results):
@@ -605,7 +629,7 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
         if f not in files:
             rep.error(f"{where} {f}", "파일 없음")
             continue
-        res = judge(f)
+        res = judge(f, barrier_scale=ACCEPTED_BARRIER_SCALE)
         bad = {i + 1: r["verdict"] for i, r in enumerate(res) if r["verdict"] != "AC"}
         if bad:
             rep.error(f"{where} {f}", f"정답으로 인정해야 하는 답안이 실패: {bad}")

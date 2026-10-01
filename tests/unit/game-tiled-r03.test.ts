@@ -48,6 +48,7 @@ const SPEC: Record<string, { type: string; props: Record<string, string | number
   m_P0308: { type: "monster", props: { problem: "P0308" } },
   "rune_L3-5": { type: "rune", props: { lesson: "L3-5" } },
   sign_mural: { type: "sign", props: { dialogue: "sign_mural" } },
+  campfire_mural: { type: "campfire", props: {} },
   m_P0310: { type: "monster", props: { problem: "P0310" } },
   t_boss_intro: { type: "trigger", props: { dialogue: "boss_intro", once: true } },
   m_P0311: { type: "monster", props: { problem: "P0311" } },
@@ -66,7 +67,7 @@ const STAGES: [string | null, string[]][] = [
   ["m_P0304", ["rune_L3-3", "m_P0306"]],
   ["m_P0306", ["npc_goblin_clerk", "chest_storeroom", "board_shadow_r03", "campfire_storeroom", "m_P0307"]],
   ["m_P0307", ["rune_L3-4", "m_P0309", "chest_hidden_pool", "m_P0308"]],
-  ["m_P0308", ["rune_L3-5", "sign_mural", "m_P0310"]],
+  ["m_P0308", ["rune_L3-5", "sign_mural", "campfire_mural", "m_P0310"]],
   ["m_P0310", ["t_boss_intro", "m_P0311"]],
   ["m_P0311", ["warp_east"]],
 ];
@@ -302,6 +303,23 @@ describe("region-3 progression (zones open west to east)", () => {
     // 게시판·캠프파이어는 창고 안쪽(길목 m_P0306 동쪽)에 있다
     expect(board.x).toBeGreaterThan(obj("m_P0306").x);
     expect(fire.x).toBeLessThan(obj("m_P0307").x);
+  });
+
+  it("a campfire in the mural room lets the player rest before the boss (after m_P0308, before the boss trigger)", () => {
+    const fire = obj("campfire_mural");
+    // 벽화의 방(m_P0308과 m_P0310 사이)에 있다
+    expect(fire.x).toBeGreaterThan(obj("m_P0308").x);
+    expect(fire.x).toBeLessThan(obj("m_P0310").x);
+    // m_P0308을 치우기 전에는 닿지 않는다
+    const before = reachableTiles(map, grid, indexWithout(new Set(["m_P0301", "m_P0302", "m_P0304", "m_P0306", "m_P0307"])), obj("spawn_west"));
+    expect(touches(before, fire)).toBe(false);
+    // m_P0310을 치우지 않고, 보스 트리거를 밟지 않고 닿는다
+    const g = grid.slice();
+    const trig = obj("t_boss_intro");
+    g[at(trig.x, trig.y)] = 1;
+    const area = reachableTiles(map, g, indexWithout(removedUntil("m_P0310")), obj("spawn_west"));
+    expect(touches(area, fire)).toBe(true);
+    expect(touches(area, obj("m_P0311"))).toBe(false);
   });
 
   it("the hidden pool passage is reachable only through the cave crack between the two frozen torches", () => {

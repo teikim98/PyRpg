@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (  # noqa: E402
     ROOT,
     RegionSpec,
+    check_runes_before_monsters,
     neighbor_floor,
     reachable,
     removed_before,
@@ -25,7 +26,8 @@ from common import (  # noqa: E402
     validate_stages,
 )
 
-OUT = ROOT / "content" / "regions" / "r01-echo-village" / "map.tmj"
+REGION_DIR = ROOT / "content" / "regions" / "r01-echo-village"
+OUT = REGION_DIR / "map.tmj"
 
 # ── 도면 ──────────────────────────────────────────────────────────────
 # 1 우물가(남서) → 2 마을 광장(북서) → 3 상점 거리(북쪽 가운데) → 4 메아리 골목(북동)
@@ -221,6 +223,8 @@ def validate(info: dict, verbose: bool) -> list[str]:
     w = info["w"]
     if info["rows"][hy][hx] != "H" or info["collision"][hy * w + hx] != 0:
         errors.append(f"hidden bush must be passable at ({hx},{hy})")
+    # 몬스터가 요구하는 이 지역 주문서의 비석은 그 몬스터보다 먼저 닿아야 한다
+    errors += check_runes_before_monsters(info, STAGES, REGION_DIR)
     alley = set(STAGES[i][0] for i in range(1, 6))
     if touches(info, reachable(info, alley, {(hx, hy)}), "chest_hidden"):
         errors.append("hidden room reachable without the hidden bush")
