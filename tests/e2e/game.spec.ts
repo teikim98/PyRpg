@@ -318,6 +318,9 @@ test.describe.serial("지역 1 전체 플레이", () => {
     await fightAndWin(page, "m_P0106", "P0106");
 
     // 상점 거리
+    await interact(page, "npc_shopkeeper");
+    await settle(page);
+    expect((await said(page)).at(-1)).toBe("npc_shopkeeper");
     await interact(page, "rune_L1-3");
     await doLesson(page, "//");
     await interact(page, "chest_shop");
@@ -339,6 +342,11 @@ test.describe.serial("지역 1 전체 플레이", () => {
     await settle(page);
     expect((await said(page)).at(-1)).toBe("chest_hidden");
     expect((await save(page)).player.gold).toBe(gold0 + 50);
+    // 숨겨진 방의 선택 몬스터
+    await fightAndWin(page, "m_P0110", "P0110");
+    await interact(page, "npc_echo_child");
+    await settle(page);
+    expect((await said(page)).at(-1)).toBe("npc_echo_child");
 
     await fightAndWin(page, "m_P0104", "P0104");
     await interact(page, "campfire_alley");
@@ -408,7 +416,7 @@ test.describe.serial("지역 1 전체 플레이", () => {
       expect(s.removedObjects, id).toContain(id);
     }
     // 선택 몬스터는 남아 있다
-    for (const id of ["m_P0108", "m_P0109", "m_P0110"]) expect(s.removedObjects).not.toContain(id);
+    for (const id of ["m_P0108", "m_P0109"]) expect(s.removedObjects).not.toContain(id);
 
     // 메뉴(M) → 코덱스: 얻은 주문서 4개, 예제 실행
     await page.keyboard.press("KeyM");
