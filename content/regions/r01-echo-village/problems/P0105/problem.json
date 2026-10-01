@@ -19,6 +19,7 @@
     }
   ],
   "timeLimitMs": 2000,
+  "budgetUnits": 0.5,
   "estimatedMinutes": 15,
   "tests": [
     { "in": "1 10\n", "out": "55\n", "public": true, "phase": 1, "note": "기본 동작" },
