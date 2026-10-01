@@ -1,0 +1,46 @@
+{
+  "id": "P0201",
+  "title": "짝과 홀의 갈림길",
+  "kind": "stdin",
+  "enemy": { "name": "갈래 새싹", "sprite": "monster_fork_sprout", "attack": 20 },
+  "requires": ["scroll.branch"],
+  "concept": "scroll.branch",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 5,
+  "tests": [
+    { "in": "4\n", "out": "왼쪽\n", "public": true, "note": "짝수" },
+    { "in": "7\n", "out": "오른쪽\n", "public": true, "note": "홀수" },
+    { "in": "0\n", "out": "왼쪽\n", "note": "경계: 0은 짝수" },
+    { "in": "-3\n", "out": "오른쪽\n", "note": "음수 홀수" },
+    { "in": "-10\n", "out": "왼쪽\n", "note": "음수 짝수" },
+    { "in": "1000000000000000000\n", "out": "왼쪽\n", "note": "경계: 최댓값" },
+    { "in": "-999999999999999999\n", "out": "오른쪽\n", "note": "경계: 아주 작은 음수 홀수" }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_a.py",
+      "title": "int() 누락",
+      "expectFail": { "1": "RE", "2": "RE", "3": "RE", "4": "RE", "5": "RE", "6": "RE", "7": "RE" },
+      "diagnosis": {
+        "when": { "verdict": "RE", "exception": "TypeError", "messageMatches": "not all arguments converted" },
+        "text": "`input()`이 준 값은 문자열이라서, `%`가 나머지가 아니라 '문자열 서식' 연산으로 읽혔어요. `n = int(input())`처럼 정수로 바꾼 뒤에 `% 2`를 해 보세요."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "숫자를 문자열과 비교",
+      "expectFail": { "1": "WA", "3": "WA", "5": "WA", "6": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA", "outputMatches": "^오른쪽" },
+        "text": "짝수인데도 오른쪽으로 갔어요. `n % 2`는 정수인데 문자열 `\"0\"`과 비교하고 있지 않나요? JS의 `0 == \"0\"`은 `true`지만, Python의 `==`는 자료형이 다르면 언제나 `False`예요. `== 0`으로 비교해 보세요."
+      }
+    }
+  ],
+  "hints": [
+    "짝수는 2로 나눈 나머지가 0인 수예요. 나머지를 구하는 연산자를 떠올려 보세요.",
+    "`n % 2 == 0`이 `True`이면 짝수예요. `if`/`else`로 두 갈래를 나누고, 입력은 `int()`로 바꿔야 해요.",
+    "```python\nn = int(input())\nif n % 2 == ____:\n    print(\"왼쪽\")\nelse:\n    print(\"오른쪽\")\n```"
+  ],
+  "reward": { "xp": 100, "gold": 50 }
+}

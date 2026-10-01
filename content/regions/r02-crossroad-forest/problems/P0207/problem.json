@@ -1,0 +1,53 @@
+{
+  "id": "P0207",
+  "title": "우박 수열",
+  "kind": "function",
+  "entry": "solution",
+  "enemy": { "name": "우박 도깨비불", "sprite": "monster_hail_wisp", "attack": 20 },
+  "requires": ["scroll.while"],
+  "concept": "scroll.while",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 8,
+  "tests": [
+    { "args": "(1,)", "expect": "0", "note": "경계: 처음부터 1" },
+    { "args": "(2,)", "expect": "1", "note": "경계: 한 번만에 1" },
+    { "args": "(16,)", "expect": "4", "note": "2의 거듭제곱(짝수만 거침)" },
+    { "args": "(6,)", "expect": "8", "public": true, "note": "기본 동작" },
+    { "args": "(27,)", "expect": "111", "public": true, "note": "아주 길게 돌아가는 수" },
+    { "args": "(837799,)", "expect": "524", "note": "100만 이하에서 가장 긴 수" },
+    { "args": "(1000000,)", "expect": "152", "note": "경계: 최댓값" }
+  ],
+  "extraDiagnoses": [
+    {
+      "when": { "verdict": "WA", "outputMatches": "^0$" },
+      "text": "아직 `answer`가 처음 값 `0` 그대로예요. `while`로 n이 1이 될 때까지 규칙을 적용하면서 횟수를 세어 보세요."
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_b.py",
+      "title": "값을 바꾸지 않아 무한루프",
+      "expectFail": { "4": "TLE", "5": "TLE", "6": "TLE", "7": "TLE" },
+      "diagnosis": {
+        "when": { "verdict": "TLE" },
+        "text": "시간 결계에 걸렸어요. 무한루프예요! 홀수일 때 `n * 3 + 1`을 계산만 하고 `n`에 다시 넣지 않아서, n이 영영 바뀌지 않아요. `while`을 쓸 땐 조건에 쓰인 변수가 반복마다 바뀌는지 꼭 확인하세요."
+      }
+    },
+    {
+      "file": "wrong_a.py",
+      "title": "횟수를 1부터 셈",
+      "expectFail": { "1": "WA", "2": "WA", "3": "WA", "4": "WA", "5": "WA", "6": "WA", "7": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA" },
+        "text": "답이 하나씩 커요. 세는 건 '바뀐 횟수'라서, 처음부터 1인 수는 0번이에요. 횟수를 0에서 시작하고, 규칙을 한 번 적용할 때마다 1씩 늘려 보세요."
+      }
+    }
+  ],
+  "hints": [
+    "몇 번 반복할지 미리 알 수 없어요. '1이 아닌 동안' 계속 도는 반복문이 필요해요.",
+    "`while n != 1:` 안에서 짝수면 `n = n // 2`, 홀수면 `n = n * 3 + 1`로 n을 **바꾸고**, 횟수를 1 늘려요. `/`를 쓰면 실수가 되니 `//`를 쓰세요.",
+    "```python\ndef solution(n):\n    answer = 0\n    while n != 1:\n        if n % 2 == 0:\n            n = n // 2\n        else:\n            n = ____\n        answer += 1\n    return answer\n```"
+  ],
+  "reward": { "xp": 100, "gold": 50 }
+}

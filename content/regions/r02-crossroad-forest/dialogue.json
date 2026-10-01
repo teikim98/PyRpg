@@ -1,0 +1,101 @@
+{
+  "region_intro": [
+    { "speaker": "system", "text": "에코 마을 동쪽 문을 지나자 숲이 펼쳐진다. 떨어지던 낙엽이 공중에 그대로 멈춰 있다." },
+    { "speaker": "system", "text": "몇 걸음 앞에서 길이 두 갈래로 갈라지고, 그 너머에서 또 갈라진다. 바람 한 점 없는데 나뭇가지 그림자만 같은 자리를 맴돈다." }
+  ],
+  "forest_intro": [
+    { "speaker": "companion", "emotion": "surprised", "text": "와, 낙엽이 공중에 떠 있어! 손으로 밀어도 안 떨어져. 여기도 시간이 멈췄구나." },
+    { "speaker": "companion", "emotion": "neutral", "text": "여긴 '갈림길 숲'이야. 지도 좀 봐. 다른 데는 길이 쭉쭉 뻗어 있는데, 이 숲만 동그란 고리 모양으로 그려져 있어." },
+    { "speaker": "companion", "emotion": "worried", "text": "예전에 지도를 그리러 왔을 때 하루 종일 걸었는데, 정신 차려 보니 같은 갈림길로 돌아와 있더라. 걸음 수를 세다가 세 번이나 처음부터 다시 셌다니까!" },
+    { "speaker": "companion", "emotion": "serious", "text": "숲 사람들 말로는, 갈림길마다 올바른 조건을 고른 사람만 앞으로 나아간대. 틀린 길을 고르면 같은 자리를 끝없이 되풀이하고." },
+    { "speaker": "companion", "emotion": "happy", "text": "조건을 고르는 주문, 같은 걸음을 되풀이하는 주문, 그리고 멈추는 주문! 이 숲에서 다 배울 수 있을 거야. 저기 빛나는 비석부터 가 보자, {player}!" }
+  ],
+  "sign_forest": [
+    { "speaker": "system", "text": "『갈림길 숲. 길은 묻는다: 짝인가, 홀인가? 답을 고른 자만 지나가리라.』" },
+    { "speaker": "companion", "emotion": "neutral", "text": "길이 질문을 한다니, 진짜 갈림길이네. 짝수인지 홀수인지 가르는 건… 지역 1에서 배운 나머지 `%`가 쓸모 있겠다!" }
+  ],
+  "lesson_L2-1_intro": [
+    { "speaker": "companion", "emotion": "happy", "text": "숲 입구의 비석이야! 여긴 '갈림길의 주문'. 조건을 보고 길을 고르는 주문이래." },
+    { "speaker": "companion", "emotion": "neutral", "text": "JS의 `if`랑 비슷한데 중괄호 대신 들여쓰기를 써. 그리고 `else if`가 아니라 `elif`야. 손가락이 JS를 기억하니까 조심!" }
+  ],
+  "lesson_L2-1_done": [
+    { "speaker": "system", "text": "갈림길의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`if`, `elif`, `else`! 이제 갈림길이 무섭지 않아. 저 갈래 새싹부터 상대해 주자!" }
+  ],
+  "sign_loop": [
+    { "speaker": "system", "text": "『이 표지판을 본 것이 처음이라고 생각하는가? 고리 길에 들어선 자여, 걸음을 세어라.』" },
+    { "speaker": "system", "text": "표지판 모서리에 누군가 칼로 새긴 자국이 있다. 『3번째』『4번째』『5번째』…" },
+    { "speaker": "companion", "emotion": "surprised", "text": "으, 누가 여길 몇 번이나 지나간 거야? 같은 길을 빙빙 돌았나 봐." },
+    { "speaker": "companion", "emotion": "serious", "text": "그래도 이건 단서야. 같은 걸 되풀이하는 길이라면, 몇 번 돌지 정해 두고 돌면 돼. 되풀이의 주문이 딱이겠다!" }
+  ],
+  "npc_lost_traveler": [
+    { "speaker": "길 잃은 여행자", "text": "오른쪽, 왼쪽, 오른쪽, 왼쪽… 어? 또 이 나무네. 아까도 이 나무였는데." },
+    { "speaker": "companion", "emotion": "worried", "text": "저기요, 괜찮아요? 같은 자리를 계속 돌고 계신 것 같은데…" },
+    { "speaker": "길 잃은 여행자", "text": "나는 '숲을 나갈 때까지 걷는다'고 다짐했을 뿐이야. 그런데 아무리 걸어도 나가지질 않아. 언제 멈춰야 하는지를 정해 두지 않았거든…" },
+    { "speaker": "길 잃은 여행자", "text": "자네들은 꼭 몇 번 돌지, 언제 멈출지 정해 두고 걷게. 끝을 정하지 않은 걸음은 영원히 끝나지 않아." },
+    { "speaker": "companion", "emotion": "serious", "text": "끝나지 않는 반복이라… 멈출 조건이 없으면 영원히 맴도는 거구나. 기억해 두자, {player}." }
+  ],
+  "lesson_L2-2_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "고리 길의 비석이야. 여긴 '되풀이의 주문'. 정해진 횟수만큼 같은 걸음을 되풀이하는 주문이래." },
+    { "speaker": "companion", "emotion": "serious", "text": "중요한 게 하나 있어. 끝 값은 세지 않는대! 걸음 수 세는 게 특기인 나도 여기서 자주 하나씩 틀려." }
+  ],
+  "lesson_L2-2_done": [
+    { "speaker": "system", "text": "되풀이의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`for i in range(1, n + 1)`! 이제 고리 길을 몇 바퀴 돌지 우리가 정할 수 있어. 고리 뱀, 각오해!" }
+  ],
+  "chest_loop": [
+    { "speaker": "system", "text": "상자를 열었다. 40골드를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "고리 길을 돌던 누군가가 지쳐서 짐을 덜고 갔나 봐. 같은 길을 몇 바퀴나 돌았으면 이걸 두고 갔을까…" }
+  ],
+  "lesson_L2-3_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "멈춘 개울 옆의 비석이야. 여긴 '멈춤의 주문'. 조건이 참인 동안 되풀이하다가, 필요할 때 멈추는 주문이래." },
+    { "speaker": "companion", "emotion": "worried", "text": "아까 그 여행자 생각나? 멈출 조건을 안 정해 두면 영원히 돌게 돼. 이 숲의 버그들은 그런 주문을 시간 결계로 끊어 버린대." }
+  ],
+  "lesson_L2-3_done": [
+    { "speaker": "system", "text": "멈춤의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`while`, `break`, `continue`! 이제 언제 멈출지 우리가 정한다. 우박 도깨비불도 문제없어!" }
+  ],
+  "npc_woodcutter": [
+    { "speaker": "나무꾼", "text": "…도끼를 휘두르다 그대로 멈췄지 뭔가. 팔만 겨우 움직이네. 나무는 반쯤 베인 채로 쓰러지지도 않고." },
+    { "speaker": "나무꾼", "text": "이 개울 따라 북쪽으로 올라가 보게. 덤불이 줄지어 있는데, 그중 딱 하나만 잎이 멈추지 않고 살랑거려. 다른 덤불은 다 굳었는데 말이야." },
+    { "speaker": "나무꾼", "text": "그 덤불은 진짜가 아니야. 그냥 밀고 지나갈 수 있지. 그 너머에 내가 숨겨 둔 쉼터가 있는데, 요즘 도깨비불 하나가 눌러앉았더군." },
+    { "speaker": "companion", "emotion": "surprised", "text": "숨겨진 길이다! 개울 따라 북쪽, 흔들리는 덤불. 지도에 표시해 둘게!" }
+  ],
+  "chest_hidden_grove": [
+    { "speaker": "system", "text": "숨겨진 쉼터의 상자를 열었다. 60골드를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "흔들리는 덤불 찾았어! 다들 그냥 지나치는 걸 보고 그대로 믿지 않은 덕분이야. 주문사의 눈은 이래야지." }
+  ],
+  "lesson_L2-4_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "개울 건너편 쉼터에도 비석이 있네. 여긴 '모음의 주문'. 여러 줄로 흩어진 입력을 하나씩 모으는 주문이래." },
+    { "speaker": "companion", "emotion": "serious", "text": "실전 시련장(백준) 문제의 입력은 대부분 '첫 줄에 개수, 그다음 그만큼의 줄'이야. 이건 꼭 손에 익혀 두자." }
+  ],
+  "lesson_L2-4_done": [
+    { "speaker": "system", "text": "모음의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "N을 읽고, N번 읽기! 이제 아무리 많은 도토리가 굴러와도 하나씩 다 셀 수 있어." }
+  ],
+  "boss_intro": [
+    { "speaker": "companion", "emotion": "serious", "text": "저기, 공터 한가운데 커다란 나무… 뿌리가 사방으로 갈라져서 숲의 모든 갈림길로 이어져 있어." },
+    { "speaker": "companion", "emotion": "surprised", "text": "눈에 시계 룬이 박혀 있어! 이 숲의 시간을 붙잡고 있는 게 바로 저 수호목이야!" },
+    { "speaker": "companion", "emotion": "worried", "text": "조심해. 숲의 버그들이 쓰던 시간 결계, 저 녀석이 원조일 거야. 맞는 주문이어도 너무 느리면 결계에 끊길 거야." },
+    { "speaker": "companion", "emotion": "neutral", "text": "갈림길, 되풀이, 멈춤, 모음. 이 숲에서 배운 주문 네 개를 다 쓸 때야. 가자, {player}!" }
+  ],
+  "boss_defeated": [
+    { "speaker": "system", "text": "갈림길 수호목의 뿌리가 땅속으로 거두어진다. 눈에 박힌 시계 룬이 '딸깍' 하고 한 칸 움직인다." },
+    { "speaker": "system", "text": "공중에 멈춰 있던 낙엽이 일제히 떨어지기 시작한다. 갈라지던 길들이 하나로 이어지며 동쪽으로 곧게 뻗는다." },
+    { "speaker": "companion", "emotion": "happy", "text": "해냈다! 낙엽이 떨어져! 바람도 불어!" },
+    { "speaker": "companion", "emotion": "surprised", "text": "지도 봐! 고리 모양이던 숲에 동쪽으로 나가는 길이 새로 그려지고 있어. 색도 번지고!" }
+  ],
+  "region_clear": [
+    { "speaker": "companion", "emotion": "happy", "text": "갈림길 숲 지도 완성! 조건문, 반복문, 멈추는 법, 여러 줄 입력까지 다 되찾았어." },
+    { "speaker": "companion", "emotion": "neutral", "text": "바깥 시련장 목록도 새로 채워 뒀어. 윤년, 구구단 같은 문제는 이제 우리 숲에서 다 연습한 거야. 한번 도전해 봐!" },
+    { "speaker": "companion", "emotion": "serious", "text": "그런데 수호목의 시간 결계… 마을의 미믹보다 훨씬 정교했어. 누군가 '느린 주문은 통과시키지 마라'고 가르쳐 둔 것 같아. 대체 누가 이런 시련을 만든 걸까?" }
+  ],
+  "east_gate_locked": [
+    { "speaker": "system", "text": "동쪽으로 난 길을 굵은 뿌리들이 그물처럼 막고 있다. 뿌리 사이로 멈춘 시계 룬의 빛이 새어 나온다." },
+    { "speaker": "companion", "emotion": "worried", "text": "수호목의 뿌리야. 저 나무가 시계 룬을 놓아줘야 길이 열릴 거야." }
+  ],
+  "to_be_continued": [
+    { "speaker": "companion", "emotion": "happy", "text": "뿌리가 걷혔다! 동쪽 너머는 동굴 같은데… 안에서 뭔가 잔뜩 줄지어 있는 소리가 들려. 두근거린다!" },
+    { "speaker": "system", "text": "갈림길 숲 이야기는 여기까지입니다. 다음 지역은 준비 중이에요. 플레이해 주셔서 고맙습니다!" }
+  ]
+}

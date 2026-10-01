@@ -30,6 +30,11 @@
   },
   {
     "exception": "TypeError",
+    "pattern": "not all arguments converted during string formatting",
+    "text": "문자열에 `%`를 썼어! 문자열 뒤의 `%`는 나머지가 아니라 옛날식 문자열 서식이라서 이런 에러가 나. `input()`으로 읽은 값을 `int()`로 바꾸지 않고 `n % 2`를 하지 않았는지 확인해 봐."
+  },
+  {
+    "exception": "TypeError",
     "pattern": "unsupported operand type\\(s\\) for .*'str'",
     "text": "문자열로 계산을 하려고 했어. `input()`이나 `split()`이 준 값은 아직 문자열이야! 계산하기 전에 `int()`나 `float()`로 바꿔 줘. JS처럼 `\"5\" - 2`가 알아서 `3`이 되지 않아."
   },
@@ -106,8 +111,13 @@
   },
   {
     "exception": "SyntaxError",
+    "pattern": "Maybe you meant '=='",
+    "text": "조건에 `=`를 썼어. `=`는 이름표 붙이기(대입)고, 같은지 비교하는 건 `==`야. `if x = 3:`이 아니라 `if x == 3:`."
+  },
+  {
+    "exception": "SyntaxError",
     "pattern": "expected ':'",
-    "text": "`if`, `for`, `def` 같은 줄 끝에는 `:`(콜론)이 꼭 필요해. JS의 `{`를 Python에서는 `:`와 들여쓰기가 대신해."
+    "text": "`if`, `for`, `def` 같은 줄 끝에는 `:`(콜론)이 꼭 필요해. JS의 `{`를 Python에서는 `:`와 들여쓰기가 대신해. 혹시 `else if`라고 썼다면 Python에서는 한 단어 `elif`야."
   },
   {
     "exception": "SyntaxError",
@@ -116,7 +126,7 @@
   },
   {
     "exception": "SyntaxError",
-    "text": "주문의 문법이 틀렸대. 강조된 줄(또는 바로 앞줄)을 봐! JS 습관이 섞이기 쉬운 곳: `let`/`const`는 빼고, `x++` 대신 `x += 1`, 주석은 `//` 대신 `#`, `===` 대신 `==`, 줄 끝 `;`는 필요 없어."
+    "text": "주문의 문법이 틀렸대. 강조된 줄(또는 바로 앞줄)을 봐! JS 습관이 섞이기 쉬운 곳: `let`/`const`는 빼고, `x++` 대신 `x += 1`, 주석은 `//` 대신 `#`, `===` 대신 `==`, `&&`/`||`/`!` 대신 `and`/`or`/`not`, 줄 끝 `;`는 필요 없어."
   },
   {
     "exception": "IndentationError",

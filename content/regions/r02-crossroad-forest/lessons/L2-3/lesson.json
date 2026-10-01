@@ -1,0 +1,16 @@
+{
+  "id": "L2-3",
+  "title": "멈춤의 주문: while, break, continue",
+  "scroll": {
+    "id": "scroll.while",
+    "name": "멈춤의 주문서",
+    "summary": "`while 조건:`은 조건이 참인 동안 되풀이한다. 조건의 변수가 반복마다 끝을 향해 바뀌지 않으면 무한루프 → 시간 결계(TLE). `break`는 반복을 즉시 끝내고, `continue`는 이번 바퀴만 건너뛴다. do-while은 없으니 `while True:` + `break`."
+  },
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 주문을 채워서 1부터 10까지 출력하되 3의 배수는 건너뛰어 봐. `1 2 4 5 7 8 10`이 출력되어야 해.",
+    "code": "i = 0\nwhile i < 10:\n    i += 1\n    if i % 3 == 0:\n        ___\n    print(i, end=\" \")\nprint()\n",
+    "expectedOutput": "1 2 4 5 7 8 10\n",
+    "answer": "continue"
+  }
+}

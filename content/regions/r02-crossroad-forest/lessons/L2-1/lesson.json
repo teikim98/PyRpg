@@ -1,0 +1,17 @@
+{
+  "id": "L2-1",
+  "title": "갈림길의 주문: if, elif, else",
+  "scroll": {
+    "id": "scroll.branch",
+    "name": "갈림길의 주문서",
+    "summary": "`if 조건:` 아래 들여쓴 블록이 조건일 때 실행된다. 갈래가 여럿이면 `elif`, 나머지는 `else`. 위에서부터 처음 참인 블록 하나만. `0 < x < 10`처럼 비교를 이어 쓸 수 있고, 조건은 `and`/`or`/`not`으로 엮는다. `==`는 자료형까지 따진다."
+  },
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 주문을 채워서 갈래를 하나 더 만들어 봐. 입력으로 `0`이 들어오면 `영`이 출력되어야 해.",
+    "code": "n = int(input())\nif n > 0:\n    print(\"양수\")\n___ n == 0:\n    print(\"영\")\nelse:\n    print(\"음수\")\n",
+    "stdin": "0\n",
+    "expectedOutput": "영\n",
+    "answer": "elif"
+  }
+}

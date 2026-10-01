@@ -1,0 +1,17 @@
+{
+  "id": "L2-4",
+  "title": "모음의 주문: 여러 줄 입력 받기",
+  "scroll": {
+    "id": "scroll.gather",
+    "name": "모음의 주문서",
+    "summary": "첫 줄의 N을 읽고 `for _ in range(n):` 안에서 `int(input())`을 N번 부르면 N줄을 차례로 읽는다(`_`는 안 쓰는 변수). 반복 밖에 0을 두고 더하면 누적합, '지금까지 최고'를 기억하며 더 클 때만 바꾸면 최댓값."
+  },
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 반복 횟수를 채워서 N줄의 값을 모두 더해 봐. 입력이 `3`, `10`, `20`, `30`이면 `60`이 출력되어야 해.",
+    "code": "n = int(input())\ntotal = 0\nfor _ in range(___):\n    total += int(input())\nprint(total)\n",
+    "stdin": "3\n10\n20\n30\n",
+    "expectedOutput": "60\n",
+    "answer": "n"
+  }
+}

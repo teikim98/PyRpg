@@ -5,7 +5,7 @@ content/ 아래 데이터를 읽어서 아래를 확인한다. 하나라도 실�
   모범답안 전부 AC, 오답·비효율 답안은 expectFail에 적은 테스트만 정확히 그 판정으로 실패,
   오답마다 첫 실패 테스트에서 자기 진단 규칙이 처음으로 걸리는지, 참조 무결성(주문서·스프라이트)
 - 레슨: 주문서 ID, 빈칸 연습 정답 실행 결과, ```python run 블록이 에러 없이 실행되는지
-- 대사: region1-spec.md §5의 ID, 대사 줄 형식
+- 대사: region1-spec.md §5, region02-spec.md §5의 ID, 대사 줄 형식
 - 지역: recommended 필드(번호·제목·사이트·레벨만), map.tmj가 있으면 맵 오브젝트 참조
 - 보조 캐릭터: profile.json, traceback.json(실제 CPython 에러 메시지로 규칙 매칭 확인)
 
@@ -42,6 +42,12 @@ REQUIRED_REGION_DIALOGUES = {
         "npc_shopkeeper", "chest_shop", "sign_alley_riddle", "npc_echo_child", "chest_hidden",
         "boss_intro", "boss_defeated", "east_gate_locked", "to_be_continued", "region_clear",
     ],
+    # docs/phase3/region02-spec.md §5
+    "r02": [
+        "region_intro", "forest_intro", "sign_forest", "sign_loop", "npc_lost_traveler", "npc_woodcutter",
+        "chest_loop", "chest_hidden_grove", "boss_intro", "boss_defeated", "east_gate_locked", "to_be_continued",
+        "region_clear",
+    ],
 }
 REQUIRED_COMMON_DIALOGUES = [
     "need_scroll", "campfire_rest", "knockout", "solution_unlocked", "retreat",
@@ -53,6 +59,20 @@ REQUIRED_REGION_CONTENT = {
         "lessons": {"L1-1": "scroll.voice", "L1-2": "scroll.convert", "L1-3": "scroll.arith", "L1-4": "scroll.quick_ear"},
         "problems": ["P0101", "P0102", "P0103", "P0104", "P0105", "P0106", "P0107", "P0108", "P0109", "P0110"],
         "boss": "P0105",
+    },
+    # region02-spec.md §2, §3
+    "r02": {
+        "lessons": {"L2-1": "scroll.branch", "L2-2": "scroll.loop", "L2-3": "scroll.while", "L2-4": "scroll.gather"},
+        "problems": ["P0201", "P0202", "P0203", "P0204", "P0205", "P0206", "P0207", "P0208", "P0209", "P0210"],
+        "boss": "P0210",
+    },
+}
+# 명세의 아트 표(region02-spec.md §6 등)에 있어서 아트 담당이 만들 스프라이트.
+# 아직 assets/manifest.json에 없으면 오류 대신 경고로 둔다(콘텐츠와 아트를 따로 작업하므로)
+PENDING_SPRITES = {
+    "r02": {
+        "monster_fork_sprout", "monster_leap_owl", "monster_loop_snake", "monster_count_shroom",
+        "monster_hail_wisp", "monster_acorn_mite", "boss_crossroad_tree", "npc_traveler", "npc_woodcutter",
     },
 }
 # 맵 오브젝트 종류별 필수 props(src/contracts/world.ts)
@@ -80,6 +100,8 @@ TRACEBACK_SAMPLES = [
     ("1 // 0", "ZeroDivisionError", False),
     ("1 / 0", "ZeroDivisionError", False),
     ("1 % 0", "ZeroDivisionError", False),
+    ('"7" % 2', "TypeError", True),
+    ("if 1 = 1:\n    pass", "SyntaxError", True),
     ("prnt(1)", "NameError", False),
     ("x = true", "NameError", True),
     ("x = null", "NameError", True),
@@ -328,7 +350,10 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
     if not isinstance(enemy.get("name"), str) or not isinstance(enemy.get("attack"), int) or enemy["attack"] <= 0:
         rep.error(where, "enemy.name/attack 형식 오류")
     if enemy.get("sprite") not in sprites:
-        rep.error(where, f"enemy.sprite {enemy.get('sprite')!r}가 assets/manifest.json에 없음")
+        if enemy.get("sprite") in PENDING_SPRITES.get(region_id, set()):
+            rep.warn(where, f"enemy.sprite {enemy.get('sprite')!r}가 아직 assets/manifest.json에 없음(명세의 아트 목록)")
+        else:
+            rep.error(where, f"enemy.sprite {enemy.get('sprite')!r}가 assets/manifest.json에 없음")
     for s in p["requires"]:
         if s not in scrolls:
             rep.error(where, f"requires의 주문서 {s!r}가 레슨에 없음")
@@ -666,7 +691,10 @@ def check_map(rep, region_id, map_path, problems, lessons, dialogues, scrolls, s
         if "lesson" in props and props["lesson"] not in lessons:
             rep.error(ow, f"lesson={props['lesson']!r} 레슨이 없음")
         if "sprite" in props and props["sprite"] not in sprites:
-            rep.error(ow, f"sprite={props['sprite']!r}가 manifest에 없음")
+            if props["sprite"] in PENDING_SPRITES.get(region_id, set()):
+                rep.warn(ow, f"sprite={props['sprite']!r}가 아직 manifest에 없음(명세의 아트 목록)")
+            else:
+                rep.error(ow, f"sprite={props['sprite']!r}가 manifest에 없음")
         if otype == "monster":
             if props.get("problem") not in problems:
                 rep.error(ow, f"problem={props.get('problem')!r} 문제가 없음")

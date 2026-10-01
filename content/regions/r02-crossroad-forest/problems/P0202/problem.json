@@ -1,0 +1,55 @@
+{
+  "id": "P0202",
+  "title": "이정표의 등급",
+  "kind": "function",
+  "entry": "solution",
+  "enemy": { "name": "갈래 새싹", "sprite": "monster_fork_sprout", "attack": 20 },
+  "requires": ["scroll.branch"],
+  "concept": "scroll.branch",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 6,
+  "tests": [
+    { "args": "(95,)", "expect": "'A'", "public": true, "note": "기본 동작" },
+    { "args": "(72,)", "expect": "'C'", "public": true, "note": "기본 동작" },
+    { "args": "(90,)", "expect": "'A'", "note": "경계: A의 최솟값" },
+    { "args": "(89,)", "expect": "'B'", "note": "경계: A 바로 아래" },
+    { "args": "(80,)", "expect": "'B'", "note": "경계: B의 최솟값" },
+    { "args": "(60,)", "expect": "'D'", "note": "경계: D의 최솟값" },
+    { "args": "(59,)", "expect": "'F'", "note": "경계: F의 최댓값" },
+    { "args": "(0,)", "expect": "'F'", "note": "경계: 최솟값" },
+    { "args": "(100,)", "expect": "'A'", "note": "경계: 최댓값" }
+  ],
+  "extraDiagnoses": [
+    {
+      "when": { "verdict": "WA", "outputMatches": "^''$" },
+      "text": "아직 `answer`가 처음 값 빈 문자열 그대로예요. `if`/`elif`/`else`로 점수에 맞는 등급을 `answer`에 넣어 보세요."
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_a.py",
+      "title": "elif 순서가 거꾸로",
+      "expectFail": { "1": "WA", "2": "WA", "3": "WA", "4": "WA", "5": "WA", "9": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA", "outputMatches": "^'D'$" },
+        "text": "60점이 넘으면 전부 `\"D\"`가 됐어요. `if`/`elif`는 **위에서부터** 보고 처음 참인 칸 하나만 실행해요. 95점도 `score >= 60`에서 먼저 걸리니까, 높은 점수 조건부터 차례로 적어 보세요."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "else if",
+      "expectFail": { "1": "RE", "2": "RE", "3": "RE", "4": "RE", "5": "RE", "6": "RE", "7": "RE", "8": "RE", "9": "RE" },
+      "diagnosis": {
+        "when": { "verdict": "RE", "exception": "SyntaxError", "messageMatches": "expected ':'" },
+        "text": "JS 습관이 나왔어요! Python에는 `else if`가 없고, 한 단어로 붙인 `elif`를 써요. `else` 바로 뒤에는 콜론(`:`)이 와야 해서 `expected ':'` 에러가 났어요."
+      }
+    }
+  ],
+  "hints": [
+    "점수 구간이 다섯 개예요. 높은 점수부터 차례로 따져 보세요.",
+    "`if`로 90점 이상을 먼저 보고, 아니면 `elif`로 80점 이상, … 마지막에 `else`로 나머지를 받으세요. 위의 조건에서 걸리지 않은 점수만 아래로 내려와요.",
+    "```python\ndef solution(score):\n    if score >= 90:\n        answer = \"A\"\n    elif score >= ____:\n        answer = \"B\"\n    # 70, 60도 같은 방식으로\n    else:\n        answer = \"F\"\n    return answer\n```"
+  ],
+  "reward": { "xp": 100, "gold": 50 }
+}

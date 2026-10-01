@@ -1,0 +1,47 @@
+{
+  "id": "P0203",
+  "title": "윤년 나무",
+  "kind": "stdin",
+  "enemy": { "name": "달력 부엉이", "sprite": "monster_leap_owl", "attack": 20 },
+  "requires": ["scroll.branch"],
+  "concept": "scroll.branch",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 7,
+  "tests": [
+    { "in": "2024\n", "out": "윤년\n", "public": true, "note": "4의 배수" },
+    { "in": "2023\n", "out": "평년\n", "public": true, "note": "4의 배수가 아님" },
+    { "in": "1900\n", "out": "평년\n", "note": "100의 배수지만 400의 배수가 아님" },
+    { "in": "2000\n", "out": "윤년\n", "note": "400의 배수" },
+    { "in": "2100\n", "out": "평년\n", "note": "100의 배수지만 400의 배수가 아님" },
+    { "in": "1\n", "out": "평년\n", "note": "경계: 최솟값" },
+    { "in": "4\n", "out": "윤년\n", "note": "경계: 가장 작은 윤년" },
+    { "in": "4000\n", "out": "윤년\n", "note": "경계: 최댓값(400의 배수)" }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_a.py",
+      "title": "4의 배수만 확인",
+      "expectFail": { "3": "WA", "5": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA", "onlyHiddenFail": true },
+        "text": "예제는 맞았는데 1900년 같은 해에서 틀렸어요. 4의 배수라도 100의 배수이면 평년이고, 그중 400의 배수만 다시 윤년이에요. 조건 세 개를 `and`와 `or`로 엮어 보세요."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "&&와 ||",
+      "expectFail": { "1": "RE", "2": "RE", "3": "RE", "4": "RE", "5": "RE", "6": "RE", "7": "RE", "8": "RE" },
+      "diagnosis": {
+        "when": { "verdict": "RE", "exception": "SyntaxError" },
+        "text": "JS 습관이 나왔어요! Python에는 `&&`, `||`, `!`가 없어요. 영어 단어 `and`, `or`, `not`으로 바꿔 보세요."
+      }
+    }
+  ],
+  "hints": [
+    "윤년 규칙의 '그리고'와 '또는'을 그대로 조건식으로 옮겨 보세요. 1900년과 2000년을 꼭 따져 보세요.",
+    "`(4의 배수 and 100의 배수가 아님) or 400의 배수`예요. '배수가 아님'은 나머지가 0이 아니라는 뜻이니 `!=`를 써요.",
+    "```python\ny = int(input())\nif (y % 4 == 0 and y % 100 != 0) ____ y % 400 == 0:\n    print(\"윤년\")\nelse:\n    print(\"평년\")\n```"
+  ],
+  "reward": { "xp": 100, "gold": 50 }
+}

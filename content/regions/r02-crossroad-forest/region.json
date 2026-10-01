@@ -1,0 +1,15 @@
+{
+  "id": "r02",
+  "order": 2,
+  "name": "갈림길 숲",
+  "introDialogue": "region_intro",
+  "clearDialogue": "region_clear",
+  "recommended": [
+    { "site": "boj", "id": 2753, "title": "윤년", "level": "B5" },
+    { "site": "boj", "id": 14681, "title": "사분면 고르기", "level": "미확인" },
+    { "site": "boj", "id": 2884, "title": "알람 시계", "level": "미확인" },
+    { "site": "boj", "id": 2739, "title": "구구단", "level": "미확인" },
+    { "site": "boj", "id": 1110, "title": "더하기 사이클", "level": "B1" },
+    { "site": "boj", "id": 11653, "title": "소인수분해", "level": "B1" }
+  ]
+}

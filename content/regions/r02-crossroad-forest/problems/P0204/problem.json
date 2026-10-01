@@ -1,0 +1,44 @@
+{
+  "id": "P0204",
+  "title": "메아리 구구단",
+  "kind": "stdin",
+  "enemy": { "name": "고리 뱀", "sprite": "monster_loop_snake", "attack": 20 },
+  "requires": ["scroll.loop"],
+  "concept": "scroll.loop",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 6,
+  "tests": [
+    {"in": "3 4\n", "out": "3 x 1 = 3\n3 x 2 = 6\n3 x 3 = 9\n3 x 4 = 12\n", "public": true, "note": "기본 동작"},
+    {"in": "7 1\n", "out": "7 x 1 = 7\n", "note": "경계: K = 1"},
+    {"in": "1 9\n", "out": "1 x 1 = 1\n1 x 2 = 2\n1 x 3 = 3\n1 x 4 = 4\n1 x 5 = 5\n1 x 6 = 6\n1 x 7 = 7\n1 x 8 = 8\n1 x 9 = 9\n", "note": "경계: N = 1"},
+    {"in": "12 10\n", "out": "12 x 1 = 12\n12 x 2 = 24\n12 x 3 = 36\n12 x 4 = 48\n12 x 5 = 60\n12 x 6 = 72\n12 x 7 = 84\n12 x 8 = 96\n12 x 9 = 108\n12 x 10 = 120\n", "note": "두 자리 수"},
+    {"in": "100 30\n", "out": "100 x 1 = 100\n100 x 2 = 200\n100 x 3 = 300\n100 x 4 = 400\n100 x 5 = 500\n100 x 6 = 600\n100 x 7 = 700\n100 x 8 = 800\n100 x 9 = 900\n100 x 10 = 1000\n100 x 11 = 1100\n100 x 12 = 1200\n100 x 13 = 1300\n100 x 14 = 1400\n100 x 15 = 1500\n100 x 16 = 1600\n100 x 17 = 1700\n100 x 18 = 1800\n100 x 19 = 1900\n100 x 20 = 2000\n100 x 21 = 2100\n100 x 22 = 2200\n100 x 23 = 2300\n100 x 24 = 2400\n100 x 25 = 2500\n100 x 26 = 2600\n100 x 27 = 2700\n100 x 28 = 2800\n100 x 29 = 2900\n100 x 30 = 3000\n", "note": "경계: 최댓값"}
+  ],
+  "wrong": [
+    {
+      "file": "wrong_b.py",
+      "title": "range(k)는 0부터",
+      "expectFail": { "1": "WA", "2": "WA", "3": "WA", "4": "WA", "5": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA", "outputMatches": "^\\d+ x 0 = 0" },
+        "text": "첫 줄이 `x 0`부터 시작했어요. `range(k)`는 0부터 k - 1까지 세요. 1부터 세려면 `range(1, ...)`처럼 시작 값을 적어 주세요."
+      }
+    },
+    {
+      "file": "wrong_a.py",
+      "title": "range 끝 값 미포함",
+      "expectFail": { "1": "WA", "2": "WA", "3": "WA", "4": "WA", "5": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA" },
+        "text": "마지막 줄이 하나 모자라요. `range(1, k)`는 끝 값 k를 **포함하지 않아서** k - 1에서 멈춰요. K까지 세려면 끝 값을 `k + 1`로 주세요."
+      }
+    }
+  ],
+  "hints": [
+    "같은 모양의 줄을 K번 출력해요. 줄마다 바뀌는 건 곱하는 수 i뿐이에요.",
+    "`for i in range(시작, 끝):`은 시작부터 끝 **바로 앞**까지 세요. 출력은 f-string `f\"{n} x {i} = {n * i}\"`로 만들 수 있어요.",
+    "```python\nn, k = map(int, input().split())\nfor i in range(1, ____):\n    print(f\"{n} x {i} = {n * i}\")\n```"
+  ],
+  "reward": { "xp": 100, "gold": 50 }
+}

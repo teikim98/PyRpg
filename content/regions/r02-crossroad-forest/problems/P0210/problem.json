@@ -1,0 +1,72 @@
+{
+  "id": "P0210",
+  "title": "[보스] 갈림길 수호목",
+  "kind": "stdin",
+  "enemy": { "name": "갈림길 수호목", "sprite": "boss_crossroad_tree", "attack": 40 },
+  "requires": ["scroll.branch", "scroll.loop", "scroll.while", "scroll.gather"],
+  "concept": "scroll.while",
+  "boss": true,
+  "phases": [
+    {
+      "phase": 1,
+      "name": "정확성",
+      "intro": "수호목이 뿌리를 들어 올렸어! 먼저 약수 개수를 정확히 세서 정체를 드러내게 하자. 지금은 N이 1000 이하니까 하나씩 세도 괜찮아!"
+    },
+    {
+      "phase": 2,
+      "name": "시간 결계",
+      "intro": "으악, 시간 결계야! N이 10^12까지 늘어났어. 1부터 N까지 하나씩 나눠 보다간 숲보다 우리가 먼저 멈추겠어. 약수는 짝을 지어 나타난다는 걸 떠올려 봐!"
+    }
+  ],
+  "timeLimitMs": 2000,
+  "budgetUnits": 10,
+  "estimatedMinutes": 20,
+  "tests": [
+    { "in": "12\n", "out": "6\n", "public": true, "phase": 1, "note": "기본 동작" },
+    { "in": "1\n", "out": "1\n", "phase": 1, "note": "경계: 최솟값(1은 완전제곱수)" },
+    { "in": "36\n", "out": "9\n", "phase": 1, "note": "완전제곱수: 6을 한 번만 셈" },
+    { "in": "997\n", "out": "2\n", "phase": 1, "note": "소수" },
+    { "in": "1000\n", "out": "16\n", "phase": 1, "note": "경계: 1페이즈 최댓값" },
+    { "in": "1000000000000\n", "out": "169\n", "phase": 2, "note": "경계: 최댓값(완전제곱수 10^12)" },
+    { "in": "999999999989\n", "out": "2\n", "phase": 2, "note": "10^12 이하에서 가장 큰 소수: √N까지 끝까지 돎" },
+    { "in": "963761198400\n", "out": "6720\n", "phase": 2, "note": "약수가 아주 많은 수" },
+    { "in": "999998000001\n", "out": "567\n", "phase": 2, "note": "큰 완전제곱수(999999의 제곱)" },
+    { "in": "999999999999\n", "out": "256\n", "phase": 2, "note": "√N 바로 아래에 약수가 있는 수" }
+  ],
+  "wrong": [
+    {
+      "file": "slow.py",
+      "title": "1부터 N까지 하나씩 나눠 보기(비효율 답안)",
+      "slow": true,
+      "expectFail": { "6": "TLE", "7": "TLE", "8": "TLE", "9": "TLE", "10": "TLE" },
+      "diagnosis": {
+        "when": { "verdict": "TLE" },
+        "text": "주문은 맞았지만 너무 느려요. N이 10^12이면 1조 번을 나눠 봐야 해요. 1초에 1000만 번씩 나눠도 하루가 넘게 걸려요. 약수는 `i`와 `n // i`로 짝을 지어 나타나니까, `i * i <= n`인 동안만 세어 보세요."
+      }
+    },
+    {
+      "file": "wrong_a.py",
+      "title": "완전제곱수에서 √N을 두 번 셈",
+      "expectFail": { "2": "WA", "3": "WA", "6": "WA", "9": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA", "onlyHiddenFail": true },
+        "text": "짝 세기는 좋았어요! 그런데 36처럼 제곱수일 때는 6 × 6이라서 짝의 두 수가 같아요. `i * i == n`이면 1개만 세어야 해요."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "range 끝 값 미포함",
+      "expectFail": { "1": "WA", "2": "WA", "3": "WA", "6": "WA", "9": "WA", "10": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA" },
+        "text": "가장 큰 짝 하나가 빠졌어요. `range(1, int(n ** 0.5))`는 끝 값 √N을 포함하지 않아요. 12라면 i가 1, 2까지만 돌아서 3 × 4 짝을 놓쳐요. 끝 값을 `+ 1` 하거나 `while i * i <= n:`으로 세어 보세요."
+      }
+    }
+  ],
+  "hints": [
+    "12의 약수를 (1, 12), (2, 6), (3, 4)처럼 곱해서 12가 되는 짝으로 묶어 보세요. 짝의 작은 쪽은 어디까지만 보면 될까요?",
+    "i가 N의 약수이면 `n // i`도 약수예요. 짝의 작은 쪽은 언제나 √N 이하라서 `i * i <= n`인 동안만 세고, 한 번에 2개씩 세면 돼요. 단 `i * i == n`이면 짝의 두 수가 같으니 1개만 세요.",
+    "```python\nn = int(input())\ncount = 0\ni = 1\nwhile i * i <= n:\n    if n % i == 0:\n        if i * i == n:\n            count += 1\n        else:\n            count += ____\n    i += 1\nprint(count)\n```"
+  ],
+  "reward": { "xp": 1000, "gold": 500 }
+}
