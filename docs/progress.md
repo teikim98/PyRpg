@@ -10,7 +10,7 @@
 | Phase 0 리서치 | 완료 | [`research.md`](./research.md) |
 | Phase 1 기획서 | 승인됨(2026-10-01), `main`에 머지 | [`design.md`](./design.md) |
 | Phase 2 버티컬 슬라이스 | 완료(2026-10-01), 피드백 1차 반영, `main`에 머지 | 지역 1 '에코 마을' 전체 플레이 가능. 실행 방법은 [`README.md`](../README.md) |
-| Phase 3 콘텐츠 확장 | **진행 중** | 계획: [`phase3/plan.md`](./phase3/plan.md) |
+| Phase 3 콘텐츠 확장 | **진행 중**: 3-0·3-2(지역 2) 완료, 3-1(시스템 화면) 다음 | 계획: [`phase3/plan.md`](./phase3/plan.md) |
 
 - Git: origin = https://github.com/teikim98/PyRpg. 클라우드 세션에서는 `claude/admiring-pasteur-98frg7` 브랜치에 커밋하고 push합니다. `main`에는 사용자가 요청할 때 머지합니다.
 - 커밋 메시지는 `Phase 3 단위 N: ...`처럼 단계명으로 시작합니다.
@@ -63,6 +63,18 @@
 
 **검증 결과**: 단위 테스트 214개 · `npm run verify`(콘텐츠 258회 오류 0, 맵·아트 OK) · E2E 77개 모두 통과.
 
+### 2026-10-01 클라우드 세션(Phase 3: 단위 3-0, 3-2)
+
+| 단위 | 결과 |
+|---|---|
+| 3-0 설계 질문 반영 | phase3/plan.md §1의 9개 적용: 튜플 답 허용 옵션(`compare.sequenceAsList`, P0108), 함수형 채점에서 `__main__` 블록 미실행, [예제 실행]에 print 출력 표시, AC 순간 승리 저장, 시작 완료 전 입력 차단, 한글 입력 중 Z로 대사 넘김, 빌드마다 오프라인 캐시 교체, 전투에서 공통 대사 2개 사용 |
+| 지역 간 이동 | warp의 `target`·`targetSpawn`. 에코 마을 동쪽 문 ↔ 갈림길 숲 서쪽 문, 새로고침해도 현재 지역 유지, 다른 지역 캠프파이어로 쓰러짐 복귀 |
+| 3-2 지역 2 갈림길 숲 | 레슨 4(L2-1 조건문, L2-2 for·range, L2-3 while·break·continue, L2-4 반복 입력), 문제 10(P0201~P0210, 보스는 약수 개수 √N, budgetUnits 10), 맵 84×24(고리 길, 얼어붙은 개울, 개울 북쪽 숨겨진 길), 새 몬스터 6·보스·NPC 2·숲 타일 12. 실전 추천은 프로그래머스 기초 문제를 아직 확인하지 못해 백준만(링크 비활성) |
+
+**검증 결과**: 단위 테스트 240개 · `npm run verify`(콘텐츠 527회 오류 0, r01·r02 맵, 아트 32개) · E2E 96개 모두 통과. `main` = `103d2f4`.
+
+화면: [`phase3/screens/`](./phase3/screens/) · 아트: [`phase3/art-preview-r02.png`](./phase3/art-preview-r02.png)
+
 ## 3. 다음에 할 일
 
 Phase 3 계획은 [`phase3/plan.md`](./phase3/plan.md)에 있습니다. 순서: 단위 3-0(설계 질문 반영) → 3-1(Phase 2에서 미룬 시스템 화면) → 3-2(지역 2 갈림길 숲) → 이후 지역마다 반복.
@@ -71,7 +83,6 @@ Phase 3 계획은 [`phase3/plan.md`](./phase3/plan.md)에 있습니다. 순서: 
 
 | 항목 | 내용 | 시점 |
 |---|---|---|
-| 공통 대사 2개 미사용 | `fatal_recursion`, `practice_suggest`는 전투 UI가 자체 문구를 써서 쓰이지 않습니다. 전투 UI에 공통 대사를 넘기려면 계약 변경이 필요합니다 | Phase 3 초 |
 | 일일 퀘스트·상점·장비·칭호·그림자 게시판 화면 | 규칙과 저장 형식만 있고 화면은 없습니다(design.md §13 메모대로) | Phase 3 초 |
 | 실제 OS 한글 입력기 | 자동화(CDP)로는 정상. Windows·macOS 한글 입력기로 직접 확인 필요 | 플레이 피드백 때 |
 | Firefox·Safari | Chromium에서만 검증 | Phase 3 |
