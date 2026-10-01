@@ -93,8 +93,9 @@ export class App {
     // 실행기는 처음 몇 초가 걸리므로 미리 부팅한다(13 MB, research.md §3.2.2)
     void this.deps.runner.init().catch((e) => console.error("실행기 부팅 실패", e));
 
+    // 지역 첫 대사는 기다리지 않는다(start는 화면 준비가 끝나면 바로 돌아온다)
     if (isNew || !this.save.flags[`region.${this.region.id}.intro`]) {
-      await this.guard(async () => {
+      void this.guard(async () => {
         this.save.flags[`region.${this.region.id}.intro`] = true;
         if (this.region.introDialogue) await this.say(this.region.introDialogue);
         await this.persist();

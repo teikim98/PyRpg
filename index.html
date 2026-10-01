@@ -3,10 +3,40 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:," />
     <title>PyRpg</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #070a17;
+        overflow: hidden;
+      }
+      #app {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+      }
+      #game {
+        position: absolute;
+        inset: 0;
+      }
+      #boot {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        color: #f1ecd6;
+        font: 16px monospace;
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div id="game"></div>
+      <div id="boot">에코 마을로 가는 중…</div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

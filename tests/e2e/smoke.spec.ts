@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test("page boots cross-origin isolated", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/?e2e");
   await page.waitForFunction(() => (window as any).__pyrpg?.ready === true);
   expect(await page.evaluate(() => self.crossOriginIsolated)).toBe(true);
 });
