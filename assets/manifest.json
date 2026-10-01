@@ -1,0 +1,160 @@
+{
+  "tileSize": 16,
+  "tilesets": {
+    "overworld": {
+      "file": "tiles/overworld.png",
+      "columns": 8,
+      "tiles": [
+        "grass",
+        "grass_flower",
+        "path",
+        "plaza_stone",
+        "water",
+        "well",
+        "tree",
+        "bush",
+        "house_wall",
+        "house_roof",
+        "house_door",
+        "house_window",
+        "fence",
+        "wall_stone",
+        "floor_wood",
+        "floor_stone",
+        "stairs",
+        "clocktower_wall",
+        "clocktower_door",
+        "lamp_post",
+        "crate",
+        "market_stall",
+        "flower_bed",
+        "dark_floor"
+      ],
+      "blocking": [
+        "water",
+        "well",
+        "tree",
+        "house_wall",
+        "house_roof",
+        "house_window",
+        "fence",
+        "wall_stone",
+        "clocktower_wall",
+        "lamp_post",
+        "crate",
+        "market_stall",
+        "flower_bed",
+        "bush"
+      ]
+    }
+  },
+  "sprites": {
+    "player": {
+      "file": "sprites/player.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "nuri": {
+      "file": "sprites/nuri.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "npc_merchant": {
+      "file": "sprites/npc_merchant.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "npc_villager": {
+      "file": "sprites/npc_villager.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "npc_child": {
+      "file": "sprites/npc_child.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_type_slime": {
+      "file": "sprites/monster_type_slime.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_remainder_bat": {
+      "file": "sprites/monster_remainder_bat.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_iron_mole": {
+      "file": "sprites/monster_iron_mole.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_echo_ghost": {
+      "file": "sprites/monster_echo_ghost.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_sep_sprite": {
+      "file": "sprites/monster_sep_sprite.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_clock_beetle": {
+      "file": "sprites/monster_clock_beetle.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "boss_stair_mimic": {
+      "file": "sprites/boss_stair_mimic.png",
+      "frameWidth": 32,
+      "frameHeight": 32
+    },
+    "obj_chest": {
+      "file": "sprites/obj_chest.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "obj_sign": {
+      "file": "sprites/obj_sign.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "obj_campfire": {
+      "file": "sprites/obj_campfire.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "obj_rune": {
+      "file": "sprites/obj_rune.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "obj_door": {
+      "file": "sprites/obj_door.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    }
+  },
+  "portraits": {
+    "portrait_nuri_neutral": {
+      "file": "portraits/nuri_neutral.png",
+      "size": 48
+    },
+    "portrait_nuri_happy": {
+      "file": "portraits/nuri_happy.png",
+      "size": 48
+    },
+    "portrait_nuri_worried": {
+      "file": "portraits/nuri_worried.png",
+      "size": 48
+    },
+    "portrait_nuri_surprised": {
+      "file": "portraits/nuri_surprised.png",
+      "size": 48
+    },
+    "portrait_nuri_serious": {
+      "file": "portraits/nuri_serious.png",
+      "size": 48
+    }
+  }
+}

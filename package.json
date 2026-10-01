@@ -1,0 +1,36 @@
+{
+  "name": "pyrpg",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "verify": "python3 tools/verify_samples.py"
+  },
+  "dependencies": {
+    "@codemirror/commands": "6.11.1",
+    "@codemirror/lang-python": "6.2.1",
+    "@codemirror/language": "6.12.4",
+    "@codemirror/state": "6.7.6",
+    "@codemirror/view": "6.43.13",
+    "@kfonts/neodgm-code": "0.5.0",
+    "codemirror": "6.0.2",
+    "galmuri": "2.40.3",
+    "idb": "8.0.3",
+    "phaser": "4.2.1",
+    "pyodide": "314.0.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "22.20.4",
+    "typescript": "6.0.3",
+    "vite": "8.3.1",
+    "vite-plugin-static-copy": "4.1.1",
+    "vitest": "5.0.3"
+  }
+}
