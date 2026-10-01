@@ -49,7 +49,7 @@
       "expectFail": { "6": "RE", "7": "RE" },
       "diagnosis": {
         "when": { "verdict": "RE", "exception": "ValueError", "messageMatches": "Exceeds the limit" },
-        "text": "Python은 4300자리가 넘는 정수를 문자열로 바꾸는 것을 기본으로 막아 둬요. 코드 맨 위에서 `import sys` 후 `sys.set_int_max_str_digits(0)`으로 제한을 풀어 주세요."
+        "text": "Python은 4300자리가 넘는 정수를 문자열로 바꾸는 걸 기본으로 막아 둬. 코드 맨 위에서 `import sys` 후 `sys.set_int_max_str_digits(0)`으로 제한을 풀어 줘."
       }
     },
     {
@@ -58,13 +58,13 @@
       "expectFail": { "1": "RE", "2": "RE", "3": "RE", "4": "RE", "5": "RE", "6": "RE", "7": "RE" },
       "diagnosis": {
         "when": { "verdict": "RE", "exception": "TypeError", "messageMatches": "unsupported operand" },
-        "text": "`input().split()`이 준 값은 문자열이라서 `**`로 거듭제곱할 수 없어요. 먼저 `int()`로 바꿔 주세요."
+        "text": "`input().split()`이 준 값은 문자열이라서 `**`로 거듭제곱할 수 없어. 먼저 `int()`로 바꿔 줘."
       }
     }
   ],
   "hints": [
-    "숫자를 문자열로 바꾸면 글자 수가 곧 자릿수예요. 큰 수에서 에러가 나면 에러 메시지를 끝까지 읽어 보세요.",
-    "`len(str(a ** b))`가 자릿수예요. 4300자리가 넘는 수는 `sys.set_int_max_str_digits(0)`으로 제한을 풀어야 문자열로 바꿀 수 있어요.",
+    "숫자를 문자열로 바꾸면 글자 수가 곧 자릿수야. 큰 수에서 에러가 나면 에러 메시지를 끝까지 읽어 봐.",
+    "`len(str(a ** b))`가 자릿수야. 4300자리가 넘는 수는 `sys.set_int_max_str_digits(0)`으로 제한을 풀어야 문자열로 바꿀 수 있어.",
     "```python\nimport sys\nsys.set_int_max_str_digits(____)\na, b = map(int, input().split())\nprint(len(str(a ** b)))\n```"
   ],
   "reward": { "xp": 100, "gold": 50 }

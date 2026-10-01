@@ -317,7 +317,7 @@ test.describe.serial("지역 2 갈림길 숲 전체 플레이", () => {
     await typeCode(page, wrong);
     await cast(page);
     await expect(page.locator(".fb-test.verdict-WA").first()).toBeVisible();
-    await expect(page.locator(".battle-msg-text")).toContainText("짝수인데도 오른쪽으로 갔어요");
+    await expect(page.locator(".battle-msg-text")).toContainText("짝수인데도 오른쪽으로 갔어.");
     // 반격은 실패한 테스트 비율만큼(공격력 20, 7개 중 4개 실패 → 11)
     await expect(page.locator(".battle-msg-text .counter")).toContainText("HP −11");
     await expect(page.locator(".player-hp-text")).toHaveText(`${maxHp - 11}/${maxHp}`);
@@ -444,13 +444,13 @@ test.describe.serial("지역 2 갈림길 숲 전체 플레이", () => {
     await expect(page.locator(".time-gauge")).toHaveClass(/is-over/);
     await expect(page.locator(".time-gauge-text")).toHaveText("초과!");
     await expect(page.locator(".fb")).toContainText("TLE");
-    await expect(page.locator(".battle-msg-text")).toContainText("너무 느려요");
+    await expect(page.locator(".battle-msg-text")).toContainText("너무 느려.");
     await expect(page.locator(".battle-msg-text")).not.toContainText("폭발");
     await shot(page, "r02-play-boss-phase2.png");
     // 완전제곱수를 두 번 센 풀이 → WA(숨김 테스트)와 진단
     await typeCode(page, code("P0210", "wrong_a.py"));
     await cast(page);
-    await expect(page.locator(".battle-msg-text")).toContainText("짝의 두 수가 같아요");
+    await expect(page.locator(".battle-msg-text")).toContainText("짝의 두 수가 같아.");
     // √N 풀이 → 승리
     await typeCode(page, solution("P0210"));
     await cast(page);

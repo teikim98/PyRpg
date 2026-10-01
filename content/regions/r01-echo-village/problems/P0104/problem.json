@@ -49,7 +49,7 @@
       "expectFail": { "1": "WA", "3": "WA", "4": "WA" },
       "diagnosis": {
         "when": { "verdict": "WA", "outputMatches": "\\n[\\s\\S]*\\S" },
-        "text": "readline이 읽은 개행 문자까지 함께 반복됐어요. `s`를 `.strip()`으로 정리해 보세요."
+        "text": "readline이 읽은 개행 문자까지 함께 반복됐어. `s`를 `.strip()`으로 정리해 봐."
       }
     },
     {
@@ -58,13 +58,13 @@
       "expectFail": { "1": "RE", "2": "RE", "3": "RE", "4": "RE" },
       "diagnosis": {
         "when": { "verdict": "RE", "exception": "TypeError", "messageMatches": "can't multiply sequence by non-int" },
-        "text": "문자열에 문자열을 곱하려고 했어요. 반복 횟수 `n`을 `int()`로 바꿔 주세요."
+        "text": "문자열에 문자열을 곱하려고 했어. 반복 횟수 `n`을 `int()`로 바꿔 줘."
       }
     }
   ],
   "hints": [
-    "readline이 돌려준 문자열 끝에 무엇이 붙어 있는지 `print(repr(s))`로 확인해 보세요.",
-    "`.strip()`으로 개행을 지우고, 문자열에 정수를 곱하면 그 횟수만큼 반복됩니다.",
+    "readline이 돌려준 문자열 끝에 뭐가 붙어 있는지 `print(repr(s))`로 확인해 봐.",
+    "`.strip()`으로 개행을 지워. 그리고 문자열에 정수를 곱하면 그 횟수만큼 반복돼.",
     "`print(s.strip() * ____)`"
   ],
   "reward": { "xp": 100, "gold": 50 }

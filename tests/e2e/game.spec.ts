@@ -290,7 +290,7 @@ test.describe.serial("지역 1 전체 플레이", () => {
     await typeCode(page, wrong);
     await cast(page);
     await expect(page.locator(".fb-test.verdict-WA").first()).toBeVisible();
-    await expect(page.locator(".battle-msg-text")).toContainText("input()은 문자열을 돌려줘요");
+    await expect(page.locator(".battle-msg-text")).toContainText("input()은 문자열을 돌려줘.");
     await expect(page.locator(".battle-msg-text .counter")).toContainText("HP −20");
     await expect(page.locator(".player-hp-text")).toHaveText(`${maxHp - 20}/${maxHp}`);
     expect(await editorText(page)).toBe(wrong);
@@ -383,7 +383,7 @@ test.describe.serial("지역 1 전체 플레이", () => {
     await expect(page.locator(".time-gauge")).toHaveClass(/is-over/);
     await expect(page.locator(".time-gauge-text")).toHaveText("초과!");
     await expect(page.locator(".fb")).toContainText("TLE");
-    await expect(page.locator(".battle-msg-text")).toContainText("너무 느려요");
+    await expect(page.locator(".battle-msg-text")).toContainText("너무 느려.");
     // TLE를 '폭발'(RE)로 말하지 않는다
     await expect(page.locator(".battle-msg-text")).not.toContainText("폭발");
     await expect(page.locator(".battle-msg-text .err-line")).toHaveText("4번째 줄");
