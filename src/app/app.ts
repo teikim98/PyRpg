@@ -1,8 +1,9 @@
 // 앱 계층: 월드·UI·실행기·진행 규칙·저장을 연결한다(design.md §4 게임 루프).
 // 월드는 그리기와 입력만, UI는 화면만, 규칙은 src/systems의 순수 함수가 맡고, 여기서는 순서만 정한다.
-import type { DialogueLine, GameContent, Lesson, Problem, Region } from "../contracts/content";
+import type { DialogueLine, GameContent, ItemDef, Lesson, Problem, Region } from "../contracts/content";
+import type { PythonRunner } from "../contracts/runner";
 import type { BattleOutcome, Facing, SaveData } from "../contracts/state";
-import type { BattleProgress, NameContext, UiServices } from "../contracts/ui";
+import type { BattleProgress, BoardView, EquipmentView, NameContext, QuestPanelView, ShopView, StreakView, TitlesView, UiServices } from "../contracts/ui";
 import type { MapObjectDef, WorldController, WorldFactory } from "../contracts/world";
 import { OPPOSITE } from "../game/grid";
 import { diagnoseResult } from "../python/diagnose";
@@ -11,15 +12,49 @@ import type { PythonRunnerHandle } from "../python/runner";
 import { createAutosaver, exportSave, importSave, type Autosaver, type SaveStore } from "../state";
 import { createNewSave } from "../state/newGame";
 import {
+  accessorySlots,
   applyBattleOutcome,
+  applyQuestEvent,
+  awardTitles,
+  boardShadows,
+  buyItem,
   completeLesson,
+  currentStreak,
+  DAILY_SHADOW_LIMIT,
+  dueShadows,
+  EMBER_THRESHOLD,
   emptyRecord,
+  ensureDailyQuests,
+  equipmentEffects,
   hudState,
+  itemsRewardedBy,
+  lastStreakRepair,
   levelFromXp,
+  MAX_PROTECTIONS,
   maxHp,
+  owned,
+  purifiedShadows,
+  questProgress,
+  REPAIR_BATTLES,
+  repairOffer,
   restAtCampfire,
+  returnCleared,
   settleOnLoad,
+  shadowProblem,
+  shadowsFoughtToday,
+  shopState,
+  tintColor,
+  TIME_BARRIER_FLAG,
+  todayCount,
+  toggleAccessory,
+  toggleCosmetic,
+  usePotion,
+  waitingShadows,
+  WEEK_GOAL,
+  weekDays,
   type BattleEvent,
+  type QuestEvent,
+  type QuestContext,
 } from "../systems";
 import { checkRequires, missingScrolls } from "./requires";
 import { arrivalSpot } from "./travel";
@@ -54,6 +89,10 @@ export class App {
    */
   private saveBlocked: string | null = null;
   private readonly now: () => Date;
+  /** 전투·퀘스트·칭호 처리 중에 모은 알림(창이 닫힌 뒤 토스트로) */
+  private notices: string[] = [];
+  /** 퀘스트 보상으로 오른 레벨(알림을 띄울 때 레벨업 대사) */
+  private pendingLevel: number | null = null;
 
   constructor(private readonly deps: AppDeps) {
     this.now = deps.now ?? (() => new Date());
@@ -128,6 +167,11 @@ export class App {
     });
     addEventListener("pagehide", leave);
 
+    // 오늘의 퀘스트, 이미 이룬 칭호(옛 저장 포함), 꾸미기 색
+    this.ensureQuests();
+    this.checkTitles();
+    this.applyTints();
+
     try {
       await this.persist();
     } catch (e) {
@@ -139,6 +183,8 @@ export class App {
       this.deps.ui.hud.toast(`저장 데이터를 읽지 못했어(${this.saveBlocked}). 원래 데이터를 지키려고 이번 플레이는 저장하지 않아. 메뉴에서 불러오기나 처음부터를 고를 수 있어.`);
     }
     this.refreshHud();
+    for (const n of this.notices.splice(0)) this.deps.ui.hud.toast(n);
+    this.pendingLevel = null;
     // 실행기는 처음 몇 초가 걸리므로 미리 부팅한다(13 MB, research.md §3.2.2)
     void this.deps.runner.init().catch((e) => console.error("실행기 부팅 실패", e));
 
@@ -207,6 +253,12 @@ export class App {
       case "monster":
         await this.fight(o);
         break;
+      case "board":
+        await this.openBoard();
+        break;
+      case "shop":
+        await this.openShop();
+        break;
       default:
         break;
     }
@@ -233,8 +285,9 @@ export class App {
     if (first) await this.say(`lesson_${lesson.id}_intro`);
     const { completed } = await this.deps.ui.lesson.open(lesson, this.deps.runner, this.names);
     if (!completed) return;
-    const r = completeLesson(this.save, lesson);
+    const r = completeLesson(this.save, lesson, { maxHpBonus: this.hpBonus() });
     this.save = r.save;
+    if (r.firstTime) this.questEvent({ type: "lesson" });
     await this.persist();
     this.refreshHud();
     if (r.firstTime) {
@@ -242,6 +295,7 @@ export class App {
       await this.say(`lesson_${lesson.id}_done`);
       if (r.levelAfter > r.levelBefore) await this.levelUp(r.levelAfter);
     }
+    await this.flushNotices();
   }
 
   private async openChest(o: MapObjectDef): Promise<void> {
@@ -312,10 +366,12 @@ export class App {
 
   private async rest(): Promise<void> {
     const pos = this.world.getPlayerPosition();
-    this.save = restAtCampfire(this.save, { regionId: this.region.id, x: pos.x, y: pos.y });
+    this.save = restAtCampfire(this.save, { regionId: this.region.id, x: pos.x, y: pos.y }, { maxHpBonus: this.hpBonus() });
+    this.questEvent({ type: "rest" });
     await this.persist();
     this.refreshHud();
     await this.sayCommon("campfire_rest");
+    await this.flushNotices();
   }
 
   // ───────────── 전투 ─────────────
@@ -328,13 +384,33 @@ export class App {
       await this.sayCommon("need_scroll");
       return;
     }
+    await this.runBattle(problem, { object: o });
+  }
+
+  /** 그림자 게시판에서 고른 그림자와 싸운다(design.md §7.6). 변형 문제를 돌려 쓰고 보상은 50% */
+  private async fightShadow(concept: string): Promise<void> {
+    const entry = this.save.shadows.find((s) => s.concept === concept);
+    if (!entry) return;
+    const original = this.allProblems().find((p) => p.id === entry.problemId) ?? this.allProblems().find((p) => p.concept === concept);
+    if (!original) {
+      this.deps.ui.hud.toast("이 그림자의 문제를 찾지 못했어.");
+      return;
+    }
+    await this.runBattle(shadowProblem(original, this.save.history), { shadow: true });
+  }
+
+  /** 전투 한 판: 전투 창 → 결과 적용 → 저장 → 보상·대사. object는 맵 몬스터(그림자전은 없음) */
+  private async runBattle(problem: Problem, opts: { object?: MapObjectDef; shadow?: boolean }): Promise<void> {
+    const shadow = opts.shadow === true;
     if (!this.deps.runner.isReady()) {
       this.deps.ui.hud.toast("마력을 모으는 중이야… 잠깐만!");
       await this.deps.runner.init();
     }
-    const rec = this.save.problems[problem.id] ?? emptyRecord();
-    this.save.problems[problem.id] = rec;
+    const rec = shadow ? emptyRecord() : (this.save.problems[problem.id] ?? emptyRecord());
+    if (!shadow) this.save.problems[problem.id] = rec;
     const level = levelFromXp(this.save.player.xp);
+    const fx = this.effects();
+    const potion = this.potionItem();
     // 전투 도중의 자동 저장: 힌트·해설서·반격이 있었으면 '지금 후퇴(HP 0이면 쓰러짐)했다면'의 결과를 저장한다.
     // 그러지 않으면 새로고침으로 힌트 대가·해설서(보상 0)·쓰러짐 기록을 지울 수 있다(§5.3, §7.6)
     let progress: BattleProgress | null = null;
@@ -349,11 +425,11 @@ export class App {
           attempts: progress.attempts,
           maxHintLevel: progress.maxHintLevel,
           solutionViewed: progress.solutionViewed,
-          finalCode: this.save.problems[problem.id]?.draft ?? problem.starter,
+          finalCode: shadow ? "" : (this.save.problems[problem.id]?.draft ?? problem.starter),
           hpLeft: progress.hp,
           elapsedMs: 0,
         };
-        data = applyBattleOutcome(this.save, problem, provisional, this.now()).save;
+        data = applyBattleOutcome(this.save, problem, provisional, this.now(), { shadow, maxHpBonus: fx.maxHpBonus }).save;
       }
       this.scheduleSave(data);
       if (now) void this.autosaver.flush();
@@ -363,15 +439,17 @@ export class App {
       runner: this.deps.runner,
       companion: this.deps.content.companion,
       names: this.names,
-      player: { hp: this.save.player.hp, maxHp: maxHp(level) },
-      draft: rec.draft,
-      knockouts: rec.knockouts,
-      hintLevel: rec.maxHintLevel,
-      regionOrder: this.region.order,
+      player: { hp: this.save.player.hp, maxHp: maxHp(level, fx.maxHpBonus) },
+      draft: shadow ? undefined : rec.draft,
+      knockouts: shadow ? 0 : rec.knockouts,
+      hintLevel: shadow ? 0 : rec.maxHintLevel,
+      regionOrder: this.regionOrderOf(problem),
       traceback: this.deps.content.traceback,
       explain: explainError,
       diagnose: diagnoseResult,
       onDraft: (code) => {
+        // 그림자전의 코드는 남기지 않는다(다음에도 빈 상태에서 떠올려 보도록)
+        if (shadow) return;
         this.save.problems[problem.id] = { ...(this.save.problems[problem.id] ?? emptyRecord()), draft: code };
         saveDuringBattle(false);
       },
@@ -382,12 +460,24 @@ export class App {
       },
       onVictory: (v) => {
         if (won) return;
-        won = this.applyBattle(problem, o, v);
+        won = this.applyBattle(problem, opts.object, v, shadow);
         this.persist().catch((e) => console.error("승리 저장 실패", e));
       },
       companionLines: {
         fatalRecursion: this.deps.content.commonDialogues.fatal_recursion,
         practiceSuggest: this.deps.content.commonDialogues.practice_suggest,
+      },
+      shadow,
+      perks: {
+        freeHint2: fx.guideFeather,
+        targetComplexity: fx.targetComplexity ? problem.targetComplexity : undefined,
+      },
+      potions: potion ? { count: owned(this.save, potion.id), heal: potion.heal ?? 0, name: potion.name } : undefined,
+      onUsePotion: () => {
+        if (!potion) return;
+        const next = usePotion(this.save, potion.id);
+        if (next) this.save = next;
+        saveDuringBattle(true);
       },
     });
     let result: ReturnType<typeof applyBattleOutcome>;
@@ -395,28 +485,52 @@ export class App {
       result = won;
       // 배너를 누르는 사이에 바뀐 작성 코드만 반영한다(보상·기록은 이미 적용됨)
       const r = this.save.problems[problem.id];
-      if (r) r.draft = outcome.finalCode;
+      if (r && !shadow) r.draft = outcome.finalCode;
     } else {
-      result = this.applyBattle(problem, o, outcome);
+      result = this.applyBattle(problem, opts.object, outcome, shadow);
     }
     await this.persist();
     this.refreshHud();
-    await this.afterBattle(problem, o, result.events, result.summary);
+    await this.afterBattle(problem, opts.object, result.events, result.summary, shadow);
+    await this.flushNotices();
   }
 
-  /** 전투 결과를 저장 데이터에 적용한다(저장은 부르는 쪽에서) */
-  private applyBattle(problem: Problem, o: MapObjectDef, outcome: BattleOutcome): ReturnType<typeof applyBattleOutcome> {
-    const result = applyBattleOutcome(this.save, problem, outcome, this.now());
+  /** 전투 결과를 저장 데이터에 적용한다(저장은 부르는 쪽에서). 승리면 퀘스트·칭호·보상 아이템까지 */
+  private applyBattle(problem: Problem, o: MapObjectDef | undefined, outcome: BattleOutcome, shadow = false): ReturnType<typeof applyBattleOutcome> {
+    const result = applyBattleOutcome(this.save, problem, outcome, this.now(), { shadow, maxHpBonus: this.hpBonus() });
     this.save = result.save;
-    if (outcome.result === "victory" && !this.save.removedObjects.includes(o.id)) this.save.removedObjects.push(o.id);
+    if (outcome.result !== "victory") return result;
+    if (o && !this.save.removedObjects.includes(o.id)) this.save.removedObjects.push(o.id);
+    if (shadow) {
+      this.questEvent({ type: "shadow" });
+    } else {
+      const rec = this.save.problems[problem.id];
+      this.questEvent({ type: "win", maxHintLevel: rec?.maxHintLevel ?? outcome.maxHintLevel, attempts: rec?.attempts ?? outcome.attempts });
+      if (outcome.timeBarrierFirstTry) this.save.flags[TIME_BARRIER_FLAG] = true;
+      // 보스 보상 장신구(예: 지역 2 보스 → 길잡이 깃털)
+      if (result.events.some((e) => e.type === "victory" && e.firstClear)) {
+        for (const item of itemsRewardedBy(this.deps.content.items, problem.id)) {
+          if (owned(this.save, item.id) > 0) continue;
+          this.save.inventory[item.id] = 1;
+          this.notices.push(`${item.name}을(를) 얻었다! 메뉴 > 장비에서 장착할 수 있어.`);
+        }
+      }
+    }
+    this.checkTitles();
     return result;
   }
 
-  private async afterBattle(problem: Problem, o: MapObjectDef, events: BattleEvent[], summary: Parameters<UiServices["reward"]["show"]>[0]): Promise<void> {
+  private async afterBattle(
+    problem: Problem,
+    o: MapObjectDef | undefined,
+    events: BattleEvent[],
+    summary: Parameters<UiServices["reward"]["show"]>[0],
+    shadow = false,
+  ): Promise<void> {
     const ui = this.deps.ui;
     for (const e of events) {
       if (e.type === "victory") {
-        await this.world.removeObject(o.id, "purify");
+        if (o) await this.world.removeObject(o.id, "purify");
         await ui.reward.show(summary, problem);
       }
     }
@@ -431,7 +545,8 @@ export class App {
           break;
         }
         case "retreat": {
-          // 몬스터를 등지게 돌려세운다(바로 Space를 눌러 다시 붙지 않도록)
+          // 몬스터를 등지게 돌려세운다(바로 Space를 눌러 다시 붙지 않도록). 그림자전은 게시판 앞이라 그대로
+          if (shadow) break;
           const pos = this.world.getPlayerPosition();
           this.world.teleport(pos.x, pos.y, OPPOSITE[pos.facing]);
           this.save.location = { regionId: this.region.id, x: pos.x, y: pos.y, facing: OPPOSITE[pos.facing] };
@@ -452,18 +567,21 @@ export class App {
           break;
       }
     }
-    if (problem.boss && events.some((e) => e.type === "victory")) await this.clearRegion();
+    if (!shadow && problem.boss && events.some((e) => e.type === "victory")) await this.clearRegion();
   }
 
   private async clearRegion(): Promise<void> {
     const flag = `region.${this.region.id}.clear`;
     const first = !this.save.flags[flag];
     this.save.flags[flag] = true;
+    // 지역 해방자 칭호(§7.4)
+    this.checkTitles();
     await this.persist();
     if (!first) return;
     await this.say("boss_defeated");
     if (this.region.clearDialogue) await this.say(this.region.clearDialogue);
     await this.deps.ui.reward.showRecommended(this.region.name, this.region.recommended, this.deps.bojBaseUrl);
+    await this.flushNotices();
   }
 
   private async levelUp(level: number): Promise<void> {
@@ -477,7 +595,36 @@ export class App {
     await this.deps.ui.menu.open({
       openCodex: async () => {
         const lessons = this.allLessons().filter((l) => this.save.lessonsCompleted.includes(l.id));
-        await this.deps.ui.codex.open(lessons, this.deps.runner, this.names);
+        // 코덱스에서 예제를 실행했는지 본다(일일 퀘스트 '코덱스 레슨 다시 실행')
+        let ran = false;
+        const r = this.deps.runner;
+        const tracked: PythonRunner = {
+          init: () => r.init(),
+          isReady: () => r.isReady(),
+          run: async (req) => {
+            const out = await r.run(req);
+            ran = true;
+            return out;
+          },
+          judge: (p, c, o) => r.judge(p, c, o),
+          referenceMs: () => r.referenceMs(),
+          dispose: () => r.dispose(),
+        };
+        const purified = purifiedShadows(this.save).map((e) => ({ concept: e.concept, name: this.conceptName(e.concept), returnCleared: returnCleared(e) }));
+        await this.deps.ui.codex.open(lessons, tracked, this.names, { purified });
+        if (ran) {
+          this.questEvent({ type: "codexRun" });
+          await this.persist();
+          this.refreshHud();
+          await this.flushNotices();
+        }
+      },
+      openEquipment: () => this.openEquipment(),
+      openTitles: () => this.openTitles(),
+      openQuests: async () => {
+        this.ensureQuests();
+        this.refreshHud();
+        await this.deps.ui.board.openQuests({ quests: this.questPanelView(), streak: this.streakView() });
       },
       exportSave: async () => {
         await this.autosaver.flush();
@@ -522,6 +669,278 @@ export class App {
       throw e;
     }
     return this.save;
+  }
+
+  // ───────────── 그림자 게시판·상점·장비·칭호(design.md §7.2~§7.6) ─────────────
+
+  private async openBoard(): Promise<void> {
+    this.ensureQuests();
+    this.refreshHud();
+    const concept = await this.deps.ui.board.open(this.boardView(), this.names);
+    if (concept) await this.fightShadow(concept);
+  }
+
+  boardView(): BoardView {
+    const now = this.now();
+    return {
+      shadows: boardShadows(this.save, now).map((s) => ({
+        concept: s.entry.concept,
+        name: this.conceptName(s.entry.concept),
+        box: s.entry.box,
+        due: s.entry.due,
+        overdueDays: s.overdueDays,
+        nextIntervalDays: s.nextIntervalDays,
+        returning: s.returning,
+      })),
+      waiting: waitingShadows(this.save, now),
+      foughtToday: shadowsFoughtToday(this.save.history, now),
+      dailyLimit: DAILY_SHADOW_LIMIT,
+      quests: this.questPanelView(),
+      streak: this.streakView(),
+    };
+  }
+
+  private questPanelView(): QuestPanelView {
+    const qc = this.deps.content.quests;
+    const st = this.save.quests;
+    const ids = st?.ids ?? [];
+    return {
+      date: st?.date ?? "",
+      quests: ids.map((id, i) => {
+        const q = qc.pool.find((d) => d.id === id);
+        return { id, text: q?.text ?? id, progress: st!.progress[i] ?? 0, count: q?.count ?? 1, done: st!.claimed[i] === true };
+      }),
+      reward: qc.reward,
+      chest: {
+        gold: qc.chest.gold,
+        items: Object.entries(qc.chest.items).map(([id, count]) => ({ name: this.item(id)?.name ?? id, count })),
+        claimed: st?.chest === true,
+      },
+    };
+  }
+
+  private streakView(): StreakView {
+    const now = this.now();
+    const st = this.save.streak;
+    const offer = repairOffer(st, now, lastStreakRepair(this.save.flags));
+    const view: StreakView = {
+      weekDays: weekDays(st, now),
+      weekGoal: WEEK_GOAL,
+      streak: currentStreak(st, now),
+      embers: st.embers,
+      iceRunes: st.iceRunes,
+      maxProtections: MAX_PROTECTIONS,
+      todayCount: todayCount(st, now),
+      emberThreshold: EMBER_THRESHOLD,
+    };
+    if (offer) view.repair = { missedDays: offer.missedDays, previousStreak: offer.previousStreak, battlesLeft: Math.max(0, REPAIR_BATTLES - todayCount(st, now)) };
+    return view;
+  }
+
+  private async openShop(): Promise<void> {
+    await this.deps.ui.shop.open(
+      () => this.shopView(),
+      async (id) => {
+        const item = this.item(id);
+        if (!item) throw new Error("없는 물건이야");
+        this.save = buyItem(this.save, item);
+        await this.persist();
+        this.refreshHud();
+        if (item.kind === "accessory") return `${item.name}을(를) 샀어! 메뉴의 장비에서 장착해 봐.`;
+        if (item.kind === "cosmetic") return `${item.name}을(를) 샀어! 메뉴의 장비 → 꾸미기에서 적용할 수 있어.`;
+        if (item.kind === "iceRune") return `얼음 룬을 샀어! 빠진 날이 생기면 스트릭을 지켜 줄 거야.`;
+        return `${item.name}을(를) 샀어! (보유 ${owned(this.save, item.id)})`;
+      },
+      this.names,
+    );
+  }
+
+  shopView(): ShopView {
+    const entries: ShopView["entries"] = [];
+    for (const item of this.deps.content.items) {
+      const state = shopState(this.save, item);
+      if (!state) continue;
+      entries.push({
+        id: item.id,
+        name: item.name,
+        kind: item.kind,
+        description: item.description,
+        price: item.price!,
+        state,
+        minLevel: item.minLevel ?? 1,
+        have: item.kind === "consumable" ? owned(this.save, item.id) : item.kind === "iceRune" ? this.save.streak.iceRunes : undefined,
+        pending: item.pending,
+        tint: item.tint,
+      });
+    }
+    return { gold: this.save.player.gold, level: levelFromXp(this.save.player.xp), entries };
+  }
+
+  private async openEquipment(): Promise<void> {
+    await this.deps.ui.equipment.open(() => this.equipmentView(), {
+      toggleAccessory: async (id) => {
+        const item = this.item(id);
+        if (!item) throw new Error("없는 장신구야");
+        const r = toggleAccessory(this.save, item);
+        this.save = r.save;
+        // 망토를 빼면 최대 HP가 줄어든다
+        this.save.player.hp = Math.min(this.save.player.hp, maxHp(levelFromXp(this.save.player.xp), this.hpBonus()));
+        await this.persist();
+        this.refreshHud();
+        return r.equipped ? `${item.name} 장착!` : `${item.name}을(를) 뺐어.`;
+      },
+      toggleCosmetic: async (id) => {
+        const item = this.item(id);
+        if (!item) throw new Error("없는 아이템이야");
+        const r = toggleCosmetic(this.save, item);
+        this.save = r.save;
+        this.applyTints();
+        await this.persist();
+        return r.applied ? `${item.name} 적용!` : `원래 색으로 되돌렸어.`;
+      },
+    });
+  }
+
+  equipmentView(): EquipmentView {
+    const level = levelFromXp(this.save.player.xp);
+    const slots = accessorySlots(level);
+    const items = this.deps.content.items;
+    const view = (i: ItemDef) => ({
+      id: i.id,
+      name: i.name,
+      description: i.description,
+      owned: owned(this.save, i.id) > 0,
+      equipped: i.kind === "accessory" ? this.save.equipment.includes(i.id) : this.save.cosmetics?.[i.target ?? "player"] === i.id,
+      pending: i.pending === true,
+      source: i.source ?? (i.price !== undefined ? "상점" : undefined),
+      tint: i.tint,
+    });
+    return {
+      level,
+      slots,
+      nextSlotLevel: slots === 1 ? 10 : slots === 2 ? 20 : undefined,
+      accessories: items.filter((i) => i.kind === "accessory").map(view),
+      cosmetics: items.filter((i) => i.kind === "cosmetic" && owned(this.save, i.id) > 0).map((i) => ({ ...view(i), target: i.target ?? "player" })),
+      consumables: items
+        .filter((i) => i.kind === "consumable" && owned(this.save, i.id) > 0)
+        .map((i) => ({ id: i.id, name: i.name, description: i.description, count: owned(this.save, i.id) })),
+      maxHp: maxHp(level, this.hpBonus()),
+    };
+  }
+
+  private async openTitles(): Promise<void> {
+    await this.deps.ui.titles.open(
+      () => this.titlesView(),
+      async (id) => {
+        if (id === null) delete this.save.activeTitle;
+        else if (this.save.titles.includes(id)) this.save.activeTitle = id;
+        await this.persist();
+        this.refreshHud();
+      },
+    );
+  }
+
+  titlesView(): TitlesView {
+    const now = this.now();
+    return {
+      playerName: this.save.player.name,
+      level: levelFromXp(this.save.player.xp),
+      streak: currentStreak(this.save.streak, now),
+      weekDays: weekDays(this.save.streak, now),
+      active: this.save.activeTitle,
+      titles: this.deps.content.titles.map((t) => ({ id: t.id, name: t.name, description: t.description, earned: this.save.titles.includes(t.id) })),
+    };
+  }
+
+  /** 오늘의 퀘스트가 없거나 날짜가 바뀌었으면 새로 뽑는다 */
+  private ensureQuests(): void {
+    if (this.deps.content.quests.pool.length === 0) return;
+    this.save = ensureDailyQuests(this.save, this.deps.content.quests, this.now(), this.questContext());
+  }
+
+  private questContext(): QuestContext {
+    const s = this.save;
+    return {
+      shadowDue: dueShadows(s, this.now()).length > 0,
+      battleLeft: this.allProblems().some((p) => !p.practice && !s.problems[p.id]?.solved),
+      lessonLeft: this.allLessons().some((l) => !s.lessonsCompleted.includes(l.id)),
+      lessonDone: s.lessonsCompleted.length > 0,
+    };
+  }
+
+  /** 퀘스트 사건 반영(보상은 바로, 알림은 나중에) */
+  private questEvent(e: QuestEvent): void {
+    this.ensureQuests();
+    const r = applyQuestEvent(this.save, this.deps.content.quests, e);
+    this.save = r.save;
+    if (r.completed.length === 0) return;
+    const reward = this.deps.content.quests.reward;
+    for (const q of r.completed) this.notices.push(`퀘스트 완료: ${q.text} (+${reward.xp} XP, +${reward.gold} G)`);
+    if (r.chest) {
+      const items = Object.entries(r.chest.items).map(([id, n]) => `${this.item(id)?.name ?? id} ${n}개`);
+      this.notices.push(`오늘의 퀘스트를 모두 끝냈어! 상자: 금화 ${r.chest.gold}${items.length ? ` + ${items.join(", ")}` : ""}`);
+    }
+    if (r.levelAfter > r.levelBefore) {
+      this.save.player.hp = maxHp(r.levelAfter, this.hpBonus());
+      this.pendingLevel = r.levelAfter;
+    }
+    this.checkTitles();
+  }
+
+  /** 새로 이룬 칭호를 준다 */
+  private checkTitles(): void {
+    const r = awardTitles(this.save, this.deps.content.titles, this.deps.content.regions);
+    if (!r.earned.length) return;
+    this.save = r.save;
+    for (const t of r.earned) this.notices.push(`칭호 「${t.name}」를 얻었다! 메뉴의 칭호에서 달 수 있어.`);
+  }
+
+  /** 모아 둔 알림을 토스트로 보이고, 퀘스트로 오른 레벨이 있으면 레벨업 대사 */
+  private async flushNotices(): Promise<void> {
+    for (const n of this.notices.splice(0)) this.deps.ui.hud.toast(n);
+    this.refreshHud();
+    if (this.pendingLevel !== null) {
+      const lv = this.pendingLevel;
+      this.pendingLevel = null;
+      await this.levelUp(lv);
+    }
+  }
+
+  private applyTints(): void {
+    const c = this.save.cosmetics ?? {};
+    for (const target of ["player", "companion"] as const) {
+      const id = c[target];
+      this.world.setTint?.(target, id ? tintColor(this.item(id)?.tint) : null);
+    }
+  }
+
+  private effects() {
+    return equipmentEffects(this.save, this.deps.content.items);
+  }
+
+  private hpBonus(): number {
+    return this.effects().maxHpBonus;
+  }
+
+  private item(id: string): ItemDef | undefined {
+    return this.deps.content.items.find((i) => i.id === id);
+  }
+
+  private potionItem(): ItemDef | undefined {
+    return this.deps.content.items.find((i) => i.kind === "consumable" && (i.heal ?? 0) > 0 && owned(this.save, i.id) > 0);
+  }
+
+  /** 개념(주문서 ID) → 주문서 이름 */
+  private conceptName(concept: string): string {
+    return this.allLessons().find((l) => l.scroll.id === concept)?.scroll.name ?? concept;
+  }
+
+  private allProblems(): Problem[] {
+    return this.deps.content.regions.flatMap((r) => r.problems);
+  }
+
+  private regionOrderOf(problem: Problem): number {
+    return this.deps.content.regions.find((r) => r.id === problem.regionId)?.order ?? this.region.order;
   }
 
   // ───────────── 도우미 ─────────────
@@ -572,7 +991,12 @@ export class App {
   }
 
   private refreshHud(): void {
-    this.deps.ui.hud.update(hudState(this.save, this.now(), this.region.name));
+    const hud = hudState(this.save, this.now(), this.region.name, { maxHpBonus: this.hpBonus() });
+    const title = this.deps.content.titles.find((t) => t.id === this.save.activeTitle);
+    if (title) hud.title = title.name;
+    const q = questProgress(this.save);
+    if (q) hud.quests = q;
+    this.deps.ui.hud.update(hud);
   }
 
   /** 자동 저장 예약. 새로고침 중이거나 저장이 막혀 있으면 아무것도 하지 않는다 */

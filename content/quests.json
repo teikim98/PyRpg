@@ -1,0 +1,14 @@
+{
+  "reward": { "xp": 30, "gold": 20 },
+  "chest": { "gold": 50, "items": { "potion": 1 } },
+  "perDay": 3,
+  "pool": [
+    { "id": "shadow-1", "text": "그림자 몬스터 1마리 처치", "event": "shadow", "count": 1, "needs": "shadowDue" },
+    { "id": "win-nohint-1", "text": "힌트 없이 전투 1개 AC", "event": "win", "count": 1, "filter": { "noHint": true }, "needs": "battleLeft" },
+    { "id": "win-firstcast-1", "text": "첫 시전에 전투 1개 AC", "event": "win", "count": 1, "filter": { "firstCast": true }, "needs": "battleLeft" },
+    { "id": "codex-run-1", "text": "코덱스 레슨 예제 1개 다시 실행", "event": "codexRun", "count": 1, "needs": "lessonDone" },
+    { "id": "lesson-1", "text": "새 레슨 1개 완료", "event": "lesson", "count": 1, "needs": "lessonLeft" },
+    { "id": "anywin-2", "text": "전투나 그림자 몬스터 2번 승리", "event": "anyWin", "count": 2 },
+    { "id": "rest-1", "text": "캠프파이어에서 한 번 쉬기", "event": "rest", "count": 1 }
+  ]
+}

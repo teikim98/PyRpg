@@ -1582,3 +1582,453 @@
     transition: none !important;
   }
 }
+
+/* ---------- 시스템 화면(그림자 게시판·퀘스트·상점·장비·칭호, design.md §7.2~§7.6) ---------- */
+
+.pyrpg-ui .float-heal {
+  right: 40px;
+  top: 16px;
+  color: var(--ok);
+}
+
+.pyrpg-ui .is-shadow .enemy-sprite-wrap .sprite,
+.pyrpg-ui .is-shadow .enemy-sprite-wrap canvas,
+.pyrpg-ui .is-shadow .enemy-sprite-wrap img {
+  filter: grayscale(1) brightness(0.45) drop-shadow(0 0 4px #9b7fd0);
+}
+
+.pyrpg-ui .is-shadow .enemy-name {
+  color: #c8b4ff;
+}
+
+.pyrpg-ui .act-hint.is-free {
+  border-color: var(--ok);
+}
+
+.pyrpg-ui .time-gauge-target {
+  color: var(--ok);
+  white-space: nowrap;
+}
+
+.pyrpg-ui .hud-title {
+  color: #c8b4ff;
+}
+
+.pyrpg-ui .hud-quests.is-done {
+  color: var(--ok);
+}
+
+.pyrpg-ui .sys-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(760px, calc(100% - 48px));
+  max-height: calc(100% - 48px);
+  animation: ui-pop 0.2s steps(3);
+}
+
+.pyrpg-ui .sys-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 3px solid var(--border-dim);
+}
+
+.pyrpg-ui .sys-close {
+  margin-left: auto;
+}
+
+.pyrpg-ui .sys-body {
+  overflow: auto;
+  padding: 8px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pyrpg-ui .sys-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--navy-900);
+  border: 2px solid var(--border-dim);
+}
+
+.pyrpg-ui .sys-section p {
+  margin: 0;
+}
+
+.pyrpg-ui .sys-nuri {
+  font-family: Galmuri14, Galmuri11, sans-serif;
+  font-size: 15px;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.pyrpg-ui .shadow-list,
+.pyrpg-ui .quest-list,
+.pyrpg-ui .shop-grid,
+.pyrpg-ui .equip-list,
+.pyrpg-ui .equip-consumables,
+.pyrpg-ui .title-list,
+.pyrpg-ui .codex-purified-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pyrpg-ui .shadow-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  background: #1a1430;
+  border: 2px solid #5b3f80;
+}
+
+.pyrpg-ui .shadow-card.is-returning {
+  border-color: var(--gold);
+}
+
+.pyrpg-ui .shadow-icon {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  background:
+    radial-gradient(circle at 35% 40%, #f1ecd6 0 2px, transparent 3px),
+    radial-gradient(circle at 65% 40%, #f1ecd6 0 2px, transparent 3px),
+    radial-gradient(ellipse at 50% 60%, #3a2f45 0 60%, transparent 62%);
+  filter: drop-shadow(0 0 3px #9b7fd0);
+}
+
+.pyrpg-ui .shadow-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pyrpg-ui .shadow-name {
+  color: #c8b4ff;
+  font-weight: 700;
+}
+
+.pyrpg-ui .shadow-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--muted);
+}
+
+.pyrpg-ui .shadow-overdue {
+  color: var(--warn);
+}
+
+.pyrpg-ui .shadow-next {
+  color: var(--muted);
+}
+
+.pyrpg-ui .box-pips {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.pyrpg-ui .box-pip {
+  width: 8px;
+  height: 8px;
+  background: var(--navy-950);
+  border: 1px solid var(--border-dim);
+}
+
+.pyrpg-ui .box-pip.is-on {
+  background: #9b7fd0;
+}
+
+.pyrpg-ui .quest-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: var(--navy-800);
+}
+
+.pyrpg-ui .quest-item.is-done {
+  color: var(--ok);
+}
+
+.pyrpg-ui .quest-text {
+  flex: 1;
+}
+
+.pyrpg-ui .quest-reward,
+.pyrpg-ui .streak-protect,
+.pyrpg-ui .streak-today,
+.pyrpg-ui .equip-note {
+  color: var(--muted);
+}
+
+.pyrpg-ui .quest-chest {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--gold);
+}
+
+.pyrpg-ui .quest-chest.is-claimed {
+  color: var(--ok);
+}
+
+.pyrpg-ui .chest-icon {
+  width: 16px;
+  height: 12px;
+  background: linear-gradient(#cfa042 0 4px, #7a4a2e 4px);
+  border: 2px solid #1c1424;
+}
+
+.pyrpg-ui .streak-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.pyrpg-ui .streak-week {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.pyrpg-ui .streak-week.is-goal {
+  color: var(--ok);
+}
+
+.pyrpg-ui .streak-goal,
+.pyrpg-ui .streak-days {
+  color: var(--muted);
+}
+
+.pyrpg-ui .streak-repair {
+  color: var(--warn);
+}
+
+.pyrpg-ui .shop-gold {
+  color: var(--gold);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.pyrpg-ui .shop-item,
+.pyrpg-ui .equip-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  background: var(--navy-900);
+  border: 2px solid var(--border-dim);
+}
+
+.pyrpg-ui .shop-item.is-locked,
+.pyrpg-ui .equip-item.is-missing {
+  opacity: 0.75;
+}
+
+.pyrpg-ui .shop-item.is-locked .shop-name {
+  color: var(--muted);
+}
+
+.pyrpg-ui .shop-item.is-owned,
+.pyrpg-ui .equip-item.is-equipped {
+  border-color: var(--ok);
+}
+
+.pyrpg-ui .shop-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pyrpg-ui .shop-name {
+  font-weight: 700;
+}
+
+.pyrpg-ui .shop-kind,
+.pyrpg-ui .shop-desc {
+  color: var(--muted);
+}
+
+.pyrpg-ui .shop-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.pyrpg-ui .shop-price {
+  color: var(--gold);
+}
+
+.pyrpg-ui .shop-status {
+  margin: 0;
+  min-height: 18px;
+  color: var(--ok);
+}
+
+.pyrpg-ui .shop-status.is-error {
+  color: var(--bad);
+}
+
+.pyrpg-ui .pending-tag {
+  margin-left: 6px;
+  color: var(--warn);
+  font-weight: 400;
+}
+
+.pyrpg-ui .equip-tag {
+  margin-left: 6px;
+  color: var(--ok);
+  font-weight: 400;
+}
+
+/* 아이템 아이콘: 종류별 도트 모양(CSS 그라디언트). 실루엣은 검게 칠한다 */
+.pyrpg-ui .item-icon {
+  --tint: #ee8ea6;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  image-rendering: pixelated;
+  border: 2px solid #1c1424;
+  background: var(--navy-700);
+}
+
+.pyrpg-ui .item-consumable {
+  background:
+    linear-gradient(#b9b8c2 0 0) 12px 2px / 8px 6px no-repeat,
+    linear-gradient(#e8504a 0 0) 6px 8px / 20px 20px no-repeat,
+    var(--navy-700);
+}
+
+.pyrpg-ui .item-iceRune {
+  background:
+    linear-gradient(45deg, transparent 30%, #a6ecf2 30% 70%, transparent 70%) 6px 6px / 20px 20px no-repeat,
+    linear-gradient(-45deg, transparent 30%, #3fa7bf 30% 70%, transparent 70%) 6px 6px / 20px 20px no-repeat,
+    var(--navy-700);
+}
+
+.pyrpg-ui .item-accessory {
+  background:
+    radial-gradient(circle at 50% 55%, #f6dc7c 0 5px, #cfa042 6px 9px, transparent 10px),
+    var(--navy-700);
+}
+
+.pyrpg-ui .item-accessory[data-item="guide-feather"] {
+  background:
+    linear-gradient(135deg, transparent 40%, #f4efe2 40% 60%, transparent 60%) 4px 4px / 24px 24px no-repeat,
+    var(--navy-700);
+}
+
+.pyrpg-ui .item-accessory[data-item="sturdy-cloak"] {
+  background:
+    linear-gradient(#c23b3b 0 0) 8px 4px / 16px 4px no-repeat,
+    linear-gradient(#7a2433 0 0) 6px 8px / 20px 20px no-repeat,
+    var(--navy-700);
+}
+
+.pyrpg-ui .item-cosmetic {
+  background:
+    radial-gradient(circle at 50% 60%, var(--tint) 0 8px, transparent 9px),
+    linear-gradient(#a8743f 0 0) 14px 2px / 4px 10px no-repeat,
+    var(--navy-700);
+}
+
+.pyrpg-ui .item-icon.is-silhouette {
+  filter: brightness(0) drop-shadow(0 0 1px #5b6aa8);
+}
+
+.pyrpg-ui .equip-slots {
+  display: flex;
+  gap: 8px;
+}
+
+.pyrpg-ui .equip-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 120px;
+  min-height: 64px;
+  padding: 6px;
+  border: 2px dashed var(--border-dim);
+  color: var(--muted);
+  text-align: center;
+}
+
+.pyrpg-ui .equip-slot.is-filled {
+  border-style: solid;
+  border-color: var(--gold);
+  color: var(--ink);
+}
+
+.pyrpg-ui .equip-slot.is-locked {
+  background: repeating-linear-gradient(45deg, var(--navy-950) 0 4px, var(--navy-900) 4px 8px);
+}
+
+.pyrpg-ui .profile-name {
+  font-size: 24px;
+  line-height: 1.2;
+  color: var(--gold);
+}
+
+.pyrpg-ui .profile-title {
+  margin-left: 8px;
+  color: #c8b4ff;
+}
+
+.pyrpg-ui .profile-meta {
+  color: var(--muted);
+}
+
+.pyrpg-ui .title-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
+  background: var(--navy-800);
+}
+
+.pyrpg-ui .title-item.is-locked {
+  color: var(--muted);
+}
+
+.pyrpg-ui .title-item.is-active {
+  outline: 2px solid #c8b4ff;
+}
+
+.pyrpg-ui .title-name {
+  min-width: 160px;
+  font-weight: 700;
+}
+
+.pyrpg-ui .title-desc {
+  flex: 1;
+  color: var(--muted);
+}
+
+.pyrpg-ui .title-off {
+  align-self: flex-start;
+}
+
+.pyrpg-ui .codex-purified {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 2px solid var(--border-dim);
+}
+
+.pyrpg-ui .codex-purified-list li {
+  color: #c8b4ff;
+}

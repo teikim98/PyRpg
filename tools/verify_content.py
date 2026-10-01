@@ -79,7 +79,8 @@ PENDING_SPRITES = {
 }
 # 맵 오브젝트 종류별 필수 props(src/contracts/world.ts)
 COMPARE_KEYS = {"sequenceAsList"}
-MAP_OBJECT_TYPES = {"npc", "sign", "chest", "door", "monster", "campfire", "rune", "trigger", "warp", "spawn"}
+MAP_OBJECT_TYPES = {"npc", "sign", "chest", "door", "monster", "campfire", "rune", "trigger", "warp", "spawn",
+                    "board", "shop"}  # 단위 3-1 마을 시설(docs/phase3/plan.md §5.2)
 
 # Traceback 해설 확인용: (코드, 예외 이름, 특정 패턴 규칙이 걸려야 하는지)
 TRACEBACK_SAMPLES = [

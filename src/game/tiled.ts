@@ -14,6 +14,8 @@ export const OBJECT_TYPES: readonly MapObjectType[] = [
   "trigger",
   "warp",
   "spawn",
+  "board",
+  "shop",
 ];
 
 export interface ParsedMap {

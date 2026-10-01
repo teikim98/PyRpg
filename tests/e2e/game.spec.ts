@@ -44,6 +44,15 @@ async function seedAndReload(page: Page, seed: Record<string, unknown>): Promise
   await settle(page);
 }
 
+/**
+ * 오늘의 일일 퀘스트(날짜로 뽑힘, design.md §7.5)로 받은 보상. 새 게임의 퀘스트는 날마다 달라서
+ * 정확한 XP·골드를 볼 때 이만큼을 더한다(퀘스트 하나 30 XP·20 G, 3개 다 하면 상자 금화 50)
+ */
+function questBonus(s: any): { xp: number; gold: number } {
+  const n = (s.quests?.claimed ?? []).filter(Boolean).length;
+  return { xp: n * 30, gold: n * 20 + (s.quests?.chest ? 50 : 0) };
+}
+
 // ───────────── 대화 ─────────────
 
 /**
@@ -251,7 +260,7 @@ test.describe.serial("지역 1 전체 플레이", () => {
     let s = await save(page);
     expect(s.lessonsCompleted).toEqual(["L1-1"]);
     expect(s.scrolls).toEqual(["scroll.voice"]);
-    expect(s.player.xp).toBe(30);
+    expect(s.player.xp).toBe(30 + questBonus(s).xp);
     await expect(page.locator(".hud-scrolls")).toHaveText("주문서 1");
 
     // 문이 열린다(마주 보고 Space)
@@ -302,10 +311,11 @@ test.describe.serial("지역 1 전체 플레이", () => {
     s = await save(page);
     expect(s.removedObjects).toContain("m_P0101");
     expect(s.problems.P0101).toMatchObject({ solved: true, attempts: 2, knockouts: 0 });
-    expect(s.player.xp).toBe(160); // 레슨 2개(30×2) + 전투 100
-    expect(s.player.gold).toBe(50);
-    await expect(page.locator(".hud-gold")).toHaveText("50 G");
-    await expect(page.locator(".hud-group .hud-small").first()).toContainText("160/");
+    const qb = questBonus(s);
+    expect(s.player.xp).toBe(160 + qb.xp); // 레슨 2개(30×2) + 전투 100 (+ 오늘의 퀘스트)
+    expect(s.player.gold).toBe(50 + qb.gold);
+    await expect(page.locator(".hud-gold")).toHaveText(`${50 + qb.gold} G`);
+    if (qb.xp === 0) await expect(page.locator(".hud-group .hud-small").first()).toContainText("160/");
     // 몬스터가 사라지고 길목을 지나갈 수 있다
     const m = await obj(page, "m_P0101");
     expect(m.removed).toBe(true);

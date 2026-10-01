@@ -1,0 +1,10 @@
+[
+  { "id": "first-spell", "name": "첫 주문", "description": "첫 전투 AC", "condition": { "type": "firstWin" } },
+  { "id": "bare-hands", "name": "맨손의 주문사", "description": "한 지역의 모든 전투를 힌트 없이 AC", "condition": { "type": "noHintRegion" } },
+  { "id": "time-turner", "name": "시간을 돌린 자", "description": "보스의 시간 결계를 한 번에 통과", "condition": { "type": "timeBarrierFirstTry" } },
+  { "id": "shadow-hunter", "name": "그림자 사냥꾼", "description": "그림자 몬스터 30마리 정화", "condition": { "type": "shadowWins", "count": 30 } },
+  { "id": "persistence", "name": "끈기", "description": "같은 전투에서 5번 이상 시전한 끝에 AC", "condition": { "type": "persistence", "attempts": 5 } },
+  { "id": "week-flame", "name": "일주일의 불꽃", "description": "한 주에 5일 이상 학습한 주가 4번", "condition": { "type": "goodWeeks", "weeks": 4, "days": 5 } },
+  { "id": "liberator-r01", "name": "에코 마을의 해방자", "description": "에코 마을 클리어", "condition": { "type": "regionClear", "region": "r01" } },
+  { "id": "liberator-r02", "name": "갈림길 숲의 해방자", "description": "갈림길 숲 클리어", "condition": { "type": "regionClear", "region": "r02" } }
+]

@@ -105,7 +105,7 @@ P.,..L...~~~PPPPPP
 P..S...,.~~~PPPPPP
 P.W..3...~~~P,.PPP
 PS......g~~~..4.PP
-P..rrr...~~~.G..,P
+P..rrr...~~~.G..bP
 P..r.rr..~~~..rr.P
 rrrr...rrsoorrrrrr
 P.,...m..~~~.,.r.P
@@ -237,6 +237,8 @@ OBJECTS = {
     "4": ("rune_L2-4", "rune", {"lesson": "L2-4"}, None),
     "W": ("npc_woodcutter", "npc", {"dialogue": "npc_woodcutter", "sprite": "npc_woodcutter"}, None),
     "G": ("campfire_stream", "campfire", {}, None),
+    # 개울 쉼터의 그림자 게시판(docs/phase3/plan.md §5.2)
+    "b": ("board_shadow_r02", "board", {}, "forest_floor"),
     "s": ("m_P0207", "monster", {"problem": "P0207"}, "stepping_stone"),
     "u": ("m_P0208", "monster", {"problem": "P0208"}, "forest_floor"),
     "D": ("chest_hidden_grove", "chest", {"gold": 60, "dialogue": "chest_hidden_grove"}, "forest_floor"),
@@ -260,7 +262,7 @@ STAGES: list[tuple[str | None, list[str], list[str]]] = [
     ("m_P0203", ["rune_L2-2", "sign_loop", "npc_lost_traveler", "m_P0204"], []),
     ("m_P0204", ["m_P0205", "chest_loop", "m_P0206"], []),
     ("m_P0206", ["rune_L2-3", "npc_woodcutter", "m_P0207", "m_P0208", "chest_hidden_grove"], []),
-    ("m_P0207", ["rune_L2-4", "campfire_stream", "m_P0209"], []),
+    ("m_P0207", ["rune_L2-4", "campfire_stream", "board_shadow_r02", "m_P0209"], []),
     ("m_P0209", ["t_boss_intro", "m_P0210"], []),
     ("m_P0210", ["warp_east"], []),
 ]
@@ -301,7 +303,7 @@ ZONE_OF = {  # 오브젝트 → 구역 번호(1부터), 명세 §4 표
     1: ["spawn_west", "warp_west", "t_forest_intro", "rune_L2-1", "sign_forest", "campfire_entrance",
         "m_P0201", "m_P0202", "m_P0203"],
     2: ["rune_L2-2", "sign_loop", "npc_lost_traveler", "m_P0204", "m_P0205", "m_P0206", "chest_loop"],
-    3: ["rune_L2-3", "rune_L2-4", "npc_woodcutter", "campfire_stream", "m_P0207", "m_P0208", "chest_hidden_grove"],
+    3: ["rune_L2-3", "rune_L2-4", "npc_woodcutter", "campfire_stream", "board_shadow_r02", "m_P0207", "m_P0208", "chest_hidden_grove"],
     4: ["m_P0209"],
     5: ["t_boss_intro", "m_P0210", "warp_east"],
 }

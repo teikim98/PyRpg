@@ -18,6 +18,9 @@ const SPEC: Record<string, { type: string; props: Record<string, string | number
   sign_plaza: { type: "sign", props: { dialogue: "sign_plaza" } },
   npc_frozen_merchant: { type: "npc", props: { dialogue: "npc_frozen_merchant", sprite: "npc_merchant" } },
   campfire_plaza: { type: "campfire", props: {} },
+  // 단위 3-1 마을 시설(docs/phase3/plan.md §5.2)
+  board_shadow: { type: "board", props: {} },
+  shop_echo: { type: "shop", props: {} },
   m_P0101: { type: "monster", props: { problem: "P0101" } },
   m_P0106: { type: "monster", props: { problem: "P0106" } },
   m_P0109: { type: "monster", props: { problem: "P0109" } },

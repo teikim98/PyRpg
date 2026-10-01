@@ -27,14 +27,20 @@ export function createHudUI(env: UiEnv): HudUI {
   const gold = h("span", { class: "hud-gold" });
   const week = h("span", { class: "hud-week" });
   const scrolls = h("span", { class: "hud-scrolls" });
+  const title = h("span", { class: "hud-title" });
+  const titleGroup = h("div", { class: "hud-group hud-title-group", hidden: true }, title);
+  const quests = h("span", { class: "hud-quests" });
+  const questGroup = h("div", { class: "hud-group hud-quest-group", hidden: true }, quests);
   const el = h(
     "div",
     { class: "hud panel", hidden: true },
     h("div", { class: "hud-group" }, region),
+    titleGroup,
     h("div", { class: "hud-group" }, level, xpBar.el, xpText),
     h("div", { class: "hud-group" }, h("span", { class: "hud-label" }, "HP"), hpBar.el, hpText),
     h("div", { class: "hud-group" }, gold),
     h("div", { class: "hud-group" }, scrolls),
+    questGroup,
     h("div", { class: "hud-group hud-week-group" }, week),
   );
   env.hudLayer.append(el);
@@ -53,6 +59,13 @@ export function createHudUI(env: UiEnv): HudUI {
       scrolls.textContent = `주문서 ${s.scrolls}`;
       week.textContent = `이번 주 ${s.weekDays}/7`;
       week.classList.toggle("is-goal", s.weekDays >= 5);
+      titleGroup.hidden = !s.title;
+      title.textContent = s.title ? `「${s.title}」` : "";
+      questGroup.hidden = !s.quests;
+      if (s.quests) {
+        quests.textContent = `퀘스트 ${s.quests.done}/${s.quests.total}`;
+        quests.classList.toggle("is-done", s.quests.done >= s.quests.total);
+      }
     },
     toast(message: string) {
       const t = h("div", { class: "toast panel", role: "status" }, message);

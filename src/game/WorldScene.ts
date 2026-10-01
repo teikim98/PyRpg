@@ -37,6 +37,8 @@ const TYPE_SPRITE: Partial<Record<MapObjectDef["type"], string>> = {
   campfire: "obj_campfire",
   rune: "obj_rune",
   warp: "obj_door",
+  board: "obj_board",
+  shop: "obj_shop",
 };
 /** 닫힘/열림 두 프레임이라 제자리 애니메이션을 하지 않는 스프라이트 */
 const STATIC_SPRITES = new Set(["obj_chest", "obj_door"]);
@@ -458,6 +460,14 @@ export class WorldScene extends Phaser.Scene {
   setCompanionVisible(visible: boolean): void {
     this.companionVisible = visible;
     this.nuri?.setVisible(visible);
+  }
+
+  /** 꾸미기 아이템 색(곱하기 틴트). null이면 원래 색 */
+  setTint(target: "player" | "companion", color: number | null): void {
+    const sprite = target === "player" ? this.player : this.nuri;
+    if (!sprite) return;
+    if (color === null) sprite.clearTint();
+    else sprite.setTint(color);
   }
 
   private finishMove(x: number, y: number): void {

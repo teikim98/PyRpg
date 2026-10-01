@@ -4,10 +4,21 @@ import { App, COMPANION_FLAG } from "../../src/app/app";
 import { loadContent } from "../../src/content/loader";
 import type { DialogueLine, GameContent, Region } from "../../src/contracts/content";
 import type { BattleOutcome, Facing, SaveData } from "../../src/contracts/state";
-import type { BattleContext, HudState, UiServices } from "../../src/contracts/ui";
+import type {
+  BattleContext,
+  BoardView,
+  EquipmentActions,
+  EquipmentView,
+  HudState,
+  MenuActions,
+  ShopView,
+  TitlesView,
+  UiServices,
+} from "../../src/contracts/ui";
 import type { MapObjectDef, WorldCallbacks, WorldController } from "../../src/contracts/world";
 import { parseTiledMap } from "../../src/game/tiled";
 import { createNewSave } from "../../src/state/newGame";
+import { addDays, studyDate } from "../../src/systems/time";
 import { fixtureRegionR99 } from "../fixtures/regions/r99";
 
 const NOW = new Date("2026-10-01T09:00:00Z");
@@ -81,6 +92,15 @@ interface Harness {
   hud: HudState[];
   recommended: string[];
   battle: { open: (ctx: BattleContext) => Promise<BattleOutcome> };
+  toasts: string[];
+  /** 시스템 화면 대본(단위 3-1). 화면이 열리면 부른다 */
+  sys: {
+    board?: (view: BoardView) => Promise<string | null>;
+    shop?: (view: () => ShopView, buy: (id: string) => Promise<string>) => Promise<void>;
+    equipment?: (view: () => EquipmentView, actions: EquipmentActions) => Promise<void>;
+    titles?: (view: () => TitlesView, select: (id: string | null) => Promise<void>) => Promise<void>;
+    menu?: (actions: MenuActions) => Promise<void>;
+  };
 }
 
 function makeContent(withR99: boolean): GameContent {
@@ -93,6 +113,8 @@ function harness(content: GameContent, store: MemoryStore): Harness {
   const said: string[] = [];
   const hud: HudState[] = [];
   const recommended: string[] = [];
+  const toasts: string[] = [];
+  const sys: Harness["sys"] = {};
   const tables = [...content.regions.map((r) => r.dialogues), content.commonDialogues];
   const idOf = (lines: DialogueLine[]) => {
     for (const t of tables) for (const [id, v] of Object.entries(t)) if (v === lines) return id;
@@ -108,8 +130,15 @@ function harness(content: GameContent, store: MemoryStore): Harness {
     lesson: { open: async () => ({ completed: false }) },
     codex: { open: async () => undefined },
     battle: { open: (ctx: BattleContext) => battle.open(ctx) },
-    hud: { update: (s: HudState) => void hud.push(s), toast: () => undefined },
-    menu: { open: async () => void said.push("menu") },
+    hud: { update: (s: HudState) => void hud.push(s), toast: (m: string) => void toasts.push(m) },
+    menu: { open: async (a: MenuActions) => (sys.menu ? sys.menu(a) : void said.push("menu")) },
+    board: {
+      open: async (v: BoardView) => (sys.board ? sys.board(v) : null),
+      openQuests: async () => undefined,
+    },
+    shop: { open: async (v: () => ShopView, buy: (id: string) => Promise<string>) => sys.shop?.(v, buy) },
+    equipment: { open: async (v: () => EquipmentView, a: EquipmentActions) => sys.equipment?.(v, a) },
+    titles: { open: async (v: () => TitlesView, sel: (id: string | null) => Promise<void>) => sys.titles?.(v, sel) },
     reward: {
       show: async () => undefined,
       showRecommended: async (name: string) => void recommended.push(name),
@@ -141,6 +170,8 @@ function harness(content: GameContent, store: MemoryStore): Harness {
     hud,
     recommended,
     battle,
+    toasts,
+    sys,
   };
 }
 
@@ -338,7 +369,9 @@ describe("지역 간 이동(warp target/targetSpawn)", () => {
 
 describe("전투", () => {
   async function battleHarness() {
-    const content = makeContent(false);
+    // 일일 퀘스트 보상이 섞이지 않게 퀘스트 풀을 비운다(퀘스트는 아래 '시스템 화면'에서 따로 본다)
+    const base = makeContent(false);
+    const content = { ...base, quests: { ...base.quests, pool: [] } };
     const store = new MemoryStore();
     const r01 = content.regions[0];
     const m = parseTiledMap(r01.map).objects.find((o) => o.id === "m_P0101")!;
@@ -407,5 +440,166 @@ describe("전투", () => {
     expect(h.said).toContain("boss_defeated");
     expect(h.recommended).toEqual(["에코 마을"]);
     expect(store.data!.flags["region.r01.clear"]).toBe(true);
+    // 지역 해방자 칭호(§7.4)
+    expect(store.data!.titles).toContain("liberator-r01");
+  });
+});
+
+describe("시스템 화면(단위 3-1: 그림자 게시판·퀘스트·상점·장비·칭호)", () => {
+  const today = studyDate(NOW);
+  const yesterday = addDays(today, -1);
+
+  async function sysHarness(mutate: (s: SaveData) => void) {
+    const content = makeContent(false);
+    const store = new MemoryStore();
+    store.data = r01Save(content, (s) => {
+      s.removedObjects.push("gate_well");
+      mutate(s);
+    });
+    const h = harness(content, store);
+    await h.app.start({} as HTMLElement);
+    await idle(h.app);
+    return { h, store, content };
+  }
+
+  const win = (ctx: BattleContext, over: Partial<BattleOutcome> = {}): BattleOutcome => ({
+    problemId: ctx.problem.id, result: "victory", attempts: 1, maxHintLevel: 0, solutionViewed: false, finalCode: "x", hpLeft: ctx.player.hp, elapsedMs: 1, ...over,
+  });
+
+  it("게시판에서 고른 그림자와 싸우면 그림자전(50% 보상, 칸 상승)이고 퀘스트가 오른다", async () => {
+    const { h, store } = await sysHarness((s) => {
+      s.problems.P0101 = { ...emptyRec(), solved: true };
+      s.removedObjects.push("m_P0101");
+      s.shadows = [{ concept: "scroll.convert", problemId: "P0101", box: 2, due: yesterday, purified: false, createdAt: "2026-09-01T00:00:00Z" }];
+      s.quests = { date: today, ids: ["shadow-1", "rest-1", "anywin-2"], progress: [0, 0, 0], claimed: [false, false, false], chest: false };
+    });
+    const xp0 = store.data!.player.xp;
+    let seen: BoardView | null = null;
+    h.sys.board = async (v) => {
+      seen = v;
+      return v.shadows[0].concept;
+    };
+    let ctxSeen!: BattleContext;
+    h.battle.open = async (ctx) => {
+      ctxSeen = ctx;
+      return win(ctx);
+    };
+    h.callbacks.onInteract(h.world.obj("board_shadow"));
+    await idle(h.app);
+    expect(seen!.shadows).toHaveLength(1);
+    expect(seen!.shadows[0]).toMatchObject({ concept: "scroll.convert", box: 2, overdueDays: 1, nextIntervalDays: 7 });
+    expect(seen!.shadows[0].name).not.toBe("scroll.convert");
+    expect(seen!.quests.quests.map((q) => q.id)).toEqual(["shadow-1", "rest-1", "anywin-2"]);
+    expect(ctxSeen.shadow).toBe(true);
+    expect(ctxSeen.problem.concept).toBe("scroll.convert");
+    expect(ctxSeen.knockouts).toBe(0);
+    expect(ctxSeen.hintLevel).toBe(0);
+    const s = store.data!;
+    expect(s.shadows[0].box).toBe(3);
+    // 그림자 보상 50 + 퀘스트(shadow-1) 30
+    expect(s.player.xp).toBe(xp0 + 50 + 30);
+    expect(s.quests!.progress).toEqual([1, 0, 1]);
+    expect(s.history.at(-1)).toMatchObject({ shadow: true, concept: "scroll.convert" });
+    expect(h.toasts.some((t) => t.includes("퀘스트 완료: 그림자 몬스터 1마리 처치"))).toBe(true);
+    expect(h.hud.at(-1)!.quests).toEqual({ done: 1, total: 3 });
+    // 오늘 상대했으니 다시 열면 없다
+    h.sys.board = async (v) => {
+      seen = v;
+      return null;
+    };
+    h.callbacks.onInteract(h.world.obj("board_shadow"));
+    await idle(h.app);
+    expect(seen!.shadows).toHaveLength(0);
+    expect(seen!.foughtToday).toBe(1);
+  });
+
+  it("퀘스트 3개를 다 하면 상자(금화 + 회복약)", async () => {
+    const { h, store, content } = await sysHarness((s) => {
+      s.quests = { date: today, ids: ["rest-1", "anywin-2", "win-nohint-1"], progress: [0, 1, 0], claimed: [false, false, false], chest: false };
+    });
+    h.battle.open = async (ctx) => win(ctx);
+    const gold0 = store.data!.player.gold;
+    h.callbacks.onInteract(h.world.obj("campfire_plaza"));
+    await idle(h.app);
+    h.callbacks.onInteract(h.world.obj("m_P0101"));
+    await idle(h.app);
+    const s = store.data!;
+    expect(s.quests!.claimed).toEqual([true, true, true]);
+    expect(s.quests!.chest).toBe(true);
+    // 전투 50 + 퀘스트 3 × 20 + 상자
+    expect(s.player.gold).toBe(gold0 + 50 + 60 + content.quests.chest.gold);
+    expect(s.inventory.potion).toBe(1);
+    expect(h.toasts.some((t) => t.includes("모두 끝냈어"))).toBe(true);
+  });
+
+  it("상점에서 망토를 사서 장착하면 최대 HP +20, 깃털을 끼면 전투의 힌트 2가 무료, 회복약을 쓰면 줄어든다", async () => {
+    const { h, store } = await sysHarness((s) => {
+      s.player.gold = 500;
+      s.inventory = { "guide-feather": 1, potion: 2 };
+    });
+    h.sys.shop = async (view, buy) => {
+      expect(view().entries.find((e) => e.id === "sturdy-cloak")!.state).toBe("available");
+      expect(view().entries.find((e) => e.id === "dye-nuri-starlight")!.state).toBe("locked");
+      expect(view().entries.some((e) => e.id === "guide-feather")).toBe(false);
+      expect(await buy("sturdy-cloak")).toContain("튼튼한 망토");
+      expect(view().entries.find((e) => e.id === "sturdy-cloak")!.state).toBe("owned");
+      await expect(buy("sturdy-cloak")).rejects.toThrow("이미");
+    };
+    h.callbacks.onInteract(h.world.obj("shop_echo"));
+    await idle(h.app);
+    expect(store.data!.player.gold).toBe(350);
+    expect(store.data!.inventory["sturdy-cloak"]).toBe(1);
+
+    h.sys.menu = async (a) => a.openEquipment!();
+    h.sys.equipment = async (view, actions) => {
+      expect(view().slots).toBe(1);
+      await actions.toggleAccessory("sturdy-cloak");
+      expect(view().maxHp).toBe(120);
+      await expect(actions.toggleAccessory("guide-feather")).rejects.toThrow("슬롯");
+    };
+    h.callbacks.onMenu();
+    await idle(h.app);
+    expect(h.hud.at(-1)!.maxHp).toBe(120);
+    expect(store.data!.equipment).toEqual(["sturdy-cloak"]);
+
+    h.sys.equipment = async (_view, actions) => {
+      await actions.toggleAccessory("sturdy-cloak");
+      await actions.toggleAccessory("guide-feather");
+    };
+    h.callbacks.onMenu();
+    await idle(h.app);
+    expect(store.data!.equipment).toEqual(["guide-feather"]);
+    expect(h.hud.at(-1)!.maxHp).toBe(100);
+
+    let ctxSeen!: BattleContext;
+    h.battle.open = async (ctx) => {
+      ctxSeen = ctx;
+      ctx.onUsePotion?.();
+      return { ...win(ctx), result: "retreat" };
+    };
+    h.callbacks.onInteract(h.world.obj("m_P0101"));
+    await idle(h.app);
+    expect(ctxSeen.perks?.freeHint2).toBe(true);
+    expect(ctxSeen.potions).toEqual({ count: 2, heal: 40, name: "회복약" });
+    expect(store.data!.inventory.potion).toBe(1);
+  });
+
+  it("이미 이룬 칭호는 시작할 때 받고, 고르면 HUD에 보인다", async () => {
+    const { h, store } = await sysHarness((s) => {
+      s.problems.P0101 = { ...emptyRec(), solved: true };
+      s.removedObjects.push("m_P0101");
+    });
+    expect(store.data!.titles).toEqual(["first-spell"]);
+    expect(h.toasts.some((t) => t.includes("「첫 주문」"))).toBe(true);
+    h.sys.menu = async (a) => a.openTitles!();
+    h.sys.titles = async (view, select) => {
+      expect(view().titles.find((t) => t.id === "first-spell")!.earned).toBe(true);
+      await select("first-spell");
+      expect(view().active).toBe("first-spell");
+    };
+    h.callbacks.onMenu();
+    await idle(h.app);
+    expect(store.data!.activeTitle).toBe("first-spell");
+    expect(h.hud.at(-1)!.title).toBe("첫 주문");
   });
 });

@@ -27,10 +27,13 @@ from monsters import MONSTERS, OBJECTS  # noqa: E402
 from png import encode_png  # noqa: E402
 from portraits import PORTRAITS  # noqa: E402
 from tiles import TILES as R01_TILES  # noqa: E402
+from town_objects import TOWN_OBJECTS  # noqa: E402
 
 TILES = {**R01_TILES, **FOREST_TILES}
 # 지역 2에서 새로 생긴 에셋(미리보기를 지역별로 나눌 때 쓴다)
 R02_NAMES = set(FOREST_TILES) | set(FOREST_CHARACTERS) | set(FOREST_MONSTERS) | set(FOREST_BOSSES)
+# 단위 3-1 마을 시설(그림자 게시판·상점). 지역별 미리보기에는 넣지 않는다
+TOWN_NAMES = set(TOWN_OBJECTS)
 
 ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
 ASSETS = os.path.join(ROOT, "assets")
@@ -45,7 +48,7 @@ def load_manifest():
 
 def sprite_frames(name: str):
     """논리 이름 → 프레임 그리드 리스트."""
-    for table in (CHARACTERS, MONSTERS, OBJECTS, BOSSES, FOREST_CHARACTERS, FOREST_MONSTERS, FOREST_BOSSES):
+    for table in (CHARACTERS, MONSTERS, OBJECTS, BOSSES, FOREST_CHARACTERS, FOREST_MONSTERS, FOREST_BOSSES, TOWN_OBJECTS):
         if name in table:
             return table[name]
     raise KeyError(f"no art defined for sprite {name!r}")
@@ -302,7 +305,7 @@ def build(write: bool = True):
     out = {}
     for rel, c in assets.items():
         out[os.path.join(ASSETS, rel)] = encode_png(c.width, c.height, c.rows())
-    r01 = subset(manifest, lambda n: n not in R02_NAMES)
+    r01 = subset(manifest, lambda n: n not in R02_NAMES and n not in TOWN_NAMES)
     prev = render_preview(r01, assets)
     out[PREVIEW] = encode_png(prev.width, prev.height, prev.rows())
     r02 = subset(manifest, lambda n: n in R02_NAMES or n in ("player", "nuri"), lambda n: n in R02_NAMES)

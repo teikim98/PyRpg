@@ -196,6 +196,16 @@
       "file": "sprites/boss_crossroad_tree.png",
       "frameWidth": 32,
       "frameHeight": 32
+    },
+    "obj_board": {
+      "file": "sprites/obj_board.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "obj_shop": {
+      "file": "sprites/obj_shop.png",
+      "frameWidth": 16,
+      "frameHeight": 16
     }
   },
   "portraits": {
