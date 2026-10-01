@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PyRpg 실행기 개발 페이지</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 16px; background: #1b1b24; color: #eee; }
+      textarea { width: 100%; font-family: monospace; background: #111; color: #eee; }
+      pre { background: #111; padding: 8px; white-space: pre-wrap; }
+      button { margin: 4px 4px 4px 0; }
+    </style>
+  </head>
+  <body>
+    <h1>Python 실행기</h1>
+    <p id="status">부팅 중…</p>
+    <textarea id="code" rows="10">a, b = map(int, input().split())
+print(a + b)</textarea>
+    <textarea id="stdin" rows="3">1 2</textarea>
+    <div><button id="run">실행</button></div>
+    <pre id="out"></pre>
+    <script type="module" src="/src/python/dev/runnerPage.ts"></script>
+  </body>
+</html>
