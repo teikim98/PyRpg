@@ -42,7 +42,7 @@
 
 - 모든 문제는 지역 1·2의 품질 기준을 따르고(공개 1 + 숨김 3 이상, 경계값, 오답 2개와 진단, 힌트 3단계, 변형 2개), 지역 1~3 개념만 씁니다. 함수 구현형은 `def solution` 틀을 미리 줍니다.
 - 진단에 넣을 흔한 실수: `arr[len(arr)]` IndexError, 슬라이스 끝 포함 착각, `arr = arr.sort()`로 None, `[[0]*m]*n` 별칭, 1부터 세는 K번째를 0부터 셈, JS식 `arr.length`·`arr.push`(AttributeError).
-- 보스 P0311: 출력은 각 위치까지의 최댓값 N개(공백 구분). 2페이즈 입력은 N = 200,000(테스트 입력 생성기 `gen` 또는 길게 적은 입력. design.md §11.1). 비효율 답안 `slow.py`는 매번 `max(arr[:i+1])`. `budgetUnits`는 지역 2처럼 Pyodide에서 재서 정합니다(모범답안 ≥ 3배 여유, 비효율 답안은 확실히 초과).
+- 보스 P0311: 출력은 각 위치까지의 최댓값 N개(공백 구분). 2페이즈 입력은 N = 200,000(테스트 입력 생성기 `gen` 또는 길게 적은 입력. design.md §11.1). 비효율 답안 `slow.py`는 매번 `max(arr[:i+1])`. `budgetUnits`는 지역 2처럼 Pyodide에서 재서 정합니다(모범답안 ≥ 3배 여유, 비효율 답안은 확실히 초과). 결과를 문자열 `out += str(best) + " "`로 이어 붙이는 O(N) 풀이도 통과시킵니다(정답으로 인정하는 답안 `alt_concat.py`, Pyodide에서 ref의 약 28~39배). 그래서 `budgetUnits`는 60(제한 ≈ ref × 90, `+=` 풀이의 2배 이상)입니다.
 - 보상: 일반 100 XP / 50 골드, 보스 1000 XP / 500 골드.
 - 실전 추천(research.md §2.5.2 지역 3): 프로그래머스 42748 K번째수, 68644 두 개 뽑아서 더하기, 12949 행렬의 곱셈을 먼저, 이어서 백준 5597, 20053, 10798.
 
@@ -77,6 +77,7 @@
 | | `m_P0308` | monster | `problem=P0308` (구역 출구) |
 | 5 벽화의 방 | `rune_L3-5` | rune | `lesson=L3-5` |
 | | `sign_mural` | sign | `dialogue=sign_mural` (대정지가 의도된 것이라는 첫 단서) |
+| | `campfire_mural` | campfire | (`m_P0308`을 지나 들어온 뒤, 보스 앞에서 체력 회복) |
 | | `m_P0310` | monster | `problem=P0310` (구역 출구) |
 | | `t_boss_intro` | trigger | `dialogue=boss_intro`, `once=true` (보스 두 칸 앞) |
 | 6 족장의 왕좌 | `m_P0311` | monster | `problem=P0311` (보스) |

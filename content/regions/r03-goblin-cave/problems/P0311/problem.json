@@ -19,7 +19,7 @@
     }
   ],
   "timeLimitMs": 2000,
-  "budgetUnits": 6,
+  "budgetUnits": 60,
   "targetComplexity": "O(N)",
   "estimatedMinutes": 20,
   "tests": [
@@ -59,6 +59,9 @@
       ]
     }
   ],
+  "accepted": [
+    { "file": "alt_concat.py", "title": "문자열 out += str(best) + \" \"로 출력을 모음" }
+  ],
   "wrong": [
     {
       "file": "slow.py",
@@ -74,7 +77,7 @@
         "when": {
           "verdict": "TLE"
         },
-        "text": "주문은 맞았지만 너무 느려! 자리마다 `max(arr[:i + 1])`을 부르면 앞부분을 통째로 복사하고 다시 훑어서, 20만 개면 약 200억 번 일해. 바로 앞 자리까지의 최댓값 `best`를 들고 다니면서 `x > best`일 때만 바꿔 봐. 한 번 지나가면 끝나. (결과를 문자열 `+=`로 이어 붙였다면 그것도 느려. 리스트에 담아 `print(*result)`로 한 번에!)"
+        "text": "주문은 맞았지만 너무 느려! 자리마다 `max(arr[:i + 1])`을 부르면 앞부분을 통째로 복사하고 다시 훑어서, 20만 개면 약 200억 번 일해. 바로 앞 자리까지의 최댓값 `best`를 들고 다니면서 `x > best`일 때만 바꿔 봐. 한 번 지나가면 끝나."
       }
     },
     {

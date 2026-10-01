@@ -192,7 +192,8 @@ for (const region of REGIONS) {
   test.describe(`콘텐츠 스모크 ${region.id}: 문제`, () => {
     for (const pid of region.problems) {
       test(`${pid}: 모범답안 AC, 오답·비효율 답안은 expectFail 그대로, 진단·해설 일치`, async () => {
-        test.setTimeout(180_000);
+        // 보스의 비효율 답안은 시간 결계 테스트마다 제한까지 두 번(§9.6 4단계) 기다린다(P0311: 약 1분 × 2회 채점)
+        test.setTimeout(360_000);
         const rep = await checkProblem(pid);
         expect(rep.found, `${pid}가 콘텐츠에 없음`).toBe(true);
         expect(rep.solutionMatchesFile).toBe(true);
@@ -316,7 +317,7 @@ for (const region of REGIONS) {
   });
 
   test(`콘텐츠 스모크 ${region.id}: 보스 시간 결계 budgetUnits 보정(§9.6 2단계)`, async () => {
-    test.setTimeout(180_000);
+    test.setTimeout(360_000);
     const bosses = await page.evaluate(
       (rid: string) =>
         (window as any).__content.regions

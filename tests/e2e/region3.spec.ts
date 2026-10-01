@@ -218,7 +218,8 @@ async function typeCode(page: Page, text: string): Promise<void> {
   await expect.poll(() => editorText(page)).toBe(text);
 }
 
-async function cast(page: Page): Promise<void> {
+/** timeoutMs: 시전 결과를 기다리는 시간(보스 시간 결계의 TLE는 테스트 4개 × 경계 재확인 2회 × 제한만큼 걸린다) */
+async function cast(page: Page, timeoutMs = 120_000): Promise<void> {
   await expect(page.locator(".act-cast")).toBeEnabled({ timeout: 60_000 });
   await page.locator(".act-cast").click();
   await page.waitForFunction(
@@ -228,7 +229,7 @@ async function cast(page: Page): Promise<void> {
       return !root || (banner && !banner.hidden) || !root.classList.contains("is-busy");
     },
     null,
-    { timeout: 120_000 },
+    { timeout: timeoutMs },
   );
 }
 
@@ -501,7 +502,7 @@ test.describe.serial("지역 3 고블린 동굴 전체 플레이", () => {
     expect((await obj(page, "m_P0308")).removed).toBe(true);
   });
 
-  test("벽화의 방: 벽화(첫 단서) → L3-5 → P0310 오답([[-1] * m] * n 별칭) → 승리", async () => {
+  test("벽화의 방: 벽화(첫 단서) → L3-5 → P0310 오답([[-1] * m] * n 별칭) → 승리 → 보스 앞 캠프파이어", async () => {
     test.setTimeout(300_000);
     await interact(page, "sign_mural");
     const texts = await readAll(page);
@@ -514,6 +515,14 @@ test.describe.serial("지역 3 고블린 동굴 전체 플레이", () => {
     await winCurrent(page, "P0310");
     await settle(page);
     expect((await obj(page, "m_P0310")).removed).toBe(true);
+
+    // 보스 앞 쉼터: 벽화의 방 캠프파이어에서 HP를 채우고 복귀 지점을 옮긴다
+    expect(await talk(page, "campfire_mural")).toBe("campfire_rest");
+    const camp = await obj(page, "campfire_mural");
+    const s = await save(page);
+    expect(s.lastCampfire.regionId).toBe("r03");
+    expect(Math.abs(s.lastCampfire.x - camp.x) + Math.abs(s.lastCampfire.y - camp.y)).toBe(1);
+    await expect(page.locator(".hud-hp-text")).toHaveText(`${s.player.hp}/${s.player.hp}`);
   });
 
   test("족장의 왕좌: 보스 앞 트리거 → P0311 느린 풀이 1페이즈 통과·2페이즈 TLE(20만 개) → 모범답안 승리 → 클리어 → 실전 추천 → 동쪽 문", async () => {
@@ -535,7 +544,7 @@ test.describe.serial("지역 3 고블린 동굴 전체 플레이", () => {
     await expect(page.locator(".time-gauge")).toBeVisible();
     // 2페이즈: 같은 코드 → TLE(생성기가 만든 N = 200,000 입력), 시간 게이지 초과, 진단이 먼저
     const t0 = Date.now();
-    await cast(page);
+    await cast(page, 400_000);
     const slowMs = Date.now() - t0;
     await expect(page.locator(".time-gauge")).toHaveClass(/is-over/);
     await expect(page.locator(".time-gauge-text")).toHaveText("초과!");

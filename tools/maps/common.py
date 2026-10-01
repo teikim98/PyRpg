@@ -269,6 +269,28 @@ def removed_before(stages: list[Stage], oid: str) -> set[str]:
     raise KeyError(oid)
 
 
+
+def check_runes_before_monsters(info: dict, stages: list[Stage], region_dir: Path) -> list[str]:
+    """몬스터가 요구하는 이 지역 주문서의 비석은 그 몬스터보다 먼저(몬스터를 치우기 전에) 닿아야 한다.
+    아니면 주문서 없이 길목에 막혀 진행할 수 없다(need_scroll). 이전 지역의 주문서는 이미 가진 것으로 본다."""
+    errors: list[str] = []
+    rune_of = {}
+    for lj in sorted((region_dir / "lessons").glob("*/lesson.json")):
+        lesson = json.loads(lj.read_text(encoding="utf-8"))
+        rune_of[lesson["scroll"]["id"]] = f"rune_{lesson['id']}"
+    for o in info["objects"]:
+        if o["type"] != "monster":
+            continue
+        oid = o["name"]
+        pid = next(p["value"] for p in o.get("properties", []) if p["name"] == "problem")
+        problem = json.loads((region_dir / "problems" / pid / "problem.json").read_text(encoding="utf-8"))
+        area = reachable(info, removed_before(stages, oid) - {oid})
+        for scroll in problem.get("requires", []):
+            rune = rune_of.get(scroll)
+            if rune and not touches(info, area, rune):
+                errors.append(f"{oid} needs {scroll}, but {rune} is not reachable before {oid}")
+    return errors
+
 def dump(tmj: dict, width: int) -> str:
     """JSON으로 쓰되 타일 데이터는 맵 한 줄을 한 줄로 쓴다(diff를 읽기 쉽게)."""
     rows: dict[str, str] = {}

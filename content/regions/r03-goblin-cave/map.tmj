@@ -11,7 +11,7 @@
  "tileheight": 16,
  "compressionlevel": -1,
  "nextlayerid": 5,
- "nextobjectid": 30,
+ "nextobjectid": 31,
  "properties": [
   {
    "name": "region",
@@ -1049,6 +1049,18 @@
     },
     {
      "id": 20,
+     "name": "campfire_mural",
+     "type": "campfire",
+     "x": 1312,
+     "y": 176,
+     "width": 16,
+     "height": 16,
+     "rotation": 0,
+     "visible": true,
+     "properties": []
+    },
+    {
+     "id": 21,
      "name": "sign_tunnels",
      "type": "sign",
      "x": 352,
@@ -1066,7 +1078,7 @@
      ]
     },
     {
-     "id": 21,
+     "id": 22,
      "name": "m_P0310",
      "type": "monster",
      "x": 1392,
@@ -1084,7 +1096,7 @@
      ]
     },
     {
-     "id": 22,
+     "id": 23,
      "name": "t_boss_intro",
      "type": "trigger",
      "x": 1408,
@@ -1107,7 +1119,7 @@
      ]
     },
     {
-     "id": 23,
+     "id": 24,
      "name": "m_P0311",
      "type": "monster",
      "x": 1440,
@@ -1125,7 +1137,7 @@
      ]
     },
     {
-     "id": 24,
+     "id": 25,
      "name": "warp_east",
      "type": "warp",
      "x": 1648,
@@ -1153,7 +1165,7 @@
      ]
     },
     {
-     "id": 25,
+     "id": 26,
      "name": "campfire_entrance",
      "type": "campfire",
      "x": 80,
@@ -1165,7 +1177,7 @@
      "properties": []
     },
     {
-     "id": 26,
+     "id": 27,
      "name": "m_P0307",
      "type": "monster",
      "x": 880,
@@ -1183,7 +1195,7 @@
      ]
     },
     {
-     "id": 27,
+     "id": 28,
      "name": "m_P0302",
      "type": "monster",
      "x": 272,
@@ -1201,7 +1213,7 @@
      ]
     },
     {
-     "id": 28,
+     "id": 29,
      "name": "board_shadow_r03",
      "type": "board",
      "x": 640,
@@ -1213,7 +1225,7 @@
      "properties": []
     },
     {
-     "id": 29,
+     "id": 30,
      "name": "campfire_storeroom",
      "type": "campfire",
      "x": 656,

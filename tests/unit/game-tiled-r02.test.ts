@@ -1,6 +1,6 @@
 // 지역 2(갈림길 숲) 맵: docs/phase3/region02-spec.md §4의 오브젝트·속성, 충돌, 구역 진행 순서를
 // 엔진의 해석기(parseTiledMap)와 격자·길찾기(buildCollisionGrid, reachableTiles)로 확인한다.
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { manifest, tileIndex } from "../../src/contracts/assets";
@@ -205,6 +205,36 @@ describe("region-2 progression (zones open west to east)", () => {
       }
     });
     for (const id of OPTIONAL) expect(removed.has(id)).toBe(false);
+  });
+
+  it("every monster's required region-2 scroll can be learned before reaching it (no need_scroll dead end)", () => {
+    const regionDir = resolve(__dirname, "../../content/regions/r02-crossroad-forest");
+    const runeOf = new Map<string, string>();
+    for (const id of readdirSync(resolve(regionDir, "lessons"))) {
+      const l = JSON.parse(readFileSync(resolve(regionDir, "lessons", id, "lesson.json"), "utf-8")) as { id: string; scroll: { id: string } };
+      runeOf.set(l.scroll.id, `rune_${l.id}`);
+    }
+    expect(runeOf.size).toBeGreaterThan(0);
+    const removed = new Set<string>();
+    let checked = 0;
+    for (const [remove, reachable] of STAGES) {
+      if (remove) removed.add(remove);
+      for (const id of reachable.filter((r) => obj(r).type === "monster")) {
+        const before = new Set([...removed].filter((r) => r !== id));
+        const area = reachableTiles(map, grid, indexWithout(before), obj("spawn_west"));
+        const pid = String(obj(id).props.problem);
+        const problem = JSON.parse(readFileSync(resolve(regionDir, "problems", pid, "problem.json"), "utf-8")) as {
+          requires: string[];
+        };
+        for (const scroll of problem.requires) {
+          const rune = runeOf.get(scroll);
+          if (!rune) continue;
+          checked++;
+          expect(touches(area, obj(rune)), `${id} needs ${scroll} (${rune})`).toBe(true);
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
   });
 
   it("zone order is west to east", () => {
