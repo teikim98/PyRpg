@@ -18,6 +18,30 @@
       "note": "경계: 최댓값(1000자)"
     }
   ],
+  "variants": [
+    {
+      "id": "P0104-v1",
+      "title": "북소리 주문",
+      "statement": "variants/v1.md",
+      "tests": [
+        { "in": "dum\n4\n", "out": "dumdumdumdum\n", "public": true, "note": "기본 동작" },
+        { "in": "xyz\n1\n", "out": "xyz\n", "note": "경계: n = 1" },
+        { "in": "a\n100\n", "out": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n", "note": "경계: 한 글자, n 최댓값" },
+        { "in": "abcdefghij\n7\n", "out": "abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij\n", "note": "경계: 가장 긴 주문" }
+      ]
+    },
+    {
+      "id": "P0104-v2",
+      "title": "새의 노래",
+      "statement": "variants/v2.md",
+      "tests": [
+        { "in": "ku\n2\n", "out": "kuku\n", "public": true, "note": "기본 동작" },
+        { "in": "q\n1\n", "out": "q\n", "note": "경계: 최솟값" },
+        { "in": "hello\n100\n", "out": "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello\n", "note": "경계: n 최댓값" },
+        { "in": "zz\n50\n", "out": "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\n", "note": "같은 글자 반복" }
+      ]
+    }
+  ],
   "wrong": [
     {
       "file": "wrong_a.py",

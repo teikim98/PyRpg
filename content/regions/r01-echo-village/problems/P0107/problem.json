@@ -14,6 +14,30 @@
     { "in": "echo\necho\necho\n", "out": "echo~echo~echo~\n", "note": "같은 단어 반복" },
     { "in": "abcdefghij\nz\nabcdefghij\n", "out": "abcdefghij~z~abcdefghij~\n", "note": "경계: 가장 긴 단어" }
   ],
+  "variants": [
+    {
+      "id": "P0107-v1",
+      "title": "꼬리말 인사",
+      "statement": "variants/v1.md",
+      "tests": [
+        { "in": "hi\nyo\nok\n", "out": "hi~yo~ok~\n", "public": true, "note": "기본 동작" },
+        { "in": "x\ny\nz\n", "out": "x~y~z~\n", "note": "경계: 한 글자 단어" },
+        { "in": "abcdefghij\nabcdefghij\nabcdefghij\n", "out": "abcdefghij~abcdefghij~abcdefghij~\n", "note": "경계: 가장 긴 단어" },
+        { "in": "py\nthon\nrpg\n", "out": "py~thon~rpg~\n", "note": "길이가 다른 단어" }
+      ]
+    },
+    {
+      "id": "P0107-v2",
+      "title": "메아리 동굴",
+      "statement": "variants/v2.md",
+      "tests": [
+        { "in": "cave\nbat\nwing\n", "out": "cave~bat~wing~\n", "public": true, "note": "기본 동작" },
+        { "in": "o\no\no\n", "out": "o~o~o~\n", "note": "경계: 같은 한 글자" },
+        { "in": "a\nabcdefghij\nb\n", "out": "a~abcdefghij~b~\n", "note": "경계: 가운데가 가장 긴 단어" },
+        { "in": "dark\ndeep\ndrip\n", "out": "dark~deep~drip~\n", "note": "같은 길이 단어" }
+      ]
+    }
+  ],
   "wrong": [
     {
       "file": "wrong_a.py",

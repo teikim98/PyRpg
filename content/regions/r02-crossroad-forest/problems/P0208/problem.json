@@ -17,6 +17,32 @@
     { "in": "1000000\n", "out": "2\n", "note": "경계: 최댓값" },
     { "in": "999983\n", "out": "999983\n", "note": "경계: 100만 이하에서 가장 큰 소수" }
   ],
+  "variants": [
+    {
+      "id": "P0208-v1",
+      "title": "작은 열쇠",
+      "statement": "variants/v1.md",
+      "tests": [
+        { "in": "35\n", "out": "5\n", "public": true, "note": "기본 동작" },
+        { "in": "3\n", "out": "3\n", "note": "경계: 가장 작은 홀수 소수" },
+        { "in": "169\n", "out": "13\n", "note": "제곱수" },
+        { "in": "999999\n", "out": "3\n", "note": "경계: 최댓값 근처" },
+        { "in": "999979\n", "out": "999979\n", "note": "경계: 큰 소수" }
+      ]
+    },
+    {
+      "id": "P0208-v2",
+      "title": "돌문의 열쇠",
+      "statement": "variants/v2.md",
+      "tests": [
+        { "in": "77\n", "out": "7\n", "public": true, "note": "기본 동작" },
+        { "in": "4\n", "out": "2\n", "note": "경계: 가장 작은 합성수" },
+        { "in": "961\n", "out": "31\n", "note": "제곱수" },
+        { "in": "997\n", "out": "997\n", "note": "소수: N 자신이 열쇠" },
+        { "in": "524288\n", "out": "2\n", "note": "2의 거듭제곱" }
+      ]
+    }
+  ],
   "wrong": [
     {
       "file": "wrong_b.py",

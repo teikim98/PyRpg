@@ -4,6 +4,8 @@ content/ 아래 데이터를 읽어서 아래를 확인한다. 하나라도 실�
 - 문제: 필수 파일, 테스트 수(공개 1+, 숨김 3+, 경계값 note), 큰 정수 규칙(literal_eval), 4300자리 제한,
   모범답안 전부 AC, 오답·비효율 답안은 expectFail에 적은 테스트만 정확히 그 판정으로 실패,
   오답마다 첫 실패 테스트에서 자기 진단 규칙이 처음으로 걸리는지, 참조 무결성(주문서·스프라이트)
+- 변형 문제(plan.md §5.1): 필드·statement 파일, 공개 1+/숨김 3+, 변형 ID 중복, 테스트 형식·4300자리,
+  원래 모범답안 전부 AC, wrong_*.py는 변형마다 하나 이상 실패, 보스 slow.py는 전부 AC(시간 결계 없음)
 - 레슨: 주문서 ID, 빈칸 연습 정답 실행 결과, ```python run 블록이 에러 없이 실행되는지
 - 대사: region1-spec.md §5, region02-spec.md §5의 ID, 대사 줄 형식
 - 지역: recommended 필드(번호·제목·사이트·레벨만), map.tmj가 있으면 맵 오브젝트 참조
@@ -394,33 +396,45 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
     if not any("경계" in (t.get("note") or "") for t in tests):
         rep.error(where, "경계값 테스트(note에 '경계')가 없음")
     phases = sorted({t.get("phase", 1) for t in tests})
-    for i, t in enumerate(tests):
-        tw = f"{where} 테스트 {test_label(i)}"
+
+    def check_test_format(tw, t):
+        """테스트 하나의 형식(stdin형 in/out, 함수형 args/expect 리터럴, 4300자리 제한). 실행할 수 있으면 True"""
+        if not isinstance(t, dict):
+            rep.error(tw, "테스트는 객체")
+            return False
         if kind == "stdin":
             if not isinstance(t.get("in"), str) or not isinstance(t.get("out"), str):
                 rep.error(tw, "stdin형 테스트는 in/out 문자열")
-                continue
+                return False
             if not t["in"].endswith("\n"):
                 rep.error(tw, "in은 개행으로 끝나야 함")
             texts = [t["in"], t["out"]]
         else:
             if not isinstance(t.get("args"), str) or not isinstance(t.get("expect"), str):
                 rep.error(tw, "함수형 테스트는 args/expect를 Python 리터럴 문자열로")
-                continue
+                return False
             try:
                 if not isinstance(ast.literal_eval(t["args"]), tuple):
                     rep.error(tw, f"args {t['args']!r}가 튜플이 아님(인자 하나면 '(x,)')")
             except (ValueError, SyntaxError):
                 rep.error(tw, f"args {t['args']!r}를 literal_eval로 읽을 수 없음")
+                return False
             try:
                 ast.literal_eval(t["expect"])
             except (ValueError, SyntaxError):
                 rep.error(tw, f"expect {t['expect']!r}를 literal_eval로 읽을 수 없음")
+                return False
             texts = [t["args"], t["expect"]]
         for s in texts:
             m = max((len(x) for x in re.findall(r"\d+", s)), default=0)
             if m > MAX_DIGITS:
                 rep.error(tw, f"{m}자리 정수(4300자리 제한, design.md §9.4)")
+        return True
+
+    for i, t in enumerate(tests):
+        tw = f"{where} 테스트 {test_label(i)}"
+        if not check_test_format(tw, t):
+            continue
         if not p["boss"] and t.get("phase", 1) != 1:
             rep.error(tw, "보스가 아닌 문제에 phase")
     if p["boss"]:
@@ -474,10 +488,10 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
         if f.startswith("alt_") and f not in accepted_files:
             rep.error(where, f"{f}가 problem.json의 accepted[]에 없음")
 
-    def judge(code_file):
+    def judge(code_file, test_list=None):
         path = os.path.join(folder, code_file)
         jobs = []
-        for t in tests:
+        for t in tests if test_list is None else test_list:
             if kind == "stdin":
                 jobs.append(pool.submit(runner.run, path, "stdin", stdin=t["in"], expect=t["out"], timeout=limit))
             else:
@@ -570,6 +584,8 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
         if d is None or d[1] != f:
             rep.error(ww, f"첫 실패 테스트에서 처음 걸리는 진단이 자기 규칙이 아님(걸린 규칙: {d})")
 
+    check_variants(rep, p, where, folder, files, judge, check_test_format, accepted_files)
+
     # 시작 코드: 문법이 맞고, 함수형이면 entry가 있어야 한다
     if "starter.py" in files:
         src = read_text(os.path.join(folder, "starter.py"))
@@ -587,6 +603,98 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
     if "solution.py" in files and "lru_cache" in read_text(os.path.join(folder, "solution.py")):
         rep.warn(where, "모범답안이 lru_cache를 씀. 재귀 깊이 300 이하인지 확인(§9.5)")
     return p
+
+
+VARIANT_KEYS = {"id", "title", "statement", "tests"}
+VARIANT_TEST_KEYS = {"in", "out", "args", "expect", "public", "note"}
+VARIANT_IDS = {}  # 변형 ID → 문제 위치(전체에서 겹치면 안 됨)
+
+
+def check_variants(rep, p, where, folder, files, judge, check_test_format, accepted_files):
+    """그림자 몬스터용 변형 문제(docs/phase3/plan.md §5.1, design.md §7.6).
+    같은 개념·같은 입출력 형식이라 원래 모범답안이 모든 변형 테스트를 통과해야 하고,
+    wrong_*.py 오답은 변형마다 하나 이상의 테스트에서 실패해야 한다(답 외우기 방지)."""
+    pid = p["id"]
+    variants = p.get("variants")
+    if variants is None:
+        rep.warn(where, "variants(그림자 몬스터용 변형 문제)가 없음")
+        return
+    if not isinstance(variants, list) or len(variants) < 2:
+        rep.error(where, "variants는 변형 2개 이상의 배열(plan.md §5.1)")
+        return
+    wrong_files = [w.get("file") for w in p["wrong"] if (w.get("file") or "").startswith("wrong_") and w["file"] in files]
+    for n, v in enumerate(variants, 1):
+        vw = f"{where} 변형 {n}"
+        if not isinstance(v, dict):
+            rep.error(vw, "변형은 객체")
+            continue
+        if set(v) - VARIANT_KEYS:
+            rep.error(vw, f"모르는 필드 {sorted(set(v) - VARIANT_KEYS)}(허용: {sorted(VARIANT_KEYS)})")
+        vid = v.get("id")
+        if not isinstance(vid, str) or not re.fullmatch(rf"{pid}-v\d+", vid):
+            rep.error(vw, f"id {vid!r}가 {pid}-vN 형식이 아님")
+        else:
+            vw = f"{where} {vid}"
+            if vid in VARIANT_IDS:
+                rep.error(vw, f"변형 ID가 {VARIANT_IDS[vid]}와 겹침")
+            VARIANT_IDS[vid] = where
+        if not isinstance(v.get("title"), str) or not v["title"].strip():
+            rep.error(vw, "title이 없음")
+        st = v.get("statement")
+        if not isinstance(st, str) or not st.endswith(".md") or os.path.isabs(st) or ".." in st.split("/"):
+            rep.error(vw, f"statement {st!r}는 문제 폴더 안의 .md 상대 경로")
+        elif not os.path.isfile(os.path.join(folder, st)):
+            rep.error(vw, f"statement 파일 없음: {st}")
+        elif not read_text(os.path.join(folder, st)).strip():
+            rep.error(vw, f"statement 파일이 비어 있음: {st}")
+        tests = v.get("tests")
+        if not isinstance(tests, list):
+            rep.error(vw, "tests 배열이 없음")
+            continue
+        publics = [t for t in tests if isinstance(t, dict) and t.get("public")]
+        hiddens = [t for t in tests if isinstance(t, dict) and not t.get("public")]
+        if len(publics) < 1 or len(hiddens) < 3:
+            rep.error(vw, f"공개 {len(publics)}개, 숨김 {len(hiddens)}개(공개 1+, 숨김 3+ 필요)")
+        if not any("경계" in (t.get("note") or "") for t in tests if isinstance(t, dict)):
+            rep.error(vw, "경계값 테스트(note에 '경계')가 없음")
+        ok = True
+        for i, t in enumerate(tests):
+            tw = f"{vw} 테스트 {test_label(i)}"
+            if not check_test_format(tw, t):
+                ok = False
+                continue
+            extra = set(t) - VARIANT_TEST_KEYS
+            if extra:
+                # phase 등: 그림자전에는 시간 결계가 없다
+                rep.error(tw, f"변형 테스트에 쓸 수 없는 필드 {sorted(extra)}")
+        if not ok:
+            continue
+
+        # 원래 모범답안(과 정답으로 인정하는 답안)은 전부 AC
+        for f in ["solution.py"] + accepted_files:
+            if f not in files:
+                continue
+            res = judge(f, tests)
+            bad = {i + 1: r["verdict"] for i, r in enumerate(res) if r["verdict"] != "AC"}
+            if bad:
+                rep.error(f"{vw} {f}", f"원래 문제의 정답이 변형에서 실패: {bad} "
+                                       f"{[(r['error_type'], r['error_message']) for r in res if r['verdict'] == 'RE'][:1]}")
+            else:
+                rep.info(f"{vw} {f}  OK  {len(res)}/{len(res)} AC")
+        # 비효율 답안: 그림자전은 시간 결계가 없으니 1페이즈 크기 입력이라 통과해야 한다
+        if "slow.py" in files:
+            res = judge("slow.py", tests)
+            bad = {i + 1: r["verdict"] for i, r in enumerate(res) if r["verdict"] != "AC"}
+            if bad:
+                rep.error(f"{vw} slow.py", f"비효율 답안이 실패: {bad}(변형은 1페이즈 크기 입력만)")
+        # 오답은 변형마다 하나 이상의 테스트에서 실패
+        for f in wrong_files:
+            res = judge(f, tests)
+            got = {i + 1: r["verdict"] for i, r in enumerate(res) if r["verdict"] != "AC"}
+            if not got:
+                rep.error(f"{vw} {f}", "오답이 변형의 모든 테스트를 통과함(오답을 잡는 테스트를 넣을 것)")
+            else:
+                rep.info(f"{vw} {f:<12} fails={got}")
 
 
 # ---------------------------------------------------------------- 레슨
