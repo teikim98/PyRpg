@@ -1329,21 +1329,73 @@
   display: flex;
   gap: 12px;
   padding: 8px 12px;
-  height: 152px;
+  /* 720px 높이에서 조금 더 크게, 640px에서는 예전 크기(편집기 공간 유지) */
+  height: clamp(152px, 24vh, 184px);
+  min-height: 0;
 }
 
 .pyrpg-ui .battle-msg-details {
-  flex: 1.1;
+  flex: 1;
   min-width: 0;
   overflow: auto;
   padding-left: 12px;
   border-left: 3px dashed var(--border-dim);
 }
 
+.pyrpg-ui .battle-msg-details.is-compact {
+  flex: 0 0 auto;
+  width: 30%;
+  max-width: 280px;
+}
+
+.pyrpg-ui .battle-msg-wrap {
+  position: relative;
+  flex: 1.25;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+
+/* 잘린 부분이 있으면 아래쪽을 흐리게 하고 '더 있어' 표시 */
+.pyrpg-ui .battle-msg-wrap.has-more::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 10px;
+  bottom: 0;
+  height: 22px;
+  background: linear-gradient(to bottom, rgba(21, 28, 56, 0), var(--navy-800));
+  pointer-events: none;
+}
+
+.pyrpg-ui .battle-msg-more {
+  position: absolute;
+  right: 14px;
+  bottom: 0;
+  z-index: 1;
+  padding: 0 6px;
+  border: 2px solid var(--gold);
+  background: var(--navy-950);
+  color: var(--gold);
+  font-family: Galmuri11, sans-serif;
+  font-size: 11px;
+  line-height: 16px;
+  cursor: pointer;
+  animation: ui-bob 1s steps(2) infinite;
+}
+
+.pyrpg-ui .battle-msg-more[hidden] {
+  display: none;
+}
+
 .pyrpg-ui .battle-msg {
   flex: 1;
   min-width: 0;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold) var(--navy-950);
   font-family: Galmuri14, Galmuri11, sans-serif;
   font-size: 15px;
   line-height: 1.6;
@@ -1356,10 +1408,79 @@
   font-weight: 700;
 }
 
+.pyrpg-ui .battle-msg::-webkit-scrollbar {
+  width: 8px;
+}
+
+.pyrpg-ui .battle-msg::-webkit-scrollbar-track {
+  background: var(--navy-950);
+}
+
+.pyrpg-ui .battle-msg::-webkit-scrollbar-thumb {
+  background: var(--gold);
+}
+
 .pyrpg-ui .battle-msg .diag {
   margin-top: 4px;
   padding: 2px 8px;
   border-left: 4px solid var(--gold);
+}
+
+.pyrpg-ui .battle-msg .diag:first-child {
+  margin-top: 0;
+}
+
+/* 진단이 있을 때 접어 둔 일반 해설의 머리 줄: '주문이 폭발했어! [6번째 줄 · AttributeError] 자세히' */
+.pyrpg-ui .battle-msg .err-head {
+  font-family: Galmuri11, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.pyrpg-ui .battle-msg .diag + .err-head {
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+.pyrpg-ui .battle-msg .err-chip {
+  display: inline-block;
+  padding: 0 6px;
+  border: 2px solid var(--bad);
+  white-space: nowrap;
+}
+
+.pyrpg-ui .battle-msg .err-chip code {
+  padding: 0 2px;
+  background: none;
+}
+
+.pyrpg-ui .battle-msg .err-more {
+  padding: 0 6px;
+  border: 2px solid var(--border-dim);
+  background: var(--navy-950);
+  color: var(--muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.pyrpg-ui .battle-msg .err-more:hover,
+.pyrpg-ui .battle-msg .err-more:focus-visible,
+.pyrpg-ui .battle-msg .err-more[aria-expanded="true"] {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.pyrpg-ui .battle-msg .err-explain {
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-left: 4px solid var(--border-dim);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.pyrpg-ui .battle-msg .err-explain[hidden] {
+  display: none;
 }
 
 .pyrpg-ui .battle-msg .counter {
@@ -1474,6 +1595,14 @@
 
 .pyrpg-ui .is-knockout .banner-title {
   color: var(--bad);
+}
+
+/* 낮은 화면(720 미만): 전투 메시지 글자를 조금 줄여 한 화면에 더 담는다 */
+@media (max-height: 700px) {
+  .pyrpg-ui .battle-msg {
+    font-size: 14px;
+    line-height: 1.5;
+  }
 }
 
 /* 좁은 화면(1280 미만) */

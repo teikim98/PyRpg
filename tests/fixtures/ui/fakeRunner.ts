@@ -132,7 +132,9 @@ export class FakeRunner implements PythonRunner {
       const expected = isStdin ? t.out.replace(/\n$/, "") : t.expect;
       const errLine = lineOf(code, /raise|\/\s*0|undefined_name/) ?? 1;
       const error: PyError | undefined =
-        verdict === "RE"
+        verdict === "TLE"
+          ? spec.error
+          : verdict === "RE"
           ? spec.error ?? {
               type: "TypeError",
               message: "can't multiply sequence by non-int of type 'str'",
