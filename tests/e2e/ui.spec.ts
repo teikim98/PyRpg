@@ -16,6 +16,8 @@ async function typeInEditor(page: Page, text: string, selectAll = true) {
   await page.keyboard.type(text);
 }
 
+const count = (text: string | null, needle: string) => (text ?? "").split(needle).length - 1;
+
 const SOLUTION_P0101 = "a, b = map(int, input().split())\nprint(a + b)";
 
 test.describe("dialogue", () => {
@@ -461,6 +463,129 @@ test.describe("battle", () => {
     const out = await done;
     expect(out.elapsedMs).toBeGreaterThanOrEqual(600_000);
   });
+
+  test("RE with a problem diagnosis: diagnosis is the main text, the generic explanation folds behind [자세히]", async ({ page }) => {
+    await boot(page);
+    await page.evaluate(() => {
+      const ui = (window as Win).__ui;
+      ui.traceback.unshift({ exception: "AttributeError", pattern: "has no attribute 'length'", text: "`.length`는 JS 말투야. Python에서 길이는 `len(s)`처럼 함수로 구해." });
+      ui.problems.PX_RE = {
+        ...ui.problems.P0101,
+        id: "PX_RE",
+        diagnoses: [{ when: { exception: "AttributeError", messageMatches: "length" }, text: "`arr.length`는 JS 말투야. 리스트의 길이는 `len(arr)`로 구해." }],
+      };
+    });
+    const done = page.evaluate(() => (window as Win).__ui.battle("PX_RE"));
+    await typeInEditor(page, "arr = [1, 2]\nprint(arr.length)");
+    const err = { type: "AttributeError", message: "'list' object has no attribute 'length'", line: 2, traceback: "AttributeError: 'list' object has no attribute 'length'" };
+    await page.evaluate((e) => (window as Win).__ui.fake.queueJudge({ verdict: "RE", error: e }), err);
+    await page.locator(".act-cast").click();
+    const msg = page.locator(".battle-msg-text");
+    // 머리 줄: 줄 번호와 예외 이름만(칩) + [자세히]
+    await expect(msg.locator(".err-head")).toContainText("주문이 폭발했어!");
+    await expect(msg.locator(".err-head .err-chip")).toHaveText("2번째 줄 · AttributeError");
+    await expect(msg.locator(".diag")).toBeVisible();
+    await expect(msg.locator(".diag")).toContainText("len(arr)");
+    expect(await msg.innerText()).not.toContain("함수로 구해");
+    await expect(msg.locator(".err-explain")).toBeHidden();
+    const more = msg.locator(".err-more");
+    await expect(more).toHaveText("자세히");
+    await expect(more).toHaveAttribute("aria-expanded", "false");
+    await more.click();
+    await expect(msg.locator(".err-explain")).toBeVisible();
+    await expect(msg.locator(".err-explain")).toContainText("함수로 구해");
+    await expect(more).toHaveText("접기");
+    await expect(more).toHaveAttribute("aria-expanded", "true");
+    await more.click();
+    await expect(msg.locator(".err-explain")).toBeHidden();
+    expect(count(await msg.textContent(), "2번째 줄")).toBe(1);
+
+    // 진단이 없는 RE는 예전처럼 해설을 그대로 보여 준다
+    await page.evaluate(() =>
+      (window as Win).__ui.fake.queueJudge({ verdict: "RE", error: { type: "TypeError", message: "unsupported operand", line: 1, traceback: "TypeError" } }),
+    );
+    await page.locator(".act-cast").click();
+    await expect(msg).toContainText("1번째 줄에서 TypeError가 났어.");
+    await expect(msg.locator(".err-head")).toHaveCount(0);
+    await expect(msg.locator(".err-more")).toHaveCount(0);
+    await page.locator(".act-retreat").click();
+    await done;
+  });
+
+  for (const [w, hgt] of [
+    [1280, 720],
+    [1024, 640],
+  ] as const) {
+    test(`long boss TLE diagnosis scrolls with a 'more' indicator and never overlaps the buttons (${w}×${hgt})`, async ({ page }) => {
+      await boot(page);
+      await page.setViewportSize({ width: w, height: hgt });
+      await page.evaluate(() => {
+        // 실제 게임처럼 #game이 화면 전체를 채운다
+        document.getElementById("tools")!.style.display = "none";
+        Object.assign(document.getElementById("game")!.style, { position: "fixed", inset: "0", width: "auto", height: "auto", margin: "0" });
+        const ui = (window as Win).__ui;
+        const long =
+          "주문은 맞았지만 너무 느려! 자리마다 `max(arr[:i + 1])`을 부르면 앞부분을 통째로 복사하고 다시 훑어서, 20만 개면 약 200억 번 일해. " +
+          "바로 앞 자리까지의 최댓값 `best`를 들고 다니면서 `x > best`일 때만 바꿔 봐. 한 번 지나가면 끝나. " +
+          "(결과를 문자열 `+=`로 이어 붙였다면 그것도 느려. 리스트에 담아 `print(*result)`로 한 번에!) 끝까지 읽었어!";
+        ui.problems.PX_BOSS = { ...ui.problems.P0105, id: "PX_BOSS", diagnoses: [{ when: { verdict: "TLE" }, text: long }] };
+      });
+      const done = page.evaluate(() => (window as Win).__ui.battle("PX_BOSS", { regionOrder: 3 }));
+      await page.evaluate(() => (window as Win).__ui.fake.queueJudge({ verdict: "AC" }));
+      await page.locator(".act-cast").click();
+      await expect(page.locator(".battle")).toHaveAttribute("data-phase", "2");
+      await page.evaluate(() =>
+        (window as Win).__ui.fake.queueJudge({ verdict: "TLE", error: { type: "KeyboardInterrupt", message: "", line: 3, traceback: "KeyboardInterrupt" } }),
+      );
+      await page.locator(".act-cast").click();
+      const msg = page.locator(".battle-msg-text");
+      await expect(msg.locator(":scope > :first-child")).toHaveClass(/diag/);
+      await expect(msg.locator(".err-head .err-line")).toHaveText("3번째 줄");
+      await expect(msg.locator(".counter")).toBeAttached();
+      await expect(page.locator(".battle")).not.toHaveClass(/is-busy/);
+
+      const box = page.locator(".battle-msg");
+      const geo = () =>
+        page.evaluate(() => {
+          const r = (s: string) => document.querySelector(s)!.getBoundingClientRect();
+          const el = document.querySelector(".battle-msg") as HTMLElement;
+          return {
+            bottom: r(".battle-bottom").bottom,
+            msgBottom: r(".battle-msg").bottom,
+            actionsTop: r(".battle-actions").top,
+            actionsBottom: r(".battle-actions").bottom,
+            overflowY: getComputedStyle(el).overflowY,
+            scrollTop: el.scrollTop,
+            scrollHeight: el.scrollHeight,
+            clientHeight: el.clientHeight,
+          };
+        });
+      const g = await geo();
+      expect(g.overflowY).toBe("auto");
+      expect(g.msgBottom).toBeLessThanOrEqual(g.bottom);
+      expect(g.bottom).toBeLessThanOrEqual(g.actionsTop);
+      expect(g.actionsBottom).toBeLessThanOrEqual(hgt);
+      // 진단은 칸 맨 위에서 시작한다
+      expect(g.scrollTop).toBe(0);
+      const more = page.locator(".battle-msg-more");
+      if (g.scrollHeight > g.clientHeight + 4) {
+        // 넘치면 '더 있어' 표시 → 누르면 내려가고, 끝까지 가면 사라진다
+        await expect(more).toBeVisible();
+        await expect(page.locator(".battle-msg-wrap")).toHaveClass(/has-more/);
+        await box.evaluate((el) => (el.scrollTop = el.scrollHeight));
+        await expect(more).toBeHidden();
+        await expect(msg).toContainText("끝까지 읽었어!");
+      } else {
+        await expect(more).toBeHidden();
+      }
+      // 새 메시지가 오면 맨 위로 돌아간다
+      await page.locator(".act-hint-1").click();
+      await expect.poll(() => box.evaluate((el) => el.scrollTop)).toBe(0);
+      await expect(more).toBeHidden();
+      await page.locator(".act-retreat").click();
+      await done;
+    });
+  }
 });
 
 test.describe("hud, menu, reward", () => {

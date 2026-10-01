@@ -80,6 +80,8 @@ export function mountHarness(game: HTMLElement) {
     results,
     victories,
     problems,
+    /** 전투 해설 규칙(테스트가 실제 콘텐츠 규칙을 앞에 끼워 넣을 수 있다) */
+    traceback,
     dialogue: (lines = dialogueLines) => record("dialogue", ui.dialogue.play(lines, names)),
     lesson: () => record("lesson", ui.lesson.open(L12, fake, names)),
     codex: () => record("codex", ui.codex.open(lessons, fake, names)),

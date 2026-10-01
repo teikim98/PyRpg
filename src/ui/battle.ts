@@ -86,6 +86,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
         let ended = false;
         const startedAt = Date.now();
         const timers: number[] = [];
+        const cleanups: (() => void)[] = [];
 
         const modal = env.stack.open({ className: "battle-modal", label: `전투: ${p.enemy.name}` });
         const root = h("div", { class: `battle ${p.boss ? "is-boss" : ""} ${ctx.shadow ? "is-shadow" : ""}`, "data-problem": p.id });
@@ -234,14 +235,49 @@ export function createBattleUI(env: UiEnv): BattleUI {
         const msg = h("div", { class: "battle-msg-text" });
         const msgDetails = h("div", { class: "battle-msg-details" });
         const msgBox = h("div", { class: "battle-msg", "aria-live": "polite" }, h("div", { class: "nuri-name" }, names.companion), msg);
+        // 메시지가 칸보다 길면 아래에 '더 있음' 표시(헤드리스·오버레이 스크롤바에서도 잘림이 보이게). 누르면 한 칸 내려간다
+        const msgMore = h("button", { class: "battle-msg-more", type: "button", tabindex: "-1", "aria-hidden": "true", hidden: true }, "▼ 더 있어");
+        const msgWrap = h("div", { class: "battle-msg-wrap" }, msgBox, msgMore);
+        const updateMsgMore = () => {
+          const rest = msgBox.scrollHeight - msgBox.scrollTop - msgBox.clientHeight;
+          msgMore.hidden = rest <= 4;
+          msgWrap.classList.toggle("has-more", rest > 4);
+        };
+        msgBox.addEventListener("scroll", updateMsgMore, { passive: true });
+        msgMore.addEventListener("click", () => {
+          msgBox.scrollBy({ top: Math.max(24, msgBox.clientHeight - 32) });
+          updateMsgMore();
+        });
+        if (typeof ResizeObserver !== "undefined") {
+          const ro = new ResizeObserver(updateMsgMore);
+          ro.observe(msgBox);
+          ro.observe(msg);
+          cleanups.push(() => ro.disconnect());
+        }
+        // 일반 해설 접기/펼치기(진단이 있을 때 한 줄로 접어 둔 Traceback 해설)
+        msg.addEventListener("click", (e) => {
+          const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".err-more");
+          if (!btn) return;
+          const body = msg.querySelector<HTMLElement>(".err-explain");
+          if (!body) return;
+          const open = body.hidden;
+          body.hidden = !open;
+          btn.setAttribute("aria-expanded", String(open));
+          btn.textContent = open ? "접기" : "자세히";
+          if (open) body.scrollIntoView({ block: "nearest" });
+          updateMsgMore();
+        });
         const say = (emotion: Emotion, html: string, details?: HTMLElement | null) => {
           portrait.set(emotion);
           msgBox.dataset.emotion = emotion;
           msg.innerHTML = html;
           msgDetails.replaceChildren(...(details ? [details] : []));
           msgDetails.hidden = !details;
+          // 판정·통과 개수뿐인 짧은 피드백(보스전)이면 오른쪽 칸을 좁혀 누리의 말에 자리를 준다
+          msgDetails.classList.toggle("is-compact", !!details?.classList.contains("fb") && !details.querySelector(".fb-test"));
           msgBox.scrollTop = 0;
           msgDetails.scrollTop = 0;
+          updateMsgMore();
         };
 
         const btnPublic = h("button", { class: "btn act-public", type: "button" }, "예제 실행");
@@ -267,7 +303,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
           btnRetreat,
         );
         const banner = h("div", { class: "battle-banner", hidden: true });
-        root.append(h("div", { class: "battle-bottom panel" }, h("div", { class: "battle-portrait" }, portrait.el), msgBox, msgDetails), actions, banner);
+        root.append(h("div", { class: "battle-bottom panel" }, h("div", { class: "battle-portrait" }, portrait.el), msgWrap, msgDetails), actions, banner);
 
         const updateButtons = () => {
           btnPublic.disabled = busy;
@@ -315,13 +351,19 @@ export function createBattleUI(env: UiEnv): BattleUI {
           }
           if (!first) return { emotion: "happy", html: "" };
           const diag = ctx.diagnose(p, res);
+          const diagHtml = diag ? `<div class="diag">${renderInline(substituteNames(diag, names))}</div>` : "";
+          // 문제 전용 진단이 있으면 진단을 본문으로 보여 주고, 일반 Traceback 해설은 [자세히]로 접어 둔다(같은 말을 두 번 하지 않게)
+          const collapsed = (head: string, ex: string | undefined) =>
+            `<div class="err-head">${head}${
+              ex ? ` <button type="button" class="err-more" aria-expanded="false">자세히</button>` : ""
+            }</div>${ex ? `<div class="err-explain" hidden>${renderInline(substituteNames(ex, names))}</div>` : ""}`;
           // TLE는 실행기가 KeyboardInterrupt로 멈춘 것이라 '폭발'(RE)처럼 말하지 않는다
           if (first.verdict === "TLE") {
             const line = first.error?.line;
             if (line) editor.highlightLine(line);
             const where = line ? `<span class="err-line">${line}번째 줄</span>을 도는 중에 멈췄어. ` : "";
-            // 문제 전용 진단이 있으면 그것을 먼저 보여 준다(보스 시간 결계에서 일반 문구가 진단을 밀어내지 않게)
-            if (diag) return { emotion: "serious", html: `<div class="diag">${renderInline(substituteNames(diag, names))}</div>${where}` };
+            // 문제 전용 진단을 먼저 보여 준다(보스 시간 결계에서 일반 문구가 진단을 밀어내지 않게)
+            if (diag) return { emotion: "serious", html: `${diagHtml}${where ? collapsed(where.trim(), first.error ? explainBody(first.error) : undefined) : ""}` };
             const ex = first.error ? explainBody(first.error) : genericVerdictMessage("TLE");
             return { emotion: "serious", html: `${where}${renderInline(substituteNames(ex, names))}` };
           }
@@ -329,10 +371,13 @@ export function createBattleUI(env: UiEnv): BattleUI {
             const line = first.error.line;
             if (line) editor.highlightLine(line);
             const ex = explainBody(first.error);
+            const type = `<code>${escapeHtml(first.error.type)}</code>`;
+            if (diag) {
+              const chip = `<span class="err-chip">${line ? `<span class="err-line">${line}번째 줄</span> · ` : ""}${type}</span>`;
+              return { emotion: "surprised", html: `${collapsed(`주문이 폭발했어! ${chip}`, ex)}${diagHtml}` };
+            }
             const where = line ? `<span class="err-line">${line}번째 줄</span>에서 ` : "";
-            let html = `주문이 폭발했어! ${where}<code>${escapeHtml(first.error.type)}</code>가 났어. ${renderInline(substituteNames(ex, names))}`;
-            if (diag) html += `<div class="diag">${renderInline(substituteNames(diag, names))}</div>`;
-            return { emotion: "surprised", html };
+            return { emotion: "surprised", html: `주문이 폭발했어! ${where}${type}가 났어. ${renderInline(substituteNames(ex, names))}` };
           }
           const text = diag ?? genericVerdictMessage(first.verdict);
           return { emotion: "worried", html: renderInline(substituteNames(text, names)) };
@@ -567,6 +612,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
           flushDraft();
           closed = true;
           timers.forEach((t) => window.clearTimeout(t));
+          cleanups.forEach((f) => f());
           const outcome = outcomeOf(result);
           editor.destroy();
           modal.close();
