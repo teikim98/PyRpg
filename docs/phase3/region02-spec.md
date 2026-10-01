@@ -75,7 +75,7 @@
 | 4 수호목 앞 | `m_P0209` | monster | `problem=P0209` (구역 출구) |
 | | `t_boss_intro` | trigger | `dialogue=boss_intro`, `once=true` (보스 두 칸 앞) |
 | 5 수호목의 공터 | `m_P0210` | monster | `problem=P0210` (보스) |
-| | `warp_east` | warp | `requires=problem:P0210`, `lockedDialogue=east_gate_locked`, `openDialogue=to_be_continued` |
+| | `warp_east` | warp | `requires=problem:P0210`, `lockedDialogue=east_gate_locked`, `openDialogue=to_be_continued`, `target=r03`, `targetSpawn=spawn_west` (고블린 동굴로, region03-spec.md §4) |
 
 - **지역 간 이동**: warp에 `target`(지역 ID)과 `targetSpawn`(도착 지역의 오브젝트 ID)이 있고 조건을 만족하면, 앱이 그 지역을 불러와 해당 오브젝트 옆 걸을 수 있는 칸에 플레이어를 놓습니다. 에코 마을 `warp_east`에도 `target=r02`, `targetSpawn=spawn_west`를 추가합니다(지금의 `to_be_continued` 대사는 `openDialogue`로 남겨서 처음 건너갈 때 짧게 보여 줌).
 - **숨겨진 길**: 개울 구역에 지나갈 수 있는 덤불(지역 1과 같은 방식)이 있고, 표지판이나 NPC 대사가 위치를 귀띔합니다.

@@ -1,7 +1,8 @@
-// dev/world.html용 하네스: 지역 맵을 직접 불러 월드만 띄운다(기본 지역 1, ?map=r02면 지역 2).
+// dev/world.html용 하네스: 지역 맵을 직접 불러 월드만 띄운다(기본 지역 1, ?map=r02면 지역 2, ?map=r03이면 지역 3).
 // window.__world = 컨트롤러, window.__events = 콜백 기록(E2E에서 읽는다).
 import mapRaw from "../../content/regions/r01-echo-village/map.tmj?raw";
 import mapRawR02 from "../../content/regions/r02-crossroad-forest/map.tmj?raw";
+import mapRawR03 from "../../content/regions/r03-goblin-cave/map.tmj?raw";
 import type { Problem, Region } from "../contracts/content";
 import type { MapObjectDef, WorldController } from "../contracts/world";
 import { createWorld } from "./index";
@@ -49,14 +50,35 @@ const ENEMY_SPRITES_R02: Record<string, string> = {
   P0210: "boss_crossroad_tree",
 };
 
-export function buildHarnessRegion(which: "r01" | "r02" = "r01"): Region {
-  const r02 = which === "r02";
-  const map = JSON.parse(r02 ? mapRawR02 : mapRaw) as Record<string, unknown>;
-  const problems = Object.entries(r02 ? ENEMY_SPRITES_R02 : ENEMY_SPRITES).map(
+/** 지역 3 몬스터 스프라이트(region03-spec.md §6, 하네스용 배정) */
+const ENEMY_SPRITES_R03: Record<string, string> = {
+  P0301: "monster_index_goblin",
+  P0302: "monster_index_goblin",
+  P0303: "monster_index_goblin",
+  P0304: "monster_slice_bat",
+  P0305: "monster_slice_bat",
+  P0306: "monster_stack_crab",
+  P0307: "monster_stack_crab",
+  P0308: "monster_mirror_slime",
+  P0309: "monster_mirror_slime",
+  P0310: "monster_grid_golem",
+  P0311: "boss_goblin_chief",
+};
+
+type HarnessMap = "r01" | "r02" | "r03";
+const HARNESS_MAPS: Record<HarnessMap, { raw: string; sprites: Record<string, string>; name: string; order: number }> = {
+  r01: { raw: mapRaw, sprites: ENEMY_SPRITES, name: "에코 마을", order: 1 },
+  r02: { raw: mapRawR02, sprites: ENEMY_SPRITES_R02, name: "갈림길 숲", order: 2 },
+  r03: { raw: mapRawR03, sprites: ENEMY_SPRITES_R03, name: "고블린 동굴", order: 3 },
+};
+
+export function buildHarnessRegion(which: HarnessMap = "r01"): Region {
+  const def = HARNESS_MAPS[which];
+  const map = JSON.parse(def.raw) as Record<string, unknown>;
+  const problems = Object.entries(def.sprites).map(
     ([id, sprite]) => ({ id, regionId: which, enemy: { name: id, sprite, attack: 0 } }) as unknown as Problem,
   );
-  const name = r02 ? "갈림길 숲" : "에코 마을";
-  return { id: which, order: r02 ? 2 : 1, name, map, problems, lessons: [], dialogues: {}, recommended: [] };
+  return { id: which, order: def.order, name: def.name, map, problems, lessons: [], dialogues: {}, recommended: [] };
 }
 
 export async function startWorldHarness(): Promise<void> {
@@ -78,7 +100,8 @@ export async function startWorldHarness(): Promise<void> {
     onMoved: (p) => log({ type: "moved", ...p }),
     onMenu: () => log({ type: "menu" }),
   });
-  const region = buildHarnessRegion(new URLSearchParams(location.search).get("map") === "r02" ? "r02" : "r01");
+  const param = new URLSearchParams(location.search).get("map");
+  const region = buildHarnessRegion(param === "r02" || param === "r03" ? param : "r01");
   const spawn = parseTiledMap(region.map).objects.find((o) => o.type === "spawn");
   world.setCompanionVisible(true);
   await world.loadRegion(region, { x: spawn?.x ?? 1, y: spawn?.y ?? 1, facing: "down" }, new Set());

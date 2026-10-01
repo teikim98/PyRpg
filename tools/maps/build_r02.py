@@ -20,7 +20,7 @@
                  chest_hidden_grove와 선택 m_P0208이 있다. 이 덤불이 그 오솔길의 유일한 입구다.
   4 수호목 앞    뿌리 길이 갈라지는 좁은 숲. 출구 m_P0209
   5 수호목의 공터 1칸 통로: t_boss_intro → 빈칸 → 보스 m_P0210(트리거는 보스 두 칸 앞, 피할 수 없음).
-                 보스 뒤 공터에서는 뿌리 길이 두 갈래씩 갈라져 퍼지고, 가운데 길 동쪽 끝에 warp_east
+                 보스 뒤 공터에서는 뿌리 길이 두 갈래씩 갈라져 퍼지고, 가운데 길 동쪽 끝에 warp_east(→ 지역 3 spawn_west)
 """
 from __future__ import annotations
 
@@ -250,7 +250,14 @@ OBJECTS = {
     ">": (
         "warp_east",
         "warp",
-        {"requires": "problem:P0210", "lockedDialogue": "east_gate_locked", "openDialogue": "to_be_continued"},
+        {
+            "requires": "problem:P0210",
+            "lockedDialogue": "east_gate_locked",
+            "openDialogue": "to_be_continued",
+            # 지역 간 이동(docs/phase3/region03-spec.md §4): 고블린 동굴 서쪽 입구로
+            "target": "r03",
+            "targetSpawn": "spawn_west",
+        },
         "root_floor",
     ),
 }

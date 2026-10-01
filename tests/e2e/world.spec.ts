@@ -1,4 +1,5 @@
 // 월드(단위 4) E2E: dev/world.html 하네스에서 실제 키 입력으로 이동·충돌·상호작용을 확인한다.
+import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 
 // window.__world / __events 타입은 src/game/harness.ts의 전역 선언을 쓴다
@@ -260,5 +261,50 @@ test.describe("world (dev/world.html)", () => {
     await page.keyboard.press("Escape");
     await page.keyboard.press("KeyM");
     await expect.poll(() => eventsSince(page, n)).toEqual([{ type: "menu" }, { type: "menu" }]);
+  });
+});
+
+// 지역 3(고블린 동굴) 맵: ?map=r03. 바위 틈(cave_crack)은 벽처럼 보이지만 실제로 지나갈 수 있다
+/** map.tmj의 ground 레이어에서 바위 틈 타일 칸(하나뿐) */
+function caveCrack(): { x: number; y: number } {
+  const map = JSON.parse(readFileSync("content/regions/r03-goblin-cave/map.tmj", "utf8"));
+  const ts = map.tilesets[0];
+  const gid = ts.firstgid + ts.tiles.find((t: { type: string }) => t.type === "cave_crack").id;
+  const ground = map.layers.find((l: { name: string }) => l.name === "ground").data as number[];
+  const cells = ground.map((g, i) => (g === gid ? i : -1)).filter((i) => i >= 0);
+  expect(cells).toHaveLength(1);
+  return { x: cells[0] % map.width, y: Math.floor(cells[0] / map.width) };
+}
+
+test.describe("world (dev/world.html?map=r03)", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/dev/world.html?map=r03");
+    await page.waitForFunction(() => window.__worldReady === true, null, { timeout: 30_000 });
+  });
+
+  test("boots at spawn_west with the region03-spec objects, and the cave crack is walkable", async ({ page }) => {
+    const objs = await page.evaluate(() => window.__world!.getObjects());
+    const byId = new Map(objs.map((o) => [o.id, o]));
+    const spawn = byId.get("spawn_west")!;
+    expect({ x: (await pos(page)).x, y: (await pos(page)).y }).toEqual({ x: spawn.x, y: spawn.y });
+    expect(byId.get("board_shadow_r03")?.type).toBe("board");
+    expect(byId.get("npc_goblin_clerk")?.props).toEqual({ dialogue: "npc_goblin_clerk", sprite: "npc_goblin" });
+    expect(byId.get("m_P0311")?.props).toEqual({ problem: "P0311" });
+    expect(objs).toHaveLength(29);
+
+    // 거울 웅덩이 북쪽 벽: 두 칸 아래에서 위로 걸어 틈을 지나 숨겨진 굴로 들어간다
+    const chest = byId.get("chest_hidden_pool")!;
+    const pool = byId.get("rune_L3-4")!;
+    const { x: crackX, y: crackY } = caveCrack();
+    expect(chest.y).toBeLessThan(crackY);
+    expect(pool.y).toBeGreaterThan(crackY);
+    await teleport(page, crackX, crackY + 1, "up");
+    await step(page, "ArrowUp");
+    expect(await pos(page)).toMatchObject({ x: crackX, y: crackY });
+    await step(page, "ArrowUp");
+    expect(await pos(page)).toMatchObject({ x: crackX, y: crackY - 1 });
+    // 틈 옆의 벽 앞면은 막혀 있다
+    await teleport(page, crackX - 1, crackY + 1, "up");
+    await pressAndStay(page, "ArrowUp");
   });
 });

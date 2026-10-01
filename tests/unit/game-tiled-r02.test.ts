@@ -52,7 +52,14 @@ const SPEC: Record<string, { type: string; props: Record<string, string | number
   m_P0210: { type: "monster", props: { problem: "P0210" } },
   warp_east: {
     type: "warp",
-    props: { requires: "problem:P0210", lockedDialogue: "east_gate_locked", openDialogue: "to_be_continued" },
+    // 지역 3(고블린 동굴)으로 이어진다(region03-spec.md §4)
+    props: {
+      requires: "problem:P0210",
+      lockedDialogue: "east_gate_locked",
+      openDialogue: "to_be_continued",
+      target: "r03",
+      targetSpawn: "spawn_west",
+    },
   },
 };
 

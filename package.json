@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "verify": "python3 tools/verify_content.py && python3 tools/verify_samples.py && python3 tools/maps/build_r01.py --check && python3 tools/maps/build_r02.py --check && python3 tools/art/check.py"
+    "verify": "python3 tools/verify_content.py && python3 tools/verify_samples.py && python3 tools/maps/build_r01.py --check && python3 tools/maps/build_r02.py --check && python3 tools/maps/build_r03.py --check && python3 tools/art/check.py"
   },
   "dependencies": {
     "@codemirror/commands": "6.11.1",
