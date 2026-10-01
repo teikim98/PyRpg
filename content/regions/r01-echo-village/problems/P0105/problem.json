@@ -1,0 +1,67 @@
+{
+  "id": "P0105",
+  "title": "[보스] 계단 미믹",
+  "kind": "stdin",
+  "enemy": { "name": "계단 미믹", "sprite": "boss_stair_mimic", "attack": 40 },
+  "requires": ["scroll.voice", "scroll.convert", "scroll.arith", "scroll.quick_ear"],
+  "concept": "scroll.arith",
+  "boss": true,
+  "phases": [
+    {
+      "phase": 1,
+      "name": "정확성",
+      "intro": "계단이 입을 벌렸어! 먼저 합을 정확히 외쳐서 정체를 드러내게 하자!"
+    },
+    {
+      "phase": 2,
+      "name": "시간 결계",
+      "intro": "으악, 시간 결계야! 이제 계단이 10^18개까지 늘어나. 하나씩 세다간 시계 룬보다 우리가 먼저 멈추겠어. 시간 게이지를 잘 봐!"
+    }
+  ],
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 15,
+  "tests": [
+    { "in": "1 10\n", "out": "55\n", "public": true, "phase": 1, "note": "기본 동작" },
+    { "in": "5 5\n", "out": "5\n", "phase": 1, "note": "경계: a = b" },
+    { "in": "3 7\n", "out": "25\n", "phase": 1, "note": "a > 1" },
+    { "in": "1 1000000000000000000\n", "out": "500000000000000000500000000000000000\n", "phase": 2, "note": "경계: 최대 범위" },
+    { "in": "100000000000000000 1000000000000000000\n", "out": "495000000000000000550000000000000000\n", "phase": 2, "note": "큰 범위" },
+    { "in": "1000000000000000000 1000000000000000000\n", "out": "1000000000000000000\n", "phase": 2, "note": "경계: a = b인 최댓값" }
+  ],
+  "wrong": [
+    {
+      "file": "slow.py",
+      "title": "반복문으로 하나씩 더하기(비효율 답안)",
+      "slow": true,
+      "expectFail": { "4": "TLE", "5": "TLE" },
+      "diagnosis": {
+        "when": { "verdict": "TLE" },
+        "text": "주문은 맞았지만 너무 느려요. 10^18번 반복하면, 1초에 1억 번씩 더해도 300년이 넘게 걸려요. 반복하지 않고 한 번에 계산하는 방법이 있어요."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "int(float)",
+      "expectFail": { "4": "WA", "5": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA", "onlyHiddenFail": true },
+        "text": "`/`에서 실수를 거치면서 정밀도를 잃었어요. P0102에서 본 함정과 같아요."
+      }
+    },
+    {
+      "file": "wrong_a.py",
+      "title": "/ 사용",
+      "expectFail": { "1": "WA", "2": "WA", "3": "WA", "4": "WA", "5": "WA", "6": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA", "outputMatches": "\\.0\\s*$|e\\+" },
+        "text": "`/`는 실수를 돌려줘요. 공식은 맞았으니 `//`로 바꿔 보세요."
+      }
+    }
+  ],
+  "hints": [
+    "반복문이 10^18번 돈다면 얼마나 걸릴지 계산해 보세요.",
+    "1부터 10까지의 합을 (1 + 10), (2 + 9), … 처럼 짝지어 보세요(가우스의 방법).",
+    "`print((a + b) * (____) // 2)`"
+  ],
+  "reward": { "xp": 1000, "gold": 500 }
+}

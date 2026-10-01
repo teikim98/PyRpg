@@ -1,0 +1,53 @@
+{
+  "id": "P0108",
+  "title": "시계탑의 초",
+  "kind": "function",
+  "entry": "solution",
+  "enemy": { "name": "시계 딱정벌레", "sprite": "monster_clock_beetle", "attack": 20 },
+  "requires": ["scroll.arith"],
+  "concept": "scroll.arith",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 8,
+  "tests": [
+    { "args": "(3661,)", "expect": "[1, 1, 1]", "public": true, "note": "기본 동작" },
+    { "args": "(59,)", "expect": "[0, 0, 59]", "public": true, "note": "1분이 안 됨" },
+    { "args": "(0,)", "expect": "[0, 0, 0]", "note": "경계: 최솟값" },
+    { "args": "(3600,)", "expect": "[1, 0, 0]", "note": "정확히 1시간" },
+    { "args": "(86399,)", "expect": "[23, 59, 59]", "note": "하루의 마지막 초" },
+    { "args": "(999999999999997199,)", "expect": "[277777777777776, 59, 59]", "note": "큰 수(float 정밀도 함정)" },
+    { "args": "(1000000000000000000,)", "expect": "[277777777777777, 46, 40]", "note": "경계: 최댓값" }
+  ],
+  "extraDiagnoses": [
+    {
+      "when": { "verdict": "WA", "outputMatches": "^\\[0, 0, 0\\]$" },
+      "text": "아직 `h`, `m`, `s`가 모두 처음 값 `0` 그대로예요. 각 칸에 `sec`로 계산하는 식을 적어 보세요."
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_a.py",
+      "title": "분에서 시간을 빼지 않음",
+      "expectFail": { "1": "WA", "4": "WA", "5": "WA", "6": "WA", "7": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA", "outputMatches": "^\\[\\d+, (?:[6-9]\\d|\\d{3,}), " },
+        "text": "분이 60을 넘었어요. 시로 넘어간 만큼은 분에서 빼야 해요. 전체 분(`sec // 60`)을 다시 60으로 나눈 나머지를 구해 보세요."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "int(sec / 3600)",
+      "expectFail": { "6": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA", "onlyHiddenFail": true },
+        "text": "작은 수는 맞는데 큰 수에서만 틀렸어요. `/`가 실수(float)를 거치면서 끝자리가 뭉개져서, 3600으로 딱 나누어떨어지기 직전의 수가 반올림됐어요. 몫은 `//`로 구하세요."
+      }
+    }
+  ],
+  "hints": [
+    "1시간은 3600초, 1분은 60초예요. 시를 먼저 떼어 내고, 남은 초에서 분을 떼어 내 보세요.",
+    "시는 `sec // 3600`, 분은 `sec % 3600 // 60`, 초는 `sec % 60`이에요. 몫과 나머지만 쓰면 큰 수에서도 정확해요.",
+    "`h = sec // 3600`\n`m = sec % 3600 // ____`\n`s = sec % ____`"
+  ],
+  "reward": { "xp": 100, "gold": 50 }
+}

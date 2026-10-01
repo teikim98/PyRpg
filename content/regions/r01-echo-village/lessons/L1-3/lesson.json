@@ -1,0 +1,16 @@
+{
+  "id": "L1-3",
+  "title": "산술의 주문: 몫과 나머지",
+  "scroll": {
+    "id": "scroll.arith",
+    "name": "산술의 주문서",
+    "summary": "`/`는 언제나 실수, `//`는 몫, `%`는 나머지, `**`는 거듭제곱. `int`는 크기 제한이 없지만 `/`를 거치면 큰 수가 뭉개진다. 4300자리 넘는 수의 출력은 `sys.set_int_max_str_digits(0)`."
+  },
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 연산자를 채워서 7을 2로 나눈 몫과 나머지 `3 1`이 출력되게 해 봐.",
+    "code": "print(7 ___ 2, 7 % 2)\n",
+    "expectedOutput": "3 1\n",
+    "answer": "//"
+  }
+}

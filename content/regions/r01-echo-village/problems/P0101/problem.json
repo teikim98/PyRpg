@@ -1,0 +1,44 @@
+{
+  "id": "P0101",
+  "title": "금화 두 자루",
+  "kind": "stdin",
+  "enemy": { "name": "타입 슬라임", "sprite": "monster_type_slime", "attack": 20 },
+  "requires": ["scroll.convert"],
+  "concept": "scroll.convert",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 5,
+  "tests": [
+    { "in": "1 2\n", "out": "3\n", "public": true, "note": "기본 동작" },
+    { "in": "0 0\n", "out": "0\n", "note": "경계: 최솟값" },
+    { "in": "7 0\n", "out": "7\n", "note": "한쪽이 0" },
+    { "in": "999999999999999999 1\n", "out": "1000000000000000000\n", "note": "자릿수 올림" },
+    { "in": "1000000000000000000 1000000000000000000\n", "out": "2000000000000000000\n", "note": "경계: 최댓값" }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_b.py",
+      "title": "float 변환",
+      "expectFail": { "1": "WA", "2": "WA", "3": "WA", "4": "WA", "5": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA", "outputMatches": "\\.0\\s*$|e\\+" },
+        "text": "`float`는 소수점이 붙어서 출력되고, 큰 수에서는 정밀도도 잃어요. 정수는 `int`로 바꿔 주세요."
+      }
+    },
+    {
+      "file": "wrong_a.py",
+      "title": "형변환 누락",
+      "expectFail": { "1": "WA", "2": "WA", "3": "WA", "4": "WA", "5": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA", "outputMatches": "^\\d+\\s*$" },
+        "text": "`input()`은 문자열을 돌려줘요. 그래서 `+`가 덧셈이 아니라 이어 붙이기가 됐어요. `int()`로 바꿔 보세요."
+      }
+    }
+  ],
+  "hints": [
+    "`input()`이 돌려주는 값의 자료형을 확인해 보세요.",
+    "`split()`으로 나눈 뒤 각각 `int()`로 바꿉니다.",
+    "`a, b = map(int, ____.split())`"
+  ],
+  "reward": { "xp": 100, "gold": 50 }
+}

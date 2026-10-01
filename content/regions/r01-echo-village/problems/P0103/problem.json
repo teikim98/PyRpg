@@ -1,0 +1,53 @@
+{
+  "id": "P0103",
+  "title": "몇 번 때려야 할까",
+  "kind": "function",
+  "entry": "solution",
+  "enemy": { "name": "철갑 두더지", "sprite": "monster_iron_mole", "attack": 20 },
+  "requires": ["scroll.arith"],
+  "concept": "scroll.arith",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 8,
+  "tests": [
+    { "args": "(10, 3)", "expect": "4", "public": true, "note": "나누어떨어지지 않음" },
+    { "args": "(9, 3)", "expect": "3", "public": true, "note": "나누어떨어짐" },
+    { "args": "(1, 1)", "expect": "1", "note": "경계: 최솟값" },
+    { "args": "(1, 1000000000000000000)", "expect": "1", "note": "atk가 hp보다 큼" },
+    { "args": "(1000000000000000000, 1)", "expect": "1000000000000000000", "note": "경계: 최댓값" },
+    { "args": "(999999999999999999, 1)", "expect": "999999999999999999", "note": "float 정밀도 함정" },
+    { "args": "(1000000000000000000, 3)", "expect": "333333333333333334", "note": "큰 수에서 올림" }
+  ],
+  "extraDiagnoses": [
+    {
+      "when": { "verdict": "WA", "outputMatches": "^0$" },
+      "text": "아직 `answer`가 처음 값 `0` 그대로예요. `return` 뒤에 두더지를 쓰러뜨리는 횟수를 계산하는 식을 적어 보세요."
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_b.py",
+      "title": "math.ceil(float)",
+      "expectFail": { "6": "WA", "7": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA", "onlyHiddenFail": true },
+        "text": "`hp / atk`가 실수를 거치면서 정밀도를 잃었어요. `999999999999999999 / 1`조차 `1e+18`이 돼요. 정수 연산만으로 올림하는 방법을 찾아보세요."
+      }
+    },
+    {
+      "file": "wrong_a.py",
+      "title": "내림 나눗셈",
+      "expectFail": { "1": "WA", "4": "WA", "7": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA" },
+        "text": "나누어떨어지지 않으면 마지막으로 한 번 더 때려야 해요. 내림이 아니라 올림이 필요해요."
+      }
+    }
+  ],
+  "hints": [
+    "나누어떨어지지 않으면 한 번 더 때려야 해요.",
+    "올림 나눗셈을 정수 연산만으로 만들어 보세요. `/`를 쓰면 큰 수에서 틀려요.",
+    "`return (hp + ____) // atk`"
+  ],
+  "reward": { "xp": 100, "gold": 50 }
+}
