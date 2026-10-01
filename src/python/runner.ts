@@ -250,7 +250,7 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
   }
 
   /** 제한 시간을 걸고 요청 하나를 실행한다. 소프트 → (1초 뒤) 하드 순서로 멈춘다 */
-  async function execute<R>(
+  async function execute<R extends RunReply>(
     body: RequestBody,
     limitMs: number,
     pick: (res: WorkerResponse) => R | undefined,
@@ -287,8 +287,12 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
         (res) => {
           if (res.ok) {
             // 응답이 왔으면 중단 여부는 응답(interrupted, timeMs)으로 판단한다.
-            // 타이머가 울린 직후 정상 응답이 도착한 경우를 TLE로 오판하지 않기 위해서다
-            finish({ reply: pick(res), timedOut: false, hardStopped: false, fatal: false });
+            // 타이머가 울린 직후 정상 응답이 도착한 경우를 TLE로 오판하지 않기 위해서다.
+            // 다만 신호를 썼는데 Python이 그것을 소비했다면(buffer가 0으로 돌아옴) 사용자 코드가
+            // `except:`로 KeyboardInterrupt를 삼키고 끝까지 간 것이므로 시간 초과로 본다
+            const reply = pick(res);
+            const swallowed = timedOut && reply !== undefined && !reply.interruptPending;
+            finish({ reply, timedOut: swallowed, hardStopped: false, fatal: false });
           } else if (res.fatal) {
             killWorker(h);
             finish({ timedOut: false, hardStopped: false, fatal: true, fatalCause: res.message });

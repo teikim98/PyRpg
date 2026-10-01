@@ -79,7 +79,7 @@ const [a, b] = "3 4".split(" ").map(Number);
 
 ```python run
 print(3 < 5, 3 == 5)
-print(1 == "1")        # 자료형이 다르면 그냥 False
+print(1 == "1")        # 숫자와 문자열은 몰래 바꿔 비교하지 않아서 False
 print("12" < "9")      # 문자열끼리는 사전 순서! 첫 글자 '1'이 '9'보다 앞
 print(int("12") < int("9"))
 ```

@@ -17,6 +17,11 @@ export interface RunReply {
   timeMs: number;
   /** KeyboardInterrupt(소프트 중단)로 끝남 */
   interrupted: boolean;
+  /**
+   * 응답 직전 interrupt buffer에 신호가 남아 있었는지. Python은 신호를 처리하면 buffer를 0으로 되돌리므로,
+   * 메인 스레드가 신호를 썼는데 false면 사용자 코드가 KeyboardInterrupt를 except로 삼킨 것이다(시간 초과).
+   */
+  interruptPending: boolean;
 }
 
 export interface TestReply extends RunReply {

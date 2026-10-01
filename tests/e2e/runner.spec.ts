@@ -222,6 +222,55 @@ test.describe("Python 실행기", () => {
     expect(r.verdict).toBe("AC");
   });
 
+  test("sys.stdout.close()와 builtins 덮어쓰기가 다음 실행·테스트에 남지 않는다", async ({ page }) => {
+    await open(page);
+    // 출력 뒤 stdout을 닫는 코드(빠른 출력 관용구를 흉내 내다 생기는 실수)
+    let r = await run(page, "import sys\nprint(1)\nsys.stdout.close()");
+    expect(r.stdout).toBe("1\n");
+    r = await run(page, "import sys\nprint('e', file=sys.stderr)\nsys.stderr.close()");
+    expect(r.stderr).toBe("e\n");
+    r = await run(page, "import sys\nprint(2)\nprint('e2', file=sys.stderr)");
+    expect(r.error).toBeUndefined();
+    expect(r.stdout).toBe("2\n");
+    expect(r.stderr).toBe("e2\n");
+
+    const p = stdinProblem("BUILTINS", [
+      { in: "1 2\n", out: "3\n" },
+      { in: "4 5\n", out: "9\n" },
+    ]);
+    const code = "import builtins\na, b = map(int, input().split())\nprint(a + b)\nbuiltins.input = lambda *x: '100 100'\nbuiltins.leak = 1";
+    const j: JudgeResult = await page.evaluate(([pp, c]) => W().__runner.judge(pp, c, { scope: "all" }), [p, code] as const);
+    expect(j.tests.map((t) => t.actual)).toEqual(["3\n", "9\n"]);
+    r = await run(page, "print(input(), 'leak' in dir(__builtins__))", "hello\n");
+    expect(r.stdout).toBe("hello False\n");
+  });
+
+  test("긴 Traceback은 가운데를 줄이고 마지막 에러 줄을 남긴다", async ({ page }) => {
+    await open(page);
+    // 서로 부르는 재귀는 같은 줄 반복이 아니라서 Traceback이 길어진다
+    const r = await run(page, "def f(n):\n    return g(n + 1)\ndef g(n):\n    return f(n + 1)\nf(0)");
+    expect(r.error?.type).toBe("RecursionError");
+    expect(r.error!.traceback.length).toBeLessThanOrEqual(4100);
+    expect(r.error!.traceback.startsWith("Traceback (most recent call last):")).toBe(true);
+    expect(r.error!.traceback.trimEnd().endsWith("RecursionError: maximum recursion depth exceeded")).toBe(true);
+  });
+
+  test("except로 KeyboardInterrupt를 삼키는 무한 루프도 하드 중단으로 멈추고 복구한다", async ({ page }) => {
+    test.setTimeout(120_000);
+    await open(page);
+    const code = "while True:\n    try:\n        pass\n    except:\n        pass";
+    const t0 = Date.now();
+    const r = await run(page, code, "", 800);
+    expect(r.timedOut).toBe(true);
+    expect(Date.now() - t0).toBeLessThan(800 + 1000 + 1500);
+    expect((await run(page, "print('alive')")).stdout).toBe("alive\n");
+    // 삼킨 뒤 정답을 출력하고 끝내도 제한을 넘겼으면 TLE
+    const p = stdinProblem("SWALLOW", [{ in: "\n", out: "1\n" }], { timeLimitMs: 100 });
+    const late = "import time\ntry:\n    while True:\n        pass\nexcept BaseException:\n    pass\nprint(1)";
+    const j: JudgeResult = await page.evaluate(([pp, c]) => W().__runner.judge(pp, c, { scope: "all" }), [p, late] as const);
+    expect(j.verdict).toBe("TLE");
+  });
+
   test("while True: pass → 소프트 중단으로 빠르게 TLE, 다음 실행 정상", async ({ page }) => {
     await open(page);
     const before = await page.evaluate(() => W().__runner.restarts());

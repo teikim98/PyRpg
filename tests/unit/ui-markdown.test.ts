@@ -109,6 +109,16 @@ describe("renderMarkdown blocks", () => {
     expect(html).toContain("<code>x|y</code>");
   });
 
+  it("treats a literal <br> in a table cell as a line break (multi-line example I/O)", () => {
+    // statement.md의 예제 표는 여러 줄 입력을 `ab`<br>`3`처럼 쓴다(P0104, P0107, P0109)
+    const html = renderMarkdown("| 입력 | 출력 |\n|---|---|\n| `ab`<br>`3` | `False`<BR/>`True` |\n| `<br>` | a<br />b<script> |");
+    expect(html).toContain("<td><code>ab</code><br><code>3</code></td>");
+    expect(html).toContain("<td><code>False</code><br><code>True</code></td>");
+    // 코드 스팬 안의 <br>은 글자 그대로, 다른 태그는 여전히 이스케이프
+    expect(html).toContain("<td><code>&lt;br&gt;</code></td>");
+    expect(html).toContain("<td>a<br>b&lt;script&gt;</td>");
+  });
+
   it("renders horizontal rules and hard breaks", () => {
     expect(renderMarkdown("a\n\n---\n\nb")).toBe("<p>a</p>\n<hr>\n<p>b</p>");
     expect(renderInline("a  \nb")).toBe("a<br>\nb");
@@ -118,5 +128,10 @@ describe("renderMarkdown blocks", () => {
 describe("substituteNames", () => {
   it("replaces every placeholder", () => {
     expect(substituteNames("{player}! {companion}야. {player}?", { player: "하늘", companion: "누리" })).toBe("하늘! 누리야. 하늘?");
+  });
+
+  it("inserts names literally even when they contain $ replacement patterns", () => {
+    // 저장 파일의 이름은 사용자가 고칠 수 있다. String.replace의 $&, $', $` 패턴으로 해석되면 안 된다
+    expect(substituteNames("안녕, {player}! 나는 {companion}.", { player: "$&$'", companion: "$`" })).toBe("안녕, $&$'! 나는 $`.");
   });
 });

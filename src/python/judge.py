@@ -19,8 +19,32 @@ REPR_LIMIT = 4000
 MESSAGE_LIMIT = 2000
 
 
+_BUILTINS = dict(builtins.__dict__)
+
+
+def _restore_builtins():
+    # builtins.input = ... 처럼 내장 모듈을 고친 것이 다음 테스트·채점기에 남지 않게 한다
+    d = builtins.__dict__
+    for k in [k for k in d if k not in _BUILTINS]:
+        del d[k]
+    d.update(_BUILTINS)
+
+
+def _reopen_std_streams():
+    # sys.stdout.close()는 sys.__stdout__ 객체 자체를 닫는다(fd는 closefd=False라 살아 있음).
+    # 그대로 두면 워커가 살아 있는 동안 모든 print가 ValueError가 되므로 새 래퍼로 바꾼다
+    for name, fd in (("__stdout__", 1), ("__stderr__", 2)):
+        s = getattr(sys, name, None)
+        if s is None or s.closed:
+            try:
+                setattr(sys, name, io.open(fd, "w", buffering=1, encoding="utf-8", closefd=False))
+            except Exception:
+                pass
+
+
 def _reset_interpreter():
     # dict로 격리되지 않는 인터프리터 상태를 기본값으로 되돌린다(research.md §3.2.8)
+    _restore_builtins()
     try:
         sys.setrecursionlimit(RECURSION_LIMIT)
     except Exception:
@@ -41,6 +65,7 @@ def _reset_interpreter():
                     os.close(new)
             except OSError:
                 pass
+    _reopen_std_streams()
     sys.stdout = sys.__stdout__
     sys.stderr = sys.__stderr__
     # 테스트마다 새 stdin 래퍼를 연다. 이전 테스트가 남긴 버퍼가 섞이지 않게 한다.
@@ -67,6 +92,14 @@ def _clip(s, limit):
     if len(s) > limit:
         return s[:limit] + "…"
     return s
+
+
+def _clip_middle(s, limit):
+    # Traceback은 마지막 줄(예외 이름과 메시지)이 가장 중요하므로 가운데를 줄인다
+    if len(s) <= limit:
+        return s
+    head = limit // 4
+    return s[:head] + "\n  …(중간 생략)…\n" + s[len(s) - (limit - head):]
 
 
 def _error_info(e):
@@ -97,7 +130,7 @@ def _error_info(e):
         "type": type(e).__name__,
         "message": _clip(message, MESSAGE_LIMIT),
         "line": line,
-        "traceback": _clip(text, MESSAGE_LIMIT * 2),
+        "traceback": _clip_middle(text, MESSAGE_LIMIT * 2),
     }
 
 

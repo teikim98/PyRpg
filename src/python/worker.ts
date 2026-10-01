@@ -138,6 +138,8 @@ function escapedError(e: unknown): PyResult | null {
 }
 
 function finishRun(r: PyResult): RunReply {
+  // Python 실행이 끝난 직후에 읽는다(중단 신호가 처리되지 않고 남았는지)
+  const interruptPending = interrupt !== null && interrupt[0] !== 0;
   // 남은 출력까지 모은다. 실패해도 응답은 보낸다
   let stdout = "";
   let stderr = "";
@@ -157,6 +159,7 @@ function finishRun(r: PyResult): RunReply {
     error: r.error,
     timeMs: r.timeMs,
     interrupted: r.status === "timeout" || r.verdict === "TLE",
+    interruptPending,
   };
 }
 

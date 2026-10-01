@@ -74,15 +74,18 @@ function exerciseSection(
   fb.set("neutral", renderInline(substituteNames("빈칸을 채우고 [실행]을 눌러 봐!", names)));
   let tries = 0;
   let solved = false;
+  // Enter 키는 비활성화된 [실행] 버튼을 거치지 않으므로 따로 막는다(한 번 실행을 여러 번 센다)
+  let running = false;
 
   const run = async () => {
-    if (solved) return;
+    if (solved || running) return;
     const value = input.value;
     if (value.trim() === "") {
       fb.set("worried", "빈칸을 먼저 채워 줘!");
       input.focus();
       return;
     }
+    running = true;
     runBtn.disabled = true;
     output.hidden = false;
     output.textContent = runner.isReady() ? "실행 중…" : "실행기를 깨우는 중…";
@@ -116,6 +119,7 @@ function exerciseSection(
     } catch (e) {
       output.textContent = `실행하지 못했어: ${(e as Error).message}`;
     } finally {
+      running = false;
       runBtn.disabled = solved;
     }
   };

@@ -40,7 +40,7 @@
   "hints": [
     "숫자를 문자열로 바꾸면 글자 수가 곧 자릿수예요. 큰 수에서 에러가 나면 에러 메시지를 끝까지 읽어 보세요.",
     "`len(str(a ** b))`가 자릿수예요. 4300자리가 넘는 수는 `sys.set_int_max_str_digits(0)`으로 제한을 풀어야 문자열로 바꿀 수 있어요.",
-    "`import sys`\n`sys.set_int_max_str_digits(____)`\n`a, b = map(int, input().split())`\n`print(len(str(a ** b)))`"
+    "```python\nimport sys\nsys.set_int_max_str_digits(____)\na, b = map(int, input().split())\nprint(len(str(a ** b)))\n```"
   ],
   "reward": { "xp": 100, "gold": 50 }
 }

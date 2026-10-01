@@ -111,6 +111,37 @@ function splitRow(row: string): string[] {
   return cells;
 }
 
+/**
+ * 표 칸 안의 `<br>`(GFM 관례)을 줄바꿈으로 그린다. 표 한 칸에는 줄바꿈을 쓸 수 없어서 여러 줄 예제 입출력에 쓴다.
+ * 코드 스팬 안의 `<br>`은 글자 그대로 두고, 나머지 글자는 renderInline이 이스케이프한다.
+ */
+function renderCell(cell: string): string {
+  const parts: string[] = [];
+  let cur = "";
+  let ticks = 0;
+  for (let i = 0; i < cell.length; i++) {
+    if (cell[i] === "`") {
+      let n = 1;
+      while (cell[i + n] === "`") n++;
+      if (ticks === 0) ticks = n;
+      else if (ticks === n) ticks = 0;
+      cur += cell.slice(i, i + n);
+      i += n - 1;
+      continue;
+    }
+    const m = ticks === 0 ? /^<br\s*\/?>/i.exec(cell.slice(i)) : null;
+    if (m) {
+      parts.push(cur);
+      cur = "";
+      i += m[0].length - 1;
+      continue;
+    }
+    cur += cell[i];
+  }
+  parts.push(cur);
+  return parts.map((p) => renderInline(p.trim())).join("<br>");
+}
+
 function renderFence(info: string, body: string): string {
   const words = info.trim().split(/\s+/).filter(Boolean);
   const lang = (words[0] ?? "").toLowerCase();
@@ -251,7 +282,7 @@ function parseBlocks(lines: string[]): string {
         i++;
       }
       const cell = (tag: string, c: string, k: number) =>
-        `<${tag}${aligns[k] ? ` style="text-align:${aligns[k]}"` : ""}>${renderInline(c)}</${tag}>`;
+        `<${tag}${aligns[k] ? ` style="text-align:${aligns[k]}"` : ""}>${renderCell(c)}</${tag}>`;
       const thead = `<thead><tr>${head.map((c, k) => cell("th", c, k)).join("")}</tr></thead>`;
       const tbody = rows.length
         ? `<tbody>${rows.map((r) => `<tr>${head.map((_, k) => cell("td", r[k] ?? "", k)).join("")}</tr>`).join("")}</tbody>`
@@ -283,5 +314,6 @@ export function renderMarkdown(md: string): string {
 
 /** 이름 치환({player}, {companion}) */
 export function substituteNames(text: string, names: { player: string; companion: string }): string {
-  return text.replace(/\{player\}/g, names.player).replace(/\{companion\}/g, names.companion);
+  // 함수로 넘겨야 이름 속의 $&, $' 같은 문자열이 치환 패턴으로 해석되지 않는다
+  return text.replace(/\{player\}/g, () => names.player).replace(/\{companion\}/g, () => names.companion);
 }
