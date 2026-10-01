@@ -223,7 +223,7 @@ for (const region of REGIONS) {
             expect.soft(e.ruleBased, `${where} #${e.test} ${e.type}: ${e.message} 에 맞는 traceback 규칙`).toBe(true);
             expect.soft(typeof e.line, `${where} #${e.test} ${e.type} 줄 번호`).toBe("number");
             expect.soft(e.text.startsWith(`${e.line}번째 줄: `), `${where} #${e.test} 해설 앞의 줄 번호`).toBe(true);
-            expect.soft(e.text, `${where} #${e.test} 일반 문구가 아님`).not.toContain("에러가 났어요. 메시지를 보고");
+            expect.soft(e.text, `${where} #${e.test} 일반 문구가 아님`).not.toContain("에러가 났어. 메시지를 보고");
             if (e.verdict === "TLE") expect.soft(e.type).toBe("KeyboardInterrupt");
           }
           if (rep.boss) {
