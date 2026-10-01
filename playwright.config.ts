@@ -6,19 +6,22 @@ import { defineConfig } from "@playwright/test";
 const preinstalled = "/opt/pw-browsers/chromium";
 const executablePath = process.env.PW_CHROMIUM_PATH ?? (existsSync(preinstalled) ? preinstalled : undefined);
 
+// 병렬 작업 시 서로 다른 포트를 쓰도록 PW_PORT로 바꿀 수 있다.
+const port = Number(process.env.PW_PORT ?? 4173);
+
 export default defineConfig({
   testDir: "tests/e2e",
   timeout: 90_000,
   fullyParallel: false,
   workers: 1,
   use: {
-    baseURL: "http://localhost:4173",
+    baseURL: `http://localhost:${port}`,
     launchOptions: executablePath ? { executablePath } : {},
     trace: "retain-on-failure",
   },
   webServer: {
-    command: "npx vite build && npx vite preview --port 4173 --strictPort",
-    url: "http://localhost:4173",
+    command: `npx vite build && npx vite preview --port ${port} --strictPort`,
+    url: `http://localhost:${port}`,
     reuseExistingServer: true,
     timeout: 180_000,
   },

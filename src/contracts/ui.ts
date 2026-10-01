@@ -1,7 +1,7 @@
 // DOM UI 계약(design.md §5, §9.7). 구현은 src/ui/.
 // 모든 UI는 캔버스 위에 겹치는 DOM이다. 열려 있는 동안 앱이 월드 입력을 끈다.
 import type { CompanionProfile, DialogueLine, Lesson, Problem, RecommendedProblem, TracebackRule } from "./content";
-import type { PyError, PythonRunner } from "./runner";
+import type { JudgeResult, PyError, PythonRunner } from "./runner";
 import type { BattleOutcome, HintLevel, RewardSummary } from "./state";
 
 export interface NameContext {
@@ -39,6 +39,10 @@ export interface BattleContext {
   /** 지역 번호. 피드백 공개 수준(§7.1)에 쓴다 */
   regionOrder: number;
   traceback: TracebackRule[];
+  /** 에러 해설(§5.3). 앱이 src/python/explain.ts를 넘겨준다 */
+  explain: ExplainError;
+  /** 오답 진단(§5.3). 해당 규칙이 없으면 undefined. 앱이 src/python/diagnose.ts를 넘겨준다 */
+  diagnose: DiagnoseResult;
   /** 작성 중 코드가 바뀔 때(디바운스해서) 호출 */
   onDraft(code: string): void;
 }
@@ -94,3 +98,6 @@ export interface UiServices {
 
 /** 에러 해설(§5.3 Traceback 해설). 구현은 src/python/explain.ts */
 export type ExplainError = (error: PyError, rules: TracebackRule[]) => string;
+
+/** 오답 진단(§5.3). problem.diagnoses 규칙을 채점 결과에 맞춰 본다. 구현은 src/python/diagnose.ts */
+export type DiagnoseResult = (problem: Problem, result: JudgeResult) => string | undefined;
