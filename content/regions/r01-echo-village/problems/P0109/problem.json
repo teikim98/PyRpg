@@ -32,7 +32,7 @@
       "title": "문자열끼리 비교",
       "expectFail": { "2": "WA", "5": "WA", "6": "WA" },
       "diagnosis": {
-        "when": { "verdict": "WA" },
+        "when": { "verdict": "WA", "outputMatches": "^False\\nFalse\\nTrue\\s*$" },
         "text": "숫자로 바꾸지 않고 비교하면 문자열끼리 사전 순서로 비교해요. 그래서 `'12' < '9'`가 `True`예요(첫 글자 `'1'`이 `'9'`보다 앞이니까). `int()`로 바꾼 뒤 비교하세요."
       }
     }
@@ -40,7 +40,7 @@
   "hints": [
     "`input().split()`이 준 값은 문자열이에요. 문자열끼리 비교하면 어떻게 될까요? `print('12' < '9')`를 실행해 보세요.",
     "`int()`로 바꾼 뒤 `>`, `==`, `<`로 비교하면 `True`나 `False`가 나와요. 그 값을 그대로 `print`하면 돼요.",
-    "`a, b = map(int, input().split())`\n`print(a > b)`\n`print(a ____ b)`\n`print(a < b)`"
+    "```python\na, b = map(int, input().split())\nprint(a > b)\nprint(a ____ b)\nprint(a < b)\n```"
   ],
   "reward": { "xp": 100, "gold": 50 }
 }

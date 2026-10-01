@@ -30,7 +30,7 @@
       "title": "형변환 누락",
       "expectFail": { "1": "WA", "2": "WA", "3": "WA", "4": "WA", "5": "WA" },
       "diagnosis": {
-        "when": { "verdict": "WA", "outputMatches": "^\\d+\\s*$" },
+        "when": { "verdict": "WA", "outputMatches": "^12\\s*$" },
         "text": "`input()`은 문자열을 돌려줘요. 그래서 `+`가 덧셈이 아니라 이어 붙이기가 됐어요. `int()`로 바꿔 보세요."
       }
     }

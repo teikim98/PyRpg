@@ -282,6 +282,19 @@ class Runner:
 
 # ---------------------------------------------------------------- 문제
 
+def inline_code_lines(md):
+    """펜스 밖에서 줄 전체가 인라인 코드 하나(`...`)인 줄 수. 이런 줄이 이어지면 한 문단(한 줄)으로 그려진다"""
+    count, fence = 0, False
+    for line in md.split("\n"):
+        t = line.strip()
+        if t.startswith("```") or t.startswith("~~~"):
+            fence = not fence
+            continue
+        if not fence and re.fullmatch(r"`[^`]+`", t):
+            count += 1
+    return count
+
+
 def test_label(i):
     return f"#{i + 1}"
 
@@ -323,6 +336,10 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
         rep.error(where, f"concept {p['concept']!r}가 주문서 ID가 아님")
     if len(p["hints"]) != 3 or not all(isinstance(h, str) and h.strip() for h in p["hints"]):
         rep.error(where, "hints는 비어 있지 않은 문자열 3개여야 함")
+    for i, h in enumerate(p["hints"]):
+        if isinstance(h, str) and inline_code_lines(h) >= 2:
+            rep.error(where, f"힌트 {i + 1}: 코드 줄마다 `...`로 감싸면 Markdown 문단으로 합쳐져 한 줄로 보임. "
+                             "여러 줄 코드는 ```python 펜스 블록으로 쓸 것")
     want_reward = {"xp": 1000, "gold": 500} if p["boss"] else {"xp": 100, "gold": 50}
     if p["reward"] != want_reward:
         rep.error(where, f"reward {p['reward']} != {want_reward}(design.md §7.1~7.2)")

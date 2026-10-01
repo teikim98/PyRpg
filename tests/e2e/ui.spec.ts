@@ -99,6 +99,26 @@ test.describe("lesson", () => {
     expect(calls.at(-1)).toBe("a, b = map(int, input().split())\nprint(a + b)");
   });
 
+  test("Enter while a blank run is in flight does not run twice", async ({ page }) => {
+    await boot(page);
+    const done = page.evaluate(() => (window as Win).__ui.lesson());
+    await page.evaluate(() => ((window as Win).__ui.fake.stepMs = 300));
+    const input = page.locator(".blank-input");
+    await input.fill("str");
+    await input.press("Enter");
+    await input.press("Enter");
+    await input.press("Enter");
+    await expect(page.locator(".exercise .nuri-row")).toHaveAttribute("data-emotion", "worried");
+    await page.waitForTimeout(800);
+    const runs = await page.evaluate(() => (window as Win).__ui.fake.calls.filter((c: any) => c.method === "run").length);
+    expect(runs).toBe(1);
+    // 한 번 틀린 것으로만 센다(3번째 시도에 정답 공개)
+    await expect(page.locator(".exercise .nuri-msg")).toContainText("1/3");
+    await expect(page.locator(".blank-answer")).toHaveCount(0);
+    await page.locator(".lesson-close").click();
+    expect(await done).toEqual({ completed: false });
+  });
+
   test("close button resolves completed=false", async ({ page }) => {
     await boot(page);
     const done = page.evaluate(() => (window as Win).__ui.lesson());
