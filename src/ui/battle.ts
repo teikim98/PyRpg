@@ -319,11 +319,11 @@ export function createBattleUI(env: UiEnv): BattleUI {
           if (first.verdict === "TLE") {
             const line = first.error?.line;
             if (line) editor.highlightLine(line);
-            const ex = first.error ? explainBody(first.error) : genericVerdictMessage("TLE");
             const where = line ? `<span class="err-line">${line}번째 줄</span>을 도는 중에 멈췄어. ` : "";
-            let html = `${where}${renderInline(substituteNames(ex, names))}`;
-            if (diag) html += `<div class="diag">${renderInline(substituteNames(diag, names))}</div>`;
-            return { emotion: "serious", html };
+            // 문제 전용 진단이 있으면 그것을 먼저 보여 준다(보스 시간 결계에서 일반 문구가 진단을 밀어내지 않게)
+            if (diag) return { emotion: "serious", html: `<div class="diag">${renderInline(substituteNames(diag, names))}</div>${where}` };
+            const ex = first.error ? explainBody(first.error) : genericVerdictMessage("TLE");
+            return { emotion: "serious", html: `${where}${renderInline(substituteNames(ex, names))}` };
           }
           if (first.error) {
             const line = first.error.line;

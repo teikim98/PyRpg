@@ -104,7 +104,8 @@ interface Harness {
 }
 
 function makeContent(withR99: boolean): GameContent {
-  const c = loadContent();
+  // 테스트마다 맵 props를 바꾸는 경우가 있어서, 공유 모듈 객체가 아니라 깊은 복사본을 쓴다
+  const c = structuredClone(loadContent());
   return withR99 ? { ...c, regions: [...c.regions, fixtureRegionR99()] } : c;
 }
 
@@ -335,6 +336,31 @@ describe("지역 간 이동(warp target/targetSpawn)", () => {
     await idle(h2.app);
     expect(h2.said).toEqual(["r99_back"]);
     expect(h2.app.region.id).toBe("r99");
+  });
+
+  it("처음 들어간 지역에서는 복귀 지점이 그 지역 입구로 바뀐다(다시 들어갈 때는 그대로)", async () => {
+    const content = makeContent(false);
+    const store = new MemoryStore();
+    store.data = atEastGate(content);
+    const h = harness(content, store);
+    await h.app.start({} as HTMLElement);
+    await idle(h.app);
+    expect(store.data!.lastCampfire.regionId).toBe("r01");
+    h.callbacks.onInteract(h.world.obj("warp_east"));
+    await idle(h.app);
+    expect(h.app.region.id).toBe("r02");
+    const arrived = store.data!.location;
+    expect(store.data!.lastCampfire).toEqual({ regionId: "r02", x: arrived.x, y: arrived.y });
+    // 에코 마을 캠프파이어에서 쉰 뒤 다시 건너가면 복귀 지점은 바뀌지 않는다
+    h.callbacks.onInteract(h.world.obj("warp_west"));
+    await idle(h.app);
+    expect(h.app.region.id).toBe("r01");
+    store.data!.lastCampfire = { regionId: "r01", x: 1, y: 1 };
+    h.app.save.lastCampfire = { regionId: "r01", x: 1, y: 1 };
+    h.callbacks.onInteract(h.world.obj("warp_east"));
+    await idle(h.app);
+    expect(h.app.region.id).toBe("r02");
+    expect(store.data!.lastCampfire.regionId).toBe("r01");
   });
 
   it("다른 지역에서 쓰러지면 마지막 캠프파이어가 있는 지역으로 돌아간다", async () => {

@@ -357,6 +357,11 @@ export class App {
       this.world.teleport(spawn?.x ?? 1, spawn?.y ?? 1, "down");
     }
     this.save.location = { regionId: region.id, ...this.world.getPlayerPosition() };
+    // 처음 들어온 지역이면 쓰러졌을 때의 복귀 지점을 이 지역 입구로 옮긴다(이전 지역 캠프파이어로 되돌아가지 않게)
+    if (!this.save.flags[`region.${region.id}.intro`]) {
+      const p = this.save.location;
+      this.save.lastCampfire = { regionId: region.id, x: p.x, y: p.y };
+    }
     await this.persist();
     this.refreshHud();
     await this.playRegionIntro();

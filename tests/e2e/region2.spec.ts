@@ -162,7 +162,9 @@ async function lesson(page: Page, rune: string, answer: string, shotName?: strin
   const id = rune.replace("rune_", "");
   await interact(page, rune);
   await doLesson(page, answer, shotName);
-  expect((await said(page)).slice(-2)).toEqual([`lesson_${id}_intro`, `lesson_${id}_done`]);
+  // 일일 퀘스트 보상으로 레벨이 오르면 끝에 level_up이 붙을 수 있다
+  const tail = (await said(page)).filter((d) => d !== "level_up").slice(-2);
+  expect(tail).toEqual([`lesson_${id}_intro`, `lesson_${id}_done`]);
   expect((await save(page)).lessonsCompleted).toContain(id);
 }
 
