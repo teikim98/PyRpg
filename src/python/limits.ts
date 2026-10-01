@@ -81,6 +81,22 @@ export function isTimeBarrier(problem: Problem, test: ProblemTest): boolean {
   return problem.boss && testPhase(test) >= 2;
 }
 
+/** 이 테스트의 페이즈가 stopOnTle(첫 확정 TLE 뒤 남은 테스트를 건너뜀)인지 */
+export function phaseStopsOnTle(problem: Problem, test: ProblemTest): boolean {
+  if (!isTimeBarrier(problem, test)) return false;
+  return problem.phases?.find((p) => p.phase === testPhase(test))?.stopOnTle === true;
+}
+
+/**
+ * 시간 결계 테스트가 제한을 넘었을 때 한 번 더 실행해서 확인할지(§9.6 4단계).
+ * 같은 채점에서 이미 시간 결계 TLE가 확정됐으면(confirmedBarrierTle) 다시 확인하지 않고 한 번으로 TLE.
+ * 경계에 걸친 코드를 한 번의 측정 잡음으로 떨어뜨리지 않으려는 재확인이므로, 이미 느리다고 확인된 코드에는 필요 없다.
+ */
+export function needsTleConfirmation(problem: Problem, test: ProblemTest, confirmedBarrierTle: boolean): boolean {
+  if (!usesBudget(problem, test)) return false;
+  return !(confirmedBarrierTle && isTimeBarrier(problem, test));
+}
+
 export function testLimitMs(problem: Problem, test: ProblemTest, refMs: number): number {
   return usesBudget(problem, test)
     ? budgetLimitMs(problem.budgetUnits!, refMs)

@@ -141,6 +141,41 @@ test.describe("Python 실행기", () => {
     expect(r.normal.tests[4]!.timeMs).toBe(0);
   });
 
+  test("시간 결계 TLE가 확정되면 뒤 테스트는 재확인하지 않고, stopOnTle 페이즈는 남은 테스트를 건너뛴다(§9.6 4단계)", async ({ page }) => {
+    test.setTimeout(120_000);
+    await open(page);
+    const r = await page.evaluate(async () => {
+      const base = W().__fixtures.problems.P0105;
+      const slow = W().__fixtures.answers.P0105.slow.code;
+      const ref: number = W().__runner.referenceMs();
+      // 제한이 약 1초가 되도록(측정 잡음보다 충분히 크게)
+      const budgetUnits = Math.max(1, (1000 - 50) / (ref * 1.5));
+      const plain = { ...base, budgetUnits };
+      const stop = {
+        ...plain,
+        phases: base.phases.map((x: any) => (x.phase === 2 ? { ...x, stopOnTle: true } : x)),
+      };
+      let t0 = performance.now();
+      const a = await W().__runner.judge(plain, slow, { scope: "all", phase: 2 });
+      const plainWall = performance.now() - t0;
+      t0 = performance.now();
+      const b = await W().__runner.judge(stop, slow, { scope: "all", phase: 2 });
+      const stopWall = performance.now() - t0;
+      return { a, b, plainWall, stopWall };
+    });
+    const limit = r.a.limitMs;
+    console.log(`P0105 slow 2페이즈: 제한=${limit} ms, 기본=${r.plainWall.toFixed(0)} ms, stopOnTle=${r.stopWall.toFixed(0)} ms`);
+    // 기본: 4번째 테스트 두 번(확정) + 5번째 한 번 = 제한의 약 3배(전에는 4배). 작은 6번째는 그대로 실행해서 AC
+    expect(r.a.tests.map((t: any) => t.verdict)).toEqual(["TLE", "TLE", "AC"]);
+    expect(r.plainWall).toBeGreaterThan(2.8 * limit);
+    expect(r.plainWall).toBeLessThan(3.7 * limit);
+    // stopOnTle: 첫 확정 TLE(두 번) 뒤 남은 테스트는 실행하지 않고 TLE
+    expect(r.b.tests.map((t: any) => t.verdict)).toEqual(["TLE", "TLE", "TLE"]);
+    expect(r.b.tests[1]!.timeMs).toBe(0);
+    expect(r.b.tests[2]!.timeMs).toBe(0);
+    expect(r.stopWall).toBeLessThan(2.7 * limit);
+  });
+
   test("scope public과 phase 필터, onProgress", async ({ page }) => {
     await open(page);
     const r = await page.evaluate(async (): Promise<{ pub: JudgeResult; ph1: JudgeResult; ph2: JudgeResult; seen: number[] }> => {

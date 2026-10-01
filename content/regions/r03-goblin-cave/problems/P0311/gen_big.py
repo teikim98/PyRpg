@@ -1,7 +1,7 @@
 # P0311 시간 결계(2페이즈) 입력 생성기(design.md §11.1).
 # 게임(Pyodide)과 검증기(CPython)가 채점 직전에 generate(case)를 불러 (입력, 기대 출력)을 만든다.
 # random 모듈 대신 시드를 고정한 선형 합동 생성기를 써서 어느 Python에서나 같은 값이 나온다.
-N = 200000
+N = 100000
 
 
 def values(case):

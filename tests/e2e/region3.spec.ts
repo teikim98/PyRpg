@@ -525,7 +525,7 @@ test.describe.serial("지역 3 고블린 동굴 전체 플레이", () => {
     await expect(page.locator(".hud-hp-text")).toHaveText(`${s.player.hp}/${s.player.hp}`);
   });
 
-  test("족장의 왕좌: 보스 앞 트리거 → P0311 느린 풀이 1페이즈 통과·2페이즈 TLE(20만 개) → 모범답안 승리 → 클리어 → 실전 추천 → 동쪽 문", async () => {
+  test("족장의 왕좌: 보스 앞 트리거 → P0311 느린 풀이 1페이즈 통과·2페이즈 TLE(10만 개) → 모범답안 승리 → 클리어 → 실전 추천 → 동쪽 문", async () => {
     test.setTimeout(600_000);
     const boss = await obj(page, "m_P0311");
     const n0 = (await said(page)).length;
@@ -542,10 +542,12 @@ test.describe.serial("지역 3 고블린 동굴 전체 플레이", () => {
     await cast(page);
     await expect(page.locator(".battle")).toHaveAttribute("data-phase", "2");
     await expect(page.locator(".time-gauge")).toBeVisible();
-    // 2페이즈: 같은 코드 → TLE(생성기가 만든 N = 200,000 입력), 시간 게이지 초과, 진단이 먼저
+    // 2페이즈: 같은 코드 → TLE(생성기가 만든 N = 100,000 입력), 시간 게이지 초과, 진단이 먼저
     const t0 = Date.now();
-    await cast(page, 400_000);
+    await cast(page);
     const slowMs = Date.now() - t0;
+    // 2페이즈는 stopOnTle: 첫 테스트에서 TLE가 확정되면(제한 × 2) 나머지 3개는 실행하지 않는다
+    expect(slowMs).toBeLessThan(20_000);
     await expect(page.locator(".time-gauge")).toHaveClass(/is-over/);
     await expect(page.locator(".time-gauge-text")).toHaveText("초과!");
     await expect(page.locator(".fb")).toContainText("TLE");

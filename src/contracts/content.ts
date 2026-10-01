@@ -72,6 +72,11 @@ export interface BossPhase {
   name: string;
   /** 페이즈 시작 시 누리의 대사(선택) */
   intro?: string;
+  /**
+   * 시간 결계 페이즈에서 TLE가 한 번 확정되면(두 번 다 초과, §9.6 4단계) 이 페이즈의 남은 테스트는
+   * 실행하지 않고 TLE로 둔다. 남은 테스트가 모두 같은 크기라 결과가 뻔할 때만 켠다(예: P0311 2페이즈)
+   */
+  stopOnTle?: boolean;
 }
 
 /** 함수 구현형 반환값 비교 옵션. 생략하면 Python == 그대로(True == 1도 같음) */

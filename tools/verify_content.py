@@ -506,6 +506,24 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
         ph = p.get("phases")
         if not isinstance(ph, list) or [x.get("phase") for x in ph] != phases or len(phases) < 2:
             rep.error(where, f"보스 phases가 테스트 페이즈 {phases}와 맞지 않음")
+        # stopOnTle(src/python/runner.ts): 첫 확정 TLE 뒤 그 페이즈의 남은 테스트를 TLE로 건너뛴다.
+        # 결과가 뻔할 때만 쓰도록, 시간 결계 페이즈(2 이상)이고 그 페이즈 테스트가 모두 같은 생성기에서 같은 크기로 나와야 한다
+        for x in ph if isinstance(ph, list) else []:
+            if "stopOnTle" not in x:
+                continue
+            pw = f"{where} phases[{x.get('phase')}].stopOnTle"
+            if not isinstance(x["stopOnTle"], bool):
+                rep.error(pw, "true/false")
+            elif x["stopOnTle"]:
+                same = [t for t in tests if t.get("phase", 1) == x.get("phase")]
+                if x.get("phase", 1) < 2:
+                    rep.error(pw, "시간 결계 페이즈(2 이상)에만 쓸 수 있음")
+                elif not same or len({t.get("gen") for t in same}) != 1 or same[0].get("gen") is None:
+                    rep.error(pw, "그 페이즈의 테스트가 모두 같은 생성기(gen)여야 함")
+                else:
+                    sizes = {t.get("in", "").split("\n", 1)[0] for t in same}
+                    if len(sizes) != 1:
+                        rep.error(pw, f"그 페이즈의 테스트 크기(첫 줄)가 모두 같아야 함: {sorted(sizes)}")
         if "slow.py" not in files:
             rep.error(where, "보스에 slow.py(비효율 답안)가 없음")
     elif p.get("phases"):
