@@ -13,7 +13,7 @@ export type MapObjectType =
   | "campfire"  // props: (없음)
   | "rune"      // 레슨 비석. props: lesson
   | "trigger"   // 밟으면 발동. props: dialogue?, lesson?, once(boolean)
-  | "warp"      // props: target(지역 ID) 또는 lockedDialogue
+  | "warp"      // props: requires, lockedDialogue, openDialogue, (target 지역 ID)
   | "spawn";    // 새 게임 시작 위치(보이지 않음)
 
 export interface MapObjectDef {
