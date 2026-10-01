@@ -137,6 +137,11 @@ export interface Autosaver {
   /** 대기 중인 저장을 즉시 실행(전투 종료·페이지 숨김 때) */
   flush(): Promise<void>;
   cancel(): void;
+  /**
+   * 대기 중인 저장을 버리고 data를 바로 저장한다. 이미 진행 중인 자동 저장 뒤에 이어서 실행하므로,
+   * 늦게 끝난 옛 자동 저장이 이 저장을 덮어쓰지 않는다. 실패하면 reject
+   */
+  saveNow(data: SaveData): Promise<SaveData>;
   readonly pending: boolean;
 }
 
@@ -180,6 +185,17 @@ export function createAutosaver(
       if (timer) clearTimeout(timer);
       timer = null;
       next = null;
+    },
+    saveNow(data) {
+      if (timer) clearTimeout(timer);
+      timer = null;
+      next = null;
+      const p = chain.then(() => store.save(data));
+      chain = p.then(
+        (saved) => opts.onSaved?.(saved),
+        () => undefined,
+      );
+      return p;
     },
     get pending() {
       return next !== null;

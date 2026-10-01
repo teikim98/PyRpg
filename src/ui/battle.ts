@@ -138,6 +138,14 @@ export function createBattleUI(env: UiEnv): BattleUI {
           floatLayer.append(f);
           setTimeout(() => f.remove(), 1000);
         };
+        // 힌트·해설서·반격으로 바뀐 상태를 앱에 알린다(새로고침으로 대가·쓰러짐을 피하지 못하게 앱이 임시 저장)
+        const reportProgress = () => {
+          try {
+            ctx.onProgress?.({ attempts, maxHintLevel: hintLevel, solutionViewed, hp });
+          } catch (e) {
+            console.error(e);
+          }
+        };
         const setHp = (v: number) => {
           hp = Math.max(0, v);
           hpFill.style.width = `${maxHp > 0 ? (hp / maxHp) * 100 : 0}%`;
@@ -404,6 +412,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
             setHp(hp - dmg);
             restartAnim(root, "is-damaged");
             floatText(`-${dmg}`, "float-dmg");
+            reportProgress();
             const ex = explainResult(res);
             const fb = buildCastFeedback(res, disclosureMode(ctx.regionOrder, p.boss));
             say(ex.emotion, `${ex.html}<div class="counter">${escapeHtml(p.enemy.name)}의 반격! HP −${dmg}</div>`, detailsEl(fb));
@@ -461,7 +470,10 @@ export function createBattleUI(env: UiEnv): BattleUI {
             const ok = await confirmDialog(env, `힌트 ${lv}단계`, `이 힌트를 열면 ${HINT_COSTS[lv].label}. 열어 볼까?`, "열기");
             if (!ok || closed) return;
           }
-          if (lv > hintLevel) hintLevel = lv;
+          if (lv > hintLevel) {
+            hintLevel = lv;
+            reportProgress();
+          }
           updateButtons();
           const title = ["", "방향", "핵심 아이디어", "부분 코드"][lv];
           const body = h("div", { class: "md hint-body", html: renderMarkdown(substituteNames(p.hints[lv - 1], names)) });
@@ -474,6 +486,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
             const ok = await confirmDialog(env, "해설서", "해설서를 열면 이 전투의 보상이 0이 되고, 이 개념이 그림자 몬스터로 등록돼. 열어 볼까?", "해설서 열기");
             if (!ok || closed) return;
             solutionViewed = true;
+            reportProgress();
             solutionView.append(
               h("h2", { class: "battle-title" }, "해설서"),
               h("p", { class: "solution-note" }, "이 전투의 보상은 0이 돼."),

@@ -30,6 +30,21 @@ async function main(): Promise<void> {
   await app.start(gameEl);
   document.getElementById("boot")?.remove();
   if (hook) hook.ready = true;
+  cacheLoadedFiles();
+}
+
+/**
+ * 처음 접속에서는 service worker가 페이지를 제어하기 전에 번들·폰트·이미지를 받으므로 캐시에 들어가지 않는다.
+ * 이미 받은 파일 목록을 service worker에 넘겨 캐시하게 해서, 한 번 접속한 뒤에는 오프라인으로도 뜨게 한다.
+ */
+function cacheLoadedFiles(): void {
+  if (!import.meta.env.PROD || !("serviceWorker" in navigator)) return;
+  void navigator.serviceWorker.ready
+    .then((reg) => {
+      const urls = [location.href, ...performance.getEntriesByType("resource").map((e) => e.name)];
+      reg.active?.postMessage({ type: "cache-urls", urls });
+    })
+    .catch(() => undefined);
 }
 
 // 오프라인 실행(design.md §12.3). 개발 서버에서는 캐시가 수정 반영을 방해하므로 등록하지 않는다

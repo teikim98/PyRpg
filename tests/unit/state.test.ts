@@ -200,6 +200,68 @@ describe("autosave", () => {
     await auto.flush();
     expect(errors.map((e) => e.code)).toEqual(["quota"]);
   });
+  it("saveNow는 진행 중인 자동 저장 뒤에 써서, 늦게 끝난 옛 자동 저장이 새 데이터를 덮지 않는다", async () => {
+    let stored: SaveData | null = null;
+    let releaseSlow!: () => void;
+    let first = true;
+    const store = {
+      save: async (d: SaveData) => {
+        if (first) {
+          // 첫 자동 저장(옛 데이터)이 느리게 끝난다
+          first = false;
+          await new Promise<void>((r) => (releaseSlow = r));
+        }
+        stored = d;
+        return d;
+      },
+    };
+    const auto = createAutosaver(store, { delayMs: 1000 });
+    const old = richSave();
+    const fresh = { ...old, player: { ...old.player, gold: 12345 } };
+    auto.schedule(old);
+    const slow = auto.flush();
+    const now = auto.saveNow(fresh);
+    await vi.waitFor(() => expect(releaseSlow).toBeTypeOf("function"));
+    releaseSlow();
+    await slow;
+    expect(await now).toBe(fresh);
+    expect(stored).toBe(fresh);
+  });
+  it("saveNow 실패는 reject, 대기 중인 자동 저장은 버린다", async () => {
+    vi.useFakeTimers();
+    const saves: SaveData[] = [];
+    const store = {
+      save: async (d: SaveData) => {
+        if (d.player.gold === -1) throw new SaveStoreError("quota", "full");
+        saves.push(d);
+        return d;
+      },
+    };
+    const auto = createAutosaver(store, { delayMs: 500 });
+    auto.schedule(richSave());
+    const bad = richSave();
+    bad.player.gold = -1;
+    await expect(auto.saveNow(bad)).rejects.toMatchObject({ code: "quota" });
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(saves).toHaveLength(0);
+    // 실패 뒤에도 다음 저장은 동작한다
+    await auto.saveNow(richSave());
+    expect(saves).toHaveLength(1);
+  });
+});
+
+describe("validateSave 위치", () => {
+  it("위치·캠프파이어 좌표는 정수여야 한다(소수 좌표는 충돌 판정을 건너뛴다)", () => {
+    const s = richSave() as unknown as Record<string, any>;
+    s.location.x = 3.5;
+    s.lastCampfire.y = 1.25;
+    const r = validateSave(s);
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.errors.join("\n")).toContain("location.x");
+      expect(r.errors.join("\n")).toContain("lastCampfire.y");
+    }
+  });
 });
 
 describe("requestPersistence", () => {
