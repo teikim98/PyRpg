@@ -103,15 +103,15 @@ export function validateSave(raw: unknown): ValidationResult {
   if (c.obj(d.location, "location", { required: ["regionId", "x", "y", "facing"] })) {
     const l = d.location;
     c.str(l.regionId, "location.regionId", true);
-    c.num(l.x, "location.x");
-    c.num(l.y, "location.y");
+    c.int(l.x, "location.x");
+    c.int(l.y, "location.y");
     c.oneOf(l.facing, "location.facing", FACING);
   }
   if (c.obj(d.lastCampfire, "lastCampfire", { required: ["regionId", "x", "y"] })) {
     const l = d.lastCampfire;
     c.str(l.regionId, "lastCampfire.regionId", true);
-    c.num(l.x, "lastCampfire.x");
-    c.num(l.y, "lastCampfire.y");
+    c.int(l.x, "lastCampfire.x");
+    c.int(l.y, "lastCampfire.y");
   }
   c.strArr(d.scrolls, "scrolls");
   c.strArr(d.lessonsCompleted, "lessonsCompleted");

@@ -83,6 +83,8 @@ export class WorldScene extends Phaser.Scene {
   private pendingInteract = false;
   /** 몬스터에 부딪힌 상태로 키를 누르고 있을 때 같은 몬스터를 반복 호출하지 않도록 */
   private bumpLatch: string | null = null;
+  /** 입력이 꺼진 동안 이동을 마친 칸(입력이 다시 켜지면 그 칸의 트리거를 발동) */
+  private deferredTrigger: Pos | null = null;
   private detachDom: (() => void) | null = null;
 
   /** 실제로 있는 이미지 파일(null이면 전부 시도) */
@@ -364,6 +366,11 @@ export class WorldScene extends Phaser.Scene {
     this.setPhaserKeyboard(enabled && !isEditableElement(document.activeElement));
     // 진행 중인 한 칸은 칸 정렬을 위해 끝까지 가고, 다음 칸은 시작하지 않는다
     if (!enabled && !this.moving) this.setIdleFrames();
+    const deferred = this.deferredTrigger;
+    if (enabled && deferred) {
+      this.deferredTrigger = null;
+      if (!this.moving && this.pos.x === deferred.x && this.pos.y === deferred.y) this.fireTriggers(deferred.x, deferred.y);
+    }
   }
 
   private safe(fn: () => void): void {
@@ -461,17 +468,48 @@ export class WorldScene extends Phaser.Scene {
     this.nuri.setDepth(DEPTH_BASE + this.nuriPos.y + 1 + 0.1);
     const facing = this.facing;
     this.safe(() => this.callbacks.onMoved({ x, y, facing }));
-    for (const t of this.index.triggersAt(x, y)) {
-      // 콜백 안에서 teleport·loadRegion이 일어났으면 남은 트리거는 무시
-      if (this.pos.x !== x || this.pos.y !== y || this.moving) break;
-      this.safe(() => this.callbacks.onTrigger({ ...t, props: { ...t.props } }));
-    }
+    // 이동 도중 메뉴 등으로 입력이 꺼졌으면 앱이 바빠서 트리거를 받지 못하므로, 입력이 다시 켜질 때 발동한다
+    if (this.inputEnabled) this.fireTriggers(x, y);
+    else this.deferredTrigger = { x, y };
     if (this.pendingInteract) {
       this.pendingInteract = false;
       if (this.inputEnabled) this.interact();
     }
     this.tryStep();
     if (!this.moving) this.setIdleFrames();
+  }
+
+  private fireTriggers(x: number, y: number): void {
+    for (const t of this.index.triggersAt(x, y)) {
+      // 콜백 안에서 teleport·loadRegion이 일어났으면 남은 트리거는 무시
+      if (this.pos.x !== x || this.pos.y !== y || this.moving) break;
+      this.safe(() => this.callbacks.onTrigger({ ...t, props: { ...t.props } }));
+    }
+  }
+
+  /** (x, y)를 밟고 설 수 있는가(타일 + 오브젝트) */
+  private standable(x: number, y: number): boolean {
+    return Number.isInteger(x) && Number.isInteger(y) && !this.blocked(x, y) && !this.index.blockerAt(x, y);
+  }
+
+  /**
+   * 저장 위치가 맵 밖·벽·오브젝트 위(맵이 바뀐 옛 저장, 손으로 고친 저장 파일)이면 갇히지 않도록
+   * 가장 가까운(맨해튼 거리) 설 수 있는 칸으로 옮긴다
+   */
+  private nearestStandable(x: number, y: number): Pos {
+    if (this.standable(x, y) || !this.parsed) return { x, y };
+    const { width, height } = this.parsed;
+    const cx = Number.isFinite(x) ? Math.min(width - 1, Math.max(0, Math.round(x))) : 0;
+    const cy = Number.isFinite(y) ? Math.min(height - 1, Math.max(0, Math.round(y))) : 0;
+    for (let r = 0; r < width + height; r++) {
+      for (let dx = -r; dx <= r; dx++) {
+        const dy = r - Math.abs(dx);
+        for (const yy of dy === 0 ? [cy] : [cy - dy, cy + dy]) {
+          if (this.standable(cx + dx, yy)) return { x: cx + dx, y: yy };
+        }
+      }
+    }
+    return { x: cx, y: cy };
   }
 
   private setIdleFrames(): void {
@@ -483,6 +521,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private stopMovement(): void {
+    this.deferredTrigger = null;
     for (const t of this.moveTweens) t.stop();
     this.moveTweens = [];
     this.moving = false;
@@ -500,8 +539,10 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
-  teleport(x: number, y: number, facing: Facing): void {
+  teleport(tx: number, ty: number, facing: Facing): void {
     this.stopMovement();
+    this.deferredTrigger = null;
+    const { x, y } = this.nearestStandable(tx, ty);
     this.pos = { x, y };
     this.facing = facing;
     this.player.setPosition(x * TILE + TILE / 2, (y + 1) * TILE).setDepth(DEPTH_BASE + y + 1.2);

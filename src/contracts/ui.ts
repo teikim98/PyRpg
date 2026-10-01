@@ -45,6 +45,19 @@ export interface BattleContext {
   diagnose: DiagnoseResult;
   /** 작성 중 코드가 바뀔 때(디바운스해서) 호출 */
   onDraft(code: string): void;
+  /**
+   * 전투 도중 대가가 걸린 상태가 바뀔 때(힌트를 새 단계로 열었을 때, 해설서를 열었을 때, 반격을 받은 뒤).
+   * 앱은 이것으로 '지금 후퇴했다면'의 결과를 임시 저장해서, 새로고침으로 힌트 대가·해설서·쓰러짐을 피하지 못하게 한다
+   */
+  onProgress?(state: BattleProgress): void;
+}
+
+export interface BattleProgress {
+  /** 이번 전투에서 [시전] 횟수 */
+  attempts: number;
+  maxHintLevel: HintLevel;
+  solutionViewed: boolean;
+  hp: number;
 }
 
 export interface BattleUI {

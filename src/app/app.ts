@@ -2,7 +2,7 @@
 // 월드는 그리기와 입력만, UI는 화면만, 규칙은 src/systems의 순수 함수가 맡고, 여기서는 순서만 정한다.
 import type { DialogueLine, GameContent, Lesson, Problem, Region } from "../contracts/content";
 import type { BattleOutcome, Facing, SaveData } from "../contracts/state";
-import type { NameContext, UiServices } from "../contracts/ui";
+import type { BattleProgress, NameContext, UiServices } from "../contracts/ui";
 import type { MapObjectDef, WorldController, WorldFactory } from "../contracts/world";
 import { OPPOSITE } from "../game/grid";
 import { diagnoseResult } from "../python/diagnose";
@@ -43,8 +43,13 @@ export class App {
   region!: Region;
   private autosaver!: Autosaver;
   private busyFlag = false;
-  /** 불러오기·초기화로 새로고침하는 중(떠날 때 위치 백업을 남기지 않는다) */
+  /** 불러오기·초기화로 새로고침하는 중(이후로는 아무것도 저장하지 않고 입력도 다시 켜지 않는다) */
   private leaving = false;
+  /**
+   * 저장을 막은 이유. 저장 데이터를 읽지 못했을 때(손상·더 새로운 버전·저장소 없음) 새 게임이 원래 데이터를
+   * 덮어쓰지 않도록 이번 실행에서는 저장하지 않는다(메뉴의 불러오기·처음부터는 그대로 동작)
+   */
+  private saveBlocked: string | null = null;
   private readonly now: () => Date;
 
   constructor(private readonly deps: AppDeps) {
@@ -64,7 +69,7 @@ export class App {
     const { content, store } = this.deps;
     const loaded = await store.load().catch((e) => {
       console.error("저장 데이터를 읽지 못했습니다", e);
-      this.deps.ui.hud.toast("저장 데이터를 읽지 못해 새 게임으로 시작합니다.");
+      this.saveBlocked = e instanceof Error ? e.message : String(e);
       return null;
     });
     const isNew = !loaded;
@@ -75,7 +80,7 @@ export class App {
       onTrigger: (o) => this.guard(() => this.trigger(o)),
       onMoved: (pos) => {
         this.save.location = { regionId: this.region.id, ...pos };
-        this.autosaver.schedule(this.save);
+        this.scheduleSave(this.save);
       },
       onMenu: () => this.guard(() => this.openMenu()),
     });
@@ -88,6 +93,14 @@ export class App {
       if (this.save.flags[`trigger.${this.region.id}.t_prologue`]) this.save.flags[COMPANION_FLAG] = true;
       this.world.setCompanionVisible(this.save.flags[COMPANION_FLAG] === true);
       await this.world.loadRegion(this.region, this.save.location, removed);
+      // 저장 위치가 설 수 없는 칸(맵이 바뀐 옛 저장, 고친 저장 파일)이면 월드가 가까운 빈 칸으로 옮긴다.
+      // 가까운 칸은 아직 열지 않은 구역일 수 있으므로, 그때는 마지막 캠프파이어로 보낸다
+      const at = this.world.getPlayerPosition();
+      const c = this.save.lastCampfire;
+      if ((at.x !== this.save.location.x || at.y !== this.save.location.y) && c.regionId === this.region.id) {
+        this.world.teleport(c.x, c.y, "down");
+      }
+      this.save.location = { regionId: this.region.id, ...this.world.getPlayerPosition() };
     } else {
       // 새 게임: 맵을 먼저 그려서 spawn 위치를 알아낸 뒤 그 자리로 옮긴다
       await this.world.loadRegion(this.region, { x: 0, y: 0, facing: "down" }, removed);
@@ -97,10 +110,13 @@ export class App {
       this.world.teleport(at.x, at.y, at.facing);
     }
 
-    this.autosaver = createAutosaver(store, { delayMs: 800, onError: (e) => console.error("자동 저장 실패", e) });
+    const guarded = { save: (d: SaveData) => (this.saveBlocked ? Promise.resolve(d) : store.save(d)) };
+    this.autosaver = createAutosaver(guarded, { delayMs: 800, onError: (e) => console.error("자동 저장 실패", e) });
     // 페이지를 떠날 때 IndexedDB 쓰기는 끝나기 전에 끊길 수 있어서, 아직 저장되지 않은 위치는 localStorage에도 남긴다
     const leave = () => {
-      if (this.autosaver.pending && !this.leaving) writeLocationBackup(this.save);
+      // 불러오기·초기화 뒤에는 옛 데이터를 다시 쓰면 안 된다
+      if (this.leaving) return;
+      if (this.autosaver.pending && !this.saveBlocked) writeLocationBackup(this.save);
       void this.autosaver.flush();
     };
     addEventListener("visibilitychange", () => {
@@ -108,18 +124,40 @@ export class App {
     });
     addEventListener("pagehide", leave);
 
-    await this.persist();
+    try {
+      await this.persist();
+    } catch (e) {
+      // 저장소 쓰기가 막혀도(용량 부족 등) 게임은 시작한다. 이후 저장 실패는 그때마다 알린다
+      console.error("저장하지 못했습니다", e);
+      this.deps.ui.hud.toast(`저장하지 못했어: ${e instanceof Error ? e.message : String(e)}`);
+    }
+    if (this.saveBlocked) {
+      this.deps.ui.hud.toast(`저장 데이터를 읽지 못했어(${this.saveBlocked}). 원래 데이터를 지키려고 이번 플레이는 저장하지 않아. 메뉴에서 불러오기나 처음부터를 고를 수 있어.`);
+    }
     this.refreshHud();
     // 실행기는 처음 몇 초가 걸리므로 미리 부팅한다(13 MB, research.md §3.2.2)
     void this.deps.runner.init().catch((e) => console.error("실행기 부팅 실패", e));
 
     // 지역 첫 대사는 기다리지 않는다(start는 화면 준비가 끝나면 바로 돌아온다)
-    if (isNew || !this.save.flags[`region.${this.region.id}.intro`]) {
-      void this.guard(async () => {
-        this.save.flags[`region.${this.region.id}.intro`] = true;
-        if (this.region.introDialogue) await this.say(this.region.introDialogue);
-        await this.persist();
-      });
+    const intro =
+      isNew || !this.save.flags[`region.${this.region.id}.intro`]
+        ? this.guard(async () => {
+            this.save.flags[`region.${this.region.id}.intro`] = true;
+            if (this.region.introDialogue) await this.say(this.region.introDialogue);
+            await this.persist();
+          })
+        : Promise.resolve();
+    // 트리거 대사 도중에 페이지를 닫았으면 그 칸에서 다시 시작하므로, 아직 발동하지 않은 once 트리거를 이어서 발동한다
+    void intro.then(() => this.resumeTriggerHere());
+  }
+
+  private resumeTriggerHere(): void {
+    const pos = this.world.getPlayerPosition();
+    for (const o of this.world.getObjects()) {
+      if (o.type !== "trigger" || o.x !== pos.x || o.y !== pos.y || !o.props.once) continue;
+      if (this.save.flags[`trigger.${this.region.id}.${o.id}`]) continue;
+      void this.guard(() => this.trigger(o));
+      return;
     }
   }
 
@@ -161,8 +199,9 @@ export class App {
   private async trigger(o: MapObjectDef): Promise<void> {
     const flag = `trigger.${this.region.id}.${o.id}`;
     if (o.props.once && this.save.flags[flag]) return;
-    this.save.flags[flag] = true;
     if (o.props.dialogue) await this.say(String(o.props.dialogue));
+    // 대사를 끝까지 본 뒤에 표시한다(대사 도중의 자동 저장이 '본 것'으로 남기지 않도록)
+    this.save.flags[flag] = true;
     if (o.props.joinCompanion) {
       this.save.flags[COMPANION_FLAG] = true;
       this.world.setCompanionVisible(true);
@@ -237,6 +276,27 @@ export class App {
     const rec = this.save.problems[problem.id] ?? emptyRecord();
     this.save.problems[problem.id] = rec;
     const level = levelFromXp(this.save.player.xp);
+    // 전투 도중의 자동 저장: 힌트·해설서·반격이 있었으면 '지금 후퇴(HP 0이면 쓰러짐)했다면'의 결과를 저장한다.
+    // 그러지 않으면 새로고침으로 힌트 대가·해설서(보상 0)·쓰러짐 기록을 지울 수 있다(§5.3, §7.6)
+    let progress: BattleProgress | null = null;
+    const saveDuringBattle = (now: boolean) => {
+      let data = this.save;
+      if (progress) {
+        const provisional: BattleOutcome = {
+          problemId: problem.id,
+          result: progress.hp <= 0 ? "knockout" : "retreat",
+          attempts: progress.attempts,
+          maxHintLevel: progress.maxHintLevel,
+          solutionViewed: progress.solutionViewed,
+          finalCode: this.save.problems[problem.id]?.draft ?? problem.starter,
+          hpLeft: progress.hp,
+          elapsedMs: 0,
+        };
+        data = applyBattleOutcome(this.save, problem, provisional, this.now()).save;
+      }
+      this.scheduleSave(data);
+      if (now) void this.autosaver.flush();
+    };
     const outcome: BattleOutcome = await this.deps.ui.battle.open({
       problem,
       runner: this.deps.runner,
@@ -252,7 +312,11 @@ export class App {
       diagnose: diagnoseResult,
       onDraft: (code) => {
         this.save.problems[problem.id] = { ...(this.save.problems[problem.id] ?? emptyRecord()), draft: code };
-        this.autosaver.schedule(this.save);
+        saveDuringBattle(false);
+      },
+      onProgress: (p) => {
+        progress = { ...p };
+        saveDuringBattle(true);
       },
     });
     const result = applyBattleOutcome(this.save, problem, outcome, this.now());
@@ -284,7 +348,7 @@ export class App {
           const pos = this.world.getPlayerPosition();
           this.world.teleport(pos.x, pos.y, OPPOSITE[pos.facing]);
           this.save.location = { regionId: this.region.id, x: pos.x, y: pos.y, facing: OPPOSITE[pos.facing] };
-          this.autosaver.schedule(this.save);
+          this.scheduleSave(this.save);
           await this.sayCommon("retreat");
           break;
         }
@@ -344,7 +408,14 @@ export class App {
         this.leaving = true;
         clearLocationBackup();
         this.autosaver.cancel();
-        await this.deps.store.clear();
+        try {
+          // 진행 중인 자동 저장이 지운 뒤에 끝나서 옛 데이터를 되살리지 않도록 기다린다
+          await this.autosaver.flush();
+          await this.deps.store.clear();
+        } catch (e) {
+          this.leaving = false;
+          throw e;
+        }
         location.reload();
       },
     });
@@ -355,7 +426,14 @@ export class App {
     this.leaving = true;
     clearLocationBackup();
     this.autosaver.cancel();
-    this.save = await this.deps.store.save(data);
+    try {
+      await this.autosaver.flush();
+      this.save = await this.deps.store.save(data);
+    } catch (e) {
+      // 저장하지 못했으면 계속 플레이할 수 있게 되돌린다
+      this.leaving = false;
+      throw e;
+    }
     return this.save;
   }
 
@@ -372,8 +450,11 @@ export class App {
       console.error(e);
       this.deps.ui.hud.toast("문제가 생겼어. 콘솔을 확인해 줘.");
     } finally {
-      this.busyFlag = false;
-      this.world?.setInputEnabled(true);
+      // 불러오기·초기화로 새로고침하는 중에는 입력을 다시 켜지 않는다(움직이면 옛 데이터가 자동 저장된다)
+      if (!this.leaving) {
+        this.busyFlag = false;
+        this.world?.setInputEnabled(true);
+      }
     }
   }
 
@@ -407,9 +488,16 @@ export class App {
     this.deps.ui.hud.update(hudState(this.save, this.now(), this.region.name));
   }
 
+  /** 자동 저장 예약. 새로고침 중이거나 저장이 막혀 있으면 아무것도 하지 않는다 */
+  private scheduleSave(data: SaveData): void {
+    if (this.leaving || !this.autosaver) return;
+    this.autosaver.schedule(data);
+  }
+
+  /** 지금 바로 저장. 진행 중인 자동 저장 뒤에 이어서 쓰므로 늦게 끝난 옛 자동 저장에 덮이지 않는다 */
   private async persist(): Promise<void> {
-    this.autosaver?.cancel();
-    this.save = await this.deps.store.save(this.save);
+    if (this.leaving) return;
+    this.save = await this.autosaver.saveNow(this.save);
   }
 }
 
