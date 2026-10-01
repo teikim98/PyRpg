@@ -25,7 +25,18 @@ from png import read_png  # noqa: E402
 PORTRAIT_SIZE = 64  # src/contracts/assets.ts: 초상화 64×64
 
 GROUND_TILES = {"grass", "grass_flower", "path", "plaza_stone", "water", "house_wall", "house_roof",
-                "wall_stone", "floor_wood", "floor_stone", "stairs", "clocktower_wall", "dark_floor"}
+                "wall_stone", "floor_wood", "floor_stone", "stairs", "clocktower_wall", "dark_floor",
+                # 지역 2(갈림길 숲)
+                "forest_floor", "fallen_leaves", "tall_grass", "root_floor", "stream", "stepping_stone"}
+
+# 지역 2 명세(docs/phase3/region02-spec.md §6): 타일셋 끝에 이 순서로 붙고, 이 중 일부는 막힌다
+R02_TILES = ["forest_floor", "fallen_leaves", "tall_grass", "stump", "log", "mushroom_patch", "stream",
+             "stepping_stone", "signpost_fork", "pine_tree", "moss_stone", "root_floor"]
+R02_BLOCKING = {"stump", "log", "stream", "signpost_fork", "pine_tree", "moss_stone"}
+R02_SPRITES = {"monster_fork_sprout", "monster_leap_owl", "monster_loop_snake", "monster_count_shroom",
+               "monster_hail_wisp", "monster_acorn_mite", "boss_crossroad_tree", "npc_traveler", "npc_woodcutter"}
+# 지역 1 타일 24종의 인덱스는 바뀌면 안 된다(지역 1 맵이 gid로 참조)
+R01_TILE_COUNT = 24
 
 
 def frame_rule(name: str):
@@ -87,6 +98,15 @@ def main():
                 errors.append(f"tile {t}: ground tile has transparent pixels")
             if all(p[3] == 0 for p in px):
                 errors.append(f"tile {t}: empty")
+
+    ow = manifest["tilesets"]["overworld"]
+    if ow["tiles"][R01_TILE_COUNT:R01_TILE_COUNT + len(R02_TILES)] != R02_TILES:
+        errors.append("overworld: region-2 tiles must follow the 24 region-1 tiles in spec order")
+    for t in R02_TILES:
+        if (t in ow["blocking"]) != (t in R02_BLOCKING):
+            errors.append(f"overworld: tile {t} blocking should be {t in R02_BLOCKING}")
+    for name in sorted(R02_SPRITES - set(manifest["sprites"])):
+        errors.append(f"sprite {name}: missing from manifest (region-2 spec §6)")
 
     for name, spr in manifest["sprites"].items():
         rule = frame_rule(name)

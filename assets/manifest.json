@@ -28,7 +28,19 @@
         "crate",
         "market_stall",
         "flower_bed",
-        "dark_floor"
+        "dark_floor",
+        "forest_floor",
+        "fallen_leaves",
+        "tall_grass",
+        "stump",
+        "log",
+        "mushroom_patch",
+        "stream",
+        "stepping_stone",
+        "signpost_fork",
+        "pine_tree",
+        "moss_stone",
+        "root_floor"
       ],
       "blocking": [
         "water",
@@ -44,7 +56,13 @@
         "crate",
         "market_stall",
         "flower_bed",
-        "bush"
+        "bush",
+        "stump",
+        "log",
+        "stream",
+        "signpost_fork",
+        "pine_tree",
+        "moss_stone"
       ]
     }
   },
@@ -133,6 +151,51 @@
       "file": "sprites/obj_door.png",
       "frameWidth": 16,
       "frameHeight": 16
+    },
+    "npc_traveler": {
+      "file": "sprites/npc_traveler.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "npc_woodcutter": {
+      "file": "sprites/npc_woodcutter.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_fork_sprout": {
+      "file": "sprites/monster_fork_sprout.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_leap_owl": {
+      "file": "sprites/monster_leap_owl.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_loop_snake": {
+      "file": "sprites/monster_loop_snake.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_count_shroom": {
+      "file": "sprites/monster_count_shroom.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_hail_wisp": {
+      "file": "sprites/monster_hail_wisp.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_acorn_mite": {
+      "file": "sprites/monster_acorn_mite.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "boss_crossroad_tree": {
+      "file": "sprites/boss_crossroad_tree.png",
+      "frameWidth": 32,
+      "frameHeight": 32
     }
   },
   "portraits": {
