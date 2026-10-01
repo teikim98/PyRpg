@@ -1,0 +1,44 @@
+{
+  "id": "P0106",
+  "title": "날짜 각인",
+  "kind": "stdin",
+  "enemy": { "name": "칸막이 요정", "sprite": "monster_sep_sprite", "attack": 20 },
+  "requires": ["scroll.convert"],
+  "concept": "scroll.voice",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 5,
+  "tests": [
+    { "in": "2026 10 1\n", "out": "2026-10-1\n", "public": true, "note": "기본 동작" },
+    { "in": "1 1 1\n", "out": "1-1-1\n", "note": "경계: 가장 짧은 날짜" },
+    { "in": "9999 12 31\n", "out": "9999-12-31\n", "note": "경계: 가장 긴 날짜" },
+    { "in": "2024 2 29\n", "out": "2024-2-29\n", "note": "한 자리 월" },
+    { "in": "305 11 7\n", "out": "305-11-7\n", "note": "세 자리 연도" }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_b.py",
+      "title": "'-'를 값으로 출력",
+      "expectFail": { "1": "WA", "2": "WA", "3": "WA", "4": "WA", "5": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA", "outputMatches": " - " },
+        "text": "`print`는 값과 값 사이에 공백을 하나씩 끼워 넣어요. 그래서 `'-'`를 값으로 넣으면 앞뒤에 공백이 같이 찍혀요. 사이에 끼울 문자를 `sep='-'`로 바꿔 보세요."
+      }
+    },
+    {
+      "file": "wrong_a.py",
+      "title": "sep 누락",
+      "expectFail": { "1": "WA", "2": "WA", "3": "WA", "4": "WA", "5": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA", "outputMatches": "^\\d+ \\d+ \\d+\\s*$" },
+        "text": "값 사이가 공백으로 찍혔어요. `print`는 기본으로 공백을 끼워 넣거든요. `sep` 옵션으로 사이에 끼울 문자를 바꿀 수 있어요."
+      }
+    }
+  ],
+  "hints": [
+    "`print`가 값과 값 사이에 무엇을 끼워 넣는지 떠올려 보세요.",
+    "`print`의 `sep` 옵션을 쓰면 값 사이에 공백 대신 원하는 문자를 끼울 수 있어요.",
+    "`print(y, m, d, sep=____)`"
+  ],
+  "reward": { "xp": 100, "gold": 50 }
+}

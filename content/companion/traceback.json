@@ -1,0 +1,171 @@
+[
+  {
+    "exception": "NameError",
+    "pattern": "name '(true|false)' is not defined",
+    "text": "앗, 소문자 `true`/`false`는 JS 말투야! 서펜트 룬에서는 첫 글자가 대문자인 `True`, `False`라고 써야 해."
+  },
+  {
+    "exception": "NameError",
+    "pattern": "name '(null|undefined)' is not defined",
+    "text": "`null`이나 `undefined`는 JS 단어야. 서펜트 룬에서 '값이 없음'은 `None` 하나뿐이야(첫 글자 대문자!)."
+  },
+  {
+    "exception": "NameError",
+    "pattern": "name 'console' is not defined",
+    "text": "`console.log`는 JS 주문이지! 서펜트 룬에서는 그냥 `print(...)`라고 외치면 돼."
+  },
+  {
+    "exception": "NameError",
+    "text": "어, 처음 보는 이름이래! 강조된 줄에서 이름 철자를 확인해 봐. 대소문자도 다르면 다른 이름이야(`Print`와 `print`는 달라). 아니면 그 변수에 값을 넣기 전에 먼저 쓴 건 아닌지 봐 줘. JS의 `ReferenceError: x is not defined`랑 같은 종류야."
+  },
+  {
+    "exception": "TypeError",
+    "pattern": "can only concatenate str \\(not \"(int|float|bool)\"\\) to str",
+    "text": "문자열과 숫자를 `+`로 이으려고 했어. JS라면 `\"1\" + 2`가 알아서 `\"12\"`가 되지만, Python은 멋대로 바꿔 주지 않아. 이어 붙이려면 `str(숫자)`로, 더하려면 `int(문자열)`로 한쪽을 맞춰 줘."
+  },
+  {
+    "exception": "TypeError",
+    "pattern": "can't multiply sequence by non-int of type",
+    "text": "어, 폭발했다! 괜찮아, 방금 건 실패가 아니라 정찰이야. 메시지를 보니까 문자열에 문자열(또는 실수)을 곱하려고 했대. 반복 횟수는 정수여야 해. 횟수를 `int()`로 감싸 볼래? (JS의 `\"ab\".repeat(3)`이 Python에선 `\"ab\" * 3`이야.)"
+  },
+  {
+    "exception": "TypeError",
+    "pattern": "unsupported operand type\\(s\\) for .*'str'",
+    "text": "문자열로 계산을 하려고 했어. `input()`이나 `split()`이 준 값은 아직 문자열이야! 계산하기 전에 `int()`나 `float()`로 바꿔 줘. JS처럼 `\"5\" - 2`가 알아서 `3`이 되지 않아."
+  },
+  {
+    "exception": "TypeError",
+    "pattern": "unsupported operand type\\(s\\) for .*'NoneType'",
+    "text": "값이 없는 `None`으로 계산하려고 했어. 어떤 변수가 `None`이 됐는지 찾아봐. 함수에서 `return`을 빠뜨리면 `None`이 돌아오거든(JS에서 `undefined`가 돌아오는 것처럼)."
+  },
+  {
+    "exception": "TypeError",
+    "pattern": "unsupported operand type",
+    "text": "이 연산자는 두 값의 자료형끼리는 쓸 수 없대. 메시지에 적힌 두 자료형을 보고, 계산 전에 같은 자료형으로 맞춰 줘."
+  },
+  {
+    "exception": "TypeError",
+    "pattern": "object of type '(int|float)' has no len\\(\\)",
+    "text": "숫자에는 길이가 없어서 `len()`을 쓸 수 없어. 자릿수를 세고 싶으면 먼저 `str()`로 문자열로 바꿔: `len(str(n))`."
+  },
+  {
+    "exception": "TypeError",
+    "pattern": "object is not callable",
+    "text": "함수가 아닌 것을 함수처럼 `()`로 불렀어. 혹시 `print = 3`이나 `input = ...`처럼 내장 주문 이름에 다른 값을 넣지 않았어? 아니면 `2(3)`처럼 곱하기 `*`를 빠뜨렸을 수도 있어."
+  },
+  {
+    "exception": "TypeError",
+    "text": "자료형이 맞지 않는 곳에 값을 넣었대. 강조된 줄에서 각 값이 문자열인지 숫자인지 확인해 봐. `print(type(x))`로 찍어 보면 바로 알 수 있어. Python은 JS처럼 자료형을 알아서 바꿔 주지 않아."
+  },
+  {
+    "exception": "ValueError",
+    "pattern": "invalid literal for int\\(\\) with base 10",
+    "text": "`int()`가 숫자로 바꿀 수 없는 문자열을 받았어. 메시지 끝 따옴표 안을 봐! 공백이 섞인 `'1 2'`를 통째로 바꾸려 했다면 `split()`으로 먼저 나누고, `'1.5'`처럼 소수점이 있다면 `float()`을 써야 해. JS의 `parseInt(\"12abc\")`는 `12`를 주지만, Python은 깐깐하게 에러를 내."
+  },
+  {
+    "exception": "ValueError",
+    "pattern": "Exceeds the limit \\(4300 digits\\)",
+    "text": "숫자가 4300자리를 넘었어! 계산은 되는데, Python은 이렇게 큰 정수를 문자열로 바꾸는 걸(출력도 포함) 기본으로 막아 둬. 코드 맨 위에서 `import sys` 후 `sys.set_int_max_str_digits(0)`이라고 외치면 제한이 풀려."
+  },
+  {
+    "exception": "ValueError",
+    "pattern": "could not convert string to float",
+    "text": "`float()`가 숫자로 바꿀 수 없는 문자열을 받았어. 메시지 끝 따옴표 안의 값을 봐. 빈 문자열이거나 글자가 섞여 있을 거야."
+  },
+  {
+    "exception": "ValueError",
+    "pattern": "not enough values to unpack|too many values to unpack",
+    "text": "`a, b = ...`처럼 나눠 담을 때 왼쪽 변수 개수와 오른쪽 값 개수가 달라. 입력 한 줄에 값이 몇 개 있는지 확인해 봐. JS의 구조 분해는 모자라면 `undefined`로 채우지만, Python은 개수가 딱 맞아야 해."
+  },
+  {
+    "exception": "ValueError",
+    "text": "자료형은 맞는데 값이 이상하대. 메시지에 적힌 값을 보고, 입력을 어떻게 읽었는지 다시 확인해 봐."
+  },
+  {
+    "exception": "IndexError",
+    "pattern": "string index out of range",
+    "text": "문자열의 없는 자리를 읽으려고 했어. 길이가 n이면 번호는 `0`부터 `n - 1`까지야. 혹시 readline으로 읽은 빈 줄이 아닌지도 확인해 봐. JS는 `\"ab\"[5]`가 `undefined`지만 Python은 에러를 내."
+  },
+  {
+    "exception": "IndexError",
+    "text": "목록의 없는 자리를 읽으려고 했어. 길이가 n이면 번호는 `0`부터 `n - 1`까지야. JS는 `arr[10]`이 조용히 `undefined`를 주지만, Python은 바로 알려 줘. 오히려 고마운 거야!"
+  },
+  {
+    "exception": "ZeroDivisionError",
+    "text": "0으로 나누려고 했어! JS라면 `1 / 0`이 `Infinity`가 되지만, Python은 `/`, `//`, `%` 모두 0으로 나누면 에러를 내. 나누는 값이 0이 될 수 있는지 확인해 봐."
+  },
+  {
+    "exception": "SyntaxError",
+    "pattern": "was never closed",
+    "text": "여는 괄호를 닫지 않았어! `(`, `[`, `{`의 짝을 세어 봐. 강조된 줄이나 그 바로 앞줄에 범인이 있을 거야."
+  },
+  {
+    "exception": "SyntaxError",
+    "pattern": "unterminated string literal",
+    "text": "따옴표를 열고 닫지 않았어. 문자열은 `\"...\"`나 `'...'`처럼 같은 따옴표로 양쪽을 감싸야 해."
+  },
+  {
+    "exception": "SyntaxError",
+    "pattern": "expected ':'",
+    "text": "`if`, `for`, `def` 같은 줄 끝에는 `:`(콜론)이 꼭 필요해. JS의 `{`를 Python에서는 `:`와 들여쓰기가 대신해."
+  },
+  {
+    "exception": "SyntaxError",
+    "pattern": "Perhaps you forgot a comma",
+    "text": "값 사이에 쉼표가 빠진 것 같아. `print(a b)`가 아니라 `print(a, b)`처럼 써 줘."
+  },
+  {
+    "exception": "SyntaxError",
+    "text": "주문의 문법이 틀렸대. 강조된 줄(또는 바로 앞줄)을 봐! JS 습관이 섞이기 쉬운 곳: `let`/`const`는 빼고, `x++` 대신 `x += 1`, 주석은 `//` 대신 `#`, `===` 대신 `==`, 줄 끝 `;`는 필요 없어."
+  },
+  {
+    "exception": "IndentationError",
+    "pattern": "expected an indented block",
+    "text": "`:`로 끝나는 줄 다음에는 들여쓴 줄이 와야 해. Python은 JS의 `{ }` 대신 들여쓰기로 덩어리를 나눠. 스페이스 4칸으로 맞춰 줘."
+  },
+  {
+    "exception": "IndentationError",
+    "pattern": "unexpected indent",
+    "text": "들여쓸 이유가 없는 줄이 들여써져 있어. 줄 맨 앞의 공백을 지워 봐. Python에서는 들여쓰기도 문법이야!"
+  },
+  {
+    "exception": "IndentationError",
+    "text": "들여쓰기 칸 수가 맞지 않아. 같은 덩어리의 줄은 앞의 공백 수가 똑같아야 해. 탭과 스페이스를 섞지 말고 스페이스 4칸으로 통일하자."
+  },
+  {
+    "exception": "EOFError",
+    "text": "입력을 더 읽으려고 했는데 남은 줄이 없어. `input()`을 입력 줄 수보다 많이 부른 건 아닌지 확인해 봐. 한 줄에 값이 여러 개라면 `input().split()`으로 한 번에 읽어야 해."
+  },
+  {
+    "exception": "AttributeError",
+    "pattern": "has no attribute 'push'",
+    "text": "`push`는 JS 배열 주문이야. Python 리스트에 하나 넣을 때는 `append`를 써: `arr.append(x)`."
+  },
+  {
+    "exception": "AttributeError",
+    "pattern": "has no attribute 'length'",
+    "text": "`.length`는 JS 말투야. Python에서 길이는 `len(s)`처럼 함수로 구해."
+  },
+  {
+    "exception": "AttributeError",
+    "pattern": "has no attribute '(toUpperCase|toLowerCase|trim|includes|forEach)'",
+    "text": "JS 문자열·배열 주문을 썼어! Python에서는 `toUpperCase` → `upper()`, `toLowerCase` → `lower()`, `trim` → `strip()`, `includes` → `in` 연산자야."
+  },
+  {
+    "exception": "AttributeError",
+    "pattern": "'int' object has no attribute",
+    "text": "숫자(`int`)에는 그런 기능이 없어. 혹시 `strip()`이나 `split()`을 `int()`로 바꾼 뒤에 쓴 거야? 문자열 주문은 숫자로 바꾸기 전에 써야 해."
+  },
+  {
+    "exception": "AttributeError",
+    "text": "그 값에는 그런 기능(속성)이 없대. 메시지 앞쪽의 자료형 이름을 보고, 그 자료형이 맞는지 확인해 봐."
+  },
+  {
+    "exception": "RecursionError",
+    "text": "함수가 자기 자신을 너무 깊이 불렀어! 재귀가 멈추는 조건(기저 사례)이 있는지, 매번 문제가 작아지는지 확인해 봐. 아주 깊어야 하는 문제라면 반복문으로 바꾸는 게 안전해."
+  },
+  {
+    "exception": "KeyboardInterrupt",
+    "text": "시간이 다 됐어! 주문이 제한 시간 안에 끝나지 않아서 내가 멈췄어. 끝나지 않는 반복이 있는지, 아니면 너무 많이 반복하는 건 아닌지 봐 줘. 정답이어도 느리면 시계 룬은 돌아가지 않아."
+  }
+]

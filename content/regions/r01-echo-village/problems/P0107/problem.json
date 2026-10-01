@@ -1,0 +1,43 @@
+{
+  "id": "P0107",
+  "title": "이어 말하기",
+  "kind": "stdin",
+  "enemy": { "name": "꼬리말 요정", "sprite": "monster_sep_sprite", "attack": 20 },
+  "requires": ["scroll.quick_ear"],
+  "concept": "scroll.voice",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 6,
+  "tests": [
+    { "in": "ab\ncd\nef\n", "out": "ab~cd~ef~\n", "public": true, "note": "기본 동작" },
+    { "in": "a\nb\nc\n", "out": "a~b~c~\n", "note": "경계: 한 글자 단어" },
+    { "in": "echo\necho\necho\n", "out": "echo~echo~echo~\n", "note": "같은 단어 반복" },
+    { "in": "abcdefghij\nz\nabcdefghij\n", "out": "abcdefghij~z~abcdefghij~\n", "note": "경계: 가장 긴 단어" }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_a.py",
+      "title": "strip 누락",
+      "expectFail": { "1": "WA", "2": "WA", "3": "WA", "4": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA", "outputMatches": "\\n~" },
+        "text": "`~` 앞에서 줄이 바뀌었어요. readline이 읽은 개행 문자가 단어 끝에 붙은 채로 출력됐기 때문이에요. 단어를 `.strip()`으로 정리해 보세요."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "마지막 end 누락",
+      "expectFail": { "1": "WA", "2": "WA", "3": "WA", "4": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA", "outputMatches": "[^~\\s]\\s*$" },
+        "text": "마지막 단어 뒤에도 `~`가 붙어야 해요. 마지막 `print`의 `end`를 확인해 보세요."
+      }
+    }
+  ],
+  "hints": [
+    "`print`는 출력이 끝나면 무엇을 덧붙이는지 떠올려 보세요. 그리고 readline이 읽은 단어 끝에 무엇이 붙어 있는지도요.",
+    "`print`의 `end` 옵션을 `\"~\"`로 바꾸면 줄을 바꾸는 대신 `~`를 붙이고 다음 출력이 같은 줄에 이어져요. 단어는 `.strip()`으로 정리하세요.",
+    "`print(a, end=____)`를 세 단어에 똑같이 써 보세요."
+  ],
+  "reward": { "xp": 100, "gold": 50 }
+}

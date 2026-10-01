@@ -1,0 +1,46 @@
+{
+  "id": "P0110",
+  "title": "큰 수의 자릿수",
+  "kind": "stdin",
+  "enemy": { "name": "금고 딱정벌레", "sprite": "monster_clock_beetle", "attack": 20 },
+  "requires": ["scroll.quick_ear"],
+  "concept": "scroll.convert",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 8,
+  "tests": [
+    { "in": "2 10\n", "out": "4\n", "public": true, "note": "기본 동작(1024)" },
+    { "in": "1 1\n", "out": "1\n", "note": "경계: 최솟값" },
+    { "in": "1 3000\n", "out": "1\n", "note": "1은 몇 번 곱해도 1" },
+    { "in": "10 100\n", "out": "101\n", "note": "10의 거듭제곱" },
+    { "in": "2 3000\n", "out": "904\n", "note": "JS Number로는 담을 수 없는 크기" },
+    { "in": "100 2150\n", "out": "4301\n", "note": "경계: 4300자리 제한을 막 넘음" },
+    { "in": "100 3000\n", "out": "6001\n", "note": "경계: 최댓값" }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_a.py",
+      "title": "4300자리 제한을 풀지 않음",
+      "expectFail": { "6": "RE", "7": "RE" },
+      "diagnosis": {
+        "when": { "verdict": "RE", "exception": "ValueError", "messageMatches": "Exceeds the limit" },
+        "text": "Python은 4300자리가 넘는 정수를 문자열로 바꾸는 것을 기본으로 막아 둬요. 코드 맨 위에서 `import sys` 후 `sys.set_int_max_str_digits(0)`으로 제한을 풀어 주세요."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "형변환 누락",
+      "expectFail": { "1": "RE", "2": "RE", "3": "RE", "4": "RE", "5": "RE", "6": "RE", "7": "RE" },
+      "diagnosis": {
+        "when": { "verdict": "RE", "exception": "TypeError", "messageMatches": "unsupported operand" },
+        "text": "`input().split()`이 준 값은 문자열이라서 `**`로 거듭제곱할 수 없어요. 먼저 `int()`로 바꿔 주세요."
+      }
+    }
+  ],
+  "hints": [
+    "숫자를 문자열로 바꾸면 글자 수가 곧 자릿수예요. 큰 수에서 에러가 나면 에러 메시지를 끝까지 읽어 보세요.",
+    "`len(str(a ** b))`가 자릿수예요. 4300자리가 넘는 수는 `sys.set_int_max_str_digits(0)`으로 제한을 풀어야 문자열로 바꿀 수 있어요.",
+    "`import sys`\n`sys.set_int_max_str_digits(____)`\n`a, b = map(int, input().split())`\n`print(len(str(a ** b)))`"
+  ],
+  "reward": { "xp": 100, "gold": 50 }
+}

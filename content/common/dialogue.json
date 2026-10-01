@@ -1,0 +1,39 @@
+{
+  "need_scroll": [
+    { "speaker": "companion", "emotion": "worried", "text": "잠깐, {player}! 이 버그는 아직 우리가 모르는 룬으로 엉켜 있어. 지금 덤비면 주문이 안 먹혀." },
+    { "speaker": "companion", "emotion": "neutral", "text": "근처에 빛나는 비석이 있을 거야. 거기서 주문서부터 얻어 오자. 지도엔 내가 표시해 둘게!" }
+  ],
+  "campfire_rest": [
+    { "speaker": "system", "text": "모닥불 곁에서 숨을 고른다. HP가 모두 회복되고 여정이 기록되었다." },
+    { "speaker": "companion", "emotion": "happy", "text": "후아, 따뜻하다. 오늘 걸은 걸음 수도 지도에 적어 둘게. 쉬었다 가자!" }
+  ],
+  "knockout": [
+    { "speaker": "system", "text": "버그의 반격에 쓰러졌다… 정신을 차려 보니 마지막 모닥불 곁이다." },
+    { "speaker": "companion", "emotion": "worried", "text": "{player}, 괜찮아? 놀랐지. 그래도 써 둔 주문은 하나도 안 사라졌어." },
+    { "speaker": "companion", "emotion": "neutral", "text": "방금 건 실패가 아니라 정찰이야. 어디서 틀렸는지 알았으니까 다음엔 더 가까이 갈 수 있어!" }
+  ],
+  "solution_unlocked": [
+    { "speaker": "companion", "emotion": "serious", "text": "같은 버그에 세 번이나 쓰러졌네. 여기서 계속 맴도는 것보다 한 번 길을 보고 가는 게 나을 수도 있어." },
+    { "speaker": "companion", "emotion": "neutral", "text": "해설서를 열 수 있게 됐어. 대신 이번 전투 보상은 없고, 이 주문은 그림자 몬스터로 나중에 다시 만나게 될 거야. 열지 말지는 네가 정해!" }
+  ],
+  "retreat": [
+    { "speaker": "companion", "emotion": "neutral", "text": "좋아, 일단 물러나자! 써 둔 주문은 그대로 남아 있어." },
+    { "speaker": "companion", "emotion": "happy", "text": "코덱스를 한 번 훑어보고 다시 오면 분명 보일 거야. 이 버그는 어디 안 가!" }
+  ],
+  "practice_suggest": [
+    { "speaker": "companion", "emotion": "worried", "text": "이 버그랑 꽤 오래 씨름하고 있네. 머리가 뜨거워질 땐 잠깐 돌아가는 것도 방법이야." },
+    { "speaker": "companion", "emotion": "neutral", "text": "같은 주문서로 연습할 수 있는 작은 버그가 있어. 하나 정화하고 오면 감이 잡힐 거야. 물론 계속 붙어 봐도 좋아. 보상은 줄지 않아!" }
+  ],
+  "shadow_registered": [
+    { "speaker": "companion", "emotion": "serious", "text": "방금 주문의 그림자가 남았어. 며칠 뒤에 그림자 게시판에 다시 나타날 거야." },
+    { "speaker": "companion", "emotion": "happy", "text": "벌이 아니라 복습이야! 그림자를 다시 이기면 그 주문은 진짜 네 거가 되는 거지." }
+  ],
+  "level_up": [
+    { "speaker": "system", "text": "레벨이 올랐다! 최대 HP가 늘어났다." },
+    { "speaker": "companion", "emotion": "happy", "text": "와, {player} 점점 단단해지는데? 지도 여백에 별 하나 그려 둘게!" }
+  ],
+  "fatal_recursion": [
+    { "speaker": "companion", "emotion": "surprised", "text": "으앗, 주문이 너무 깊이 파고들어서 룬 엔진이 통째로 꺼졌다가 다시 켜졌어!" },
+    { "speaker": "companion", "emotion": "neutral", "text": "재귀가 너무 깊어. 반복문이나 dict 메모로 바꿔 볼래? 엔진은 다시 멀쩡하니까 바로 또 시전해도 돼." }
+  ]
+}

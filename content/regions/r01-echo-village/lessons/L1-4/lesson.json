@@ -1,0 +1,17 @@
+{
+  "id": "L1-4",
+  "title": "빠른 귀의 주문: sys.stdin.readline",
+  "scroll": {
+    "id": "scroll.quick_ear",
+    "name": "빠른 귀의 주문서",
+    "summary": "`import sys` 후 `input = sys.stdin.readline`으로 빠르게 읽는다. readline은 줄 끝 `\\n`까지 주므로 문자열은 `.strip()`으로 정리. 문자열 × 정수는 반복."
+  },
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 주문을 채워서 readline이 읽은 줄의 꼬리(줄바꿈)를 떼어 내. `ab`가 입력되면 `ababab`가 출력되어야 해.",
+    "code": "import sys\ns = sys.stdin.readline().___()\nprint(s * 3)\n",
+    "stdin": "ab\n",
+    "expectedOutput": "ababab\n",
+    "answer": "strip"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "L1-2",
+  "title": "변환의 주문: 문자열과 숫자",
+  "scroll": {
+    "id": "scroll.convert",
+    "name": "변환의 주문서",
+    "summary": "`int()`, `float()`, `str()`로 자료형을 바꾼다. 한 줄의 여러 정수는 `a, b = map(int, input().split())`. 비교 연산의 결과는 `True`/`False`."
+  },
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 변환 주문을 채워서 `3 4`가 입력되면 `7`이 출력되게 해 봐.",
+    "code": "a, b = map(___, input().split())\nprint(a + b)\n",
+    "stdin": "3 4\n",
+    "expectedOutput": "7\n",
+    "answer": "int"
+  }
+}

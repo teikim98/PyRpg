@@ -1,0 +1,118 @@
+{
+  "region_intro": [
+    { "speaker": "system", "text": "물소리가 들리지 않는다. 두레박에서 쏟아지던 물줄기가 공중에 그대로 멈춰 있다." },
+    { "speaker": "system", "text": "당신은 낯선 우물가에서 눈을 떴다. 이름도, 여기까지 온 길도 떠오르지 않는다." }
+  ],
+  "prologue": [
+    { "speaker": "companion", "emotion": "surprised", "text": "어?! 움직인다! 너, 굳어 있지 않아?" },
+    { "speaker": "player", "text": "…여긴 어디지? 아무것도 기억이 안 나." },
+    { "speaker": "companion", "emotion": "happy", "text": "여긴 에코 마을이야. 나는 {companion}! 세르펜티아 대륙 지도를 완성하러 떠도는 지도 제작자야. 반가워!" },
+    { "speaker": "companion", "emotion": "serious", "text": "얼마 전에 대륙 곳곳에서 시간이 멈췄어. 다들 '대정지'라고 불러. 이 마을도 우물물이 공중에 걸린 채로 멈춰 버렸지." },
+    { "speaker": "companion", "emotion": "neutral", "text": "이 세계는 전부 '서펜트 룬'이라는 주문으로 움직여. 강이 흐르는 것도, 등불이 켜지는 것도 누군가 써 둔 룬이 돌아가고 있어서야." },
+    { "speaker": "companion", "emotion": "worried", "text": "그런데 시간이 멈춘 틈으로 잘못 쓰인 주문 찌꺼기, '버그'들이 괴물이 되어 흘러나왔어. 버그는 칼로는 안 베어져. 올바른 주문을 시전해야만 정화돼." },
+    { "speaker": "companion", "emotion": "surprised", "text": "잠깐, 네 손등에 룬 자국이 있네? 너 주문사구나! 기억은 잃었어도 손은 기억할지 몰라." },
+    { "speaker": "player", "text": "주문사…? 주문 같은 건 하나도 생각나지 않는데." },
+    { "speaker": "companion", "emotion": "happy", "text": "괜찮아, 처음부터 다시 배우면 되지! 마을마다 룬을 가르쳐 주는 비석이 있어. 바로 저기, 우물 옆에도 하나 있고." },
+    { "speaker": "companion", "emotion": "serious", "text": "마을 북동쪽 시계탑 꼭대기에 이 마을의 시간을 돌리던 '시계 룬'이 있어. 뭔가가 그걸 꽉 붙잡고 있대. 그걸 풀어 주면 마을 시간이 다시 흐를 거야." },
+    { "speaker": "companion", "emotion": "neutral", "text": "누가 왜 세계를 멈췄는지는 아무도 몰라. 어떤 할아버지가 굳기 직전에 '할트…'라고 중얼거렸다던데, 무슨 뜻인지는 나도 몰라." },
+    { "speaker": "companion", "emotion": "happy", "text": "어쨌든! 내 지도에서 이 마을은 아직 하얗게 비어 있거든. 같이 색칠하러 가자, {player}! 먼저 저 비석부터!" }
+  ],
+  "sign_well": [
+    { "speaker": "system", "text": "『에코 마을 우물. 물을 길을 때는 두레박 줄을 꼭 잡으시오.』" },
+    { "speaker": "companion", "emotion": "neutral", "text": "물이 공중에 멈춰 있는 거 봐. 손을 대도 안 떨어져. 시계 룬이 다시 돌면 이것도 흐르겠지?" }
+  ],
+  "gate_well_locked": [
+    { "speaker": "system", "text": "광장으로 가는 문이 꿈쩍도 하지 않는다. 문에 새겨진 룬이 희미하게 빛난다." },
+    { "speaker": "companion", "emotion": "worried", "text": "룬으로 잠긴 문이야. 우물 옆 비석에서 '목소리의 주문서'를 얻으면 열 수 있을 거야!" }
+  ],
+  "lesson_L1-1_intro": [
+    { "speaker": "companion", "emotion": "happy", "text": "이게 룬 비석이야! 손을 대면 주문이 머릿속으로 흘러 들어와." },
+    { "speaker": "companion", "emotion": "neutral", "text": "첫 번째는 '목소리의 주문'. 말을 하고(`print`), 말을 듣는(`input`) 주문이야. 모든 주문의 시작이지!" }
+  ],
+  "lesson_L1-1_done": [
+    { "speaker": "system", "text": "목소리의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "목소리 회복! 이제 문의 룬에 대고 말할 수 있겠다. 광장으로 가자!" }
+  ],
+  "sign_plaza": [
+    { "speaker": "system", "text": "『에코 마을 광장. 동쪽: 상점 거리 / 북동쪽: 메아리 골목, 시계탑』" },
+    { "speaker": "companion", "emotion": "serious", "text": "길목마다 버그가 버티고 있네. 정화하지 않으면 못 지나가. 주문서를 먼저 챙기고 붙자!" }
+  ],
+  "npc_frozen_merchant": [
+    { "speaker": "굳은 상인", "text": "금화… 두… 자루를… 장부에…" },
+    { "speaker": "companion", "emotion": "worried", "text": "말하다가 그대로 굳었어. 장부를 펼쳐 놓고 금화를 세던 중이었나 봐." },
+    { "speaker": "companion", "emotion": "neutral", "text": "저 슬라임이 장부 숫자를 엉망으로 만들고 있는 것 같아. 숫자로 읽어야 할 걸 글자로 읽게 만드는 녀석이래. 광장 비석에서 '변환의 주문서'를 얻고 오자!" }
+  ],
+  "lesson_L1-2_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "광장 비석이다! 여기선 '변환의 주문'을 배울 수 있어." },
+    { "speaker": "companion", "emotion": "serious", "text": "귀로 들은 말은 전부 글자(문자열)야. 숫자로 계산하려면 먼저 바꿔 줘야 해. JS랑 제일 다른 부분이니까 집중!" }
+  ],
+  "lesson_L1-2_done": [
+    { "speaker": "system", "text": "변환의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "이제 글자를 숫자로, 숫자를 글자로 바꿀 수 있어! 타입 슬라임, 기다려라!" }
+  ],
+  "npc_shopkeeper": [
+    { "speaker": "상점 주인", "text": "어서… 오…세요… 몸이… 천천히밖에… 안 움직여서…" },
+    { "speaker": "상점 주인", "text": "버그를 정화하면… 골드가 남지요… 잘 모아 두세요… 회복약도… 장신구도… 골드로 사는 거니까…" },
+    { "speaker": "상점 주인", "text": "지금은… 진열대째 시간이 멈춰서… 물건을 꺼낼 수가 없어요… 시계 룬이 돌면… 꼭 다시 열게요…" },
+    { "speaker": "companion", "emotion": "neutral", "text": "골드는 정답을 대신 사 주진 않아. 그래도 회복약이 있으면 버그와 오래 버틸 수 있지. 차곡차곡 모아 두자!" }
+  ],
+  "lesson_L1-3_intro": [
+    { "speaker": "companion", "emotion": "happy", "text": "상점 거리 비석! 여긴 '산술의 주문'이야. 더하고 나누고, 몫과 나머지까지!" },
+    { "speaker": "companion", "emotion": "neutral", "text": "JS에서 쓰던 `Math.floor(a / b)` 습관을 Python식으로 바꿔 보자." }
+  ],
+  "lesson_L1-3_done": [
+    { "speaker": "system", "text": "산술의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "몫은 `//`, 나머지는 `%`! 저 박쥐랑 두더지, 이제 상대해 줄 수 있겠어." }
+  ],
+  "chest_shop": [
+    { "speaker": "system", "text": "상자를 열었다. 30골드를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "오, 누가 숨겨 둔 비상금인가 봐. 시간이 돌아오면 주인한테 말해 주자. 일단은 고맙게 쓸게!" }
+  ],
+  "lesson_L1-4_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "메아리 골목 비석이야. 여긴 '빠른 귀의 주문'. 말을 아주 빨리 알아듣는 주문이래." },
+    { "speaker": "companion", "emotion": "serious", "text": "빠른 대신 조심할 게 하나 있어. 들은 말 끝에 꼬리처럼 줄바꿈이 붙어 와. 그걸 떼는 법까지 배우자!" }
+  ],
+  "lesson_L1-4_done": [
+    { "speaker": "system", "text": "빠른 귀의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`sys.stdin.readline` 다음엔 `.strip()`! 이 조합만 기억하면 메아리 유령도 무섭지 않아." }
+  ],
+  "sign_alley_riddle": [
+    { "speaker": "system", "text": "『길을 아는 자만 숨은 방에 닿으리라. 이 표지판에서 `len('serpent')`걸음 동쪽, `2 ** 2`걸음 북쪽.』" },
+    { "speaker": "companion", "emotion": "surprised", "text": "오, 서펜트 룬으로 쓴 수수께끼다! `len`은 글자 수를 세는 주문이고, `**`는 거듭제곱이었지?" },
+    { "speaker": "companion", "emotion": "happy", "text": "계산은 너한테 맡길게. 걸음 수 세는 건 내 특기니까, 답이 나오면 같이 걸어 보자!" }
+  ],
+  "npc_echo_child": [
+    { "speaker": "메아리 아이", "text": "안녕… 안녕… 안녕…" },
+    { "speaker": "companion", "emotion": "surprised", "text": "이 아이는 완전히 굳진 않았네. 대신 들은 말을 계속 되풀이하고 있어." },
+    { "speaker": "메아리 아이", "text": "내 말 끝에는… 꼬리가 달려 있어… 줄을 바꾸는 꼬리… 떼어 주지 않으면… 메아리가 줄마다 끊겨…" },
+    { "speaker": "companion", "emotion": "serious", "text": "줄을 바꾸는 꼬리라… readline으로 읽은 말 끝의 `\\n` 얘기 같은데? 기억해 두자." }
+  ],
+  "chest_hidden": [
+    { "speaker": "system", "text": "숨겨진 상자를 열었다. 50골드를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "7걸음 동쪽, 4걸음 북쪽! 수수께끼를 풀었어! 표지판 주문을 머릿속으로 실행해 본 거잖아. 그거 진짜 주문사 실력이야." }
+  ],
+  "boss_intro": [
+    { "speaker": "companion", "emotion": "serious", "text": "시계탑 계단이야. 저 위에서 시계 룬이 멈춘 채 떨고 있어." },
+    { "speaker": "companion", "emotion": "surprised", "text": "잠깐, 계단 하나가… 숨을 쉬고 있어! 저거 계단이 아니야, 미믹이야!" },
+    { "speaker": "companion", "emotion": "neutral", "text": "지금까지 배운 주문 네 개를 다 쓸 때야. 준비됐으면 다가가자, {player}!" }
+  ],
+  "boss_defeated": [
+    { "speaker": "system", "text": "계단 미믹이 빛으로 흩어졌다. 시계탑 꼭대기에서 톱니 하나가 '딸깍' 하고 움직인다." },
+    { "speaker": "system", "text": "시계 룬이 다시 돌기 시작했다. 공중에 멈춰 있던 우물물이 쏟아지고, 광장의 사람들이 하던 말을 이어 간다." },
+    { "speaker": "companion", "emotion": "happy", "text": "해냈다! 들려? 물소리야! 마을이 다시 움직여!" },
+    { "speaker": "companion", "emotion": "surprised", "text": "앗, 지도 좀 봐. 에코 마을 자리에 색이 번지고 있어!" }
+  ],
+  "region_clear": [
+    { "speaker": "companion", "emotion": "happy", "text": "에코 마을 지도 완성! 입출력, 형변환, 산술, 빠른 귀까지 전부 되찾았어." },
+    { "speaker": "companion", "emotion": "neutral", "text": "그리고 이건 내가 모아 둔 '바깥 시련장' 목록이야. 여기서 익힌 주문을 다른 세계의 문제로도 시험해 볼 수 있대." },
+    { "speaker": "companion", "emotion": "serious", "text": "그런데 이상해. 시계 룬을 붙잡고 있던 미믹, 누가 일부러 거기 둔 것 같았어. 대정지가 그냥 일어난 일이 아닐지도 몰라." }
+  ],
+  "east_gate_locked": [
+    { "speaker": "system", "text": "동쪽 문이 굳게 닫혀 있다. 문 위의 작은 시계가 멈춰 있다." },
+    { "speaker": "companion", "emotion": "worried", "text": "이 문은 마을 시간에 묶여 있어. 시계탑의 시계 룬을 되살려야 열릴 거야." }
+  ],
+  "to_be_continued": [
+    { "speaker": "companion", "emotion": "happy", "text": "문이 열렸다! 동쪽은 내 지도에서도 아직 하얗게 비어 있는 곳이야. 두근거리는데?" },
+    { "speaker": "system", "text": "에코 마을 이야기는 여기까지입니다. 다음 지역은 준비 중이에요. 플레이해 주셔서 고맙습니다!" }
+  ]
+}

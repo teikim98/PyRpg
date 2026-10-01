@@ -1,0 +1,17 @@
+{
+  "id": "L1-1",
+  "title": "목소리의 주문: print와 input",
+  "scroll": {
+    "id": "scroll.voice",
+    "name": "목소리의 주문서",
+    "summary": "`print`로 말하고 `input()`으로 듣는다. `sep`은 값 사이, `end`는 출력 끝에 붙는 문자. `input()`은 언제나 문자열을 돌려준다."
+  },
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 주문을 채워서 입력 한 줄을 읽어 와. 입력으로 `메아리`가 들어오면 `메아리~메아리`가 출력되어야 해.",
+    "code": "word = ___\nprint(word, word, sep=\"~\")\n",
+    "stdin": "메아리\n",
+    "expectedOutput": "메아리~메아리\n",
+    "answer": "input()"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "id": "P0104",
+  "title": "메아리 주문",
+  "kind": "stdin",
+  "enemy": { "name": "메아리 유령", "sprite": "monster_echo_ghost", "attack": 20 },
+  "requires": ["scroll.quick_ear"],
+  "concept": "scroll.quick_ear",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 6,
+  "tests": [
+    { "in": "ab\n3\n", "out": "ababab\n", "public": true, "note": "기본 동작" },
+    { "in": "z\n1\n", "out": "z\n", "note": "경계: 최솟값" },
+    { "in": "python\n2\n", "out": "pythonpython\n", "note": "일반 단어" },
+    {
+      "in": "abcdefghij\n100\n",
+      "out": "abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij\n",
+      "note": "경계: 최댓값(1000자)"
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_a.py",
+      "title": "strip 누락",
+      "expectFail": { "1": "WA", "3": "WA", "4": "WA" },
+      "diagnosis": {
+        "when": { "verdict": "WA", "outputMatches": "\\n[\\s\\S]*\\S" },
+        "text": "readline이 읽은 개행 문자까지 함께 반복됐어요. `s`를 `.strip()`으로 정리해 보세요."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "str * str",
+      "expectFail": { "1": "RE", "2": "RE", "3": "RE", "4": "RE" },
+      "diagnosis": {
+        "when": { "verdict": "RE", "exception": "TypeError", "messageMatches": "can't multiply sequence by non-int" },
+        "text": "문자열에 문자열을 곱하려고 했어요. 반복 횟수 `n`을 `int()`로 바꿔 주세요."
+      }
+    }
+  ],
+  "hints": [
+    "readline이 돌려준 문자열 끝에 무엇이 붙어 있는지 `print(repr(s))`로 확인해 보세요.",
+    "`.strip()`으로 개행을 지우고, 문자열에 정수를 곱하면 그 횟수만큼 반복됩니다.",
+    "`print(s.strip() * ____)`"
+  ],
+  "reward": { "xp": 100, "gold": 50 }
+}
