@@ -93,9 +93,9 @@ function removedUntil(id: string): Set<string> {
   throw new Error(id);
 }
 
-/** 숨겨진 길 입구: 맵에 하나뿐인 덤불(지나갈 수 있다) */
+/** 숨겨진 길 입구: 줄지어 선 덤불 중 하나뿐인 지나갈 수 있는 덤불(나머지는 막힘) */
 const hiddenBush = () => {
-  const bushes = map.deco.map((v, i) => (v === tileIndex("bush") ? i : -1)).filter((i) => i >= 0);
+  const bushes = map.deco.map((v, i) => (v === tileIndex("bush") && !grid[i] ? i : -1)).filter((i) => i >= 0);
   expect(bushes).toHaveLength(1);
   return { x: bushes[0] % map.width, y: Math.floor(bushes[0] / map.width) };
 };
@@ -241,6 +241,11 @@ describe("region-2 progression (zones open west to east)", () => {
       [0, -1],
     ].map(([dx, dy]) => map.ground[(h.y + dy) * map.width + h.x + dx]);
     expect(nb).toContain(stream);
+    // 나무꾼 대사('덤불이 줄지어 있는데, 그중 딱 하나만'): 같은 줄에 막힌 덤불이 이어져 있다
+    const left = h.y * map.width + h.x - 1;
+    expect(map.deco[left]).toBe(tileIndex("bush"));
+    expect(grid[left]).toBe(1);
+    expect(map.deco[left - 1]).toBe(tileIndex("bush"));
     expect(h.y).toBeLessThan(obj("npc_woodcutter").y);
     expect(h.y).toBeLessThan(obj("m_P0207").y);
     const removed = removedUntil("chest_hidden_grove");

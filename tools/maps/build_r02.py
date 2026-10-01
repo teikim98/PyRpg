@@ -16,7 +16,7 @@
   3 멈춘 개울    얼어붙은 개울이 남북으로 맵을 가른다. 서쪽 기슭(나무꾼, rune_L2-3)에서 디딤돌로 건너는데
                  첫 디딤돌을 m_P0207이 막는다. 동쪽 기슭이 쉼터(rune_L2-4, campfire_stream).
                  숨겨진 길: 서쪽 기슭을 따라 개울 북쪽 끝까지 올라가면 개울에 맞닿은 덤불(H) 하나가 지나갈 수
-                 있다(나무꾼 대사의 귀띔: 개울을 따라 북쪽으로, 잎이 아직 흔들리는 덤불). 그 너머 오솔길 끝에
+                 있다(나무꾼 대사의 귀띔: 개울을 따라 북쪽으로, 줄지어 선 덤불 중 잎이 아직 흔들리는 하나). 그 너머 오솔길 끝에
                  chest_hidden_grove와 선택 m_P0208이 있다. 이 덤불이 그 오솔길의 유일한 입구다.
   4 수호목 앞    뿌리 길이 갈라지는 좁은 숲. 출구 m_P0209
   5 수호목의 공터 1칸 통로: t_boss_intro → 빈칸 → 보스 m_P0210(트리거는 보스 두 칸 앞, 피할 수 없음).
@@ -99,7 +99,7 @@ ZONE3 = r"""
 PPPPPPPPP~~~PPPPPP
 PPPPDPPPP~~~PPPPPP
 PPu.,..,.~~~PPPPPP
-PPPPPPPPH~~~PPPPPP
+PPPPhhhhH~~~PPPPPP
 PPPPPPPP.~~~PPPPPP
 P.,..L...~~~PPPPPP
 P..S...,.~~~PPPPPP
@@ -206,7 +206,8 @@ TILES: dict[str, tuple[str, str]] = {
     "m": ("mushroom_patch", "deco"),
     "Y": ("signpost_fork", "deco"),
     "B": ("moss_stone", "deco"),
-    "H": ("bush", "deco"),  # 숨겨진 길 입구: 덤불로 보이지만 지나갈 수 있다
+    "h": ("bush", "deco"),  # 개울 북쪽 끝의 덤불 줄(막힘). 나무꾼 대사의 '줄지어 있는 덤불'
+    "H": ("bush", "deco"),  # 숨겨진 길 입구: 줄 끝(개울 쪽)의 덤불 하나만 지나갈 수 있다
 }
 PASSABLE_OVERRIDE = {"H"}
 FLOORS = {"forest_floor", "root_floor", "stepping_stone"}
