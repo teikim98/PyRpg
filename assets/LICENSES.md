@@ -12,12 +12,13 @@ design.md §9.8의 에셋 정책에 따라 게임에 들어가는 그림과 폰�
 
 | 파일 | 내용 |
 |---|---|
-| `tiles/overworld.png` | 지형 타일 36종(16×16, 8열): 지역 1 24종 + 지역 2 숲 타일 12종 |
-| `sprites/player.png`, `sprites/nuri.png`, `sprites/npc_merchant.png`, `sprites/npc_villager.png`, `sprites/npc_child.png`, `sprites/npc_traveler.png`, `sprites/npc_woodcutter.png` | 캐릭터(16×16 × 8프레임) |
-| `sprites/monster_*.png` | 지역 1 몬스터 6종 + 지역 2 몬스터 6종(16×16 × 2프레임) |
+| `tiles/overworld.png` | 지형 타일 48종(16×16, 8열): 지역 1 24종 + 지역 2 숲 타일 12종 + 지역 3 동굴 타일 12종 |
+| `sprites/player.png`, `sprites/nuri.png`, `sprites/npc_merchant.png`, `sprites/npc_villager.png`, `sprites/npc_child.png`, `sprites/npc_traveler.png`, `sprites/npc_woodcutter.png`, `sprites/npc_goblin.png` | 캐릭터(16×16 × 8프레임) |
+| `sprites/monster_*.png` | 지역 1 몬스터 6종 + 지역 2 몬스터 6종 + 지역 3 몬스터 5종(16×16 × 2프레임) |
 | `sprites/obj_*.png` | 상자·표지판·캠프파이어·비석·문(16×16 × 2프레임) |
 | `sprites/boss_stair_mimic.png` | 지역 1 보스 계단 미믹(32×32 × 2프레임) |
 | `sprites/boss_crossroad_tree.png` | 지역 2 보스 갈림길 수호목(32×32 × 2프레임) |
+| `sprites/boss_goblin_chief.png` | 지역 3 보스 고블린 족장(32×32 × 2프레임) |
 | `portraits/nuri_*.png` | 누리 초상화 5종(64×64) |
 
 ## 2. 폰트

@@ -40,7 +40,19 @@
         "signpost_fork",
         "pine_tree",
         "moss_stone",
-        "root_floor"
+        "root_floor",
+        "cave_floor",
+        "cave_wall",
+        "cave_wall_top",
+        "torch_frozen",
+        "crystal",
+        "rubble",
+        "treasure_pile",
+        "cave_pool",
+        "mural_wall",
+        "cave_crack",
+        "minecart_rail",
+        "bone_pile"
       ],
       "blocking": [
         "water",
@@ -62,7 +74,16 @@
         "stream",
         "signpost_fork",
         "pine_tree",
-        "moss_stone"
+        "moss_stone",
+        "cave_wall",
+        "cave_wall_top",
+        "torch_frozen",
+        "crystal",
+        "rubble",
+        "treasure_pile",
+        "cave_pool",
+        "mural_wall",
+        "bone_pile"
       ]
     }
   },
@@ -206,6 +227,41 @@
       "file": "sprites/obj_shop.png",
       "frameWidth": 16,
       "frameHeight": 16
+    },
+    "npc_goblin": {
+      "file": "sprites/npc_goblin.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_index_goblin": {
+      "file": "sprites/monster_index_goblin.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_slice_bat": {
+      "file": "sprites/monster_slice_bat.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_stack_crab": {
+      "file": "sprites/monster_stack_crab.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_mirror_slime": {
+      "file": "sprites/monster_mirror_slime.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_grid_golem": {
+      "file": "sprites/monster_grid_golem.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "boss_goblin_chief": {
+      "file": "sprites/boss_goblin_chief.png",
+      "frameWidth": 32,
+      "frameHeight": 32
     }
   },
   "portraits": {

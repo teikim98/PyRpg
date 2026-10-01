@@ -25,10 +25,10 @@
    "name": "overworld",
    "image": "../../../assets/tiles/overworld.png",
    "imagewidth": 128,
-   "imageheight": 80,
+   "imageheight": 96,
    "tilewidth": 16,
    "tileheight": 16,
-   "tilecount": 36,
+   "tilecount": 48,
    "columns": 8,
    "margin": 0,
    "spacing": 0,
@@ -426,6 +426,138 @@
        "name": "blocking",
        "type": "bool",
        "value": false
+      }
+     ]
+    },
+    {
+     "id": 36,
+     "type": "cave_floor",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 37,
+     "type": "cave_wall",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 38,
+     "type": "cave_wall_top",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 39,
+     "type": "torch_frozen",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 40,
+     "type": "crystal",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 41,
+     "type": "rubble",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 42,
+     "type": "treasure_pile",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 43,
+     "type": "cave_pool",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 44,
+     "type": "mural_wall",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 45,
+     "type": "cave_crack",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 46,
+     "type": "minecart_rail",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 47,
+     "type": "bone_pile",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
       }
      ]
     }
@@ -982,6 +1114,16 @@
        "name": "openDialogue",
        "type": "string",
        "value": "to_be_continued"
+      },
+      {
+       "name": "target",
+       "type": "string",
+       "value": "r03"
+      },
+      {
+       "name": "targetSpawn",
+       "type": "string",
+       "value": "spawn_west"
       }
      ]
     },

@@ -2,7 +2,7 @@
 // 지역 1을 끝낸 저장에서 시작해 실제 방향키·대화·레슨·CodeMirror·Pyodide 채점으로 지역 2를 끝까지 플레이한다.
 // 도우미는 game.spec.ts와 같은 방식이다(window.__pyrpg 훅은 좌표·진행도·길찾기만, 이동은 실제 키).
 // PW_PORT=4195 npx playwright test tests/e2e/region2.spec.ts
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -14,6 +14,8 @@ const code = (pid: string, file: string) => readFileSync(`${PROBLEMS}/${pid}/${f
 const solution = (pid: string) => code(pid, "solution.py");
 
 const SCREENS = "docs/phase3/screens";
+// 지역 3(고블린 동굴) 콘텐츠는 다른 브랜치에서 들어온다. 있으면 갈림길 숲 동쪽 문이 그리로 이어진다
+const HAS_R03 = existsSync("content/regions/r03-goblin-cave/region.json");
 
 async function shot(page: Page, name: string): Promise<void> {
   await page.waitForTimeout(1100);
@@ -483,22 +485,40 @@ test.describe.serial("지역 2 갈림길 숲 전체 플레이", () => {
     expect(s.scrolls).toEqual(expect.arrayContaining(["scroll.branch", "scroll.loop", "scroll.while", "scroll.gather"]));
     for (const p of ["P0201", "P0203", "P0204", "P0206", "P0207", "P0208", "P0209", "P0210"]) expect(s.problems[p].solved, p).toBe(true);
 
-    // 보스가 있던 칸을 지나 동쪽 끝 문: 다음 지역은 아직 없으므로 to_be_continued만 보여 주고 머문다
-    await walkTo(page, boss.x, boss.y);
-    for (let k = 0; k < 2; k++) {
-      const n = (await said(page)).length;
-      await interact(page, "warp_east");
-      await settle(page);
-      expect((await said(page)).slice(n)).toEqual(["to_be_continued"]);
-      expect((await save(page)).location.regionId).toBe("r02");
-      await expect(page.locator(".hud-region")).toHaveText("갈림길 숲");
-    }
-
     // 새로고침해도 클리어 연출이 다시 나오지 않는다
     await reloadReady(page);
     await settle(page);
     expect(await said(page)).toEqual([]);
     expect((await save(page)).location.regionId).toBe("r02");
+
+    // 보스가 있던 칸을 지나 동쪽 끝 문(target=r03, targetSpawn=spawn_west).
+    // 지역 3 콘텐츠(region.json)가 있으면 고블린 동굴로 건너가고, 아직 없으면 to_be_continued만 보여 주고 머문다
+    await walkTo(page, boss.x, boss.y);
+    if (HAS_R03) {
+      await interact(page, "warp_east");
+      await settle(page);
+      expect(await said(page)).toEqual(["to_be_continued", "region_intro", "cave_intro"]);
+      expect((await save(page)).location.regionId).toBe("r03");
+      await expect(page.locator(".hud-region")).toHaveText("고블린 동굴");
+      // 동굴 서쪽 문 → 갈림길 숲 동쪽 문 옆(이번에는 대사 없이)
+      await interact(page, "warp_west");
+      await settle(page);
+      await expect(page.locator(".hud-region")).toHaveText("갈림길 숲");
+      expect((await save(page)).location.regionId).toBe("r02");
+      const gate = await obj(page, "warp_east");
+      const back = await where(page);
+      expect(Math.abs(back.x - gate.x) + Math.abs(back.y - gate.y)).toBe(1);
+      expect((await said(page)).slice(3)).toEqual([]);
+    } else {
+      for (let k = 0; k < 2; k++) {
+        const n = (await said(page)).length;
+        await interact(page, "warp_east");
+        await settle(page);
+        expect((await said(page)).slice(n)).toEqual(["to_be_continued"]);
+        expect((await save(page)).location.regionId).toBe("r02");
+        await expect(page.locator(".hud-region")).toHaveText("갈림길 숲");
+      }
+    }
   });
 });
 
