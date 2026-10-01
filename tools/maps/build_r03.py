@@ -17,7 +17,8 @@
                  → 출구 m_P0302
   2 갈림 굴      굴이 갈라지는 곳에 sign_tunnels. 북쪽 굴은 막다른 길(끝에 선택 m_P0305), 가운데 굴에 rune_L3-2,
                  광차 레일이 깔린 동쪽 굴 끝이 출구 m_P0304
-  3 보물 창고    1칸 통로의 길목 m_P0306 → 금화 더미가 줄지어(선반처럼) 쌓인 창고. 고블린 서기, rune_L3-3,
+  3 보물 창고    창고로 들어가는 1칸 통로 북쪽 벽감에 rune_L3-3(길목 몬스터가 이 주문서를 요구하므로 길목 앞) →
+                 길목 m_P0306 → 금화 더미가 줄지어(선반처럼) 쌓인 창고. 고블린 서기,
                  chest_storeroom, 남서쪽 쉼터에 board_shadow_r03 + campfire_storeroom. 출구 m_P0307
   4 거울 웅덩이  가운데 큰 웅덩이를 돌아 rune_L3-4, 출구 m_P0308.
                  숨겨진 길: 북쪽 벽 앞면의 두 얼어붙은 횃불 한가운데(웅덩이 한가운데의 바로 북쪽)에 지나갈 수 있는
@@ -29,6 +30,7 @@
 """
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -44,7 +46,8 @@ from common import (  # noqa: E402
     validate_stages,
 )
 
-OUT = ROOT / "content" / "regions" / "r03-goblin-cave" / "map.tmj"
+REGION_DIR = ROOT / "content" / "regions" / "r03-goblin-cave"
+OUT = REGION_DIR / "map.tmj"
 H = 24
 
 # ── 도면(구역별 블록, 높이 24. 비어 있는 아래쪽 줄은 벽으로 채운다) ──────────────────
@@ -96,8 +99,8 @@ ZONE3 = r"""
 ###.$$$$..$$$$..$$.#
 ###.......N........#
 ###.$$$$..$$$$..$$.#
-###...........3....#
-###.====.==========#
+###................#
+3##.====.==========#
 ..l................#
 ###.$$$$..$$$$..$$.#
 ###................o
@@ -258,8 +261,8 @@ STAGES: list[tuple[str | None, list[str], list[str]]] = [
     (None, ["warp_west", "t_cave_intro", "rune_L3-1", "campfire_entrance", "m_P0301"], []),
     ("m_P0301", ["m_P0303", "m_P0302"], []),
     ("m_P0302", ["rune_L3-2", "sign_tunnels", "m_P0305", "m_P0304"], []),
-    ("m_P0304", ["m_P0306"], []),
-    ("m_P0306", ["rune_L3-3", "npc_goblin_clerk", "chest_storeroom", "board_shadow_r03", "campfire_storeroom", "m_P0307"], []),
+    ("m_P0304", ["rune_L3-3", "m_P0306"], []),
+    ("m_P0306", ["npc_goblin_clerk", "chest_storeroom", "board_shadow_r03", "campfire_storeroom", "m_P0307"], []),
     ("m_P0307", ["rune_L3-4", "m_P0309", "chest_hidden_pool", "m_P0308"], []),
     ("m_P0308", ["rune_L3-5", "sign_mural", "m_P0310"], []),
     ("m_P0310", ["t_boss_intro", "m_P0311"], []),
@@ -401,6 +404,23 @@ def validate(info: dict, verbose: bool) -> list[str]:
             errors.append(f"{oid} reachable without the cave crack")
     if not touches(info, closed, "m_P0308"):
         errors.append("the rest of the mirror-pool zone should not need the crack")
+    # 몬스터가 요구하는 이 지역 주문서의 비석은 그 몬스터보다 먼저(몬스터를 치우기 전에) 닿아야 한다.
+    # 아니면 주문서 없이 길목에 막혀 진행할 수 없다(need_scroll)
+    rune_of = {}
+    for lj in sorted((REGION_DIR / "lessons").glob("*/lesson.json")):
+        lesson = json.loads(lj.read_text(encoding="utf-8"))
+        rune_of[lesson["scroll"]["id"]] = f"rune_{lesson['id']}"
+    for o in info["objects"]:
+        if o["type"] != "monster":
+            continue
+        oid = o["name"]
+        pid = next(p["value"] for p in o.get("properties", []) if p["name"] == "problem")
+        problem = json.loads((REGION_DIR / "problems" / pid / "problem.json").read_text(encoding="utf-8"))
+        area = reachable(info, removed_before(STAGES, oid) - {oid})
+        for scroll in problem.get("requires", []):
+            rune = rune_of.get(scroll)
+            if rune and not touches(info, area, rune):
+                errors.append(f"{oid} needs {scroll}, but {rune} is not reachable before {oid}")
     # 바닥이 비지 않았다
     if any(v == 0 for v in info["ground"]):
         errors.append("ground layer has empty tiles")

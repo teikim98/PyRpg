@@ -127,3 +127,23 @@ describe.skipIf(!hasPython)("gen parity (CPython)", () => {
     }
   });
 });
+
+describe("지역 간 이동 대사", () => {
+  type TiledObj = { name?: string; properties?: { name: string; value: unknown }[] };
+  const warps = content.regions.flatMap((r) =>
+    ((r.map as { layers: { objects?: TiledObj[] }[] }).layers ?? [])
+      .flatMap((l) => l.objects ?? [])
+      .map((o) => ({ region: r, props: Object.fromEntries((o.properties ?? []).map((p) => [p.name, p.value])) }))
+      .filter((w) => w.props.openDialogue),
+  );
+
+  it("이어지는 지역이 있는 문의 openDialogue는 '이야기는 여기까지/준비 중'이라고 말하지 않는다", () => {
+    const linked = warps.filter((w) => content.regions.some((r) => r.id === w.props.target));
+    expect(linked.map((w) => `${w.region.id}->${String(w.props.target)}`)).toEqual(expect.arrayContaining(["r01->r02", "r02->r03"]));
+    for (const w of linked) {
+      for (const line of w.region.dialogues[String(w.props.openDialogue)]) {
+        expect(line.text, `${w.region.id} ${String(w.props.openDialogue)}`).not.toMatch(/준비 중|여기까지입니다/);
+      }
+    }
+  });
+});

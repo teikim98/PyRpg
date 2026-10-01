@@ -95,7 +95,6 @@
     { "speaker": "companion", "emotion": "worried", "text": "수호목의 뿌리야. 저 나무가 시계 룬을 놓아줘야 길이 열릴 거야." }
   ],
   "to_be_continued": [
-    { "speaker": "companion", "emotion": "happy", "text": "뿌리가 걷혔다! 동쪽 너머는 동굴 같은데… 안에서 뭔가 잔뜩 줄지어 있는 소리가 들려. 두근거린다!" },
-    { "speaker": "system", "text": "갈림길 숲 이야기는 여기까지입니다. 다음 지역은 준비 중이에요. 플레이해 주셔서 고맙습니다!" }
+    { "speaker": "companion", "emotion": "happy", "text": "뿌리가 걷혔다! 동쪽 너머는 동굴 같은데… 안에서 뭔가 잔뜩 줄지어 있는 소리가 들려. 두근거린다!" }
   ]
 }

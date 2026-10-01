@@ -62,8 +62,9 @@ const STAGES: [string | null, string[]][] = [
   [null, ["warp_west", "t_cave_intro", "rune_L3-1", "campfire_entrance", "m_P0301"]],
   ["m_P0301", ["m_P0303", "m_P0302"]],
   ["m_P0302", ["rune_L3-2", "sign_tunnels", "m_P0305", "m_P0304"]],
-  ["m_P0304", ["m_P0306"]],
-  ["m_P0306", ["rune_L3-3", "npc_goblin_clerk", "chest_storeroom", "board_shadow_r03", "campfire_storeroom", "m_P0307"]],
+  // 창고 길목의 m_P0306은 scroll.methods를 요구하므로 rune_L3-3은 길목 앞(통로 북쪽 벽감)에 있다
+  ["m_P0304", ["rune_L3-3", "m_P0306"]],
+  ["m_P0306", ["npc_goblin_clerk", "chest_storeroom", "board_shadow_r03", "campfire_storeroom", "m_P0307"]],
   ["m_P0307", ["rune_L3-4", "m_P0309", "chest_hidden_pool", "m_P0308"]],
   ["m_P0308", ["rune_L3-5", "sign_mural", "m_P0310"]],
   ["m_P0310", ["t_boss_intro", "m_P0311"]],
@@ -220,6 +221,31 @@ describe("region-3 progression (zones open west to east)", () => {
       }
     });
     for (const id of OPTIONAL) expect(removed.has(id)).toBe(false);
+  });
+
+  it("every monster's required region-3 scroll can be learned before reaching it (no need_scroll dead end)", () => {
+    const lessonsDir = resolve(__dirname, "../../content/regions/r03-goblin-cave/lessons");
+    const runeOf = new Map<string, string>();
+    for (const id of ["L3-1", "L3-2", "L3-3", "L3-4", "L3-5"]) {
+      const l = JSON.parse(readFileSync(resolve(lessonsDir, id, "lesson.json"), "utf-8")) as { scroll: { id: string } };
+      runeOf.set(l.scroll.id, `rune_${id}`);
+    }
+    const removed = new Set<string>();
+    for (const [remove, reachable] of STAGES) {
+      if (remove) removed.add(remove);
+      for (const id of reachable.filter((r) => obj(r).type === "monster")) {
+        const before = new Set([...removed].filter((r) => r !== id));
+        const area = reachableTiles(map, grid, indexWithout(before), obj("spawn_west"));
+        const pid = String(obj(id).props.problem);
+        const problem = JSON.parse(
+          readFileSync(resolve(__dirname, `../../content/regions/r03-goblin-cave/problems/${pid}/problem.json`), "utf-8"),
+        ) as { requires: string[] };
+        for (const scroll of problem.requires) {
+          const rune = runeOf.get(scroll);
+          if (rune) expect(touches(area, obj(rune)), `${id} needs ${scroll} (${rune})`).toBe(true);
+        }
+      }
+    }
   });
 
   it("required monsters block 1-tile chokepoints", () => {

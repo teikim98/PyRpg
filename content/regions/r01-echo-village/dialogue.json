@@ -112,7 +112,6 @@
     { "speaker": "companion", "emotion": "worried", "text": "이 문은 마을 시간에 묶여 있어. 시계탑의 시계 룬을 되살려야 열릴 거야." }
   ],
   "to_be_continued": [
-    { "speaker": "companion", "emotion": "happy", "text": "문이 열렸다! 동쪽은 내 지도에서도 아직 하얗게 비어 있는 곳이야. 두근거리는데?" },
-    { "speaker": "system", "text": "에코 마을 이야기는 여기까지입니다. 다음 지역은 준비 중이에요. 플레이해 주셔서 고맙습니다!" }
+    { "speaker": "companion", "emotion": "happy", "text": "문이 열렸다! 동쪽은 내 지도에서도 아직 하얗게 비어 있는 곳이야. 두근거리는데?" }
   ]
 }

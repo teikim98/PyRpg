@@ -82,6 +82,7 @@
 | 6 족장의 왕좌 | `m_P0311` | monster | `problem=P0311` (보스) |
 | | `warp_east` | warp | `requires=problem:P0311`, `lockedDialogue=east_gate_locked`, `openDialogue=to_be_continued` |
 
+- 몬스터가 요구하는 주문서의 비석은 그 몬스터보다 앞(치우기 전에 닿는 곳)에 둡니다. `rune_L3-3`은 창고 길목 `m_P0306`(scroll.methods 필요) 앞, 창고로 들어가는 통로의 북쪽 벽감에 있습니다(`build_r03.py`가 검사).
 - 숨겨진 길: 거울 웅덩이 구역의 바위 벽 가운데 지나갈 수 있는 틈 하나(지역 1·2의 덤불과 같은 방식, 새 타일 `cave_crack`). 고블린 서기나 표지판 대사가 위치를 귀띔합니다.
 
 ## 5. 대사 ID 목록
