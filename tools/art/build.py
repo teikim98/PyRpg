@@ -106,7 +106,7 @@ HEAD = (246, 220, 124, 255)
 def render_preview(manifest, assets):
     S = 4
     ts = manifest["tileSize"]
-    W = 1160
+    W = 1200
     blocks = []  # (높이, 그리기 함수)
     pad = 16
 
@@ -186,23 +186,25 @@ def render_preview(manifest, assets):
             text(c, n, pad, y + spr["frameHeight"] * S + 6, 1)
     blocks.append((32 * S + 20, draw_big))
 
-    section("portraits (48x48)  nuri: neutral / happy / worried / surprised / serious")
+    psize = max(p["size"] for p in manifest["portraits"].values())
+    PS = 3  # 대화창과 같은 배율
+    section(f"portraits ({psize}x{psize}, 3x)  nuri: neutral / happy / worried / surprised / serious")
 
     def draw_portraits(c, y):
         x = pad
         for n in portraits:
             size = manifest["portraits"][n]["size"]
             g = portrait_grid(n)
-            c.fill_rect(x - 2, y - 2, size * S + 4, size * S + 4, PANEL)
-            c.paste(Canvas(size, size).draw(g), x, y, S)
-            text(c, n.removeprefix("portrait_"), x, y + size * S + 6, 1)
-            x += size * S + 10
-        # 대화창 배율(3x)과 실제 크기(1x)
+            c.fill_rect(x - 2, y - 2, size * PS + 4, size * PS + 4, PANEL)
+            c.paste(Canvas(size, size).draw(g), x, y, PS)
+            text(c, n.removeprefix("portrait_"), x, y + size * PS + 6, 1)
+            x += size * PS + 10
+        # 실제 크기(1x)
         for k, n in enumerate(portraits):
             size = manifest["portraits"][n]["size"]
             g = Canvas(size, size).draw(portrait_grid(n))
             c.paste(g, x + 8 + (k % 2) * (size + 6), y + (k // 2) * (size + 6), 1)
-    blocks.append((48 * S + 20, draw_portraits))
+    blocks.append((max(psize * PS, 3 * (psize + 6)) + 20, draw_portraits))
 
     # 5) 장면 예시(2x): 타일 위에 캐릭터·오브젝트를 올려 어울림 확인
     section("sample scene (2x)")

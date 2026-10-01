@@ -21,9 +21,14 @@ export interface PortraitHandle {
   set(emotion: Emotion | undefined): void;
 }
 
-/** 48×48 초상화를 scale배로(정수배) 그린다 */
+/** 초상화 원본 한 변(px). manifest의 `${prefix}_neutral` 크기를 따르고, 없으면 계약 기본값 64 */
+export function portraitBaseSize(prefix: string): number {
+  return manifest.portraits[`${prefix}_neutral`]?.size ?? 64;
+}
+
+/** 초상화(manifest 크기, 지금은 64×64)를 scale배로(정수배) 그린다 */
 export function createPortrait(prefix: string, scale: number, initial: string): PortraitHandle {
-  const size = 48 * scale;
+  const size = portraitBaseSize(prefix) * scale;
   const img = h("img", { class: "portrait-img", alt: "", width: size, height: size, draggable: "false" });
   const fallback = h("div", { class: "portrait-fallback" }, h("span", { class: "portrait-initial" }, initial));
   const el = h("div", { class: "portrait", style: `width:${size}px;height:${size}px` }, img, fallback);

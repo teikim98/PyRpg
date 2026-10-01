@@ -5,6 +5,7 @@
 옆모습은 [모은 다리, 벌린 다리]다.
 """
 from gridlib import grid, mirror
+from nuripal import CH
 
 
 def legs_down(p, f, frame):
@@ -91,58 +92,97 @@ PLAYER_UP = grid("""
     ..KKvvvvvvvvKK..
 """, 16, 14)
 
-# ── 누리(모에 SD): 큰 머리, 바보털, 청록 리본의 주황 포니테일, 황동 고글, 반짝이는 큰 눈과 홍조,
-#    올리브 망토, 어깨의 지도통 ──
-NURI_DOWN = grid("""
+# ── 누리(모에 SD): 큰 머리, 바보털, 청록 리본의 주황 포니테일, 황동 고글, 초록 눈과 홍조,
+#    올리브 망토, 어깨의 지도통. 초상화와 같은 확장 팔레트(nuripal)로 색을 비튼 음영과 색 외곽선을 쓴다.
+#    아래 그리드는 지역 범례(NURI_KEY)로 쓰고, 외곽선 K는 닿은 재질에 맞는 색으로 바꾼다.
+NURI_KEY = {
+    "1": "h1", "2": "h2", "3": "h3", "4": "h4", "5": "h5",
+    "s": "s4", "S": "s3", "i": "bl0", "e": "lash", "g": "e2", "w": "sc",
+    "U": "b3", "u": "b1", "Y": "b4", "c": "t3", "t": "t1", "T": "t2",
+    "o": "c1", "q": "c2", "O": "c3", "Q": "c4", "W": "w3", "B": "l2", "b": "l1", "n": "l3",
+}
+_HAIR = {CH[k] for k in ("h1", "h2", "h3", "h4", "h5")}
+_SKIN = {CH[k] for k in ("s4", "s3", "bl0")}
+_CAPE = {CH[k] for k in ("c1", "c2", "c3", "c4")}
+
+
+def nuri_grid(text):
+    """지역 범례(NURI_KEY)로 쓴 16×14 그리드 → 팔레트 문자 그리드(크기·문자 검사 포함)."""
+    table = str.maketrans({k: CH[v] for k, v in NURI_KEY.items()})
+    return grid(text.translate(table), 16, 14)
+
+
+def color_outlines(frame):
+    """외곽선 K를 닿은 재질에 맞는 색 외곽선(머리카락·피부·망토·그 밖)으로 바꾼다."""
+    h, w = len(frame), len(frame[0])
+    out = [list(r) for r in frame]
+    for y in range(h):
+        for x in range(w):
+            if frame[y][x] != "K":
+                continue
+            nb = {frame[y + dy][x + dx] for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))
+                  if 0 <= x + dx < w and 0 <= y + dy < h}
+            if nb & _HAIR:
+                out[y][x] = CH["ol_hair"]
+            elif nb & _SKIN:
+                out[y][x] = CH["ol_skin"]
+            elif nb & _CAPE:
+                out[y][x] = CH["ol_cape"]
+            else:
+                out[y][x] = CH["ol"]
+    return ["".join(r) for r in out]
+
+
+NURI_DOWN = nuri_grid("""
     .....KK.........
-    ....KRK.........
-    ....KKRKKKKK....
-    ...KRRRRRRRRKKK.
+    ....K4K.........
+    ....KK4KKKKK....
+    ...K44443332KKK.
     ..KUccUuuUccUKcK
-    ..KRUURRRRUURKTK
-    ..KRRyzRRyyRRKrK
-    ..KRrRRssRRrRKrK
-    ..KRKKssssKKRKrK
-    ..KRKWssssWKRK.K
-    ..KRissssssiRK..
-    .KUKoOOUUOOoKK..
-    .KsKOWWBOOOoKsK.
-    ..KKoOOOBOOoKK..
-""", 16, 14)
+    ..K4UU3333UU2KTK
+    ..K4455343332K2K
+    ..K4243ss3312K1K
+    ..K3eessssee2K1K
+    ..K3wgsssswg2K.K
+    ..K3isssssSi2K..
+    .KUKqQOYUOqoKK..
+    .KsKQWWbOOqoKSK.
+    ..KKqOOObOqoKK..
+""")
 
-NURI_RIGHT = grid("""
+NURI_RIGHT = nuri_grid("""
     ......KK........
-    .....KRK........
-    ....KKRKKKKK....
-    ..KKKRRRRRRRK...
-    .KcTKRRRRRUccK..
-    KRcRKRRRRRuUUK..
-    KRrRKRRRRRRRrK..
-    KRrKRRRRRrsRsK..
-    KRrKRRRRrsKKsK..
-    .KrKRRRRrsKWsK..
-    ..KKRRRRrssisK..
-    ...KUoOOOOSK....
-    ..KBnOOOOWOK....
-    ..KBnoOOOsKK....
-""", 16, 14)
+    .....K4K........
+    ....KK4KKKKK....
+    ..KKK4444333K...
+    .KcTK44433UccK..
+    K4t2K44333uUUK..
+    K423K44533332K..
+    K42K433331s2sK..
+    K41K43332seesK..
+    .K1K33321swgsK..
+    ..KK33221ssisK..
+    ...KUqQOOqSK....
+    ..KBnQOOOWqK....
+    ..KbnqOOqsKK....
+""")
 
-NURI_UP = grid("""
+NURI_UP = nuri_grid("""
     .........KK.....
-    .........KRK....
-    ....KKKKKRKK....
-    .KKKRRRRRRRRK...
-    .KcKuUuuuuuuUK..
-    KTKRRRRRRRRRRK..
-    KRKRyzRRyyRRrK..
-    KRrKRRRRRRRRrKK.
-    KRrKRrRRRRrRrKUK
-    .KrKRRRRRRRRrKnK
-    ..KKRRRRRRRRKKnK
-    .KoOKKRRRRKKOKK.
-    .KsKBBBUYBBBBKsK
-    ..KKbBBuuBBBKK..
-""", 16, 14)
+    .........K4K....
+    ....KKKKK4KK....
+    .KKK44443332K...
+    .KcKbUbbbbbbUK..
+    KTK4443333322K..
+    K4K4553344332K..
+    K42K433333322KK.
+    K41K423333221KUK
+    .K1K333332221KnK
+    ..KK33332222KKnK
+    .KqQKK3221KKqKK.
+    .KsKnBBUYBBBbKSK
+    ..KKqOQOOOOqKK..
+""")
 
 # ── 상인(얼어붙은 상인): 빨간 모자, 콧수염, 보라 조끼, 앞치마 ───────────────────
 MERCHANT_DOWN = grid("""
@@ -316,7 +356,7 @@ def legs_side_child(p, f, frame):
 
 CHARACTERS = {
     "player": character(PLAYER_DOWN, PLAYER_RIGHT, PLAYER_UP, "N", "B"),
-    "nuri": character(NURI_DOWN, NURI_RIGHT, NURI_UP, "o", "B"),
+    "nuri": [color_outlines(f) for f in character(NURI_DOWN, NURI_RIGHT, NURI_UP, CH["c1"], CH["l1"])],
     "npc_merchant": character(MERCHANT_DOWN, MERCHANT_RIGHT, MERCHANT_UP, "b", "k"),
     "npc_villager": character(VILLAGER_DOWN, VILLAGER_RIGHT, VILLAGER_UP, "d", "B"),
     "npc_child": character(CHILD_DOWN, CHILD_RIGHT, CHILD_UP, "s", "B", legs_down_child, legs_side_child),
