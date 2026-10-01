@@ -17,7 +17,7 @@ design.md §9.8의 에셋 정책에 따라 게임에 들어가는 그림과 폰�
 | `sprites/monster_*.png` | 지역 1 몬스터 6종(16×16 × 2프레임) |
 | `sprites/obj_*.png` | 상자·표지판·캠프파이어·비석·문(16×16 × 2프레임) |
 | `sprites/boss_stair_mimic.png` | 보스 계단 미믹(32×32 × 2프레임) |
-| `portraits/nuri_*.png` | 누리 초상화 5종(48×48) |
+| `portraits/nuri_*.png` | 누리 초상화 5종(64×64) |
 
 ## 2. 폰트
 

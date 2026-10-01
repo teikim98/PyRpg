@@ -306,6 +306,8 @@
 .pyrpg-ui .portrait {
   position: relative;
   flex: none;
+  /* width/height는 그림 크기(원본 × 정수배). 테두리는 바깥에 더해 정수배 확대를 지킨다 */
+  box-sizing: content-box;
   background: var(--navy-900);
   border: 3px solid var(--border);
   image-rendering: pixelated;
@@ -446,7 +448,8 @@
 }
 
 .pyrpg-ui .dlg-box.has-portrait .dlg-name {
-  left: 176px;
+  /* 상자 안쪽 여백 16 + 초상화 192(64×3) + 테두리 6 + 간격 16 */
+  left: 230px;
 }
 
 .pyrpg-ui .dlg-text {

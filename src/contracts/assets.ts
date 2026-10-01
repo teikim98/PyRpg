@@ -6,7 +6,7 @@
 // - 캐릭터(player, nuri, npc_*): 16×16 프레임, 가로 8프레임 = 아래·왼쪽·오른쪽·위 방향 × 2프레임(걷기).
 // - 몬스터·오브젝트(monster_*, obj_*): 16×16 프레임 2개(제자리 애니메이션). obj_chest·obj_door는 [닫힘, 열림].
 // - 보스(boss_*): 32×32 프레임 2개.
-// - 초상화(portrait_*): 48×48 한 장. 표정마다 파일 하나.
+// - 초상화(portrait_*): 64×64 한 장. 표정마다 파일 하나.
 import manifestJson from "../../assets/manifest.json";
 
 export interface SpriteAsset {

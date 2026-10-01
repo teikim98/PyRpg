@@ -1,498 +1,767 @@
-"""누리 초상화(48×48, 표정 5종) — 모에 애니메이션풍.
+"""누리 초상화(64×64, 표정 5종) — 농장 생활 게임풍 흉상 초상화의 화풍을 빌린 도트(디자인은 누리 고유).
 
-몸통·머리카락·고글·망토는 도형(타원·다각형·굵은 선)으로 한 번 그려 모든 표정이 공유하고,
-표정마다 눈썹·눈·입·홍조·효과(땀방울, 반짝임, 놀람 선)만 바꿔 얹는다(design.md §3 공통).
+화풍: 재질마다 4~6단계 램프(그늘은 적자주 쪽, 밝은 쪽은 노랑 쪽으로 색상을 비튼다), 순수 검정 대신
+재질별 색 외곽선, 큰 덩어리로 나눈 머리카락 다발과 가닥 모양 광택, 2~3톤 홍채와 밝은 반사광.
+빛은 언제나 왼쪽 위에서 온다.
 
-누리: 주황 포니테일(청록 리본), 정수리의 바보털(아호게), 얼굴을 감싸는 옆머리, 이마에 올린 황동 고글,
-옆머리의 나침반 장미 머리핀, 짧은 올리브 망토(황동 걸쇠), 왼쪽 어깨 뒤의 지도통,
-가슴을 가로지르는 지도통 끈과 거기 매달린 나침반. 눈은 올리브빛 초록(위는 짙고 아래로 밝아지는 홍채).
-머리가 크고 몸이 작은 비율, 둥근 볼과 작은 턱, 큰 눈과 작은 입으로 귀엽게 그린다.
+몸통·머리카락·고글·망토는 한 번 그려 모든 표정이 공유하고, 표정마다 눈썹·눈·입·홍조·효과만
+바꿔 얹는다(design.md §3 공통).
+
+그리는 순서
+1) 기하: 재질(머리카락·피부·망토…)과 음영 정보를 픽셀마다 기록한다. 머리카락은 정수리 덩어리(구 음영)
+   위에 옆머리·앞머리·포니테일 다발(두께가 변하는 스플라인)을 겹친다.
+2) 음영: 재질 램프(nuripal.COLORS)로 색을 정한다. 다발은 그늘 쪽 가장자리·끝을 한 단계 어둡게,
+   겹친 다발 아래에는 그림자 선을, 빛 쪽 가운데에는 광택 가닥을 넣는다. 외톨이 픽셀은 정리한다.
+3) 표정 조각과 소품(리본·머리핀)을 얹고, 마지막으로 재질별 색 외곽선을 두른다.
+
+작업 캔버스는 너비 67(가운데 축 x=32)이고, 포니테일이 들어갈 자리를 오른쪽에 두려고
+마지막에 왼쪽 3칸을 잘라 64×64로 만든다(얼굴 축은 결과 그림에서 x=29).
+
+누리: 주황 하이 포니테일(청록 리본), 정수리 바보털, 이마에 올린 황동 고글(청록 렌즈), 왼쪽 옆머리의
+나침반 장미 머리핀, 초록 눈, 어깨를 덮는 짧은 올리브 망토(황동 걸쇠), 왼쪽 어깨 뒤의 지도통,
+가슴을 가로지르는 가죽 끈과 거기 매달린 황동 나침반.
 """
 import math
 
-from gridlib import grid, outline
+from nuripal import CH
 
-N = 48
+N = 64          # 결과 크기
+W = 67          # 작업 캔버스 너비
+XO = 3          # 결과로 자를 때 왼쪽에서 버리는 칸 수
+_L = (-0.52, -0.62, 0.59)
+_ln = math.sqrt(sum(c * c for c in _L))
+LIGHT = tuple(c / _ln for c in _L)
+
+HAIR = ("h0", "h1", "h2", "h3", "h4", "h5", "h6")
+OUTLINE = {"hair": "ol_hair", "skin": "ol_skin", "cape": "ol_cape"}
+D4 = ((1, 0), (-1, 0), (0, 1), (0, -1))
 
 
-class Pix:
+def _spline(pts, steps=8):
+    """Catmull-Rom 스플라인으로 (x, y, w) 점들을 촘촘하게."""
+    P = [pts[0]] + list(pts) + [pts[-1]]
+    out = []
+    for i in range(1, len(P) - 2):
+        p0, p1, p2, p3 = P[i - 1], P[i], P[i + 1], P[i + 2]
+        for s in range(steps):
+            t = s / steps
+            out.append(tuple(
+                0.5 * (2 * p1[k] + (-p0[k] + p2[k]) * t + (2 * p0[k] - 5 * p1[k] + 4 * p2[k] - p3[k]) * t * t
+                       + (-p0[k] + 3 * p1[k] - 3 * p2[k] + p3[k]) * t ** 3)
+                for k in range(3)))
+    out.append(tuple(pts[-1]))
+    return out
+
+
+def _sweep(pts, steps=8):
+    """두께가 변하는 선(스플라인) 안의 픽셀 → {(x, y): (u, t, 단면 방향 px, py)}."""
+    S = _spline(pts, steps)
+    segs = []
+    total = 0.0
+    for a, b in zip(S, S[1:]):
+        L = math.hypot(b[0] - a[0], b[1] - a[1])
+        if L > 1e-6:
+            segs.append((a, b, L, total))
+            total += L
+    wmax = max(p[2] for p in S)
+    x0 = int(min(p[0] for p in S) - wmax)
+    x1 = int(max(p[0] for p in S) + wmax) + 1
+    y0 = int(min(p[1] for p in S) - wmax)
+    y1 = int(max(p[1] for p in S) + wmax) + 1
+    out = {}
+    for y in range(max(0, y0), min(N, y1 + 1)):
+        for x in range(max(0, x0), min(W, x1 + 1)):
+            px, py = x + 0.5, y + 0.5
+            best = None
+            for a, b, L, acc in segs:
+                dx, dy = (b[0] - a[0]) / L, (b[1] - a[1]) / L
+                s = max(0.0, min(L, (px - a[0]) * dx + (py - a[1]) * dy))
+                qx, qy = a[0] + dx * s, a[1] + dy * s
+                d = math.hypot(px - qx, py - qy)
+                w = a[2] + (b[2] - a[2]) * s / L
+                score = d - w / 2
+                if best is None or score < best[0]:
+                    cross = dx * (py - a[1]) - dy * (px - a[0])
+                    best = (score, d, w, cross, dx, dy, (acc + s) / total)
+            if best and best[0] <= 0:
+                _, d, w, cross, dx, dy, t = best
+                u = (d / (w / 2)) * (1 if cross >= 0 else -1) if w > 0 else 0.0
+                out[(x, y)] = (max(-1.0, min(1.0, u)), t, -dy, dx)
+    return out
+
+
+class Geo:
+    """1단계 기하: 픽셀마다 (재질, 그린 순서, 음영 정보)."""
+
     def __init__(self):
-        self.g = [["."] * N for _ in range(N)]
+        self.mat = [[None] * W for _ in range(N)]
+        self.info = [[None] * W for _ in range(N)]
+        self.order = [[-1] * W for _ in range(N)]
+        self.n = 0
 
-    def put(self, x, y, ch):
-        if 0 <= x < N and 0 <= y < N:
-            self.g[y][x] = ch
+    def _set(self, x, y, mat, info):
+        if 0 <= x < W and 0 <= y < N:
+            self.mat[y][x] = mat
+            self.info[y][x] = info
+            self.order[y][x] = self.n
 
-    def get(self, x, y):
-        if 0 <= x < N and 0 <= y < N:
-            return self.g[y][x]
-        return "."
-
-    def ellipse(self, cx, cy, rx, ry, ch):
+    def fill(self, inside, mat, info=None):
+        self.n += 1
         for y in range(N):
-            for x in range(N):
-                if ((x + 0.5 - cx) / rx) ** 2 + ((y + 0.5 - cy) / ry) ** 2 <= 1.0:
-                    self.put(x, y, ch)
+            for x in range(W):
+                if inside(x + 0.5, y + 0.5):
+                    self._set(x, y, mat, dict(info or {}))
 
-    def poly(self, pts, ch):
-        n = len(pts)
-        for y in range(N):
-            py = y + 0.5
-            for x in range(N):
-                px = x + 0.5
-                inside = False
-                for i in range(n):
-                    x1, y1 = pts[i]
-                    x2, y2 = pts[(i + 1) % n]
-                    if (y1 > py) != (y2 > py):
-                        xi = x1 + (py - y1) * (x2 - x1) / (y2 - y1)
-                        if px < xi:
-                            inside = not inside
-                if inside:
-                    self.put(x, y, ch)
+    def strand(self, pts, mat="hair", steps=8, **extra):
+        self.n += 1
+        for (x, y), (u, t, px, py) in _sweep(pts, steps).items():
+            self._set(x, y, mat, dict(u=u, t=t, px=px, py=py, sid=self.n, **extra))
 
-    def thick_line(self, x0, y0, x1, y1, w, ch):
-        """두께 w의 선분(점과 선분 사이 거리로 판정)."""
-        dx, dy = x1 - x0, y1 - y0
-        L2 = dx * dx + dy * dy
-        for y in range(N):
-            for x in range(N):
-                px, py = x + 0.5, y + 0.5
-                t = max(0.0, min(1.0, ((px - x0) * dx + (py - y0) * dy) / L2))
-                qx, qy = x0 + t * dx, y0 + t * dy
-                if math.hypot(px - qx, py - qy) <= w / 2:
-                    self.put(x, y, ch)
+    def m(self, x, y):
+        return self.mat[y][x] if 0 <= x < W and 0 <= y < N else None
 
-    def mask(self, chars):
-        return {(x, y) for y in range(N) for x in range(N) if self.g[y][x] in chars}
+    def i(self, x, y):
+        return (self.info[y][x] or {}) if 0 <= x < W and 0 <= y < N else {}
 
-    def edge(self, region, against, ch, dirs=((1, 0), (-1, 0), (0, 1), (0, -1))):
-        """region 안의 픽셀 중 against 픽셀에 닿은 것을 ch로 칠한다."""
-        hits = [(x, y) for (x, y) in region if any((x + dx, y + dy) in against for dx, dy in dirs)]
-        for x, y in hits:
-            self.put(x, y, ch)
-
-    def stamp(self, g, x, y):
-        for j, row in enumerate(g):
-            for i, ch in enumerate(row):
-                if ch != ".":
-                    self.put(x + i, y + j, ch)
-
-    def rows(self):
-        return ["".join(r) for r in self.g]
+    def region(self, *mats):
+        return {(x, y) for y in range(N) for x in range(W) if self.mat[y][x] in mats}
 
 
-# 얼굴 윤곽: 넓고 둥근 볼, 작고 둥근 턱(모에 비율). 가운데 축은 x=24.0(픽셀 23|24 사이).
-FACE_CX = 24.0
+def _sphere(x, y, cx=31.0, cy=22.0, r=26.0):
+    nx, ny = (x + 0.5 - cx) / r, (y + 0.5 - cy) / r
+    nz = math.sqrt(max(0.08, 1 - nx * nx - ny * ny))
+    ln = math.sqrt(nx * nx + ny * ny + nz * nz)
+    return (nx * LIGHT[0] + ny * LIGHT[1] + nz * LIGHT[2]) / ln
 
 
-def _face_halfwidth(y):
-    yc = y + 0.5
-    if yc < 12 or yc > 37:
-        return -1
-    if yc < 24:
-        return 11.8 * math.sqrt(max(0.0, 1 - ((yc - 24) / 13) ** 2))
-    if yc <= 28:
-        return 11.8 - (yc - 24) * 0.12
-    # 볼 아래에서 턱까지 둥글게 좁아진다
-    w28 = 11.8 - 4 * 0.12
-    t = (yc - 28) / 9.0
-    return w28 * math.sqrt(max(0.0, 1 - t ** 2.2)) * (1 - 0.35 * t)
+def _face_hw(yc):
+    """얼굴 반폭(가운데 축 x=32.0). 넓고 둥근 볼, 작고 둥근 턱."""
+    if yc < 13 or yc > 50.6:
+        return -1.0
+    if yc <= 37:
+        return 15.6 * math.sqrt(max(0.0, 1 - ((yc - 37) / 25) ** 2))
+    t = (yc - 37) / 13.6
+    return 15.6 * max(0.0, 1 - t ** 2.3) ** 0.5 * (1 - 0.3 * t)
+
+
+def _mirror_pts(pts):
+    return [(64 - x, y, w) for x, y, w in pts]
+
+
+# ── 1) 기하 ──────────────────────────────────────────────────────────────────
+TAIL = [
+    [(47, 8, 6), (53, 4.2, 7), (59, 5.6, 8), (63, 12, 8), (64.6, 21, 7), (64, 30, 5.6), (62, 38, 3.6), (59.6, 43.5, 1.0)],
+    [(48, 9.5, 5), (54, 8, 6), (59, 12, 6.5), (60.4, 20, 6), (59.8, 28, 4.6), (58, 35, 2.2), (56.6, 38.4, 0.6)],
+]
+SIDE_L = [
+    [(17, 15, 7), (13.6, 25, 7.5), (12.6, 35, 6.5), (13.4, 44, 4.6), (15.8, 50.6, 1.2)],
+    [(20.5, 17, 5), (18.4, 27, 5), (17.6, 36, 3.6), (18.2, 42, 1.0)],
+]
+# (뿌리 x, 뿌리 y, 굵기, 끝 y, 끝 x)
+BANGS = [
+    (20.0, 16.0, 8.5, 28.0, 17.4),
+    (25.0, 15.5, 9.0, 31.0, 22.6),
+    (30.0, 15.0, 8.0, 28.0, 28.4),
+    (34.6, 15.0, 8.0, 32.0, 34.6),
+    (39.6, 15.5, 9.0, 30.0, 40.6),
+    (44.4, 16.0, 8.0, 27.5, 46.6),
+]
+
+
+def _geometry():
+    g = Geo()
+    # 지도통(왼쪽 어깨 뒤로 비스듬히): 가죽 몸통 + 황동 뚜껑
+    g.strand([(-2.0, 66, 6.0), (8.2, 47.4, 6.0)], mat="tube", steps=2)
+    # 지도통 끝(통 방향에 수직인 타원 뚜껑)
+    ax, ay = 0.48, -0.88
+    for (rx, ry), part in (((3.6, 2.0), "ring"), ((2.1, 1.0), "paper")):
+        g.fill(lambda x, y, rx=rx, ry=ry: ((x - 8.4) * ay - (y - 47.0) * ax) ** 2 / rx ** 2
+               + ((x - 8.4) * ax + (y - 47.0) * ay) ** 2 / ry ** 2 <= 1, "tubecap", dict(part=part))
+
+    # 포니테일(머리 뒤 오른쪽 위에서 올라갔다가 흘러내림)
+    for pts in TAIL:
+        g.strand(pts, part="tail")
+
+    # 뒷머리(얼굴 뒤로 보이는 머리 안쪽)
+    g.fill(lambda x, y: ((x - 32) / 20.5) ** 2 + ((y - 28) / 22) ** 2 <= 1 and y < 50, "hair", dict(back=True))
+
+    # 목
+    g.fill(lambda x, y: 28.0 <= x <= 36.0 and 44 <= y <= 60, "skin", dict(neck=True))
+
+    # 망토: 둥근 어깨, 가운데가 V자로 열리고 셔츠가 보인다
+    g.fill(lambda x, y: y >= 51.2 + 0.0072 * (x - 32) ** 2 and 1.0 <= x <= 66.5, "cape")
+    g.fill(lambda x, y: 51.5 <= y <= 61.0 and abs(x - 32) <= 4.2 - (y - 51.5) * 0.55, "shirt")
+    # 옷깃(양쪽으로 접힌 깃)
+    for sgn in (-1, 1):
+        g.fill(lambda x, y, sgn=sgn: 51.6 <= y <= 57.6
+               and 3.4 + (y - 51.6) * -0.1 <= (x - 32) * sgn <= 8.8 - (y - 51.6) * 0.62
+               and (x - 32) * sgn >= 4.4 - (y - 51.6) * 0.5, "cape", dict(collar=sgn))
+
+    # 얼굴
+    g.fill(lambda x, y: abs(x - 32) <= _face_hw(y), "skin", dict(face=True))
+
+    # 머리 윗부분(정수리 덩어리): 구 음영으로 칠한다
+    g.fill(lambda x, y: ((x - 32) / 21.6) ** 2 + ((y - 25.5) / 22) ** 2 <= 1 and y < 31
+           and (y < 17 or abs(x - 32) > _face_hw(y) - 1.5), "hair", dict(part="cap"))
+
+    # 옆머리(관자놀이에서 턱 아래까지, 끝이 안쪽으로 살짝 말린다)
+    for pts in SIDE_L:
+        g.strand(pts, part="side")
+    for pts in SIDE_L:
+        g.strand(_mirror_pts(pts), part="side")
+
+    # 앞머리: 정수리에서 이마로 내려오는 뾰족한 다발들(길이를 엇갈리게)
+    for x0, y0, w, ty, tx in BANGS:
+        mx = (x0 + tx) / 2 + (0.5 if tx > 32 else -0.5)
+        g.strand([(32 + (x0 - 32) * 0.7, 7.0, w * 0.9), (x0, y0, w), (mx, (y0 + ty) / 2 + 1, w * 0.72), (tx, ty, 0.6)],
+                 part="bang")
+
+    # 바보털
+    g.strand([(33.6, 6.0, 3.0), (33.0, 2.4, 2.8), (30.6, 0.4, 2.4), (27.6, 0.6, 1.8), (26.2, 2.6, 0.6)], part="ahoge")
+
+    # 고글 끈(머리를 감싸는 곡선)
+    g.fill(lambda x, y: (abs(y - (13.8 + 0.011 * (x - 32) ** 2)) <= 1.55
+                         and ((x - 32) / 21.7) ** 2 + ((y - 25.5) / 22.1) ** 2 <= 1), "leather", dict(strap=True))
+    # 고글: 황동 테 + 청록 렌즈(두 개), 가운데 다리
+    for cx in GOGGLE_X:
+        g.fill(lambda x, y, cx=cx: ((x - cx) / 5.6) ** 2 + ((y - GOGGLE_Y) / 4.9) ** 2 <= 1, "brass", dict(rim=cx))
+        g.fill(lambda x, y, cx=cx: ((x - cx) / 3.7) ** 2 + ((y - GOGGLE_Y) / 3.1) ** 2 <= 1, "lens", dict(cx=cx))
+    g.fill(lambda x, y: 30.4 <= x <= 33.6 and 12.0 <= y <= 14.6, "brass", dict(bridge=True))
+
+    # 지도통 끈(왼쪽 어깨 → 오른쪽 아래)과 나침반
+    g.strand([(9, 52.0, 3.6), (30, 58.0, 3.6), (56, 65.4, 3.6)], mat="leather", steps=4, belt=True)
+    g.fill(lambda x, y: (x - COMPASS[0]) ** 2 + (y - COMPASS[1]) ** 2 <= 3.5 ** 2, "brass", dict(compass=True))
+    # 망토 걸쇠
+    g.fill(lambda x, y: (x - 32) ** 2 + ((y - 58.6) / 0.85) ** 2 <= 2.0 ** 2, "brass", dict(clasp=True))
+    return g
+
+
+GOGGLE_X = (25.2, 38.8)
+GOGGLE_Y = 13.2
+COMPASS = (40.5, 60.2)
+
+# 정수리 덩어리 위의 다발 경계선(한 단계 어둡게)과 광택 가닥(밝게)
+CAP_LINES = [
+    [(27, 5.2, 1), (20.5, 8.5, 1), (15.5, 14, 1), (12.6, 21, 1)],
+    [(22, 10, 1), (17.5, 15.5, 1), (15.6, 22, 1), (15.2, 28, 1)],
+    [(37, 5.2, 1), (43.5, 8.5, 1), (48.5, 14, 1), (51.4, 21, 1)],
+    [(42, 10, 1), (46.5, 15.5, 1), (48.4, 22, 1), (48.8, 28, 1)],
+    [(33.5, 4.0, 1), (31.0, 6.6, 1), (29.6, 8.6, 1)],
+    [(35.0, 4.4, 1), (38.0, 7.0, 1), (39.4, 8.6, 1)],
+]
+SHINE = [
+    [(18.5, 8.6, 1.0), (21.6, 5.8, 1.6), (25.4, 4.2, 1.0)],
+    [(26.8, 5.6, 1.0), (29.0, 4.2, 1.3), (31.0, 3.9, 0.7)],
+    [(36.4, 4.6, 0.7), (38.6, 5.4, 1.1), (40.6, 6.8, 0.7)],
+    [(16.4, 11.6, 0.9), (14.6, 15.0, 1.5), (13.4, 19.6, 0.8)],
+]
+# 다발 종류별 광택 가닥이 들어가는 길이 구간(t)
+STREAK = {"bang": (0.2, 0.42), "side": (0.06, 0.3), "tail": (0.1, 0.42)}
+
+
+# ── 2) 음영 ──────────────────────────────────────────────────────────────────
+def _clean(lv, region):
+    """외톨이 픽셀 정리: 상하좌우 이웃 3개 이상이 같은 값이면 그 값으로."""
+    out = {p: v for p, v in lv.items()}
+    for (x, y) in region:
+        nb = [lv[(x + dx, y + dy)] for dx, dy in D4 if (x + dx, y + dy) in region]
+        if len(nb) < 3:
+            continue
+        for v in set(nb):
+            if v != lv[(x, y)] and nb.count(v) >= 3:
+                out[(x, y)] = v
+    return out
+
+
+def _shade_hair(g, col):
+    hair = g.region("hair")
+    lv = {}
+    for (x, y) in hair:
+        inf = g.i(x, y)
+        sph = _sphere(x, y)
+        if inf.get("back"):
+            lv[(x, y)] = 1 if sph < 0.3 else 2
+            continue
+        part = inf["part"]
+        if part == "cap":
+            L = 2 + (sph > 0.28) + (sph > 0.6)
+            if sph < 0.05:
+                L = 1
+            lv[(x, y)] = L
+            continue
+        v = sph
+        if part == "tail":
+            v -= 0.1
+        if part == "ahoge":
+            v += 0.2
+        if part == "side":
+            v -= 0.06 + 0.22 * inf["t"]
+        L = 2 + (v > 0.28) + (v > 0.6)
+        u = inf["u"]
+        if part == "tail":
+            # 포니테일은 머리와 떨어진 덩어리라 다발 자체의 원기둥 음영을 쓴다
+            nz = math.sqrt(max(0.0, 1 - u * u))
+            cyl = u * (inf["px"] * LIGHT[0] + inf["py"] * LIGHT[1]) + nz * LIGHT[2]
+            L = 2 + (cyl > 0.56) + (cyl > 0.86) - (inf["t"] > 0.7)
+        side = u * (inf["px"] * LIGHT[0] + inf["py"] * LIGHT[1])  # >0이면 빛을 향한 가장자리
+        if abs(u) > 0.55 and side < 0:
+            L -= 1
+        lo, hi = STREAK.get(part, (0, 0))
+        if side > 0 and 0.08 < abs(u) < 0.62 and lo < inf["t"] < hi:
+            L += 1
+        if inf["t"] > 0.84:
+            L -= 1
+        lv[(x, y)] = max(1, min(5, L))
+    # 겹친 다발 아래쪽에 그림자 선(위 다발 가장자리 바로 바깥)
+    sep = dict(lv)
+    for (x, y) in hair:
+        o = g.order[y][x]
+        for dx, dy in ((0, -1), (-1, 0), (1, 0)):
+            q = (x + dx, y + dy)
+            if q in hair and g.order[q[1]][q[0]] > o:
+                up, me = g.i(*q), g.i(x, y)
+                # 같은 앞머리끼리는 뿌리 쪽(이마 위)에선 선을 긋지 않아 큰 덩어리로 보이게 한다
+                if up.get("part") == me.get("part") == "bang" and up["t"] < 0.42:
+                    continue
+                sep[(x, y)] = max(1, lv[(x, y)] - 1)
+                break
+    # 정수리 경계선
+    for pts in CAP_LINES:
+        for (x, y), (u, t, _, _) in _sweep(pts, 6).items():
+            if (x, y) in hair and g.i(x, y).get("part") in ("cap", "bang") and t > 0.12:
+                sep[(x, y)] = max(1, lv[(x, y)] - 1)
+    lv = _clean(sep, hair)
+    # 광택 가닥: 밝은 쪽은 h5, 가운데 굵은 곳은 h6
+    for pts in SHINE:
+        for (x, y), (u, t, _, _) in _sweep(pts, 6).items():
+            if (x, y) in hair and g.i(x, y).get("part") in ("cap", "bang"):
+                sp = _sphere(x, y)
+                lv[(x, y)] = 6 if sp > 0.8 and abs(u) < 0.35 else (5 if sp > 0.5 else 4)
+    for (x, y) in hair:
+        inf = g.i(x, y)
+        L = lv[(x, y)]
+        col[y][x] = HAIR[L]
+    # 그늘 쪽 윤곽 안쪽의 은은한 반사광(림 라이트): 오른쪽 가장자리 1픽셀을 한 단계 밝게
+    for (x, y) in hair:
+        inf = g.i(x, y)
+        if inf.get("part") in ("cap", "side") and 12 <= y <= 40 and x > 40 \
+                and g.m(x + 1, y) is None and g.m(x + 2, y) is None and col[y][x] in ("h1", "h2"):
+            col[y][x] = HAIR[HAIR.index(col[y][x]) + 1]
+    # 포니테일과 머리 사이 경계는 가장 어둡게
+    for (x, y) in hair:
+        if g.i(x, y).get("part") == "tail":
+            for dx, dy in D4:
+                q = (x + dx, y + dy)
+                if q in hair and g.i(*q).get("part") != "tail":
+                    col[y][x] = "h0"
+                    break
+
+
+def _shade_rest(g, col):
+    m, i = g.m, g.i
+
+    # 피부: 앞머리 그림자, 오른쪽 볼 그늘, 턱 아래, 목
+    for (x, y) in g.region("skin"):
+        if i(x, y).get("neck"):
+            c = "s3"
+            if any(i(x, y - k).get("face") for k in (1, 2)):
+                c = "s2"
+            if m(x + 1, y) != "skin" or m(x + 2, y) != "skin":
+                c = "s2"
+            if m(x - 1, y) != "skin" and not any(i(x, y - k).get("face") for k in (1, 2)):
+                c = "s4" if y > 48 else c
+            col[y][x] = c
+            continue
+        c = "s4"
+        if m(x, y - 1) == "hair" or m(x, y - 2) == "hair":
+            c = "s3"
+        if m(x - 1, y) == "hair" or m(x + 1, y) == "hair" or m(x + 2, y) == "hair":
+            c = "s3"
+        if y > 24 and (m(x + 1, y) is None or m(x + 2, y) is None):
+            c = "s3"
+        if y > 44 and not i(x, y + 1).get("face"):
+            c = "s3"
+        if m(x, y - 1) == "hair" and m(x, y - 2) == "hair" and m(x + 1, y - 1) == "hair" and y > 20:
+            c = "s2"
+        col[y][x] = c
+
+    # 망토
+    for (x, y) in g.region("cape"):
+        inf = i(x, y)
+        c = "c3"
+        if x > 46:
+            c = "c2"
+        if x < 10 and y > 58:
+            c = "c2"
+        if m(x, y - 1) != "cape" or m(x, y - 2) != "cape":
+            c = "c4" if x < 44 else "c3"
+        if "collar" in inf:
+            if inf["collar"] < 0:
+                c = "c4" if m(x - 1, y) != "cape" or m(x, y - 1) != "cape" else "c3"
+            else:
+                c = "c3" if m(x, y - 1) != "cape" else "c2"
+        elif "collar" in i(x, y - 1):
+            c = "c1"
+        if (x, y) in CAPE_FOLDS:
+            c = "c2" if x < 40 else "c1"
+        if m(x, y - 1) == "leather" and i(x, y - 1).get("belt"):
+            c = "c1" if x > 30 else "c2"
+        col[y][x] = c
+
+    for (x, y) in g.region("shirt"):
+        c = "w3"
+        if m(x - 1, y) == "cape" or m(x + 1, y) == "cape" or m(x, y - 1) == "skin":
+            c = "w2"
+        if m(x + 1, y) == "cape" and m(x + 2, y) == "cape":
+            c = "w1"
+        col[y][x] = c
+
+    for (x, y) in g.region("leather"):
+        c = "l2"
+        if m(x, y - 1) != "leather":
+            c = "l3"
+        if m(x, y + 1) != "leather":
+            c = "l1"
+        if i(x, y).get("strap") and x > 44:
+            c = "l1" if c != "l3" else "l2"
+        col[y][x] = c
+    for (x, y) in g.region("tube"):
+        u = i(x, y)["u"]
+        col[y][x] = "l3" if u < -0.4 else ("l1" if u > 0.35 else "l2")
+        if y == 57:
+            col[y][x] = "b3" if u < -0.4 else ("b1" if u > 0.35 else "b2")
+    for (x, y) in g.region("tubecap"):
+        # 황동 테 안에 말아 넣은 지도(크림색 종이와 말린 자국)
+        if i(x, y)["part"] == "paper":
+            col[y][x] = "w3" if i(x - 1, y).get("part") != "paper" else "w2"
+            continue
+        d = (x + 0.5 - 8.4) * -0.88 - (y + 0.5 - 47.0) * 0.48   # 뚜껑 긴 축 위치(왼쪽 위가 +)
+        col[y][x] = "b4" if d > 1.4 else ("b3" if d > -1.0 else "b1")
+
+    # 황동
+    for (x, y) in g.region("brass"):
+        inf = i(x, y)
+        if "rim" in inf:
+            dx, dy = x + 0.5 - inf["rim"], y + 0.5 - GOGGLE_Y
+            v = -(dx * 0.6 + dy * 0.8) / 5.0
+            c = "b4" if v > 0.45 else ("b3" if v > -0.3 else "b2")
+            if any(m(x + a, y + b) == "lens" for a, b in D4):
+                c = "b2" if v > 0 else "b1"
+            if m(x, y + 1) not in ("brass", "lens"):
+                c = "b1"
+        elif inf.get("bridge"):
+            c = "b4" if m(x, y - 1) != "brass" else ("b1" if m(x, y + 1) != "brass" else "b2")
+        elif inf.get("compass"):
+            dx, dy = x + 0.5 - COMPASS[0], y + 0.5 - COMPASS[1]
+            if math.hypot(dx, dy) < 2.1:
+                c = "w3" if dx + dy < 1 else "w2"
+            else:
+                c = "b4" if dx + dy < -2.5 else ("b3" if dx + dy < 1.5 else "b1")
+        else:  # 걸쇠
+            c = "b4" if m(x, y - 1) != "brass" and m(x - 1, y) != "brass" else "b3"
+            if m(x, y + 1) != "brass" or m(x + 1, y) != "brass":
+                c = "b1" if m(x, y + 1) != "brass" else "b2"
+        col[y][x] = c
+    cx, cy = int(COMPASS[0]), int(COMPASS[1])
+    col[cy - 1][cx] = "red"
+    col[cy][cx] = "red0"
+    col[cy + 1][cx] = "w0"
+    col[cy - 3][cx - 1] = "b5"
+
+    # 렌즈: 위는 테 그림자로 어둡고 아래로 밝아짐, 왼쪽 위 반사광
+    for (x, y) in g.region("lens"):
+        dx, dy = x + 0.5 - i(x, y)["cx"], y + 0.5 - GOGGLE_Y
+        c = "t2"
+        if m(x, y - 1) != "lens":
+            c = "t1"
+        if dy > 0.8 and dx > -1.5:
+            c = "t3"
+        col[y][x] = c
+    for gx in GOGGLE_X:
+        x0 = int(gx - 2.2)
+        col[11][x0] = "t4"
+        col[12][x0] = "t4"
+        col[11][x0 + 1] = "white"
+
+
+CAPE_FOLDS = {(8, 59), (8, 60), (9, 61), (9, 62), (9, 63), (17, 61), (17, 62), (17, 63),
+              (47, 59), (47, 60), (48, 61), (48, 62), (48, 63), (56, 60), (56, 61), (57, 62), (57, 63)}
+
+
+def _stamp(col, text, x0, y0, legend, flip=False):
+    for j, r in enumerate(_rows(text)):
+        if flip:
+            r = r[::-1]
+        for k, ch in enumerate(r):
+            if ch == ".":
+                continue
+            x, y = x0 + k, y0 + j
+            if 0 <= x < W and 0 <= y < N:
+                col[y][x] = legend[ch]
+
+
+def _rows(text):
+    return [r.strip() for r in text.strip("\n").splitlines() if r.strip()]
+
+
+# 리본(청록 나비매듭, 포니테일 묶은 곳)과 나침반 장미 머리핀
+RIBBON = """
+aa.......aa
+aca.....aba
+adca...acba
+adcca.accba
+abccbdbccba
+abbbadabbba
+.aaabdbaaa.
+...abaaba..
+..aba..aba.
+..aa....aa.
+"""
+RIBBON_L = {"a": "t0", "b": "t1", "c": "t2", "d": "t3", "e": "t4"}
+
+CLIP = """
+...a...
+..aba..
+.abcba.
+abcdcba
+.abcba.
+..aba..
+...a...
+"""
+CLIP_L = {"a": "b1", "b": "b3", "c": "b4", "d": "red"}
+
+
+def _props(col):
+    _stamp(col, RIBBON, 44, 1, RIBBON_L)
+    _stamp(col, CLIP, 10, 27, CLIP_L)
+
+
+# ── 3) 표정 ──────────────────────────────────────────────────────────────────
+# 눈 10×9(왼눈 x=19~28, 오른눈은 좌우 반전해서 x=35~44). 반사광은 반전하지 않고 두 눈 모두 왼쪽 위에 둔다.
+EYE_X, EYE_Y = 19, 31
+BROW_X, BROW_Y = 20, 28
+BLUSH_X, BLUSH_Y = 17, 40
+MOUTH_Y = 45
+FEAT = {
+    "L": "lash", "l": "lash2", "W": "sc", "w": "sc1", "0": "e0", "1": "e1", "2": "e2", "3": "e3", "4": "e4",
+    "*": "white", "k": "s2", "s": "s3", "b": "h0", "B": "lash2", "i": "bl1", "I": "bl0",
+    "A": "m0", "M": "m1", "N": "m2", "T": "m3", "o": "s0", "a": "s1", "c": "t4", "t": "t3",
+}
+
+EYE_OPEN = """
+...LLLLL..
+LLLLLLLLLl
+Lw111111W.
+.W210012W.
+.W220022W.
+.W233332W.
+.W334433W.
+..344443..
+...llll...
+"""
+CATCH = ((3, 2), (4, 2), (3, 3), (6, 6))
+
+EXPR = {
+    "neutral": dict(
+        brow="""
+            .bbbbbb.
+            b.......
+        """,
+        eye=EYE_OPEN, catch=CATCH,
+        mouth="""
+            k....k
+            .oooo.
+        """,
+        blush="""
+            .iiii.
+            ..ii..
+        """,
+    ),
+    "happy": dict(
+        brow="""
+            .bbbbbb.
+            b......b
+        """, brow_dy=-1,
+        eye="""
+            ..........
+            ..........
+            ..........
+            ...LLLL...
+            .LLLLLLLL.
+            LL......LL
+            L........l
+            ..........
+            ..........
+        """,
+        mouth="""
+            .AAAAAA.
+            AMMMMMMA
+            .AMNNMA.
+            ..ANNA..
+            ...AA...
+        """, mouth_dy=-1,
+        blush="""
+            .iIIi.
+            iiIIii
+        """,
+        fx=[("""
+            ..y..
+            ..Y..
+            yYWYy
+            ..Y..
+            ..y..
+        """, 3, 17), ("""
+            .y.
+            yWy
+            .y.
+        """, 5, 25)],
+    ),
+    "worried": dict(
+        brow="""
+            .....bbB
+            bbbbb...
+        """, brow_dy=-1,
+        eye="""
+            ..........
+            ..LLLLLL..
+            LLLLLLLLLl
+            Lw111111W.
+            .W210012W.
+            .W233332W.
+            .W334433W.
+            ..cttttc..
+            ...cccc...
+        """, catch=((3, 3), (4, 3), (3, 4), (6, 6), (7, 5)),
+        mouth="""
+            ..oo..
+            .o..o.
+        """,
+        fx=[("""
+            ..t..
+            .tct.
+            tcccT
+            tWccT
+            tWccT
+            .TTT.
+        """, 51, 21)],
+    ),
+    "surprised": dict(
+        brow="""
+            .bbbbbb.
+            b......b
+        """, brow_dy=-2,
+        eye="""
+            ..LLLLLL..
+            .LLLLLLLL.
+            LWWWWWWWWl
+            .WWW11WWW.
+            .WW1001WW.
+            .WW2002WW.
+            .WW2332WW.
+            .WWW44WWW.
+            ..WWWWWW..
+            ...llll...
+        """, eye_dy=-1, catch=((3, 4),),
+        mouth="""
+            .AA.
+            AMMA
+            AMNA
+            .AA.
+        """,
+        fx=[("""
+            rr
+            rr
+            rr
+            rr
+            ..
+            rr
+        """, 7, 6)],
+    ),
+    "serious": dict(
+        brow="""
+            bbb.....
+            ...bbbbB
+        """, brow_dy=1,
+        eye="""
+            ..........
+            ..........
+            LLLLLLLLLl
+            LL111111L.
+            .W210012W.
+            .W233332W.
+            .W334433W.
+            ..344443..
+            ...llll...
+        """, catch=((3, 4), (4, 4), (6, 6)),
+        mouth="""
+            aooa
+        """, mouth_dy=1,
+        blush="""
+            ..ii..
+            ......
+        """,
+    ),
+}
+FX = dict(FEAT, y="b4", Y="b5", t="t1", T="t2", c="t4", r="red")
+
+
+def _face(col, expr):
+    e = EXPR[expr]
+    blush = e.get("blush", EXPR["neutral"]["blush"])
+    w = len(_rows(blush)[0])
+    _stamp(col, blush, BLUSH_X, BLUSH_Y, FEAT)
+    _stamp(col, blush, 64 - BLUSH_X - w, BLUSH_Y, FEAT, flip=True)
+    ew = len(_rows(e["eye"])[0])
+    for x0, flip in ((EYE_X, False), (64 - EYE_X - ew, True)):
+        ey = EYE_Y + e.get("eye_dy", 0)
+        _stamp(col, e["eye"], x0, ey, FEAT, flip=flip)
+        for cx, cy in e.get("catch", ()):
+            col[ey + cy][x0 + cx] = "white"
+    bw = len(_rows(e["brow"])[0])
+    by = BROW_Y + e.get("brow_dy", 0)
+    _stamp(col, e["brow"], BROW_X, by, FEAT)
+    _stamp(col, e["brow"], 64 - BROW_X - bw, by, FEAT, flip=True)
+    # 코: 그늘 1픽셀 + 밝은 콧등 1픽셀
+    col[42][32] = "s2"
+    mw = len(_rows(e["mouth"])[0])
+    _stamp(col, e["mouth"], 32 - mw // 2, MOUTH_Y + e.get("mouth_dy", 0), FEAT)
+    for text, x, y in e.get("fx", ()):
+        _stamp(col, text, x, y, FX)
+
+
+# ── 마무리 ───────────────────────────────────────────────────────────────────
+def _outline(g, col):
+    out = [r[:] for r in col]
+    for y in range(N):
+        for x in range(W):
+            if col[y][x] is not None:
+                continue
+            for dx, dy in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < W and 0 <= ny < N and col[ny][nx] is not None:
+                    out[y][x] = OUTLINE.get(g.mat[ny][nx], "ol")
+                    break
+    return out
 
 
 def _base():
-    p = Pix()
-    # 1) 지도통(왼쪽 어깨 뒤로 비스듬히)
-    p.thick_line(5.4, 49, 8.6, 34.5, 4.0, "B")
-    p.thick_line(4.2, 49, 7.4, 34.5, 1.2, "n")
-    p.thick_line(7.0, 49, 10.0, 35.0, 1.0, "b")
-    p.thick_line(8.2, 35.0, 8.8, 32.5, 4.6, "U")
-    p.thick_line(7.2, 33.6, 7.6, 32.6, 1.0, "Y")
-    tube = p.mask("nNBbUY")
-    for x, y in tube:  # 지도통 가운데의 황동 띠
-        if y == 40:
-            p.put(x, y, "U")
-        elif y == 41:
-            p.put(x, y, "u")
-
-    # 2) 포니테일(머리 뒤 오른쪽 위에서 흘러내림, 끝은 안쪽으로 말림)
-    chain = [(39.4, 6.5, 2.4), (42.0, 8.6, 2.9), (43.8, 12.0, 3.1), (44.6, 16.0, 3.0),
-             (44.6, 20.0, 2.7), (44.0, 23.6, 2.3), (43.0, 26.6, 1.8), (41.8, 28.8, 1.3), (40.6, 30.2, 0.8)]
-    for cx, cy, r in chain:
-        p.ellipse(cx, cy, r, r, "R")
-    tail = p.mask("R")
-    for x, y in tail:  # 오른쪽(그늘) 가장자리 2px은 어둡게
-        if (x + 1, y) not in tail or ((x + 2, y) not in tail and y > 10):
-            p.put(x, y, "r")
-    for (ax, ay, ar), (bx, by, br) in zip(chain[1:5], chain[2:6]):
-        p.thick_line(ax - ar * 0.35, ay, bx - br * 0.35, by, 0.9, "y")
-
-    # 3) 망토(작은 어깨)와 셔츠
-    p.poly([(4, 48), (6, 44.5), (11, 41.4), (18, 40.2), (30, 40.2), (37, 41.4), (42, 44.5), (44, 48)], "O")
-    cape = p.mask("O")
-    p.poly([(21.6, 41.0), (26.4, 41.0), (29.5, 48), (18.5, 48)], "W")
-    shirt = p.mask("W") - tube
-    p.edge(cape, shirt, "o")
-    for x in range(N):
-        for y in range(N):
-            if p.get(x, y) == "O" and p.get(x, y - 1) in ".nNBbUY":
-                p.put(x, y, "Q")
-    for x, y0 in ((9, 45), (14, 43), (34, 43), (39, 45)):
-        for y in range(y0, 48):
-            if p.get(x, y) == "O":
-                p.put(x, y, "o")
-
-    # 4) 목(가늘게)
-    for y in range(34, 42):
-        for x in range(22, 26):
-            p.put(x, y, "S")
-    neck = p.mask("S")
-
-    # 5) 머리카락 뒷부분(크고 둥근 머리)
-    p.ellipse(24, 20.5, 15.6, 16.6, "R")
-    head = p.mask("R") - tail
-    for x, y in head:  # 얼굴 옆·아래로 보이는 머리 안쪽은 어둡게
-        if y >= 18:
-            p.put(x, y, "r")
-
-    # 6) 얼굴
-    face = set()
-    for y in range(N):
-        hw = _face_halfwidth(y)
-        if hw <= 0.4:
-            continue
-        for x in range(N):
-            if abs(x + 0.5 - FACE_CX) <= hw:
-                face.add((x, y))
-                p.put(x, y, "s")
-    for x, y in neck:
-        if (x, y) not in face and y >= 38:
-            p.put(x, y, "s")
-    for x, y in face:  # 오른쪽·아래 가장자리 음영(빛은 왼쪽 위)
-        if (x + 1, y) not in face and y > 22:
-            p.put(x, y, "S")
-        if (x, y + 1) not in face and y > 33:
-            p.put(x, y, "S")
-
-    # 7) 옆머리(얼굴을 감싸고 끝이 가늘어진다)
-    locks = Pix()
-    locks.poly([(10.0, 14), (16.4, 14), (15.6, 24), (14.8, 31), (13.0, 37.0), (11.2, 33.5), (9.8, 25)], "R")
-    locks.poly([(38.0, 14), (31.6, 14), (32.4, 24), (33.2, 31), (35.0, 37.0), (36.8, 33.5), (38.2, 25)], "R")
-    # 8) 앞머리: 둥근 머리 안쪽을 채우고 아래로 뾰족한 다발이 내려온다
-    bang = Pix()
-    bang.poly([(8, 3), (40, 3), (40, 15.6), (8, 15.6)], "R")
-    clumps = [
-        (10.5, 16.0, 13.0, 22.5),
-        (15.0, 20.2, 17.4, 20.0),
-        (19.4, 24.6, 21.8, 18.8),
-        (23.8, 28.6, 26.4, 17.8),
-        (27.8, 33.0, 30.6, 20.0),
-        (32.0, 37.5, 35.0, 22.5),
-    ]
-    for x0, x1, tx, ty in clumps:
-        bang.poly([(x0, 15.0), (x1, 15.0), (tx, ty)], "R")
-    bmask = {(x, y) for (x, y) in bang.mask("R") if (x, y) in head or (x, y) in face}
-    lmask = locks.mask("R")
-    for x, y in lmask | bmask:
-        p.put(x, y, "R")
-    hair = lmask | bmask
-    # 옆머리 바깥쪽 결과 안쪽 그림자
-    for x, y in lmask:
-        if y >= 16 and ((x - 1, y) not in hair or (x + 1, y) not in hair):
-            p.put(x, y, "r")
-    # 앞머리가 얼굴에 드리우는 그림자
-    for x, y in face:
-        if (x, y - 1) in hair and (x, y) not in hair:
-            p.put(x, y, "S")
-    # 광택: 다발마다 짧은 밝은 띠(천사 고리), 빛은 왼쪽 위
-    cuts = {int(x0 + 0.5) for x0, _, _, _ in clumps[1:]}
-    for x in range(14, 34):
-        if x in cuts:
-            continue
-        p.put(x, 14, "y")
-        if x - 1 in cuts or x == 14:
-            p.put(x, 15, "y")
-        if 15 <= x <= 25 and x - 1 not in cuts and x + 1 not in cuts:
-            p.put(x, 14, "z")
-    for x in range(15, 34):  # 고글 위 정수리의 광택
-        if p.get(x, 5) == "R" and x not in (19, 20, 27, 28):
-            p.put(x, 5, "y" if x > 22 else "z")
-    # 옆머리 하이라이트
-    p.thick_line(11.6, 17, 11.6, 29, 0.9, "y")
-    p.thick_line(36.4, 17, 36.4, 27, 0.9, "R")
-
-    # 9) 바보털(아호게): 정수리에서 휘어 올라가는 머리 한 가닥
-    for x, y in ((24, 4), (23, 3), (22, 2), (21, 1), (20, 1), (19, 2)):
-        p.put(x, y, "R")
-    p.put(22, 2, "y")
-
-    # 10) 고글(이마 위로 올림): 가죽 띠 + 황동 테 + 렌즈
-    strap = Pix()
-    strap.thick_line(8.0, 10.2, 40.0, 10.2, 2.4, "b")
-    for x, y in strap.mask("b") & head:
-        p.put(x, y, "b")
-    for cx in (18.4, 29.6):
-        p.ellipse(cx, 9.6, 4.4, 3.6, "U")
-        p.ellipse(cx, 9.6, 2.9, 2.2, "t")
-        p.ellipse(cx - 0.4, 9.2, 2.4, 1.7, "T")
-        p.put(int(cx - 2), 8, "c")
-        p.put(int(cx - 1), 8, "W")
-        p.put(int(cx - 2), 9, "c")
-    for x in range(22, 26):
-        p.put(x, 9, "u")
-        p.put(x, 10, "U")
-    for cx in (18.4, 29.6):
-        for x in range(int(cx - 3), int(cx + 4)):
-            if p.get(x, 13) == "U":
-                p.put(x, 13, "u")
-    for y in range(N):
-        for x in range(N):
-            if p.get(x, y) == "U" and p.get(x + 1, y) not in "Uu" and p.get(x - 1, y) == "U" and y >= 10:
-                p.put(x, y, "u")
-    for cx in (18.4, 29.6):
-        p.put(int(cx - 3), 8, "Y")
-
-    # 11) 포니테일 리본(청록, 고글 렌즈와 같은 색)
-    p.stamp(grid("""
-        .KKK.KKK.
-        KccTKTccK
-        KcTTUTTcK
-        .KTtUtTK.
-        ..KtKtK..
-        .KTK.KTK.
-        .KK...KK.
-    """), 35, 1)
-
-    # 12) 나침반 장미 머리핀(왼쪽 옆머리)
-    p.stamp(grid("""
-        ..K..
-        .KYK.
-        KUxUK
-        .KUK.
-        ..K..
-    """), 9, 18)
-
-    # 13) 지도통 끈(왼쪽 어깨 → 오른쪽 옆구리)과 나침반, 망토 걸쇠
-    p.thick_line(12.5, 41.0, 31.5, 49.5, 2.2, "B")
-    p.thick_line(12.5, 42.3, 31.5, 50.8, 0.9, "b")
-    p.ellipse(30.4, 45.4, 2.6, 2.6, "U")
-    p.ellipse(30.4, 45.4, 1.5, 1.5, "W")
-    p.put(30, 44, "x")
-    p.put(30, 45, "K")
-    p.put(29, 43, "Y")
-    p.put(31, 47, "u")
-    p.ellipse(24, 41.4, 1.8, 1.6, "U")
-    p.put(23, 41, "Y")
-
-    # 14) 큰 덩어리 사이 경계선
-    body = p.mask("OQosSWmBbUYux")
-    p.edge(tube - body, p.mask("OQo"), "K")
-    p.edge(p.mask("Rry") & tail, p.mask("OQo"), "K")
-    return outline(p.rows())
+    g = _geometry()
+    col = [[None] * W for _ in range(N)]
+    _shade_hair(g, col)
+    _shade_rest(g, col)
+    _props(col)
+    return g, col
 
 
-BASE = _base()
-
-
-def _g(s):
-    return grid(s)
-
-
-def _flip(g):
-    return [r[::-1] for r in g]
-
-
-# 표정 조각의 자리(왼쪽 위 기준). 얼굴 가운데 축이 x=23|24 사이라서 왼쪽 x ↔ 오른쪽 47-x 로 대칭이다.
-# 눈 7×8(왼눈 x=15~21, 오른눈 x=26~32), 눈썹 6×2, 입은 짝수 너비로 가운데 정렬, 홍조 6×2.
-EYE_Y, LEFT_X, RIGHT_X = 21, 15, 26
-BROW_Y, BROW_LX = 18, 15
-MOUTH_Y = 31
-BLUSH_Y, BLUSH_LX, BLUSH_RX = 29, 13, 29
-
-# 왼눈(바깥 끝이 왼쪽). 오른눈은 좌우 반전(하이라이트도 바깥쪽으로 대칭).
-# 아치형 윗 속눈썹(바깥 끝이 두껍게 내려옴), 위는 짙고 아래로 밝아지는 홍채,
-# 큰 하이라이트 2×2 + 작은 하이라이트 1, 안쪽 위의 흰자, 바깥 아래 속눈썹 힌트.
-EYE_OPEN = """
-    .KKKKK.
-    KKddddK
-    .kWWdKW
-    .kWWKdW
-    .kdKKd.
-    .keKKe.
-    .kElWE.
-    ..klll.
-"""
-
-BLUSH = """
-    .jijij
-    jijij.
-"""
-
-SPARKLE_BIG = """
-    ..Y..
-    ..Y..
-    YYWYY
-    ..Y..
-    ..Y..
-"""
-SPARKLE_SMALL = """
-    .Y.
-    YWY
-    .Y.
-"""
-
-EXPRESSIONS = {
-    # 잔잔한 미소
-    "neutral": dict(
-        brow=_g("""
-            .BBBB.
-            B.....
-        """),
-        eye=_g(EYE_OPEN),
-        mouth=_g("""
-            X..X
-            .XX.
-        """),
-    ),
-    # ^^ 감은 눈 + 활짝 웃는 입 + 반짝임
-    "happy": dict(
-        brow=_g("""
-            .BBBB.
-            B....B
-        """),
-        brow_dy=-1,
-        eye=_g("""
-            .......
-            .......
-            ..KKK..
-            .KKKKK.
-            KK...KK
-            K.....K
-            .......
-            .......
-        """),
-        mouth=_g("""
-            XXXXXX
-            XxxxxX
-            .XiiX.
-            ..XX..
-        """),
-        blush=_g("""
-            jijiji
-            ijiji.
-        """),
-        fx=[(_g(SPARKLE_BIG), 2, 6), (_g(SPARKLE_SMALL), 7, 14)],
-    ),
-    # 안쪽이 올라간 눈썹, 눈물 맺힌 눈, 물결 입, 땀방울
-    "worried": dict(
-        brow=_g("""
-            ....BB
-            BBBB..
-        """),
-        brow_dy=-1,
-        eye=_g("""
-            .KKKKK.
-            KKddddK
-            .kWWdKW
-            .kWWKdW
-            .kdKKd.
-            .kcKKc.
-            .kcWcc.
-            ..cccc.
-        """),
-        mouth=_g("""
-            X.XX.X
-            .X..X.
-        """),
-        fx=[(_g("""
-            ..K..
-            .KcK.
-            KcccK
-            KWccK
-            KWccK
-            .KKK.
-        """), 36, 16)],
-    ),
-    # 크게 뜬 눈(작은 눈동자), 동그란 입, 놀람 선
-    "surprised": dict(
-        brow=_g("""
-            .BBBB.
-            B....B
-        """),
-        brow_dy=-2,
-        eye=_g("""
-            .KKKKK.
-            KKWWWKK
-            kWdddWk
-            kWdKdWk
-            kWeleWk
-            .kWWWk.
-            ..kkk..
-            .......
-        """),
-        mouth=_g("""
-            .KK.
-            KXXK
-            KxxK
-            .KK.
-        """),
-        mouth_dy=1,
-        fx=[(_g("""
-            KKK
-            KxK
-            KxK
-            KxK
-            KKK
-            KxK
-            KKK
-        """), 4, 3)],
-    ),
-    # 가늘게 뜬 결연한 눈, 안쪽으로 내려온 눈썹, 작은 일자 입
-    "serious": dict(
-        brow=_g("""
-            BB....
-            ..BBBB
-        """),
-        brow_dy=1,
-        eye=_g("""
-            .......
-            KK.....
-            .KKKKKK
-            .kWdKKW
-            .kdKKd.
-            .keKKe.
-            .kElEE.
-            ..klll.
-        """),
-        mouth=_g("""
-            XXXX
-        """),
-        mouth_dy=1,
-        blush=_g("""
-            ..jj..
-            .jj...
-        """),
-    ),
-}
+GEO, BASE = _base()
 
 
 def portrait(expr):
-    e = EXPRESSIONS[expr]
-    p = Pix()
-    p.g = [list(r) for r in BASE]
-    blush = e.get("blush", _g(BLUSH))
-    p.stamp(blush, BLUSH_LX, BLUSH_Y)
-    p.stamp(_flip(blush), BLUSH_RX, BLUSH_Y)
-    by = BROW_Y + e.get("brow_dy", 0)
-    p.stamp(e["brow"], BROW_LX, by)
-    p.stamp(_flip(e["brow"]), N - BROW_LX - len(e["brow"][0]), by)
-    p.stamp(e["eye"], LEFT_X, EYE_Y)
-    p.stamp(_flip(e["eye"]), RIGHT_X, EYE_Y)
-    m = e["mouth"]
-    p.stamp(m, N // 2 - len(m[0]) // 2, MOUTH_Y + e.get("mouth_dy", 0))
-    for g, x, y in e.get("fx", ()):
-        p.stamp(g, x, y)
-    return p.rows()
+    col = [r[:] for r in BASE]
+    _face(col, expr)
+    col = _outline(GEO, col)
+    return ["".join(CH[c] if c else "." for c in row[XO:XO + N]) for row in col]
 
 
-PORTRAITS = {f"nuri_{k}": [portrait(k)] for k in ("neutral", "happy", "worried", "surprised", "serious")}
+EXPRS = ("neutral", "happy", "worried", "surprised", "serious")
+PORTRAITS = {f"nuri_{k}": [portrait(k)] for k in EXPRS}

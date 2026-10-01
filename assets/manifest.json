@@ -138,23 +138,23 @@
   "portraits": {
     "portrait_nuri_neutral": {
       "file": "portraits/nuri_neutral.png",
-      "size": 48
+      "size": 64
     },
     "portrait_nuri_happy": {
       "file": "portraits/nuri_happy.png",
-      "size": 48
+      "size": 64
     },
     "portrait_nuri_worried": {
       "file": "portraits/nuri_worried.png",
-      "size": 48
+      "size": 64
     },
     "portrait_nuri_surprised": {
       "file": "portraits/nuri_surprised.png",
-      "size": 48
+      "size": 64
     },
     "portrait_nuri_serious": {
       "file": "portraits/nuri_serious.png",
-      "size": 48
+      "size": 64
     }
   }
 }

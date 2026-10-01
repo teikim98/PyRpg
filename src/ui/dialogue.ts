@@ -1,4 +1,4 @@
-// 대화창(design.md §3, §11.3). 아래쪽 상자, 보조 캐릭터만 초상화(48×48 → 3배).
+// 대화창(design.md §3, §11.3). 아래쪽 상자, 보조 캐릭터만 초상화(64×64 → 3배).
 import type { DialogueLine } from "../contracts/content";
 import type { DialogueUI, NameContext } from "../contracts/ui";
 import { createPortrait } from "./assets";

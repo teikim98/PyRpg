@@ -5,7 +5,7 @@
 - 캐릭터(player, nuri, npc_*): 프레임 8개(아래·왼쪽·오른쪽·위 × 2) → 너비 = 8 × frameWidth
 - 몬스터·오브젝트(monster_*, obj_*): 프레임 2개, 16×16
 - 보스(boss_*): 프레임 2개, 32×32
-- 초상화: size × size
+- 초상화(portrait_*): 64×64(manifest size = 64)
 추가로 PNG가 RGBA(컬러 타입 6)인지, 바닥 타일이 완전히 불투명한지, 빈 프레임이 없는지,
 build.py로 다시 만든 결과가 디스크의 파일과 바이트 단위로 같은지(결정적 빌드) 확인한다.
 
@@ -21,6 +21,8 @@ sys.path.insert(0, HERE)
 
 import build  # noqa: E402
 from png import read_png  # noqa: E402
+
+PORTRAIT_SIZE = 64  # src/contracts/assets.ts: 초상화 64×64
 
 GROUND_TILES = {"grass", "grass_flower", "path", "plaza_stone", "water", "house_wall", "house_roof",
                 "wall_stone", "floor_wood", "floor_stone", "stairs", "clocktower_wall", "dark_floor"}
@@ -104,6 +106,8 @@ def main():
 
     for name, por in manifest["portraits"].items():
         s = por["size"]
+        if s != PORTRAIT_SIZE:
+            errors.append(f"portrait {name}: manifest size {s}, contract says {PORTRAIT_SIZE}")
         rows = check_file(por["file"], s, s)
         if rows is not None and frame_empty(rows, 0, 0, s, s):
             errors.append(f"portrait {name}: empty")
