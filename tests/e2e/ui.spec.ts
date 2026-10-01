@@ -63,6 +63,25 @@ test.describe("dialogue", () => {
   });
 });
 
+test.describe("dialogue: 한글 입력 상태", () => {
+  test("Z가 ㅋ로 들어와도(e.code = KeyZ) 대사가 넘어가고, 조합 중 입력은 무시", async ({ page }) => {
+    await boot(page, 0);
+    const done = page.evaluate(() => (window as Win).__ui.dialogue());
+    const box = page.locator(".dlg-box");
+    await expect(box).toHaveAttribute("data-line", "0");
+    const key = (init: { key: string; code: string; isComposing?: boolean }) =>
+      page.evaluate((i: any) => window.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, ...i })), init as any);
+    await key({ key: "ㅋ", code: "KeyZ" });
+    await expect(box).toHaveAttribute("data-line", "1");
+    await key({ key: "ㅋ", code: "KeyZ", isComposing: true });
+    await expect(box).toHaveAttribute("data-line", "1");
+    await key({ key: "ㅌ", code: "KeyX" });
+    await expect(box).toHaveAttribute("data-line", "1");
+    for (let i = 0; i < 10 && (await page.locator(".dlg-modal").count()); i++) await key({ key: "ㅋ", code: "KeyZ" });
+    await done;
+  });
+});
+
 test.describe("lesson", () => {
   test("runs an example and completes via the blank exercise", async ({ page }) => {
     await boot(page);
@@ -274,6 +293,59 @@ test.describe("battle", () => {
     });
     expect(out.elapsedMs).toBeGreaterThan(0);
     await expect(page.locator(".battle-modal")).toHaveCount(0);
+  });
+
+  test("onVictory fires at the AC moment, before the banner is clicked", async ({ page }) => {
+    await boot(page);
+    const done = page.evaluate(() => (window as Win).__ui.battle("P0101"));
+    await typeInEditor(page, SOLUTION_P0101);
+    await page.locator(".act-cast").click();
+    await expect(page.locator(".battle-banner")).toContainText("정화 완료!");
+    const early = await page.evaluate(() => (window as Win).__ui.victories);
+    expect(early).toHaveLength(1);
+    expect(early[0]).toMatchObject({ problemId: "P0101", result: "victory", attempts: 1, finalCode: SOLUTION_P0101 });
+    await page.locator(".banner-ok").click();
+    expect((await done).result).toBe("victory");
+    expect(await page.evaluate(() => (window as Win).__ui.victories.length)).toBe(1);
+  });
+
+  test("function problem: [예제 실행] shows the user's print output", async ({ page }) => {
+    await boot(page);
+    const done = page.evaluate(() => (window as Win).__ui.battle("P0103"));
+    await page.evaluate(() => (window as Win).__ui.fake.queueJudge({ verdict: "AC", stdout: "hp=10 atk=3\n" }));
+    await page.locator(".act-public").click();
+    const details = page.locator(".battle-msg-details");
+    await expect(details).toContainText("예제 2/2 통과");
+    await expect(details.locator(".fb-stdout .fb-label").first()).toHaveText("print 출력");
+    await expect(details.locator(".fb-stdout .fb-val").first()).toHaveText("hp=10 atk=3");
+    await page.locator(".act-retreat").click();
+    await done;
+  });
+
+  test("companionLines: fatal_recursion and practice_suggest come from the common dialogues", async ({ page }) => {
+    await page.clock.install();
+    await boot(page);
+    const lines = {
+      fatalRecursion: [
+        { speaker: "companion", emotion: "surprised", text: "룬 엔진이 꺼졌다 켜졌어!" },
+        { speaker: "companion", emotion: "neutral", text: "{player}, 재귀를 반복문으로 바꿔 볼래?" },
+      ],
+      practiceSuggest: [{ speaker: "companion", emotion: "worried", text: "연습할 수 있는 작은 버그가 있어." }],
+    };
+    const done = page.evaluate((cl) => (window as Win).__ui.battle("P0101", { companionLines: cl }), lines);
+    await page.evaluate(() => (window as Win).__ui.fake.queueJudge({ verdict: "RE", fatal: true, fail: [4] }));
+    await page.locator(".act-cast").click();
+    const msg = page.locator(".battle-msg-text");
+    await expect(msg).toContainText("룬 엔진이 꺼졌다 켜졌어!");
+    await expect(msg).toContainText("하늘, 재귀를 반복문으로 바꿔 볼래?");
+    await expect(msg).not.toContainText("재귀가 너무 깊으면");
+    await expect(page.locator(".battle-msg")).toHaveAttribute("data-emotion", "surprised");
+    await page.clock.fastForward("10:01");
+    await expect(page.locator(".battle-msg")).toHaveAttribute("data-practice", "true");
+    await expect(msg).toContainText("연습할 수 있는 작은 버그가 있어.");
+    await expect(page.locator(".battle-msg")).toHaveAttribute("data-emotion", "worried");
+    await page.locator(".act-retreat").click();
+    await done;
   });
 
   test("hints show their cost before opening; level 1 is free", async ({ page }) => {

@@ -6,7 +6,13 @@ import { h, isComposing } from "./dom";
 import type { UiEnv } from "./env";
 import { renderInline, substituteNames } from "./markdown";
 
+// 물리 키(e.code) 기준: 한글 입력 상태에서 Z를 누르면 e.key가 "ㅋ"가 되어도 넘어가게
+const ADVANCE_CODES = new Set(["KeyZ", "Space", "Enter", "NumpadEnter"]);
 const ADVANCE_KEYS = new Set([" ", "Enter", "z", "Z"]);
+
+export function isAdvanceKey(e: Pick<KeyboardEvent, "code" | "key">): boolean {
+  return ADVANCE_CODES.has(e.code) || (!e.code && ADVANCE_KEYS.has(e.key));
+}
 
 /** HTML을 넣은 뒤 텍스트 노드를 한 글자씩 드러내는 타자기 효과 */
 export class Typewriter {
@@ -134,7 +140,7 @@ export function createDialogueUI(env: UiEnv): DialogueUI {
 
         const onKey = (e: KeyboardEvent) => {
           if (!modal.isTop() || isComposing(e) || e.repeat) return;
-          if (!ADVANCE_KEYS.has(e.key)) return;
+          if (!isAdvanceKey(e)) return;
           e.preventDefault();
           e.stopPropagation();
           advance();

@@ -111,6 +111,8 @@ interface PyResult {
   status?: "ok" | "error" | "timeout";
   verdict?: TestReply["verdict"];
   actual?: string;
+  /** 함수형: 사용자 print 출력(채점과 무관) */
+  stdout?: string;
   error: PyError | null;
   timeMs: number;
 }
@@ -198,18 +200,18 @@ function handle(req: WorkerRequest): Promise<WorkerResponse> | WorkerResponse {
         r =
           req.type === "stdinTest"
             ? parse(judge.runStdinTest(req.code, req.expected))
-            : parse(judge.runFunctionTest(req.code, req.entry, req.args, req.expect));
+            : parse(judge.runFunctionTest(req.code, req.entry, req.args, req.expect, req.compare));
       } catch (e) {
         const esc = escapedError(e);
         if (!esc) throw e;
         r = esc;
       }
       const base = finishRun(r);
-      // stdin형의 actual은 take_stdout으로 이미 가져갔으므로 stdout 자리에도 넣는다
+      // stdin형의 actual, 함수형의 print 출력은 채점기가 take_stdout으로 이미 가져갔으므로 stdout 자리에 넣는다
       const actual = r.actual ?? "";
       const result: TestReply = {
         ...base,
-        stdout: req.type === "stdinTest" ? actual : base.stdout,
+        stdout: req.type === "stdinTest" ? actual : (r.stdout ?? "") + base.stdout,
         verdict: r.verdict ?? "RE",
         actual,
       };

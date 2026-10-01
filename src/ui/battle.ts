@@ -1,5 +1,5 @@
 // 전투 화면(design.md §5.3, §7.1, §9.7)
-import type { Emotion } from "../contracts/content";
+import type { DialogueLine, Emotion } from "../contracts/content";
 import type { JudgeResult, PyError, TestResult } from "../contracts/runner";
 import type { BattleOutcome, HintLevel } from "../contracts/state";
 import type { BattleContext, BattleUI } from "../contracts/ui";
@@ -47,6 +47,7 @@ function detailsEl(fb: Feedback): HTMLElement {
     row("입력", d.input, "fb-input");
     row("기대", d.expected, "fb-expected");
     row("내 출력", d.actual, "fb-actual");
+    row("print 출력", d.stdout, "fb-stdout");
     row("에러", d.errorText, "fb-error");
     el.append(
       h(
@@ -290,6 +291,8 @@ export function createBattleUI(env: UiEnv): BattleUI {
           const first = firstFailed(res);
           if (res.fatal) {
             if (first?.error?.line) editor.highlightLine(first.error.line);
+            const common = companionSay(ctx.companionLines?.fatalRecursion);
+            if (common) return common;
             return {
               emotion: "serious",
               html: "실행기가 버티지 못하고 다시 시작했어(마력 재충전). 재귀가 너무 깊으면 이런 일이 생겨. 반복문이나 dict 메모로 바꿔 볼래?",
@@ -365,6 +368,15 @@ export function createBattleUI(env: UiEnv): BattleUI {
           } finally {
             if (!closed) setBusy(false);
           }
+        };
+
+        // 공통 대사(여러 줄)를 전투 메시지 한 칸에 담는다. 표정은 첫 줄 것
+        const companionSay = (lines: DialogueLine[] | undefined): { emotion: Emotion; html: string } | null => {
+          if (!lines?.length) return null;
+          return {
+            emotion: lines[0].emotion ?? "neutral",
+            html: lines.map((l) => `<p class="nuri-line">${renderInline(substituteNames(l.text, names))}</p>`).join(""),
+          };
         };
 
         const runnerWaitText = () => (ctx.runner.isReady() ? "주문을 읽는 중…" : "실행기를 깨우는 중… 처음 한 번은 조금 걸려.");
@@ -451,6 +463,12 @@ export function createBattleUI(env: UiEnv): BattleUI {
 
         const victory = () => {
           ended = true;
+          // 배너를 누르기 전에 새로고침해도 승리가 남도록 앱에 바로 알린다
+          try {
+            ctx.onVictory?.(outcomeOf("victory"));
+          } catch (e) {
+            console.error(e);
+          }
           restartAnim(sprite, "is-defeated");
           say("happy", `해냈어! ${escapeHtml(p.enemy.name)}을(를) 정화했어!`);
           setBusy(true);
@@ -499,21 +517,23 @@ export function createBattleUI(env: UiEnv): BattleUI {
           say("serious", "괜찮아, 막혔을 땐 풀이를 보고 이해하는 것도 실력이야. 이해했으면 직접 다시 써 보자.");
         };
 
+        const outcomeOf = (result: BattleOutcome["result"]): BattleOutcome => ({
+          problemId: p.id,
+          result,
+          attempts,
+          maxHintLevel: hintLevel,
+          solutionViewed,
+          finalCode: editor.getCode(),
+          hpLeft: result === "knockout" ? 0 : hp,
+          elapsedMs: Date.now() - startedAt,
+        });
+
         const finish = (result: BattleOutcome["result"]) => {
           if (closed) return;
           flushDraft();
           closed = true;
           timers.forEach((t) => window.clearTimeout(t));
-          const outcome: BattleOutcome = {
-            problemId: p.id,
-            result,
-            attempts,
-            maxHintLevel: hintLevel,
-            solutionViewed,
-            finalCode: editor.getCode(),
-            hpLeft: result === "knockout" ? 0 : hp,
-            elapsedMs: Date.now() - startedAt,
-          };
+          const outcome = outcomeOf(result);
           editor.destroy();
           modal.close();
           resolve(outcome);
@@ -530,10 +550,14 @@ export function createBattleUI(env: UiEnv): BattleUI {
           timers.push(
             window.setTimeout(() => {
               if (closed) return;
-              say(
-                "neutral",
-                "꽤 오래 붙잡고 있네! 같은 주문서의 <strong>연습 전투</strong>를 먼저 해 보는 건 어때? 강제는 아니고, 돌아와도 보상은 그대로야.",
-              );
+              const common = companionSay(ctx.companionLines?.practiceSuggest);
+              if (common) say(common.emotion, common.html);
+              else {
+                say(
+                  "neutral",
+                  "꽤 오래 붙잡고 있네! 같은 주문서의 <strong>연습 전투</strong>를 먼저 해 보는 건 어때? 강제는 아니고, 돌아와도 보상은 그대로야.",
+                );
+              }
               msgBox.dataset.practice = "true";
             }, practiceThresholdMs(p.estimatedMinutes)),
           );

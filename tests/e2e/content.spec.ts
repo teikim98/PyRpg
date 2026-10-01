@@ -130,6 +130,8 @@ async function checkProblem(pid: string): Promise<ProblemReport> {
       };
     };
     const answers = [await judgeOne("solution.py", problem.solution, {})];
+    // 정답으로 인정하는 다른 답안(예: P0108 튜플 반환, compare.sequenceAsList)
+    for (const a of pf.accepted ?? []) answers.push(await judgeOne(a.file, py[a.file] ?? "", {}));
     for (const w of pf.wrong) answers.push(await judgeOne(w.file, py[w.file] ?? "", w.expectFail, w.diagnosis?.text));
     return {
       found: true,
@@ -157,7 +159,8 @@ test.describe(`콘텐츠 스모크 ${REGION_ID}: 문제`, () => {
 
       for (const a of rep.answers) {
         const where = `${pid} ${a.file}`;
-        const diagOk = a.file === "solution.py" ? a.diag === undefined : a.diag === a.wantDiag;
+        const correct = a.file === "solution.py" || a.file.startsWith("alt_");
+        const diagOk = correct ? a.diag === undefined : a.diag === a.wantDiag;
         const explainOk = a.explains.every((e) => e.ruleBased && typeof e.line === "number");
         rows.push(
           `| ${pid} | ${a.file} | ${fmt(a.expected)} | ${fmt(a.got)} | ${diagOk ? "OK" : "불일치"} | ${
@@ -166,7 +169,7 @@ test.describe(`콘텐츠 스모크 ${REGION_ID}: 문제`, () => {
         );
         expect.soft(a.got, `${where} 판정`).toEqual(a.expected);
         expect.soft(a.fatal, `${where} 런타임 사망(§9.5)`).toBe(false);
-        if (a.file === "solution.py") {
+        if (correct) {
           expect.soft(a.diag, `${where} 진단`).toBeUndefined();
         } else {
           expect.soft(a.diag, `${where} 진단(첫 실패 actual=${JSON.stringify(a.firstActual)})`).toBe(a.wantDiag);
@@ -180,7 +183,7 @@ test.describe(`콘텐츠 스모크 ${REGION_ID}: 문제`, () => {
           if (e.verdict === "TLE") expect.soft(e.type).toBe("KeyboardInterrupt");
         }
         if (rep.boss) {
-          if (a.file === "solution.py") {
+          if (correct) {
             expect.soft(a.phaseRun, `${where} 페이즈별 채점`).toBeNull();
           } else {
             // 처음 실패한 페이즈의 판정은 expectFail 중 그 페이즈의 것과 같고, 진단도 자기 규칙

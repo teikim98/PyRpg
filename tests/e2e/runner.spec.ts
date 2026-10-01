@@ -162,6 +162,38 @@ test.describe("Python 실행기", () => {
     expect(r.ph1.limitMs).toBeGreaterThan(r.ph2.limitMs);
   });
 
+  test("함수형: True == 1, compare.sequenceAsList, __name__ != __main__, print 출력은 stdout으로(Pyodide)", async ({ page }) => {
+    await open(page);
+    const base = stdinProblem("PF", []);
+    const fn = (expect: string, extra: Partial<Problem> = {}): Problem => ({
+      ...base,
+      kind: "function",
+      entry: "solution",
+      tests: [{ args: "(3661,)", expect, public: true }],
+      ...extra,
+    });
+    const code = [
+      "def solution(sec):",
+      "    print('디버그', sec)",
+      "    return sec // 3600, sec % 3600 // 60, sec % 60",
+      "",
+      'if __name__ == "__main__":',
+      "    raise SystemExit(3)",
+    ].join("\n");
+    const [plain, seq, truthy] = await page.evaluate(
+      async ([a, b, c, src]) => [
+        await W().__runner.judge(a, src, { scope: "all" }),
+        await W().__runner.judge(b, src, { scope: "all" }),
+        await W().__runner.judge(c, "def solution(sec):\n    return True\n", { scope: "all" }),
+      ],
+      [fn("[1, 1, 1]"), fn("[1, 1, 1]", { compare: { sequenceAsList: true } }), fn("1"), code] as const,
+    );
+    expect(plain.tests[0]).toMatchObject({ verdict: "WA", actual: "(1, 1, 1)", stdout: "디버그 3661\n" });
+    expect(seq.tests[0]).toMatchObject({ verdict: "AC", stdout: "디버그 3661\n" });
+    expect(truthy.tests[0]).toMatchObject({ verdict: "AC", actual: "True" });
+    expect(truthy.tests[0].stdout).toBeUndefined();
+  });
+
   test("run(): input()과 sys.stdin.readline, end='', 큰 정수, 에러 줄 번호", async ({ page }) => {
     await open(page);
     let r = await run(page, "a = input()\nb = input()\nprint(a + '|' + b)", "x y\nz\n");

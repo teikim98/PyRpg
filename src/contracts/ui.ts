@@ -50,6 +50,18 @@ export interface BattleContext {
    * 앱은 이것으로 '지금 후퇴했다면'의 결과를 임시 저장해서, 새로고침으로 힌트 대가·해설서·쓰러짐을 피하지 못하게 한다
    */
   onProgress?(state: BattleProgress): void;
+  /**
+   * 마지막 시전이 AC가 된 순간(승리 배너를 누르기 전). 앱은 여기서 승리를 바로 저장해서
+   * 배너를 누르기 전에 새로고침해도 승리가 남게 한다. open()이 돌려주는 결과도 같은 승리다(보상은 한 번만)
+   */
+  onVictory?(outcome: BattleOutcome): void;
+  /** 공통 대사(content/common/dialogue.json)에서 넘겨받는 누리 대사. 없으면 전투 UI의 기본 문구 */
+  companionLines?: {
+    /** 실행기가 죽었다 살아났을 때(fatal_recursion) */
+    fatalRecursion?: DialogueLine[];
+    /** 오래 붙잡고 있을 때 연습 전투 제안(practice_suggest) */
+    practiceSuggest?: DialogueLine[];
+  };
 }
 
 export interface BattleProgress {

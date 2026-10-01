@@ -3,6 +3,7 @@ import type { JudgeResult, RunOutput, TestResult } from "../../src/contracts/run
 import {
   bossPhases,
   buildCastFeedback,
+  buildPublicFeedback,
   computeDamage,
   disclosureMode,
   hintShortCost,
@@ -10,6 +11,7 @@ import {
   testsInScope,
   timeGaugePercent,
 } from "../../src/ui/battleLogic";
+import { isAdvanceKey } from "../../src/ui/dialogue";
 import { exerciseOutputOk, fillBlank } from "../../src/ui/lesson";
 import { bojUrl, programmersUrl } from "../../src/ui/reward";
 import { P0101, P0105 } from "../fixtures/ui/problems";
@@ -113,5 +115,27 @@ describe("misc", () => {
     expect(programmersUrl(120802)).toBe("https://school.programmers.co.kr/learn/courses/30/lessons/120802");
     expect(bojUrl("https://boj.example/problem/", 1000)).toBe("https://boj.example/problem/1000");
     expect(bojUrl("https://boj.example/p?id={id}", 1000)).toBe("https://boj.example/p?id=1000");
+  });
+});
+
+describe("함수형 [예제 실행]의 print 출력(plan §1 4)", () => {
+  it("TestResult.stdout이 있으면 상세에 함께 보이고, 없으면 생략", () => {
+    const fb = buildPublicFeedback(result([{ ...t(0, "AC", true), stdout: "디버그 1\n" }, t(1, "WA", true)]));
+    expect(fb.details[0].stdout).toBe("디버그 1");
+    expect(fb.details[1].stdout).toBeUndefined();
+    // [시전] 피드백에는 넣지 않는다
+    const cast = buildCastFeedback(result([{ ...t(0, "WA", true), stdout: "x" }]), "full");
+    expect(cast.details[0].stdout).toBeUndefined();
+  });
+});
+
+describe("대화 넘기기 키(plan §1 7)", () => {
+  it("물리 키 기준: 한글 입력 상태의 Z(ㅋ)도 넘어간다", () => {
+    expect(isAdvanceKey({ code: "KeyZ", key: "ㅋ" })).toBe(true);
+    expect(isAdvanceKey({ code: "KeyZ", key: "z" })).toBe(true);
+    expect(isAdvanceKey({ code: "Space", key: " " })).toBe(true);
+    expect(isAdvanceKey({ code: "Enter", key: "Enter" })).toBe(true);
+    expect(isAdvanceKey({ code: "KeyX", key: "x" })).toBe(false);
+    expect(isAdvanceKey({ code: "KeyA", key: "z" })).toBe(false);
   });
 });

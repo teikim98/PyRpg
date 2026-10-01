@@ -77,7 +77,7 @@ P0101~P0105는 design.md §8.3의 본문·테스트·답안을 그대로 옮깁�
 | | `m_P0110` | monster | `problem=P0110` (숨겨진 방, 선택) |
 | 5 시계탑 계단 | `t_boss_intro` | trigger | `dialogue=boss_intro`, `once=true` (보스 두 칸 앞) |
 | | `m_P0105` | monster | `problem=P0105` (보스) |
-| | `warp_east` | warp | `lockedDialogue=east_gate_locked`, `requires=problem:P0105`, `openDialogue=to_be_continued` |
+| | `warp_east` | warp | `lockedDialogue=east_gate_locked`, `requires=problem:P0105`, `openDialogue=to_be_continued`, `target=r02`, `targetSpawn=spawn_west`(Phase 3, 지역 간 이동) |
 
 - **숨겨진 방**: 표지판 수수께끼(표지판에서 동쪽 7칸, 북쪽 4칸)가 가리키는 자리에 보통 덤불처럼 보이지만 지나갈 수 있는 칸이 있고, 그 너머가 숨겨진 방입니다. 맵 생성기는 이 칸을 `bush` 타일로 그리되 충돌 레이어에서 뺍니다.
 - **캠프파이어**: 상호작용하면 저장 + HP 회복. HP 0이 되면 마지막 캠프파이어로 돌아갑니다. 우물가에는 캠프파이어 대신 시작 지점이 그 역할을 합니다.

@@ -88,6 +88,8 @@ export interface TestDetail {
   input?: string;
   expected?: string;
   actual?: string;
+  /** 함수형 [예제 실행]: 사용자 print 출력(채점과 무관) */
+  stdout?: string;
   errorText?: string;
 }
 
@@ -128,11 +130,11 @@ export function buildCastFeedback(result: JudgeResult, mode: DisclosureMode, max
   return { summary, details: [], note: "보스전은 실전처럼 판정과 통과 개수만 알려 줘." };
 }
 
-/** [예제 실행] 결과: 공개 테스트이므로 전부 보인다 */
+/** [예제 실행] 결과: 공개 테스트이므로 전부 보인다. 함수형은 print 출력도 함께 */
 export function buildPublicFeedback(result: JudgeResult): Feedback {
   return {
     summary: `예제 ${result.passed}/${result.total} 통과`,
-    details: result.tests.map(full),
+    details: result.tests.map((t) => (t.stdout ? { ...full(t), stdout: t.stdout.replace(/\n$/, "") } : full(t))),
   };
 }
 

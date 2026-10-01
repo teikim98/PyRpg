@@ -39,7 +39,13 @@ const SPEC: Record<string, { type: string; props: Record<string, string | number
   m_P0105: { type: "monster", props: { problem: "P0105" } },
   warp_east: {
     type: "warp",
-    props: { lockedDialogue: "east_gate_locked", requires: "problem:P0105", openDialogue: "to_be_continued" },
+    props: {
+      lockedDialogue: "east_gate_locked",
+      requires: "problem:P0105",
+      openDialogue: "to_be_continued",
+      target: "r02",
+      targetSpawn: "spawn_west",
+    },
   },
 };
 

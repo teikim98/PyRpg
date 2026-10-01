@@ -98,6 +98,14 @@ describe("content loader: region r01", () => {
     expect((p0103.tests[5] as FunctionTest).args).toBe("(999999999999999999, 1)");
   });
 
+  it("P0108 carries compare.sequenceAsList (tuple h, m, s is accepted); others keep the default compare", () => {
+    const p = r01.problems.find((q) => q.id === "P0108")!;
+    expect(p.compare).toEqual({ sequenceAsList: true });
+    expect(r01.problems.filter((q) => q.compare).map((q) => q.id)).toEqual(["P0108"]);
+    // 검증용 다른 답안 목록은 게임 데이터에 담지 않는다
+    expect("accepted" in p).toBe(false);
+  });
+
   it("boss P0105 has phases matching its tests", () => {
     const boss = r01.problems.filter((p) => p.boss);
     expect(boss.map((p) => p.id)).toEqual(["P0105"]);

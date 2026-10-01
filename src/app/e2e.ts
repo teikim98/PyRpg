@@ -1,16 +1,16 @@
 // E2E 전용 테스트 훅(design.md §12.3). main.ts가 ?e2e일 때만 불러와 window.__pyrpg에 붙인다.
 // 캔버스 안은 DOM으로 찾을 수 없으므로 좌표·진행도·길찾기만 알려 주고, 이동은 테스트가 실제 키로 보낸다.
-import { manifest } from "../contracts/assets";
 import type { GameContent } from "../contracts/content";
 import type { Facing, SaveData } from "../contracts/state";
 import type { MapObjectDef } from "../contracts/world";
-import { DIRS, PASSABLE_OBJECT_TYPES, buildCollisionGrid, inBounds } from "../game/grid";
-import { parseTiledMap } from "../game/tiled";
+import { DIRS } from "../game/grid";
 import type { PythonRunnerHandle } from "../python/runner";
 import type { SaveStore } from "../state";
 import { completeLesson, emptyRecord } from "../systems";
 import type { UiServicesExt } from "../ui";
 import type { App } from "./app";
+import { walkableFn } from "./travel";
+import { fixtureRegionR99 } from "../../tests/fixtures/regions/r99";
 
 export interface E2eSeed {
   /** 완료 처리할 레슨(주문서·XP 포함) */
@@ -45,20 +45,31 @@ export interface E2eHook {
   seed(seed: E2eSeed): Promise<SaveData>;
 }
 
+/**
+ * ?e2e&fixtures: 지역 간 이동 시험용 지역 r99(tests/fixtures/regions/r99.ts)를 넣고, 에코 마을 warp_east가
+ * r99의 spawn_west로 이어지게 바꾼다. 앱이 시작하기 전에 불러야 한다
+ */
+export function addE2eFixtures(content: GameContent): void {
+  if (content.regions.some((r) => r.id === "r99")) return;
+  content.regions.push(fixtureRegionR99());
+  const r01 = content.regions.find((r) => r.id === "r01");
+  for (const layer of (r01?.map.layers ?? []) as { objects?: { name?: string; properties?: { name: string; value: unknown }[] }[] }[]) {
+    for (const o of layer.objects ?? []) {
+      if (o.name !== "warp_east") continue;
+      for (const p of o.properties ?? []) {
+        if (p.name === "target") p.value = "r99";
+        if (p.name === "targetSpawn") p.value = "spawn_west";
+      }
+    }
+  }
+}
+
 export function createE2eHook(
   app: App,
   deps: { runner: PythonRunnerHandle; content: GameContent; ui: UiServicesExt; store: SaveStore },
 ): E2eHook {
-  const walkable = () => {
-    const parsed = parseTiledMap(app.region.map, Object.keys(manifest.tilesets));
-    const grid = buildCollisionGrid(parsed, manifest.tilesets[parsed.tileset]);
-    const removed = new Set(app.save.removedObjects);
-    const blocked = new Set<number>();
-    for (const o of parsed.objects) {
-      if (!removed.has(o.id) && !PASSABLE_OBJECT_TYPES.has(o.type)) blocked.add(o.y * parsed.width + o.x);
-    }
-    return (x: number, y: number) => inBounds(parsed, x, y) && !grid[y * parsed.width + x] && !blocked.has(y * parsed.width + x);
-  };
+  if (new URLSearchParams(location.search).has("fixtures")) addE2eFixtures(deps.content);
+  const walkable = () => walkableFn(app.region, new Set(app.save.removedObjects));
 
   /** 너비 우선 탐색. goal(x, y)가 true인 첫 칸까지의 방향 목록 */
   const bfs = (goal: (x: number, y: number) => boolean): { path: Facing[]; end: { x: number; y: number } } | null => {

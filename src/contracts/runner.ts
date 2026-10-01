@@ -40,6 +40,8 @@ export interface TestResult {
   expected: string;
   /** stdin형은 stdout, 함수형은 반환값 repr */
   actual: string;
+  /** 함수형만: 사용자 코드의 print 출력(채점에는 쓰지 않음). 비어 있으면 생략 */
+  stdout?: string;
   error?: PyError;
 }
 

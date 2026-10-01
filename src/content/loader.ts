@@ -3,6 +3,7 @@
 import type {
   BossPhase,
   CompanionProfile,
+  ProblemCompare,
   DiagnosisRule,
   DialogueMap,
   EnemyDef,
@@ -33,8 +34,12 @@ export interface ProblemFile {
   practice?: boolean;
   timeLimitMs: number;
   budgetUnits?: number;
+  /** 함수형 비교 옵션 */
+  compare?: ProblemCompare;
   estimatedMinutes: number;
   tests: ProblemTest[];
+  /** 정답으로 인정해야 하는 다른 답안(검증용, 예: 튜플 반환). 게임에는 담지 않는다 */
+  accepted?: { file: string; title?: string }[];
   /** 오답 예시(검증용). diagnosis는 problem.diagnoses로 옮긴다 */
   wrong: { file: string; title?: string; slow?: boolean; expectFail: Record<string, string>; diagnosis: DiagnosisRule }[];
   /** 오답 예시와 묶이지 않은 진단 규칙. wrong[]의 진단보다 먼저 본다 */
@@ -146,6 +151,7 @@ function buildProblem(src: ContentSources, regionDir: string, regionId: string, 
   if (p.phases) problem.phases = p.phases;
   if (p.practice) problem.practice = true;
   if (p.budgetUnits !== undefined) problem.budgetUnits = p.budgetUnits;
+  if (p.compare) problem.compare = p.compare;
   return problem;
 }
 
