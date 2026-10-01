@@ -219,7 +219,7 @@ export class WorldScene extends Phaser.Scene {
     const cam = this.cameras.main;
     cam.setBounds(0, 0, parsed.width * TILE, parsed.height * TILE);
     this.player.setVisible(true);
-    this.nuri.setVisible(true);
+    this.nuri.setVisible(this.companionVisible);
     this.teleport(spawn.x, spawn.y, spawn.facing);
     cam.startFollow(this.player, true);
   }
@@ -446,6 +446,12 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private nuriFacing: Facing = "down";
+  private companionVisible = false;
+
+  setCompanionVisible(visible: boolean): void {
+    this.companionVisible = visible;
+    this.nuri?.setVisible(visible);
+  }
 
   private finishMove(x: number, y: number): void {
     this.moving = false;

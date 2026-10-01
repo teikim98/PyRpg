@@ -63,6 +63,7 @@ export async function startWorldHarness(): Promise<void> {
   });
   const region = buildHarnessRegion();
   const spawn = parseTiledMap(region.map).objects.find((o) => o.type === "spawn");
+  world.setCompanionVisible(true);
   await world.loadRegion(region, { x: spawn?.x ?? 1, y: spawn?.y ?? 1, facing: "down" }, new Set());
   window.__world = world;
   window.__worldReady = true;

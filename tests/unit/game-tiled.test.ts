@@ -10,7 +10,7 @@ const loadMap = () => JSON.parse(readFileSync(MAP_PATH, "utf-8")) as Record<stri
 /** region1-spec.md §4 */
 const SPEC: Record<string, { type: string; props: Record<string, string | number | boolean> }> = {
   spawn: { type: "spawn", props: {} },
-  t_prologue: { type: "trigger", props: { dialogue: "prologue", once: true } },
+  t_prologue: { type: "trigger", props: { dialogue: "prologue", once: true, joinCompanion: true } },
   "rune_L1-1": { type: "rune", props: { lesson: "L1-1" } },
   sign_well: { type: "sign", props: { dialogue: "sign_well" } },
   gate_well: { type: "door", props: { requires: "lesson:L1-1", lockedDialogue: "gate_well_locked" } },

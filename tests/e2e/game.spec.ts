@@ -729,9 +729,8 @@ test.describe("키보드와 오프라인", () => {
     }
     expect(external).toEqual([]);
 
-    // 알려진 한계: 오프라인에서 워커를 다시 만들면(fatal·하드 중단) Pyodide 파일을 다시 받지 못한다
-    // (Cache-Control: no-cache, 서비스 워커 없음). 오프라인 새로고침도 같은 이유로 안 된다.
-    // 다시 연결되면 다음 실행에서 스스로 복구하는지만 확인한다.
+    // 이 테스트의 첫 방문은 service worker가 아직 제어하지 않으므로, 오프라인에서 워커를 다시 만들면 Pyodide를 못 받을 수 있다.
+    // 다시 연결되면 스스로 복구하는지만 확인한다. 오프라인 새로고침·재생성은 offline.spec.ts에서 확인한다.
     const deep = "import sys\nfrom functools import lru_cache\nsys.setrecursionlimit(10**6)\n@lru_cache(maxsize=None)\ndef f(n):\n    return 0 if n == 0 else f(n - 1) + 1\nprint(f(2000))";
     await context.setOffline(true);
     try {

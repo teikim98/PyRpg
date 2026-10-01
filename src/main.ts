@@ -32,6 +32,11 @@ async function main(): Promise<void> {
   if (hook) hook.ready = true;
 }
 
+// 오프라인 실행(design.md §12.3). 개발 서버에서는 캐시가 수정 반영을 방해하므로 등록하지 않는다
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch((e) => console.warn("service worker 등록 실패", e));
+}
+
 main().catch((e) => {
   console.error(e);
   const boot = document.getElementById("boot");

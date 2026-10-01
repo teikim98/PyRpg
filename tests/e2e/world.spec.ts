@@ -88,7 +88,7 @@ test.describe("world (dev/world.html)", () => {
     for (const [id, type] of Object.entries(SPEC_OBJECTS)) {
       expect(byId.get(id)?.type, id).toBe(type);
     }
-    expect(byId.get("t_prologue")!.props).toEqual({ dialogue: "prologue", once: true });
+    expect(byId.get("t_prologue")!.props).toEqual({ dialogue: "prologue", once: true, joinCompanion: true });
     expect(byId.get("gate_well")!.props).toEqual({ requires: "lesson:L1-1", lockedDialogue: "gate_well_locked" });
     expect(byId.get("chest_shop")!.props).toEqual({ gold: 30, dialogue: "chest_shop" });
     expect(byId.get("npc_echo_child")!.props).toEqual({ dialogue: "npc_echo_child", sprite: "npc_child" });

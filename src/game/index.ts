@@ -56,6 +56,7 @@ export const createWorld: WorldFactory = {
       setInputEnabled: (enabled) => scene.setInputEnabled(enabled),
       getPlayerPosition: () => scene.getPlayerPosition(),
       teleport: (x, y, facing) => scene.teleport(x, y, facing),
+      setCompanionVisible: (visible) => scene.setCompanionVisible(visible),
       getObjects: () => scene.getObjects(),
     };
   },

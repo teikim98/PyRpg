@@ -922,6 +922,11 @@
        "name": "once",
        "type": "bool",
        "value": true
+      },
+      {
+       "name": "joinCompanion",
+       "type": "bool",
+       "value": true
       }
      ]
     },

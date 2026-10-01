@@ -12,7 +12,7 @@ export type MapObjectType =
   | "monster"   // props: problem
   | "campfire"  // props: (없음)
   | "rune"      // 레슨 비석. props: lesson
-  | "trigger"   // 밟으면 발동. props: dialogue?, lesson?, once(boolean)
+  | "trigger"   // 밟으면 발동. props: dialogue?, lesson?, once(boolean), joinCompanion?(대사 뒤 보조 캐릭터 합류)
   | "warp"      // props: requires, lockedDialogue, openDialogue, (target 지역 ID)
   | "spawn";    // 새 게임 시작 위치(보이지 않음)
 
@@ -46,6 +46,8 @@ export interface WorldController {
   setInputEnabled(enabled: boolean): void;
   getPlayerPosition(): { x: number; y: number; facing: Facing };
   teleport(x: number, y: number, facing: Facing): void;
+  /** 보조 캐릭터(누리)를 보이고 따라오게 할지. 기본 false(프롤로그에서 합류) */
+  setCompanionVisible(visible: boolean): void;
   /** 맵의 모든 오브젝트(제거된 것 포함) */
   getObjects(): MapObjectDef[];
 }

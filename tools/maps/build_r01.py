@@ -109,7 +109,7 @@ FLOORS = {"grass", "path", "plaza_stone", "floor_wood", "floor_stone", "dark_flo
 OBJECTS: dict[str, tuple[str, str, dict, str | None]] = {
     # 1 우물가
     "@": ("spawn", "spawn", {}, None),
-    "!": ("t_prologue", "trigger", {"dialogue": "prologue", "once": True}, None),
+    "!": ("t_prologue", "trigger", {"dialogue": "prologue", "once": True, "joinCompanion": True}, None),
     "1": ("rune_L1-1", "rune", {"lesson": "L1-1"}, None),
     "A": ("sign_well", "sign", {"dialogue": "sign_well"}, None),
     "G": ("gate_well", "door", {"requires": "lesson:L1-1", "lockedDialogue": "gate_well_locked"}, "path"),

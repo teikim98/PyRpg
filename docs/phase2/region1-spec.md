@@ -50,7 +50,7 @@ P0101~P0105는 design.md §8.3의 본문·테스트·답안을 그대로 옮깁�
 | 구역 | 오브젝트 ID | 종류 | props |
 |---|---|---|---|
 | 1 우물가 | `spawn` | spawn | |
-| | `t_prologue` | trigger | `dialogue=prologue`, `once=true` (spawn 칸 바로 옆) |
+| | `t_prologue` | trigger | `dialogue=prologue`, `once=true`, `joinCompanion=true` (spawn 칸 바로 옆. 대사가 끝나면 누리가 합류해서 따라다님) |
 | | `rune_L1-1` | rune | `lesson=L1-1` |
 | | `sign_well` | sign | `dialogue=sign_well` |
 | | `gate_well` | door | `requires=lesson:L1-1`, `lockedDialogue=gate_well_locked` |

@@ -23,6 +23,9 @@ import {
 } from "../systems";
 import { checkRequires, missingScrolls } from "./requires";
 
+/** 보조 캐릭터가 합류했는지(프롤로그 트리거의 joinCompanion) */
+export const COMPANION_FLAG = "companion.joined";
+
 export interface AppDeps {
   content: GameContent;
   runner: PythonRunnerHandle;
@@ -81,6 +84,9 @@ export class App {
     if (loaded) {
       this.save = settleOnLoad(loaded, this.now()).save;
       this.save.location = takeLocationBackup(this.save) ?? this.save.location;
+      // 프롤로그 트리거를 이미 지난 저장(합류 플래그가 생기기 전 버전 포함)이면 누리를 보인다
+      if (this.save.flags[`trigger.${this.region.id}.t_prologue`]) this.save.flags[COMPANION_FLAG] = true;
+      this.world.setCompanionVisible(this.save.flags[COMPANION_FLAG] === true);
       await this.world.loadRegion(this.region, this.save.location, removed);
     } else {
       // 새 게임: 맵을 먼저 그려서 spawn 위치를 알아낸 뒤 그 자리로 옮긴다
@@ -157,6 +163,10 @@ export class App {
     if (o.props.once && this.save.flags[flag]) return;
     this.save.flags[flag] = true;
     if (o.props.dialogue) await this.say(String(o.props.dialogue));
+    if (o.props.joinCompanion) {
+      this.save.flags[COMPANION_FLAG] = true;
+      this.world.setCompanionVisible(true);
+    }
     if (o.props.lesson) await this.openLesson(String(o.props.lesson));
     await this.persist();
   }
