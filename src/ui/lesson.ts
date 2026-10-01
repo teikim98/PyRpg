@@ -3,7 +3,9 @@ import type { BlankExercise, Emotion, Lesson } from "../contracts/content";
 import type { PythonRunner } from "../contracts/runner";
 import type { LessonUI, NameContext } from "../contracts/ui";
 import { createPortrait, type PortraitHandle } from "./assets";
-import { formatRunOutput, normalizeOutput, outputsEqual } from "./battleLogic";
+import type { RunOutput } from "../contracts/runner";
+import { normalizeOutput, outputsMatch } from "../python/compare";
+import { formatRunOutput } from "./battleLogic";
 import { h } from "./dom";
 import type { UiEnv } from "./env";
 import { escapeHtml, renderInline, renderMarkdown, substituteNames } from "./markdown";
@@ -11,6 +13,11 @@ import { ensureRunner, mountMarkdown } from "./runnable";
 
 export const BLANK = "___";
 export const REVEAL_AFTER_TRIES = 3;
+
+/** 빈칸 연습 통과 여부. 출력 비교는 채점기와 같은 규칙(src/python/compare.ts)을 쓴다 */
+export function exerciseOutputOk(res: RunOutput, expectedOutput: string): boolean {
+  return !res.error && !res.timedOut && !res.fatal && outputsMatch(res.stdout, expectedOutput);
+}
 
 /** 빈칸(___) 하나를 값으로 바꾼다 */
 export function fillBlank(code: string, value: string): string {
@@ -83,7 +90,7 @@ function exerciseSection(
       await ensureRunner(runner);
       const res = await runner.run({ code: fillBlank(ex.code, value), stdin: ex.stdin });
       output.textContent = formatRunOutput(res);
-      const ok = !res.error && !res.timedOut && !res.fatal && outputsEqual(res.stdout, ex.expectedOutput);
+      const ok = exerciseOutputOk(res, ex.expectedOutput);
       output.classList.toggle("is-error", !ok);
       if (ok) {
         solved = true;

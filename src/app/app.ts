@@ -1,9 +1,10 @@
 // 앱 계층: 월드·UI·실행기·진행 규칙·저장을 연결한다(design.md §4 게임 루프).
 // 월드는 그리기와 입력만, UI는 화면만, 규칙은 src/systems의 순수 함수가 맡고, 여기서는 순서만 정한다.
 import type { DialogueLine, GameContent, Lesson, Problem, Region } from "../contracts/content";
-import type { BattleOutcome, SaveData } from "../contracts/state";
+import type { BattleOutcome, Facing, SaveData } from "../contracts/state";
 import type { NameContext, UiServices } from "../contracts/ui";
 import type { MapObjectDef, WorldController, WorldFactory } from "../contracts/world";
+import { OPPOSITE } from "../game/grid";
 import { diagnoseResult } from "../python/diagnose";
 import { explainError } from "../python/explain";
 import type { PythonRunnerHandle } from "../python/runner";
@@ -38,11 +39,18 @@ export class App {
   world!: WorldController;
   region!: Region;
   private autosaver!: Autosaver;
-  private busy = false;
+  private busyFlag = false;
+  /** 불러오기·초기화로 새로고침하는 중(떠날 때 위치 백업을 남기지 않는다) */
+  private leaving = false;
   private readonly now: () => Date;
 
   constructor(private readonly deps: AppDeps) {
     this.now = deps.now ?? (() => new Date());
+  }
+
+  /** 대화·전투·메뉴 등이 진행 중인가 */
+  get busy(): boolean {
+    return this.busyFlag;
   }
 
   get names(): NameContext {
@@ -72,7 +80,8 @@ export class App {
     const removed = new Set(loaded?.removedObjects ?? []);
     if (loaded) {
       this.save = settleOnLoad(loaded, this.now()).save;
-      await this.world.loadRegion(this.region, loaded.location, removed);
+      this.save.location = takeLocationBackup(this.save) ?? this.save.location;
+      await this.world.loadRegion(this.region, this.save.location, removed);
     } else {
       // 새 게임: 맵을 먼저 그려서 spawn 위치를 알아낸 뒤 그 자리로 옮긴다
       await this.world.loadRegion(this.region, { x: 0, y: 0, facing: "down" }, removed);
@@ -83,10 +92,15 @@ export class App {
     }
 
     this.autosaver = createAutosaver(store, { delayMs: 800, onError: (e) => console.error("자동 저장 실패", e) });
+    // 페이지를 떠날 때 IndexedDB 쓰기는 끝나기 전에 끊길 수 있어서, 아직 저장되지 않은 위치는 localStorage에도 남긴다
+    const leave = () => {
+      if (this.autosaver.pending && !this.leaving) writeLocationBackup(this.save);
+      void this.autosaver.flush();
+    };
     addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "hidden") void this.autosaver.flush();
+      if (document.visibilityState === "hidden") leave();
     });
-    addEventListener("pagehide", () => void this.autosaver.flush());
+    addEventListener("pagehide", leave);
 
     await this.persist();
     this.refreshHud();
@@ -255,6 +269,15 @@ export class App {
           await this.sayCommon("knockout");
           this.world.teleport(e.respawn.x, e.respawn.y, "down");
           break;
+        case "retreat": {
+          // 몬스터를 등지게 돌려세운다(바로 Space를 눌러 다시 붙지 않도록)
+          const pos = this.world.getPlayerPosition();
+          this.world.teleport(pos.x, pos.y, OPPOSITE[pos.facing]);
+          this.save.location = { regionId: this.region.id, x: pos.x, y: pos.y, facing: OPPOSITE[pos.facing] };
+          this.autosaver.schedule(this.save);
+          await this.sayCommon("retreat");
+          break;
+        }
         case "solutionUnlocked":
           await this.sayCommon("solution_unlocked");
           break;
@@ -304,12 +327,12 @@ export class App {
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       },
       importSave: async (file) => {
-        const data = importSave(await file.text());
-        this.autosaver.cancel();
-        await this.deps.store.save(data);
+        await this.overwriteSave(importSave(await file.text()));
         location.reload();
       },
       resetSave: async () => {
+        this.leaving = true;
+        clearLocationBackup();
         this.autosaver.cancel();
         await this.deps.store.clear();
         location.reload();
@@ -317,12 +340,21 @@ export class App {
     });
   }
 
+  /** 저장 데이터를 통째로 바꾼다(불러오기). 화면에 반영하려면 새로고침 */
+  async overwriteSave(data: SaveData): Promise<SaveData> {
+    this.leaving = true;
+    clearLocationBackup();
+    this.autosaver.cancel();
+    this.save = await this.deps.store.save(data);
+    return this.save;
+  }
+
   // ───────────── 도우미 ─────────────
 
   /** 대화·전투·메뉴가 열려 있는 동안 월드 입력을 끄고, 겹쳐 열리지 않게 한다 */
   private async guard(fn: () => Promise<void>): Promise<void> {
-    if (this.busy) return;
-    this.busy = true;
+    if (this.busyFlag) return;
+    this.busyFlag = true;
     this.world?.setInputEnabled(false);
     try {
       await fn();
@@ -330,7 +362,7 @@ export class App {
       console.error(e);
       this.deps.ui.hud.toast("문제가 생겼어. 콘솔을 확인해 줘.");
     } finally {
-      this.busy = false;
+      this.busyFlag = false;
       this.world?.setInputEnabled(true);
     }
   }
@@ -368,5 +400,53 @@ export class App {
   private async persist(): Promise<void> {
     this.autosaver?.cancel();
     this.save = await this.deps.store.save(this.save);
+  }
+}
+
+// ───────────── 떠날 때의 위치 백업 ─────────────
+
+const LOCATION_BACKUP_KEY = "pyrpg.locationBackup";
+
+function writeLocationBackup(save: SaveData): void {
+  try {
+    localStorage.setItem(LOCATION_BACKUP_KEY, JSON.stringify({ ...save.location, at: new Date().toISOString() }));
+  } catch {
+    // 저장소를 쓸 수 없으면 IndexedDB 저장에만 맡긴다
+  }
+}
+
+function clearLocationBackup(): void {
+  try {
+    localStorage.removeItem(LOCATION_BACKUP_KEY);
+  } catch {
+    // 무시
+  }
+}
+
+/** 마지막 IndexedDB 저장보다 나중에 남긴 위치 백업이 있으면 그 위치(한 번 쓰면 지운다) */
+export function takeLocationBackup(save: SaveData): SaveData["location"] | null {
+  let raw: string | null = null;
+  try {
+    raw = localStorage.getItem(LOCATION_BACKUP_KEY);
+  } catch {
+    return null;
+  }
+  clearLocationBackup();
+  if (!raw) return null;
+  try {
+    const b = JSON.parse(raw) as Partial<SaveData["location"]> & { at?: string };
+    const facings = ["up", "down", "left", "right"];
+    if (
+      b.regionId !== save.location.regionId ||
+      !Number.isInteger(b.x) ||
+      !Number.isInteger(b.y) ||
+      !facings.includes(String(b.facing)) ||
+      !(Date.parse(String(b.at)) > Date.parse(save.updatedAt))
+    ) {
+      return null;
+    }
+    return { regionId: b.regionId, x: b.x!, y: b.y!, facing: b.facing as Facing };
+  } catch {
+    return null;
   }
 }

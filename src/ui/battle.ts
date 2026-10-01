@@ -287,6 +287,16 @@ export function createBattleUI(env: UiEnv): BattleUI {
           }
           if (!first) return { emotion: "happy", html: "" };
           const diag = ctx.diagnose(p, res);
+          // TLE는 실행기가 KeyboardInterrupt로 멈춘 것이라 '폭발'(RE)처럼 말하지 않는다
+          if (first.verdict === "TLE") {
+            const line = first.error?.line;
+            if (line) editor.highlightLine(line);
+            const ex = first.error ? ctx.explain(first.error, ctx.traceback) : genericVerdictMessage("TLE");
+            const where = line ? `<span class="err-line">${line}번째 줄</span>을 도는 중에 멈췄어. ` : "";
+            let html = `${where}${renderInline(substituteNames(ex, names))}`;
+            if (diag) html += `<div class="diag">${renderInline(substituteNames(diag, names))}</div>`;
+            return { emotion: "serious", html };
+          }
           if (first.error) {
             const line = first.error.line;
             if (line) editor.highlightLine(line);
@@ -297,7 +307,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
             return { emotion: "surprised", html };
           }
           const text = diag ?? genericVerdictMessage(first.verdict);
-          return { emotion: first.verdict === "TLE" ? "serious" : "worried", html: renderInline(substituteNames(text, names)) };
+          return { emotion: "worried", html: renderInline(substituteNames(text, names)) };
         };
 
         const runPublic = async () => {

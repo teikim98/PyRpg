@@ -1,18 +1,16 @@
 import { describe, expect, it } from "vitest";
-import type { JudgeResult, TestResult } from "../../src/contracts/runner";
+import type { JudgeResult, RunOutput, TestResult } from "../../src/contracts/runner";
 import {
   bossPhases,
   buildCastFeedback,
   computeDamage,
   disclosureMode,
   hintShortCost,
-  normalizeOutput,
-  outputsEqual,
   practiceThresholdMs,
   testsInScope,
   timeGaugePercent,
 } from "../../src/ui/battleLogic";
-import { fillBlank } from "../../src/ui/lesson";
+import { exerciseOutputOk, fillBlank } from "../../src/ui/lesson";
 import { bojUrl, programmersUrl } from "../../src/ui/reward";
 import { P0101, P0105 } from "../fixtures/ui/problems";
 
@@ -44,11 +42,17 @@ describe("computeDamage", () => {
 });
 
 describe("outputs", () => {
-  it("ignores trailing spaces per line and trailing newlines", () => {
-    expect(normalizeOutput("3 1  \n\n")).toBe("3 1");
-    expect(outputsEqual("7\n", "7")).toBe(true);
-    expect(outputsEqual("a \nb\t\n", "a\nb")).toBe(true);
-    expect(outputsEqual(" 7", "7")).toBe(false);
+  it("lesson blank check uses the judge's rule (ASCII trailing whitespace, trailing empty lines)", () => {
+    const out = (stdout: string, extra: Partial<RunOutput> = {}): RunOutput => ({ stdout, stderr: "", timedOut: false, fatal: false, timeMs: 1, ...extra });
+    expect(exerciseOutputOk(out("3 1  \n\n"), "3 1\n")).toBe(true);
+    expect(exerciseOutputOk(out("7\r\n"), "7")).toBe(true);
+    expect(exerciseOutputOk(out("a \nb\t\f\v\n"), "a\nb")).toBe(true);
+    expect(exerciseOutputOk(out(" 7"), "7")).toBe(false);
+    // 유니코드 공백은 지우지 않는다(judge.py·verify_content.py와 같음)
+    expect(exerciseOutputOk(out("7\u00a0\n"), "7")).toBe(false);
+    expect(exerciseOutputOk(out("\n7"), "7")).toBe(false);
+    expect(exerciseOutputOk(out("7\n", { timedOut: true }), "7")).toBe(false);
+    expect(exerciseOutputOk(out("7\n", { error: { type: "ValueError", message: "", traceback: "" } }), "7")).toBe(false);
   });
   it("fills the single blank", () => {
     expect(fillBlank("map(___, x) # ___", "int")).toBe("map(int, x) # ___");

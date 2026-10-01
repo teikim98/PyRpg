@@ -1,7 +1,7 @@
 // 전투 밖의 진행 규칙: 레슨 완료, 캠프파이어, 불러온 직후 정산, HUD 값.
 import type { SaveData } from "../contracts/state";
 import type { HudState } from "../contracts/ui";
-import { levelFromXp, maxHp, xpToNext } from "./level";
+import { levelFromXp, levelProgress, maxHp } from "./level";
 import { settleStreak, weekDays } from "./streak";
 import { studyDate } from "./time";
 
@@ -55,11 +55,13 @@ export function settleOnLoad(save: SaveData, now: Date): { save: SaveData; prote
 
 export function hudState(save: SaveData, now: Date, regionName: string, opts: { maxHpBonus?: number } = {}): HudState {
   const level = levelFromXp(save.player.xp);
+  // HUD는 xp/xpToNext로 막대를 그리므로 지금 레벨 구간 안의 진행도를 넘긴다(누적 XP/남은 XP를 넘기면 1720/108처럼 보였다)
+  const prog = levelProgress(save.player.xp);
   return {
     regionName,
     level,
-    xp: save.player.xp,
-    xpToNext: xpToNext(save.player.xp),
+    xp: prog.current,
+    xpToNext: prog.needed,
     hp: save.player.hp,
     maxHp: maxHp(level, opts.maxHpBonus ?? 0),
     gold: save.player.gold,

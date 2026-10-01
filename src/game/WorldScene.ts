@@ -357,7 +357,7 @@ export class WorldScene extends Phaser.Scene {
     this.held = [];
     this.pendingDir = null;
     this.pendingInteract = false;
-    this.bumpLatch = null;
+    // bumpLatch는 남겨 둔다: 전투에서 후퇴한 뒤 누르고 있던 방향키의 자동 반복으로 같은 몬스터에 다시 붙지 않게
     this.setPhaserKeyboard(enabled && !isEditableElement(document.activeElement));
     // 진행 중인 한 칸은 칸 정렬을 위해 끝까지 가고, 다음 칸은 시작하지 않는다
     if (!enabled && !this.moving) this.setIdleFrames();

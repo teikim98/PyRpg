@@ -23,11 +23,13 @@ async function main(): Promise<void> {
   void requestPersistence();
 
   const app = new App({ content, runner, ui, worldFactory: createWorld, store, bojBaseUrl: null });
-  if (e2e) Object.assign(window, { __pyrpg: { ready: false, app, runner, content, ui, crossOriginIsolated: self.crossOriginIsolated } });
+  // 테스트 훅은 ?e2e일 때만 불러온다(design.md §12.3)
+  const hook = e2e ? (await import("./app/e2e")).createE2eHook(app, { runner, content, ui, store }) : null;
+  if (hook) Object.assign(window, { __pyrpg: hook });
 
   await app.start(gameEl);
   document.getElementById("boot")?.remove();
-  if (e2e) (window as unknown as { __pyrpg: { ready: boolean } }).__pyrpg.ready = true;
+  if (hook) hook.ready = true;
 }
 
 main().catch((e) => {

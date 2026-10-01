@@ -30,20 +30,6 @@ export function maxHint(a: HintLevel, b: HintLevel): HintLevel {
   return (a > b ? a : b) as HintLevel;
 }
 
-/** 각 줄 끝 공백과 마지막 개행 차이를 무시한 출력 비교(design.md §5.5) */
-export function normalizeOutput(s: string): string {
-  return s
-    .replace(/\r\n?/g, "\n")
-    .split("\n")
-    .map((l) => l.replace(/[ \t]+$/, ""))
-    .join("\n")
-    .replace(/\n+$/, "");
-}
-
-export function outputsEqual(actual: string, expected: string): boolean {
-  return normalizeOutput(actual) === normalizeOutput(expected);
-}
-
 export function testPhase(t: ProblemTest): number {
   return t.phase ?? 1;
 }

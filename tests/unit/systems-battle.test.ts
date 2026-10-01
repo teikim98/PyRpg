@@ -265,4 +265,11 @@ describe("progress helpers", () => {
     const hud = hudState(r.save, at("2026-10-02"), "에코 마을");
     expect(hud).toMatchObject({ regionName: "에코 마을", level: 1, xp: 0, xpToNext: xpForLevel(2), maxHp: 100, weekDays: 3, scrolls: 0 });
   });
+  it("HUD의 XP는 지금 레벨 구간 안의 진행도(막대 xp/xpToNext가 0~1)", () => {
+    const s = newSave();
+    s.player.xp = xpForLevel(6) + 10;
+    const hud = hudState(s, NOW, "에코 마을");
+    expect(hud).toMatchObject({ level: 6, xp: 10, xpToNext: xpForLevel(7) - xpForLevel(6) });
+    expect(hud.xp).toBeLessThan(hud.xpToNext);
+  });
 });
