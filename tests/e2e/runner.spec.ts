@@ -114,8 +114,31 @@ test.describe("Python 실행기", () => {
     const slow = byKey["P0105.slow"]!.r;
     console.log("P0105 slow limitMs =", slow.limitMs, "times =", slow.tests.map((t) => t.timeMs.toFixed(1)).join(", "));
     expect(slow.limitMs).toBeLessThan(1000);
+    expect(slow.tests.map((t) => t.verdict)).toEqual(["AC", "AC", "AC", "TLE", "TLE", "AC"]);
     expect(slow.tests[3]!.error?.type).toBe("KeyboardInterrupt");
     expect(slow.tests[3]!.error?.line).toBe(4);
+  });
+
+  test("보스 시간 결계는 budgetUnits가 없어도 TLE 뒤 남은 테스트를 계속 채점한다", async ({ page }) => {
+    test.setTimeout(120_000);
+    await open(page);
+    const r = await page.evaluate(async (): Promise<{ boss: JudgeResult; normal: JudgeResult }> => {
+      const base = W().__fixtures.problems.P0105;
+      const slow = W().__fixtures.answers.P0105.slow.code;
+      // budgetUnits 없음 → 일반 제한(timeLimitMs 150 → 300 ms 이상)을 쓰지만 시간 결계라서 멈추지 않는다
+      const boss = { ...base, budgetUnits: undefined, timeLimitMs: 150 };
+      // 보스가 아니면 일반 제한을 넘긴 뒤 남은 테스트는 같은 판정으로 건너뛴다
+      const normal = { ...base, boss: false, phases: undefined, budgetUnits: undefined, timeLimitMs: 150 };
+      return {
+        boss: await W().__runner.judge(boss, slow, { scope: "all" }),
+        normal: await W().__runner.judge(normal, slow, { scope: "all" }),
+      };
+    });
+    expect(r.boss.tests.map((t) => t.verdict)).toEqual(["AC", "AC", "AC", "TLE", "TLE", "AC"]);
+    expect(r.boss.tests[5]!.timeMs).toBeGreaterThan(0);
+    expect(r.normal.tests.map((t) => t.verdict)).toEqual(["AC", "AC", "AC", "TLE", "TLE", "TLE"]);
+    // 건너뛴 테스트는 실행하지 않았다
+    expect(r.normal.tests[4]!.timeMs).toBe(0);
   });
 
   test("scope public과 phase 필터, onProgress", async ({ page }) => {
@@ -169,7 +192,7 @@ test.describe("Python 실행기", () => {
     expect(r.stdout).toBe("한글 출력\n");
     expect(r.error).toBeUndefined();
     const exp = await page.evaluate(
-      (e) => W().__python.explainError(e, [{ exception: "TypeError", text: "기본" }, { exception: "TypeError", pattern: "unsupported operand", text: "구체" }]),
+      (e) => W().__python.explainError(e, [{ exception: "TypeError", pattern: "unsupported operand", text: "구체" }, { exception: "TypeError", text: "기본" }]),
       { type: "TypeError", message: "unsupported operand type(s) for +: 'int' and 'str'", line: 3, traceback: "" },
     );
     expect(exp).toBe("3번째 줄: 구체");

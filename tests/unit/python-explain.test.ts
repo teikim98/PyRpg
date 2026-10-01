@@ -5,10 +5,11 @@ import { explainError, isFatalError, pickRule } from "../../src/python/explain";
 import { FATAL_MESSAGE } from "../../src/python/protocol";
 import { fatalError } from "../../src/python/runner";
 
+// content/companion/traceback.json처럼 예외마다 패턴 규칙을 기본 규칙보다 앞에 둔다
 const rules: TracebackRule[] = [
-  { exception: "TypeError", text: "타입 기본" },
   { exception: "TypeError", pattern: "can only concatenate str \\(not \"int\"\\) to str", text: "문자열+숫자" },
   { exception: "TypeError", pattern: "can't multiply sequence", text: "문자열×문자열" },
+  { exception: "TypeError", text: "타입 기본" },
   { exception: "NameError", text: "이름 기본" },
   { exception: "ValueError", pattern: "invalid literal for int", text: "int 변환 실패" },
   { exception: "RecursionError", text: "재귀 기본" },
@@ -33,6 +34,20 @@ describe("pickRule", () => {
   });
   it("기본 규칙이 없고 패턴도 안 맞으면 없음", () => {
     expect(pickRule(err("ValueError", "math domain error"), rules)).toBeUndefined();
+  });
+  it("배열 순서대로 처음 맞는 규칙(기본 규칙이 앞에 있으면 기본 규칙)", () => {
+    const defaultFirst: TracebackRule[] = [
+      { exception: "TypeError", text: "기본" },
+      { exception: "TypeError", pattern: "can't multiply", text: "구체" },
+    ];
+    expect(pickRule(err("TypeError", "can't multiply sequence by non-int of type 'str'"), defaultFirst)?.text).toBe("기본");
+    // 패턴 규칙끼리도 앞의 것이 이긴다
+    const two: TracebackRule[] = [
+      { exception: "TypeError", pattern: "unsupported operand type\\(s\\) for .*'str'", text: "str" },
+      { exception: "TypeError", pattern: "unsupported operand type", text: "일반" },
+    ];
+    expect(pickRule(err("TypeError", "unsupported operand type(s) for +: 'int' and 'str'"), two)?.text).toBe("str");
+    expect(pickRule(err("TypeError", "unsupported operand type(s) for +: 'int' and 'list'"), two)?.text).toBe("일반");
   });
   it("잘못된 정규식은 무시", () => {
     const bad: TracebackRule[] = [{ exception: "KeyError", pattern: "(", text: "x" }];
@@ -75,5 +90,8 @@ describe("explainError", () => {
     // fatal 전용 패턴 규칙이 있으면 그것을 쓴다
     const withFatal: TracebackRule[] = [...rules, { exception: "RecursionError", pattern: "Pyodide", text: "전용" }];
     expect(explainError(fatal, withFatal)).toBe("전용");
+    // 맞지 않는 패턴 규칙만 있으면 내장 fatal 해설(기본 규칙이 아님)
+    const noMatch: TracebackRule[] = [...rules, { exception: "RecursionError", pattern: "^xyz", text: "x" }];
+    expect(explainError(fatal, noMatch)).toContain("dict 메모");
   });
 });

@@ -73,6 +73,14 @@ export function usesBudget(problem: Problem, test: ProblemTest): boolean {
   return hasPhases ? testPhase(test) >= 2 : true;
 }
 
+/**
+ * 보스의 시간 결계 테스트인지(2페이즈 이상, §5.3). budgetUnits가 없어도 그렇다.
+ * 시간 결계에서 TLE가 나도 다음 테스트는 계속 채점한다(작은 입력은 통과할 수 있으므로).
+ */
+export function isTimeBarrier(problem: Problem, test: ProblemTest): boolean {
+  return problem.boss && testPhase(test) >= 2;
+}
+
 export function testLimitMs(problem: Problem, test: ProblemTest, refMs: number): number {
   return usesBudget(problem, test)
     ? budgetLimitMs(problem.budgetUnits!, refMs)

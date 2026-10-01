@@ -82,8 +82,8 @@ export const SAMPLE_PROBLEMS: Record<string, Problem> = {
     ]),
     "a, b = map(int, input().split())\nprint(a + b)\n",
     [
-      { when: { outputMatches: "\\.0$" }, text: DIAG.floatDot },
-      { when: { outputMatches: "^\\d+$", verdict: "WA" }, text: DIAG.concat },
+      { when: { outputMatches: "\\.0\\s*$" }, text: DIAG.floatDot },
+      { when: { outputMatches: "^\\d+\\s*$", verdict: "WA" }, text: DIAG.concat },
     ],
   ),
   P0102: problem(
@@ -134,7 +134,7 @@ export const SAMPLE_PROBLEMS: Record<string, Problem> = {
     "import sys\ninput = sys.stdin.readline\ns = input().strip()\nn = int(input())\nprint(s * n)\n",
     [
       { when: { exception: "TypeError", messageMatches: "can't multiply sequence" }, text: DIAG.strTimes },
-      { when: { outputMatches: "\\n.", verdict: "WA" }, text: DIAG.newline },
+      { when: { outputMatches: "\\n[\\s\\S]*\\S", verdict: "WA" }, text: DIAG.newline },
     ],
   ),
   P0105: problem(
@@ -155,7 +155,7 @@ export const SAMPLE_PROBLEMS: Record<string, Problem> = {
     "a, b = map(int, input().split())\nprint((a + b) * (b - a + 1) // 2)\n",
     [
       { when: { verdict: "TLE" }, text: DIAG.tle },
-      { when: { outputMatches: "\\.0$|e\\+" }, text: DIAG.floatDot },
+      { when: { outputMatches: "\\.0\\s*$|e\\+" }, text: DIAG.floatDot },
       { when: { onlyHiddenFail: true }, text: DIAG.precision },
     ],
     {

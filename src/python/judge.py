@@ -136,9 +136,14 @@ def _exec_user(code, extra=None):
     return status, error, g, elapsed
 
 
+# 줄 끝에서 무시하는 공백(ASCII). str.rstrip()의 기본값은 유니코드 공백·\x1c~\x1f까지 지워서 JS와 달라지므로 명시한다
+LINE_END_SPACE = " \t\r\f\v"
+
+
 def normalize_output(s):
-    """각 줄 끝 공백과 마지막 개행(빈 줄) 차이를 무시한다(§5.5). src/python/compare.ts와 같은 규칙."""
-    lines = [line.rstrip() for line in s.replace("\r\n", "\n").split("\n")]
+    """각 줄 끝 공백과 마지막 개행(빈 줄) 차이를 무시한다(§5.5).
+    src/python/compare.ts normalizeOutput, tools/verify_content.py norm과 같은 규칙(tests/unit/python-parity.test.ts)."""
+    lines = [line.rstrip(LINE_END_SPACE) for line in s.replace("\r\n", "\n").split("\n")]
     while lines and lines[-1] == "":
         lines.pop()
     return "\n".join(lines)

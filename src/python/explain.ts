@@ -40,20 +40,27 @@ function safeTest(pattern: string, text: string): boolean {
   }
 }
 
-/** 예외 이름이 같은 규칙 중 메시지 패턴이 맞는 규칙 > 패턴 없는 기본 규칙 순으로 고른다 */
+function hasPattern(r: TracebackRule): r is TracebackRule & { pattern: string } {
+  return r.pattern !== undefined && r.pattern !== "";
+}
+
+/**
+ * 예외 이름이 같고 (패턴이 없거나 메시지에 패턴이 맞는) 규칙 중 **배열에서 처음** 것을 고른다.
+ * content/companion/traceback.json은 예외마다 구체적인 패턴 규칙을 기본 규칙보다 앞에 둔다.
+ * tools/verify_content.py의 check_companion()과 같은 규칙이다.
+ */
 export function pickRule(error: PyError, rules: TracebackRule[]): TracebackRule | undefined {
-  const same = rules.filter((r) => r.exception === error.type);
-  const specific = same.find((r) => r.pattern !== undefined && r.pattern !== "" && safeTest(r.pattern, error.message));
-  if (specific) return specific;
-  return same.find((r) => r.pattern === undefined || r.pattern === "");
+  return rules.find((r) => r.exception === error.type && (!hasPattern(r) || safeTest(r.pattern, error.message)));
 }
 
 function bodyText(error: PyError, rules: TracebackRule[]): string {
-  const fatal = error.message === FATAL_MESSAGE;
+  if (error.message === FATAL_MESSAGE) {
+    // fatal(브라우저 스택 초과)은 일반 RecursionError 기본 규칙보다 전용 해설이 낫다.
+    // 메시지에 맞는 패턴 규칙이 있으면 그것을 쓴다
+    const specific = rules.find((r) => r.exception === error.type && hasPattern(r) && safeTest(r.pattern, error.message));
+    return specific ? specific.text : FATAL_TEXT;
+  }
   const rule = pickRule(error, rules);
-  // fatal은 일반 RecursionError 기본 규칙보다 전용 해설이 낫다(패턴 규칙이 있으면 그것을 쓴다)
-  if (rule && (!fatal || (rule.pattern !== undefined && rule.pattern !== ""))) return rule.text;
-  if (fatal) return FATAL_TEXT;
   if (rule) return rule.text;
   const builtin = BUILTIN[error.type];
   if (builtin) return builtin;

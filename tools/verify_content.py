@@ -123,7 +123,9 @@ except SystemExit as e:
     if e.code not in (None, 0):
         res = {"ok": False, "type": "SystemExit", "message": str(e.code)}
 except BaseException as e:
-    res = {"ok": False, "type": type(e).__name__, "message": str(e)}
+    # 메시지는 게임 채점기(src/python/judge.py _error_info)와 같게: SyntaxError는 e.msg, 나머지는 str(e)
+    msg = (e.msg or "") if isinstance(e, SyntaxError) else str(e)
+    res = {"ok": False, "type": type(e).__name__, "message": msg}
 sys.stdout.flush()
 with open(result_path, "w", encoding="utf-8") as f:
     json.dump(res, f)
@@ -149,27 +151,68 @@ class Report:
             print(f"  {msg}")
 
 
+LINE_END_SPACE = " \t\r\f\v"
+
+
 def norm(s):
-    return "\n".join(line.rstrip() for line in s.rstrip("\n").split("\n"))
+    """게임 채점기(src/python/judge.py normalize_output, src/python/compare.ts)와 같은 출력 정규화(§5.5):
+    \r\n → \n, 각 줄 끝의 ASCII 공백 제거, 끝의 빈 줄 제거. (공백만 있는 마지막 줄도 빈 줄로 본다)"""
+    lines = [line.rstrip(LINE_END_SPACE) for line in s.replace("\r\n", "\n").split("\n")]
+    while lines and lines[-1] == "":
+        lines.pop()
+    return "\n".join(lines)
+
+
+# JS의 \s(플래그 없음)가 맞는 문자(ECMAScript WhiteSpace + LineTerminator). Python의 \s와 범위가 다르다
+JS_SPACE = r"\t\n\x0b\x0c\r \xa0  -     　﻿"
 
 
 def js_regex(pattern):
-    """JS 정규식(플래그 없음)과 같게 동작하도록 고친 Python 정규식. JS의 $는 문자열 끝에서만 맞는다."""
-    out, i = [], 0
+    """JS 정규식(플래그 없음, new RegExp(pattern).test)과 같게 동작하도록 고친 Python 정규식.
+
+    게임(src/python/diagnose.ts, explain.ts)은 브라우저의 JS 정규식으로 규칙을 맞춰 보므로 검증도 같은 뜻이어야 한다.
+    - $: JS는 문자열 맨 끝에서만 맞는다(Python의 $는 마지막 개행 앞에서도 맞는다) → \\Z
+    - .: JS는 \\n, \\r, \\u2028, \\u2029를 넘지 않는다(Python은 \\n만)
+    - \\s, \\S: JS의 공백 집합으로 바꾼다(Python은 \\x1c~\\x1f도 공백으로 본다)
+    - \\d, \\w, \\b: JS는 ASCII만 본다 → re.ASCII(한글은 \\w가 아니다)
+    """
+    out, i, in_class = [], 0, False
     while i < len(pattern):
         c = pattern[i]
         if c == "\\" and i + 1 < len(pattern):
-            out.append(pattern[i:i + 2])
+            e = pattern[i + 1]
+            if e == "s":
+                out.append(JS_SPACE if in_class else f"[{JS_SPACE}]")
+            elif e == "S" and not in_class:
+                out.append(f"[^{JS_SPACE}]")
+            else:
+                out.append(pattern[i:i + 2])
             i += 2
             continue
-        out.append(r"(?!\n)\Z" if c == "$" else c)
+        if in_class:
+            if c == "]":
+                in_class = False
+            out.append(c)
+        elif c == "[":
+            in_class = True
+            out.append(c)
+            # [^ 다음의 ]는 Python에서 글자 ]로 읽힌다. JS와 뜻이 다른 []·[^]는 check_regex가 막는다
+            if pattern.startswith("^", i + 1):
+                out.append("^")
+                i += 1
+        elif c == "$":
+            out.append(r"\Z")
+        elif c == ".":
+            out.append(r"[^\n\r  ]")
+        else:
+            out.append(c)
         i += 1
-    return re.compile("".join(out))
+    return re.compile("".join(out), re.ASCII)
 
 
 def check_regex(rep, where, pattern):
     """Python과 JS 양쪽에서 같은 뜻인 정규식만 허용한다."""
-    for bad in ("(?P", "(?<=", "(?<!", "\\A", "\\Z", "(?i", "(?s", "(?m", "(?x"):
+    for bad in ("(?P", "(?<", "\\A", "\\Z", "(?i", "(?s", "(?m", "(?x", "(?a", "(?u", "(?L", "[]", "[^]", "\\u{"):
         if bad in pattern:
             rep.error(where, f"JS와 호환되지 않는 정규식 문법 {bad!r}: {pattern}")
             return None
@@ -379,13 +422,16 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
         return [j.result() for j in jobs]
 
     def diagnose(results):
-        """design.md §5.3 오답 진단을 흉내 낸다: 첫 실패 테스트에 대해 규칙을 순서대로 보고 처음 맞는 것"""
+        """design.md §5.3 오답 진단. src/python/diagnose.ts와 같은 의미:
+        첫 실패 테스트에 대해 규칙을 배열 순서대로 보고 처음 맞는 것. when의 조건은 모두 맞아야 한다.
+        outputMatches는 가공하지 않은 actual(stdout 그대로, 함수형은 repr)에 JS 정규식 의미(js_regex)로 적용한다."""
         fails = [i for i, r in enumerate(results) if r["verdict"] != "AC"]
         if not fails:
             return None
         first = results[fails[0]]
-        only_hidden = all(results[i]["verdict"] == "AC" for i, t in enumerate(tests) if t.get("public")) and \
-            any(not tests[i].get("public") for i in fails)
+        # 공개 테스트를 모두 통과했고 첫 실패가 숨김 테스트
+        only_hidden = not tests[fails[0]].get("public") and \
+            all(results[i]["verdict"] == "AC" for i, t in enumerate(tests) if t.get("public"))
         for idx, (owner, c) in enumerate(compiled):
             if c is None:
                 continue

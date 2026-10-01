@@ -14,6 +14,7 @@ import {
   REFERENCE_RUNS,
   budgetLimitMs,
   generalLimitMs,
+  isTimeBarrier,
   isReferenceStale,
   referenceFromSamples,
   testLimitMs,
@@ -410,8 +411,9 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
             actual: one.reply?.actual ?? "",
             error: tleError(one.reply),
           };
-          // 일반 제한(넉넉함)을 넘긴 코드는 남은 테스트도 넘길 것이므로 건너뛴다
-          if (!budget) stopVerdict = "TLE";
+          // 일반 제한(넉넉함)을 넘긴 코드는 남은 테스트도 넘길 것이므로 건너뛴다.
+          // 보스 시간 결계는 테스트마다 입력 크기가 달라서(작은 입력은 통과 가능) 계속 채점한다
+          if (!budget && !isTimeBarrier(problem, t)) stopVerdict = "TLE";
         } else if (one.internalError || !one.reply) {
           result = {
             ...base,

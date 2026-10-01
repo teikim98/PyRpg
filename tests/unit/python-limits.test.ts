@@ -8,6 +8,7 @@ import {
   deviceFactor,
   generalLimitMs,
   isReferenceStale,
+  isTimeBarrier,
   median,
   referenceFromSamples,
   testLimitMs,
@@ -62,6 +63,23 @@ describe("시간 제한", () => {
     expect(usesBudget(p, p.tests[0]!)).toBe(false);
     const q: Problem = { ...p, budgetUnits: 3 };
     expect(usesBudget(q, q.tests[0]!)).toBe(true);
+  });
+});
+
+describe("시간 결계(isTimeBarrier)", () => {
+  it("보스의 2페이즈 이상 테스트만, budgetUnits가 없어도", () => {
+    const p = SAMPLE_PROBLEMS.P0105!;
+    expect(p.tests.map((t) => isTimeBarrier(p, t))).toEqual([false, false, false, true, true, true]);
+    const noBudget: Problem = { ...p, budgetUnits: undefined };
+    expect(noBudget.tests.map((t) => isTimeBarrier(noBudget, t))).toEqual([false, false, false, true, true, true]);
+    // 시간 결계지만 budgetUnits가 없으면 제한은 일반 제한
+    expect(usesBudget(noBudget, noBudget.tests[3]!)).toBe(false);
+  });
+  it("보스가 아니면 시간 결계 없음", () => {
+    const p = SAMPLE_PROBLEMS.P0101!;
+    expect(p.tests.some((t) => isTimeBarrier(p, t))).toBe(false);
+    const q: Problem = { ...p, tests: p.tests.map((t) => ({ ...t, phase: 2 })) };
+    expect(q.tests.some((t) => isTimeBarrier(q, t))).toBe(false);
   });
 });
 

@@ -40,9 +40,20 @@ describe("diagnoseResult", () => {
     expect(diagnoseResult(P0101, jr([tr(0, "AC", "3\n")]))).toBeUndefined();
   });
 
-  it("outputMatches는 정규화한 출력(마지막 개행 제거)에 적용", () => {
+  it("outputMatches는 가공하지 않은 stdout에 플래그 없는 JS 정규식으로 적용(규칙이 \\s*$로 끝 개행 허용)", () => {
     expect(diagnoseResult(P0101, jr([tr(0, "WA", "12\n")]))).toBe(DIAG.concat);
     expect(diagnoseResult(P0101, jr([tr(0, "WA", "3.0  \n\n")]))).toBe(DIAG.floatDot);
+    const fail = tr(0, "WA", "12\n");
+    // 정규화하지 않으므로 $ 앞의 개행을 규칙이 허용하지 않으면 맞지 않는다(Python re의 $와 다름)
+    expect(ruleMatches({ when: { outputMatches: "^\\d+$" }, text: "" }, P0101, jr([fail]), fail)).toBe(false);
+    expect(ruleMatches({ when: { outputMatches: "^\\d+\\s*$" }, text: "" }, P0101, jr([fail]), fail)).toBe(true);
+    // 줄 끝 공백도 그대로 남아 있다
+    const sp = tr(0, "WA", "1 2 \n");
+    expect(ruleMatches({ when: { outputMatches: "2 \\n$" }, text: "" }, P0101, jr([sp]), sp)).toBe(true);
+    // 플래그 없음: ^는 문자열 처음에서만, .은 개행을 넘지 않는다
+    const two = tr(0, "WA", "a\nb\n");
+    expect(ruleMatches({ when: { outputMatches: "^b" }, text: "" }, P0101, jr([two]), two)).toBe(false);
+    expect(ruleMatches({ when: { outputMatches: "a.b" }, text: "" }, P0101, jr([two]), two)).toBe(false);
   });
 
   it("첫 실패 테스트 기준", () => {
@@ -55,6 +66,29 @@ describe("diagnoseResult", () => {
     expect(diagnoseResult(P0102, hidden)).toBe(DIAG.precision);
     const publicFail = jr([tr(0, "WA", "3 2\n")]);
     expect(diagnoseResult(P0102, publicFail)).toBeUndefined();
+    // 공개 테스트가 하나라도 실패하면(첫 실패가 숨김이어도) 아님
+    const mixed = jr([tr(0, "AC", "3 1\n"), tr(1, "WA", "x", { public: false }), tr(2, "WA", "y", { public: true })]);
+    expect(diagnoseResult(P0102, mixed)).toBeUndefined();
+  });
+
+  it("onlyHiddenFail: false는 공개 테스트에서 실패할 때 맞는다(verify_content.py와 같은 의미)", () => {
+    const rule: DiagnosisRule = { when: { onlyHiddenFail: false }, text: "공개" };
+    const pub = tr(0, "WA", "x");
+    expect(ruleMatches(rule, P0101, jr([pub]), pub)).toBe(true);
+    const hid = tr(1, "WA", "x", { public: false });
+    const r = jr([tr(0, "AC", "3\n"), hid]);
+    expect(ruleMatches(rule, P0101, r, hid)).toBe(false);
+  });
+
+  it("규칙은 배열 순서대로, 처음 맞는 것", () => {
+    const p: Problem = {
+      ...P0101,
+      diagnoses: [
+        { when: { verdict: "WA" }, text: "먼저" },
+        { when: { verdict: "WA", outputMatches: "12" }, text: "나중" },
+      ],
+    };
+    expect(diagnoseResult(p, jr([tr(0, "WA", "12\n")]))).toBe("먼저");
   });
 
   it("exception + messageMatches", () => {
