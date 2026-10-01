@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PyRpg 저장 테스트</title>
+  </head>
+  <body>
+    <!-- 단위 7 저장 계층 확인용(E2E: tests/e2e/state.spec.ts). IndexedDB·내보내기·불러오기를 실제 브라우저에서 돌린다 -->
+    <pre id="out">loading…</pre>
+    <script type="module">
+      import { SaveStore, createNewSave, exportSave, importSave, requestPersistence, createAutosaver } from "/src/state/index.ts";
+      import { applyBattleOutcome } from "/src/systems/index.ts";
+
+      const store = new SaveStore();
+      const harness = {
+        newSave: () => createNewSave(new Date(), { spawn: { x: 3, y: 4 } }),
+        win(save) {
+          const problem = {
+            id: "P0101", regionId: "r01", title: "t", kind: "stdin", enemy: { name: "e", sprite: "s", attack: 10 },
+            requires: [], boss: false, concept: "S1-io", timeLimitMs: 1000, estimatedMinutes: 1, tests: [], statement: "",
+            starter: "", solution: "", explanation: "", hints: ["a", "b", "c"], diagnoses: [], reward: { xp: 100, gold: 50 },
+          };
+          const outcome = { problemId: "P0101", result: "victory", attempts: 1, maxHintLevel: 2, solutionViewed: false, finalCode: "print(3)", hpLeft: 80, elapsedMs: 1 };
+          return applyBattleOutcome(save, problem, outcome, new Date()).save;
+        },
+        load: () => store.load(),
+        save: (d) => store.save(d),
+        clear: () => store.clear(),
+        exportSave: (d) => exportSave(d),
+        importSave: (t) => importSave(t),
+        persist: () => requestPersistence(),
+        async autosaveFlush(d) {
+          const a = createAutosaver(store, { delayMs: 10_000 });
+          a.schedule(d);
+          await a.flush();
+        },
+        async putRaw(v) {
+          await store.clear(); // DB와 store를 먼저 만든다
+          const req = indexedDB.open("pyrpg", 1);
+          const db = await new Promise((res, rej) => ((req.onsuccess = () => res(req.result)), (req.onerror = () => rej(req.error))));
+          await new Promise((res, rej) => {
+            const tx = db.transaction("saves", "readwrite");
+            tx.objectStore("saves").put(v, "slot1");
+            tx.oncomplete = res;
+            tx.onerror = () => rej(tx.error);
+          });
+          db.close();
+        },
+        async loadError() {
+          try {
+            await store.load();
+            return null;
+          } catch (e) {
+            return { name: e.name, code: e.code, issues: e.issues };
+          }
+        },
+      };
+      window.__stateHarness = harness;
+      document.getElementById("out").textContent = "ready";
+    </script>
+  </body>
+</html>
