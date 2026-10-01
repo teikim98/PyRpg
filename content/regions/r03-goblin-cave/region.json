@@ -1,0 +1,15 @@
+{
+  "id": "r03",
+  "order": 3,
+  "name": "고블린 동굴",
+  "introDialogue": "region_intro",
+  "clearDialogue": "region_clear",
+  "recommended": [
+    { "site": "programmers", "id": 42748, "title": "K번째수", "level": "Lv.1" },
+    { "site": "programmers", "id": 68644, "title": "두 개 뽑아서 더하기", "level": "Lv.1" },
+    { "site": "programmers", "id": 12949, "title": "행렬의 곱셈", "level": "Lv.2" },
+    { "site": "boj", "id": 5597, "title": "과제 안 내신 분..?", "level": "B3" },
+    { "site": "boj", "id": 20053, "title": "최소, 최대 2", "level": "B3" },
+    { "site": "boj", "id": 10798, "title": "세로읽기", "level": "B1" }
+  ]
+}

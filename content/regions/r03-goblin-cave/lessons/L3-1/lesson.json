@@ -1,0 +1,16 @@
+{
+  "id": "L3-1",
+  "title": "줄 세우기의 주문: 리스트",
+  "scroll": {
+    "id": "scroll.list",
+    "name": "줄 세우기의 주문서",
+    "summary": "`[값, 값, ...]`으로 리스트를 만든다. 칸 번호는 0부터 `len(arr) - 1`까지, 음수 `arr[-1]`은 맨 끝. `x in arr`로 찾기. 한 줄 입력은 `list(map(int, input().split()))`, 출력은 `print(*arr)`."
+  },
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 칸 번호를 채워서 `arr`의 맨 끝 값 `40`이 출력되게 해 봐. 길이를 몰라도 되는 번호로!",
+    "code": "arr = [10, 20, 30, 40]\nprint(arr[___])\n",
+    "expectedOutput": "40\n",
+    "answer": "-1"
+  }
+}

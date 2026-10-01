@@ -16,7 +16,9 @@ export type WorkerRequest =
       /** Problem.compare를 JSON 문자열로. 없으면 "" */
       compare: string;
     }
-  | { id: number; type: "reference"; runs: number };
+  | { id: number; type: "reference"; runs: number }
+  /** 큰 입력 생성기 실행(design.md §11.1). 시간을 재지 않는다 */
+  | { id: number; type: "generate"; code: string; arg: string };
 
 export interface RunReply {
   stdout: string;
@@ -43,6 +45,7 @@ export type WorkerResponse =
   | { id: number; ok: true; type: "run"; result: RunReply }
   | { id: number; ok: true; type: "test"; result: TestReply }
   | { id: number; ok: true; type: "reference"; times: number[] }
+  | { id: number; ok: true; type: "generate"; input: string; output: string }
   /** fatal이면 워커를 버려야 한다 */
   | { id: number; ok: false; fatal: boolean; message: string };
 

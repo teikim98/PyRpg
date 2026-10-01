@@ -19,7 +19,12 @@ const REGIONS = readdirSync(resolve("content/regions"))
   .filter((r) => !ONLY || ONLY.includes(r.id));
 
 /** 비효율 답안의 반복 1회 비용을 어림할 입력(반복 10^6회). 보스마다 입력 형식이 다르다 */
-const SLOW_PROBE_STDIN: Record<string, string> = { P0105: "1 1000000\n", P0210: "1000000\n" };
+const SLOW_PROBE_STDIN: Record<string, string> = {
+  P0105: "1 1000000\n",
+  P0210: "1000000\n",
+  // max(arr[:i+1])를 N번: 1 + 2 + … + 1414 ≈ 10^6
+  P0311: `1414\n${Array.from({ length: 1414 }, (_, i) => (i * 37) % 1999 - 999).join(" ")}\n`,
+};
 
 /** 시간 결계 보정 기준(§9.6 2단계): 제한은 모범답안의 3배 이상, 비효율 답안은 제한의 3배 이상 */
 const BUDGET_HEADROOM = 3;
@@ -345,7 +350,9 @@ for (const region of REGIONS) {
           const generous: { index: number; timedOut: boolean; ms: number }[] = [];
           for (const idx of slowTle) {
             const t0 = performance.now();
-            const r = await W.__runner.run({ code: slowCode, stdin: p.tests[idx].in, timeoutMs: Math.ceil(limitMs * headroom) });
+            // 생성기(gen) 테스트는 실행기가 만든 실제 입력을 쓴다(design.md §11.1)
+            const stdin = (await W.__runner.testData(p, idx)).in;
+            const r = await W.__runner.run({ code: slowCode, stdin, timeoutMs: Math.ceil(limitMs * headroom) });
             generous.push({ index: idx, timedOut: r.timedOut, ms: performance.now() - t0 });
           }
           // 비효율 답안의 반복 1회 비용으로 실제 입력 시간을 어림한다(10^6회 실행)

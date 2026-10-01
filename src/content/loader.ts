@@ -13,6 +13,7 @@ import type {
   ProblemKind,
   ProblemTest,
   RecommendedProblem,
+  StdinTest,
   Region,
   Scroll,
   BlankExercise,
@@ -32,6 +33,9 @@ export interface VariantFile {
   tests: ProblemTest[];
 }
 
+/** problem.json의 테스트 항목. 큰 입력은 in/out 대신 생성기 파일 이름(gen)과 인자(genArg)를 적는다(design.md §11.1) */
+export type ProblemTestFile = ProblemTest | (Omit<StdinTest, "in" | "out" | "gen"> & { gen: string; genArg?: string });
+
 /** problem.json의 파일 형식. 코드·본문은 옆의 .py/.md 파일에 있다 */
 export interface ProblemFile {
   id: string;
@@ -49,7 +53,7 @@ export interface ProblemFile {
   /** 함수형 비교 옵션 */
   compare?: ProblemCompare;
   estimatedMinutes: number;
-  tests: ProblemTest[];
+  tests: ProblemTestFile[];
   /** 정답으로 인정해야 하는 다른 답안(검증용, 예: 튜플 반환). 게임에는 담지 않는다 */
   accepted?: { file: string; title?: string }[];
   /** 오답 예시(검증용). diagnosis는 problem.diagnoses로 옮긴다 */
@@ -156,7 +160,7 @@ function buildProblem(src: ContentSources, regionDir: string, regionId: string, 
     concept: p.concept,
     timeLimitMs: p.timeLimitMs,
     estimatedMinutes: p.estimatedMinutes,
-    tests: p.tests,
+    tests: p.tests.map((t, i) => buildTest(src, base, p.kind, t, i)),
     statement: need(src.text[`${base}statement.md`], base, "statement.md"),
     starter: src.text[`${base}starter.py`] ?? "",
     solution: need(src.text[`${base}solution.py`], base, "solution.py"),
@@ -173,6 +177,19 @@ function buildProblem(src: ContentSources, regionDir: string, regionId: string, 
   if (p.targetComplexity) problem.targetComplexity = p.targetComplexity;
   if (p.variants?.length) problem.variants = p.variants.map((v) => buildVariant(src, base, v));
   return problem;
+}
+
+/** 생성기 테스트(gen)는 파일 내용을 담고 in/out을 빈 문자열로 둔다. 실행기가 채점 직전에 만든다 */
+function buildTest(src: ContentSources, base: string, kind: ProblemKind, t: ProblemTestFile, i: number): ProblemTest {
+  const gen = (t as { gen?: unknown }).gen;
+  if (gen === undefined) return t as ProblemTest;
+  const where = `${base}problem.json 테스트 #${i + 1}`;
+  if (kind !== "stdin") throw new ContentError(where, "gen은 stdin형 문제에만");
+  if (typeof gen !== "string" || !/^[A-Za-z0-9_]+\.py$/.test(gen)) throw new ContentError(where, `gen 파일 이름 형식 오류: ${String(gen)}`);
+  if (t.public) throw new ContentError(where, "gen 테스트는 숨김 테스트만");
+  const { genArg, ...rest } = t as Omit<StdinTest, "in" | "out" | "gen"> & { gen: string; genArg?: string };
+  const code = need(src.text[`${base}${gen}`], where, gen);
+  return { ...rest, in: "", out: "", gen: { file: gen, code, arg: genArg ?? "" } };
 }
 
 function buildVariant(src: ContentSources, base: string, v: VariantFile): ProblemVariant {

@@ -282,3 +282,14 @@ def reference(runs):
         _reference_body()
         times.append((time.perf_counter() - start) * 1000.0)
     return json.dumps(times)
+
+
+def generate_test(code, arg):
+    """큰 입력 생성기(design.md §11.1)를 실행해서 {"in", "out"} JSON을 돌려준다. 콘텐츠 파일이라 사용자 코드가 아니다.
+    tools/verify_content.py generate_test와 같은 규칙: 새 globals에서 실행하고, generate(arg)가 (입력, 출력) 문자열 튜플을 돌려준다."""
+    g = {"__name__": "pyrpg_gen", "__builtins__": builtins}
+    exec(compile(code, "<gen>", "exec", dont_inherit=True), g)
+    result = g["generate"](arg)
+    if not (isinstance(result, tuple) and len(result) == 2 and all(isinstance(x, str) for x in result)):
+        raise TypeError("generate(arg)는 (입력, 출력) 문자열 튜플을 돌려줘야 함")
+    return json.dumps({"in": result[0], "out": result[1]}, ensure_ascii=False)

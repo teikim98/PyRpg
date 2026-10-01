@@ -51,7 +51,12 @@ export interface PythonRunnerHandle extends PythonRunner {
   restarts(): number;
   /** 기준 루프를 다시 잰다 */
   remeasure(): Promise<number>;
+  /** 테스트의 실제 입력·기대 출력. 생성기(gen) 테스트는 만들어서(캐시) 돌려준다(E2E 보정용) */
+  testData(problem: Problem, index: number): Promise<{ in: string; out: string }>;
 }
+
+/** 생성기 실행 제한(ms). 사용자 코드가 아니라 시간을 재지 않는다 */
+const GENERATE_TIMEOUT_MS = 60_000;
 
 type RequestBody = WorkerRequest extends infer R ? (R extends { id: number } ? Omit<R, "id"> : never) : never;
 
@@ -331,6 +336,31 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
     return out;
   }
 
+  /** 생성기 테스트의 결과 캐시(테스트 객체 → 입력·출력). 같은 콘텐츠 객체를 다시 채점하면 재사용한다 */
+  const generated = new WeakMap<StdinTest, { in: string; out: string }>();
+
+  /** 테스트의 실제 stdin·기대 출력. gen이 있으면 워커에서 생성기를 실행한다(design.md §11.1) */
+  async function stdinData(t: StdinTest): Promise<{ in: string; out: string }> {
+    if (!t.gen) return { in: t.in, out: t.out };
+    const hit = generated.get(t);
+    if (hit) return hit;
+    const h = await ensureWorker();
+    let res: WorkerResponse;
+    try {
+      res = await h.request({ type: "generate", code: t.gen.code, arg: t.gen.arg }, GENERATE_TIMEOUT_MS);
+    } catch (e) {
+      killWorker(h);
+      throw e;
+    }
+    if (!res.ok || res.type !== "generate") {
+      if (!res.ok && res.fatal) killWorker(h);
+      throw new Error(`테스트 생성 실패(${t.gen.file}): ${res.ok ? res.type : res.message}`);
+    }
+    const data = { in: res.input, out: res.output };
+    generated.set(t, data);
+    return data;
+  }
+
   interface OneTest {
     reply?: TestReply;
     exceeded: boolean;
@@ -341,8 +371,16 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
   }
 
   async function runOneTest(problem: Problem, code: string, t: ProblemTest, limit: number): Promise<OneTest> {
-    const body: RequestBody = isStdinTest(t)
-      ? { type: "stdinTest", code, stdin: t.in, expected: t.out }
+    let data: { in: string; out: string } | undefined;
+    if (isStdinTest(t)) {
+      try {
+        data = await stdinData(t);
+      } catch (e) {
+        return { exceeded: false, fatal: false, internalError: String(e), timeMs: 0 };
+      }
+    }
+    const body: RequestBody = data
+      ? { type: "stdinTest", code, stdin: data.in, expected: data.out }
       : {
           type: "functionTest",
           code,
@@ -389,7 +427,8 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
         index,
         public: t.public === true,
         phase: testPhase(t),
-        input: isStdinTest(t) ? t.in : (t as FunctionTest).args,
+        // 생성기 테스트는 입력이 커서 사람이 읽을 설명만 둔다
+        input: isStdinTest(t) ? (t.gen ? `(큰 입력: ${t.note ?? t.gen.file})` : t.in) : (t as FunctionTest).args,
         expected: isStdinTest(t) ? t.out : (t as FunctionTest).expect,
       };
       let result: TestResult;
@@ -467,6 +506,13 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
     softStop: () => interruptView !== undefined,
     restarts: () => restartCount,
     remeasure: () => exclusive(measureReference),
+    testData: (problem, index) =>
+      exclusive(async () => {
+        const t = problem.tests[index];
+        if (!t || !isStdinTest(t)) throw new Error(`stdin 테스트가 아님: ${problem.id} #${index + 1}`);
+        await initInner();
+        return stdinData(t);
+      }),
     dispose: () => {
       disposed = true;
       if (typeof document !== "undefined") document.removeEventListener("visibilitychange", onVisibility);

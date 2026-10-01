@@ -1,0 +1,16 @@
+{
+  "id": "L3-2",
+  "title": "자르기의 주문: 슬라이싱",
+  "scroll": {
+    "id": "scroll.slice",
+    "name": "자르기의 주문서",
+    "summary": "`arr[a:b]`는 칸 a부터 b 바로 앞까지 새 리스트로 자른다(끝 미포함, 개수는 b - a). 1부터 센 a~b번째는 `arr[a - 1:b]`. `arr[::2]` 하나 건너 하나, `arr[::-1]` 거꾸로, `arr[:]` 복사."
+  },
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 슬라이스를 채워서 `[2, 3, 4]`가 출력되게 해 봐. 값 2는 칸 1에 있어!",
+    "code": "arr = [1, 2, 3, 4, 5, 6]\nprint(arr[___])\n",
+    "expectedOutput": "[2, 3, 4]\n",
+    "answer": "1:4"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "L3-3",
+  "title": "보물 정리의 주문: 리스트 메서드",
+  "scroll": {
+    "id": "scroll.methods",
+    "name": "보물 정리의 주문서",
+    "summary": "`append`(맨 뒤에 넣기, JS의 push), `insert(i, x)`, `remove(x)`(맨 앞의 하나), `pop()`/`pop(i)`, `index`, `count`, `sum`/`max`/`min`. `sorted(arr)`는 새 리스트, `arr.sort()`·`arr.reverse()`는 제자리에서 바꾸고 None을 돌려준다(`arr = arr.sort()` 금지)."
+  },
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 한 줄을 넣어서 `arr`를 제자리에서 정렬해 봐. 출력은 `[1, 2, 3]`!",
+    "code": "arr = [3, 1, 2]\n___\nprint(arr)\n",
+    "expectedOutput": "[1, 2, 3]\n",
+    "answer": "arr.sort()"
+  }
+}

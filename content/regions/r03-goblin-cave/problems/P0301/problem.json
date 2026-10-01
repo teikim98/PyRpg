@@ -1,0 +1,88 @@
+{
+  "id": "P0301",
+  "title": "보물 줄의 끝",
+  "kind": "stdin",
+  "enemy": { "name": "번호표 고블린", "sprite": "monster_index_goblin", "attack": 20 },
+  "requires": ["scroll.list"],
+  "concept": "scroll.list",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 5,
+  "tests": [
+    {"in": "5\n7 3 9 -2 4\n", "out": "7 4\n", "public": true, "note": "기본 동작"},
+    {"in": "1\n42\n", "out": "42 42\n", "note": "경계: N = 1(맨 앞이 곧 맨 끝)"},
+    {"in": "3\n-5 -1 -9\n", "out": "-5 -9\n", "note": "음수만"},
+    {"in": "4\n8 8 8 8\n", "out": "8 8\n", "note": "모두 같은 값"},
+    {"in": "2\n-1000 1000\n", "out": "-1000 1000\n", "note": "경계: 값의 최솟값·최댓값"},
+    {"in": "100\n-63 -26 11 48 85 -79 -42 -5 32 69 -95 -58 -21 16 53 90 -74 -37 0 37 74 -90 -53 -16 21 58 95 -69 -32 5 42 79 -85 -48 -11 26 63 100 -64 -27 10 47 84 -80 -43 -6 31 68 -96 -59 -22 15 52 89 -75 -38 -1 36 73 -91 -54 -17 20 57 94 -70 -33 4 41 78 -86 -49 -12 25 62 99 -65 -28 9 46 83 -81 -44 -7 30 67 -97 -60 -23 14 51 88 -76 -39 -2 35 72 -92 -55 -18\n", "out": "-63 -18\n", "note": "경계: N = 100"}
+  ],
+  "variants": [
+    {
+      "id": "P0301-v1",
+      "title": "멈춘 횃불 줄",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"in": "3\n10 20 30\n", "out": "10 30\n", "public": true, "note": "기본 동작"},
+        {"in": "1\n-7\n", "out": "-7 -7\n", "note": "경계: N = 1"},
+        {"in": "5\n0 0 0 0 0\n", "out": "0 0\n", "note": "모두 0"},
+        {"in": "6\n-1000 3 3 3 3 1000\n", "out": "-1000 1000\n", "note": "경계: 값의 최솟값·최댓값"}
+      ]
+    },
+    {
+      "id": "P0301-v2",
+      "title": "광물 수레 행렬",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"in": "4\n5 -3 0 12\n", "out": "5 12\n", "public": true, "note": "기본 동작"},
+        {"in": "2\n9 9\n", "out": "9 9\n", "note": "경계: N = 2, 같은 값"},
+        {"in": "1\n1000\n", "out": "1000 1000\n", "note": "경계: N = 1"},
+        {"in": "7\n-4 -8 -15 -16 -23 -42 -1\n", "out": "-4 -1\n", "note": "음수만"}
+      ]
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_a.py",
+      "title": "arr[len(arr)]로 맨 끝 읽기",
+      "expectFail": {
+        "1": "RE",
+        "2": "RE",
+        "3": "RE",
+        "4": "RE",
+        "5": "RE",
+        "6": "RE"
+      },
+      "diagnosis": {
+        "when": {
+          "exception": "IndexError"
+        },
+        "text": "줄 바깥을 읽었어! 길이가 n인 리스트의 칸 번호는 `0`부터 `n - 1`까지라서 `arr[len(arr)]`은 맨 끝 다음 칸이야. 맨 끝은 `arr[len(arr) - 1]`, 더 짧게는 `arr[-1]`이라고 써."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "JS식 arr.length",
+      "expectFail": {
+        "1": "RE",
+        "2": "RE",
+        "3": "RE",
+        "4": "RE",
+        "5": "RE",
+        "6": "RE"
+      },
+      "diagnosis": {
+        "when": {
+          "exception": "AttributeError",
+          "messageMatches": "length"
+        },
+        "text": "`arr.length`는 JS 말투야. Python 리스트의 길이는 `len(arr)`로 구해. 그리고 맨 끝 칸은 길이를 몰라도 `arr[-1]`로 바로 읽을 수 있어!"
+      }
+    }
+  ],
+  "hints": [
+    "리스트의 칸 번호는 0부터 시작해. 그럼 맨 끝 칸의 번호는 길이보다 얼마나 작을까?",
+    "맨 앞은 `arr[0]`이야. 맨 끝은 `arr[len(arr) - 1]`인데, Python에는 뒤에서부터 세는 **음수 인덱스**가 있어서 `arr[-1]`이라고만 써도 돼.",
+    "```python\nimport sys\ninput = sys.stdin.readline\n\nn = int(input())\narr = list(map(int, input().split()))\nprint(arr[0], arr[____])\n```"
+  ],
+  "reward": { "xp": 100, "gold": 50 }
+}

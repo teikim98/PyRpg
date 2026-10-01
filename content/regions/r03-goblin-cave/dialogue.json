@@ -1,0 +1,110 @@
+{
+  "region_intro": [
+    { "speaker": "system", "text": "숲 동쪽 끝의 바위 틈을 지나자 서늘한 동굴이 입을 벌리고 있다. 벽에 꽂힌 횃불의 불꽃이 청록색 서리를 두른 채 멈춰 있다." },
+    { "speaker": "system", "text": "어둠 속으로 금화와 보석, 낡은 투구가 끝없이 한 줄로 늘어서 있다. 누군가 자로 잰 듯 반듯하게." }
+  ],
+  "cave_intro": [
+    { "speaker": "companion", "emotion": "surprised", "text": "우와, 횃불이 얼어붙었어! 불꽃인데 만지면 차가워. 여기도 시간이 멈췄구나." },
+    { "speaker": "companion", "emotion": "neutral", "text": "여긴 '고블린 동굴'이야. 지도 좀 봐. 동굴 전체가 칸칸이 나뉜 선반처럼 그려져 있어. 칸마다 번호까지 붙어 있고." },
+    { "speaker": "companion", "emotion": "happy", "text": "고블린들은 보물을 줄 세우고, 자르고, 다시 정리하는 데 푹 빠져 있대. 소문엔 한 번 세운 줄은 절대 흐트러뜨리지 않는다나?" },
+    { "speaker": "companion", "emotion": "serious", "text": "그런데 걸음 수를 세 보니 이상해. 번호는 0번 칸부터 시작하더라. 고블린식 세는 법인가 봐. 헷갈리지 않게 조심하자." },
+    { "speaker": "companion", "emotion": "happy", "text": "여러 값을 한 줄로 다루는 주문, 리스트! 이 동굴에서 제대로 배워 보자. 저기 빛나는 비석부터 가 보자, {player}!" }
+  ],
+  "lesson_L3-1_intro": [
+    { "speaker": "companion", "emotion": "happy", "text": "동굴 입구의 비석이야! 여긴 '줄 세우기의 주문'. 여러 값을 한 줄로 묶는 리스트 주문이래." },
+    { "speaker": "companion", "emotion": "neutral", "text": "JS 배열이랑 거의 똑같아. 다른 건 길이를 `.length`가 아니라 `len()`으로 구한다는 거, 그리고 뒤에서부터 세는 음수 번호가 있다는 거!" }
+  ],
+  "lesson_L3-1_done": [
+    { "speaker": "system", "text": "줄 세우기의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`arr[0]`은 맨 앞, `arr[-1]`은 맨 끝! 이제 번호표 고블린이 뭘 물어봐도 대답할 수 있겠다." }
+  ],
+  "sign_tunnels": [
+    { "speaker": "system", "text": "『갈림 굴. 왼쪽 굴은 3번 칸부터, 오른쪽 굴은 끝에서 두 칸. 끝 칸에는 발을 들이지 말 것. 박쥐가 잘라 간다.』" },
+    { "speaker": "system", "text": "표지판 아래쪽에 작은 글씨가 덧붙어 있다. 『거울 웅덩이의 바위벽은 모두 단단하다. 단 하나, 얼어붙은 횃불 두 개 사이, 웅덩이 한가운데 위쪽 벽의 틈만 빼고.』" },
+    { "speaker": "companion", "emotion": "neutral", "text": "'끝 칸에는 발을 들이지 말 것'… 자를 때 끝은 포함하지 않는다는 뜻 같아. 고블린들, 표지판까지 슬라이스로 쓰네." },
+    { "speaker": "companion", "emotion": "surprised", "text": "그리고 횃불 두 개 사이의 틈? 거울 웅덩이에 가면 위쪽 바위벽을 잘 살펴보자!" }
+  ],
+  "lesson_L3-2_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "갈림 굴의 비석이야. 여긴 '자르기의 주문'. 줄의 일부분만 싹둑 잘라 내는 주문이래." },
+    { "speaker": "companion", "emotion": "serious", "text": "숲에서 배운 `range`처럼 끝은 포함하지 않는대. 박쥐들이 바로 그 끝 칸을 노린다니까 꼭 기억해!" }
+  ],
+  "lesson_L3-2_done": [
+    { "speaker": "system", "text": "자르기의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`arr[a:b]`, `arr[::-1]`! 거꾸로 매달린 박쥐도 이제 무섭지 않아. 줄을 거꾸로 읽어 주면 되잖아?" }
+  ],
+  "npc_goblin_clerk": [
+    { "speaker": "고블린 서기", "text": "흠흠, 손님이시군요. 저는 이 창고의 서기, 안경 고블린입니다. 보물 3,817개의 번호를 0번부터 전부 외우고 있지요." },
+    { "speaker": "companion", "emotion": "surprised", "text": "와, 말이 통하는 고블린이다! 다른 고블린들은 다 굳어 있던데, 너는 어떻게 움직여?" },
+    { "speaker": "고블린 서기", "text": "장부를 고치던 손만 겨우 움직입니다. 족장님이 시계 룬을 목에 건 뒤로 동굴 전체가 이 모양이에요. 줄 맨 뒤에 새 보물을 append하던 중이었는데…" },
+    { "speaker": "고블린 서기", "text": "하나 귀띔해 드리지요. 거울 웅덩이 위쪽 바위벽에 얼어붙은 횃불이 두 개 걸려 있습니다. 그 두 횃불 한가운데, 웅덩이 한복판에서 똑바로 위쪽 벽은 진짜 벽이 아니라 지나갈 수 있는 틈이에요. 그 너머에 제가 몰래 빼돌린… 아니, 보관해 둔 보물이 있습니다." },
+    { "speaker": "고블린 서기", "text": "다만 그 안쪽에 쌍둥이 슬라임이 눌러앉았어요. 녀석은 둘씩 짝지어 더하는 걸 좋아합니다. 같은 걸 두 번 세면 화를 내고요." },
+    { "speaker": "companion", "emotion": "happy", "text": "숨겨진 길 정보 고마워! 거울 웅덩이, 얼어붙은 횃불 두 개 사이의 위쪽 벽 틈. 지도에 표시해 둘게!" }
+  ],
+  "chest_storeroom": [
+    { "speaker": "system", "text": "상자를 열었다. 50골드를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "상자 안쪽에 쪽지가 붙어 있어. '정리 끝난 보물은 sorted로 새 줄에 옮길 것. sort하고 대입하면 보물이 None이 됨.' 서기님 글씨 같아. 경험담인가 봐…" }
+  ],
+  "lesson_L3-3_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "보물 창고의 비석이야. 여긴 '보물 정리의 주문'. 넣고, 빼고, 세고, 줄 세우는 리스트 메서드들이래." },
+    { "speaker": "companion", "emotion": "worried", "text": "JS 손버릇으로 `push`를 쓰면 안 된대. 그리고 `sort()`가 뭘 돌려주는지 꼭 확인하래. 창고 고블린들이 거기서 보물을 많이 잃어버렸다나." }
+  ],
+  "lesson_L3-3_done": [
+    { "speaker": "system", "text": "보물 정리의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`append`, `pop`, `remove`, 그리고 `sorted`! 이제 창고 정리는 우리한테 맡겨. 상자 게도 덤벼 봐!" }
+  ],
+  "lesson_L3-4_intro": [
+    { "speaker": "companion", "emotion": "surprised", "text": "거울 웅덩이 옆에도 비석이 있네. 여긴 '한 줄 주문'. 반복문 여러 줄을 한 줄로 줄이는 주문이래!" },
+    { "speaker": "companion", "emotion": "neutral", "text": "JS의 `map`이랑 `filter`를 대괄호 하나로 쓰는 느낌이래. 웅덩이가 리스트를 비춰서 새 리스트를 만드는 것처럼." }
+  ],
+  "lesson_L3-4_done": [
+    { "speaker": "system", "text": "한 줄 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`[x for x in arr if 조건]`! 한 줄로 거르고 바꾸고. 거울 슬라임아, 짝수 보석만 골라 줄게!" }
+  ],
+  "chest_hidden_pool": [
+    { "speaker": "system", "text": "숨겨진 굴의 상자를 열었다. 70골드를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "횃불 사이의 틈, 진짜였어! 서기님이 '보관해 둔' 보물이 여기 있었네. 나중에 돌려줘야 하나…?" },
+    { "speaker": "companion", "emotion": "neutral", "text": "겉보기엔 다른 벽이랑 똑같았는데 말이야. 하나하나 확인해 보는 눈, 그게 주문사의 눈이지!" }
+  ],
+  "lesson_L3-5_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "벽화의 방 비석이야. 여긴 '격자의 주문'. 리스트 안에 리스트를 넣어서 바둑판을 만드는 주문이래." },
+    { "speaker": "companion", "emotion": "serious", "text": "비석 옆에 경고문이 있어. '줄을 곱해서 늘리지 말 것. 한 줄이 아프면 모든 줄이 아프다.' …무슨 뜻일까?" }
+  ],
+  "lesson_L3-5_done": [
+    { "speaker": "system", "text": "격자의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`[[0] * m for _ in range(n)]`! 줄마다 새 리스트를 만들어야 한 줄씩 따로 움직이는구나. 이제 격자 골렘을 세로로 읽어 주자!" }
+  ],
+  "sign_mural": [
+    { "speaker": "system", "text": "벽 한 면을 거대한 벽화가 덮고 있다. 수많은 시계 룬이 바둑판처럼 칸칸이 그려져 있고, 그 한가운데에 높은 탑이 서 있다." },
+    { "speaker": "system", "text": "탑 꼭대기의 형체가 시계 룬들을 향해 손을 뻗고 있다. 칸마다 시곗바늘이 같은 자리에서 멈춰 있다. 아래에 글귀가 반쯤 지워져 있다. 『끝나지 않을 주문이 두려워 … 모든 것을 … 멈추었노라』" },
+    { "speaker": "companion", "emotion": "surprised", "text": "이거… 시간이 멈추는 그림이잖아. 그런데 저절로 멈춘 게 아니라, 누가 손을 뻗어서 멈춘 것처럼 그려져 있어." },
+    { "speaker": "companion", "emotion": "worried", "text": "대정지가 사고가 아니었다고? …에이, 설마. 고블린들이 지어낸 옛날이야기겠지. 그래도 지도 구석에 적어 둘게." },
+    { "speaker": "companion", "emotion": "serious", "text": "…저 탑, 어디서 본 것 같은데. 기분 탓인가. 가자, {player}. 족장이 기다리고 있어." }
+  ],
+  "boss_intro": [
+    { "speaker": "companion", "emotion": "serious", "text": "저기, 보물 더미로 쌓은 왕좌… 보물 왕관을 쓴 고블린 족장이야." },
+    { "speaker": "companion", "emotion": "surprised", "text": "목걸이에 시계 룬이 매달려 있어! 이 동굴의 시간을 붙잡고 있는 게 바로 저 족장이야!" },
+    { "speaker": "고블린 족장", "text": "크하하! 내 보물 줄을 보아라. 줄의 어느 자리에서 물어도, 거기까지 본 것 중 가장 귀한 보물을 말할 수 있어야 진정한 족장이지!" },
+    { "speaker": "companion", "emotion": "worried", "text": "조심해. 숲의 수호목처럼 시간 결계를 쓸 거야. 자리마다 처음부터 다시 훑는 느린 주문은 결계에 끊길 거야." },
+    { "speaker": "companion", "emotion": "neutral", "text": "줄 세우기, 자르기, 정리, 한 줄 주문, 격자. 이 동굴에서 배운 주문 다섯 개를 다 쓸 때야. 가자, {player}!" }
+  ],
+  "boss_defeated": [
+    { "speaker": "system", "text": "고블린 족장이 왕관을 떨어뜨리고 털썩 주저앉는다. 목걸이의 시계 룬이 '딸깍' 하고 한 칸 움직인다." },
+    { "speaker": "system", "text": "얼어붙었던 횃불이 일제히 타오르고, 한 줄로 굳어 있던 보물 더미가 와르르 무너져 내린다." },
+    { "speaker": "고블린 족장", "text": "내, 내 보물 줄이…! 하지만 이상하군. 줄이 무너졌는데 가슴이 후련해. 오래 숨을 참고 있었던 것 같아." },
+    { "speaker": "companion", "emotion": "happy", "text": "해냈다! 불꽃이 다시 춤춰! 고블린들도 기지개를 켜고 있어!" },
+    { "speaker": "companion", "emotion": "surprised", "text": "지도 봐! 칸칸이 나뉘어 있던 동굴에 색이 번지고, 동쪽으로 나가는 굴이 새로 그려지고 있어!" }
+  ],
+  "region_clear": [
+    { "speaker": "companion", "emotion": "happy", "text": "고블린 동굴 지도 완성! 리스트 만들기, 자르기, 정리하기, 한 줄 주문, 격자까지 다 되찾았어." },
+    { "speaker": "companion", "emotion": "neutral", "text": "바깥 시련장 목록도 새로 채워 뒀어. 'K번째수', '두 개 뽑아서 더하기' 같은 문제는 이 동굴에서 연습한 그대로야. 한번 도전해 봐!" },
+    { "speaker": "companion", "emotion": "serious", "text": "그런데 그 벽화가 자꾸 생각나. 시계 룬을 향해 손을 뻗던 형체… 정말로 누가 일부러 세상을 멈춘 거라면, 왜 그랬을까?" }
+  ],
+  "east_gate_locked": [
+    { "speaker": "system", "text": "동쪽 굴을 보물 상자가 천장까지 빈틈없이 쌓여 막고 있다. 상자마다 '족장 전용' 딱지가 붙어 있다." },
+    { "speaker": "companion", "emotion": "worried", "text": "족장의 보물 벽이야. 족장이 시계 룬을 놓아줘야 이 줄도 풀릴 거야." }
+  ],
+  "to_be_continued": [
+    { "speaker": "companion", "emotion": "happy", "text": "보물 벽이 무너졌다! 동쪽 굴 끝에서 바람이 불어와. 오래된 종이 냄새가 나… 이 너머에 커다란 도서관이 있대!" },
+    { "speaker": "system", "text": "고블린 동굴 이야기는 여기까지입니다. 다음 지역은 준비 중이에요. 플레이해 주셔서 고맙습니다!" }
+  ]
+}

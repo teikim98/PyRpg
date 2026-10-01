@@ -1,0 +1,85 @@
+{
+  "id": "P0306",
+  "title": "고블린 출석부",
+  "kind": "stdin",
+  "enemy": { "name": "상자 게", "sprite": "monster_stack_crab", "attack": 20 },
+  "requires": ["scroll.methods"],
+  "concept": "scroll.methods",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 8,
+  "tests": [
+    {"in": "5\nadd gob\nadd lin\nadd kiki\nleave lin\nadd zz\n", "out": "gob kiki zz\n", "public": true, "note": "기본 동작"},
+    {"in": "1\nadd solo\n", "out": "solo\n", "note": "경계: 명령 1개"},
+    {"in": "4\nadd a\nadd b\nlast\nleave a\n", "out": "없음\n", "note": "경계: 모두 지워져 빈 출석부"},
+    {"in": "5\nadd gob\nadd lin\nadd gob\nadd kiki\nleave gob\n", "out": "lin gob kiki\n", "note": "같은 이름 중 앞의 하나만 지움"},
+    {"in": "7\nadd x\nadd y\nadd x\nlast\nadd z\nleave x\nadd x\n", "out": "y z x\n", "note": "last와 leave를 섞음, 중복"},
+    {"in": "100\nadd g0\nadd g1\nadd g2\nadd g3\nadd g4\nadd g5\nadd g6\nadd g0\nadd g1\nadd g2\nadd g3\nadd g4\nadd g5\nadd g6\nadd g0\nadd g1\nadd g2\nadd g3\nadd g4\nadd g5\nadd g6\nadd g0\nadd g1\nadd g2\nadd g3\nadd g4\nadd g5\nadd g6\nadd g0\nadd g1\nadd g2\nadd g3\nadd g4\nadd g5\nadd g6\nadd g0\nadd g1\nadd g2\nadd g3\nadd g4\nadd g5\nadd g6\nadd g0\nadd g1\nadd g2\nadd g3\nadd g4\nadd g5\nadd g6\nadd g0\nadd g1\nadd g2\nadd g3\nadd g4\nadd g5\nadd g6\nadd g0\nadd g1\nadd g2\nadd g3\nleave g3\nleave g3\nleave g3\nleave g3\nleave g3\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\nlast\n", "out": "g0 g1 g2 g4 g5 g6 g0 g1 g2 g4 g5 g6 g0 g1 g2 g4 g5 g6 g0 g1\n", "note": "경계: Q = 100"}
+  ],
+  "variants": [
+    {
+      "id": "P0306-v1",
+      "title": "짐꾼 명단",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"in": "4\nadd tom\nadd ann\nlast\nadd bo\n", "out": "tom bo\n", "public": true, "note": "기본 동작"},
+        {"in": "2\nadd tom\nleave tom\n", "out": "없음\n", "note": "경계: 빈 명단"},
+        {"in": "4\nadd bo\nadd bo\nadd bo\nleave bo\n", "out": "bo bo\n", "note": "같은 이름 셋 중 하나만 지움"},
+        {"in": "6\nadd a\nadd b\nadd c\nlast\nlast\nadd d\n", "out": "a d\n", "note": "last 연속"}
+      ]
+    },
+    {
+      "id": "P0306-v2",
+      "title": "횃불 당번표",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"in": "3\nadd rok\nadd mia\nleave rok\n", "out": "mia\n", "public": true, "note": "기본 동작"},
+        {"in": "1\nadd z\n", "out": "z\n", "note": "경계: 명령 1개"},
+        {"in": "5\nadd mia\nadd rok\nadd mia\nleave mia\nadd rok\n", "out": "rok mia rok\n", "note": "중복 이름, 앞의 것만 지움"},
+        {"in": "2\nadd q\nlast\n", "out": "없음\n", "note": "경계: last로 비움"}
+      ]
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_a.py",
+      "title": "JS식 roll.push",
+      "expectFail": {
+        "1": "RE",
+        "2": "RE",
+        "3": "RE",
+        "4": "RE",
+        "5": "RE",
+        "6": "RE"
+      },
+      "diagnosis": {
+        "when": {
+          "exception": "AttributeError",
+          "messageMatches": "push"
+        },
+        "text": "`push`는 JS 배열 주문이야! Python 리스트의 맨 뒤에 넣는 건 `roll.append(이름)`이야. 나머지 `remove`와 `pop`은 잘 썼어."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "같은 이름을 모두 지움",
+      "expectFail": {
+        "4": "WA",
+        "6": "WA"
+      },
+      "diagnosis": {
+        "when": {
+          "verdict": "WA",
+          "onlyHiddenFail": true
+        },
+        "text": "같은 이름이 여럿일 때 전부 지워 버렸어. `leave`는 **가장 앞의 하나만** 지우는 명령이야. `roll.remove(이름)`은 원래 딱 그렇게 앞의 하나만 지우니까, `while`로 되풀이하지 말고 한 번만 불러."
+      }
+    }
+  ],
+  "hints": [
+    "빈 리스트 `roll = []`에서 시작해서, 명령 한 줄을 `split()`으로 자르면 첫 칸이 명령 이름이야. 명령마다 어떤 리스트 메서드가 맞을까?",
+    "`add` → `roll.append(이름)`, `leave` → `roll.remove(이름)`(앞의 하나만 지움), `last` → `roll.pop()`(맨 뒤를 꺼냄). 마지막에 비어 있으면 `없음`, 아니면 `print(*roll)`.",
+    "```python\nroll = []\nfor _ in range(q):\n    cmd = input().split()\n    if cmd[0] == \"add\":\n        roll.append(cmd[1])\n    elif cmd[0] == \"leave\":\n        roll.____(cmd[1])\n    else:\n        roll.pop()\n```"
+  ],
+  "reward": { "xp": 100, "gold": 50 }
+}

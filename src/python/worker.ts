@@ -56,7 +56,8 @@ const encoder = new TextEncoder();
 let pyodide: PyodideAPI | null = null;
 let interrupt: Uint8Array | null = null;
 type PyFn = (...args: unknown[]) => string;
-let judge: { runProgram: PyFn; runStdinTest: PyFn; runFunctionTest: PyFn; reference: PyFn } | null = null;
+let judge: { runProgram: PyFn; runStdinTest: PyFn; runFunctionTest: PyFn; reference: PyFn; generateTest: PyFn } | null =
+  null;
 
 function setStdin(text: string): void {
   stdinData = encoder.encode(text);
@@ -95,6 +96,7 @@ async function boot(sab?: SharedArrayBuffer): Promise<{ bootMs: number; version:
     runStdinTest: mod.run_stdin_test,
     runFunctionTest: mod.run_function_test,
     reference: mod.reference,
+    generateTest: mod.generate_test,
   };
   pyodide = py;
   return { bootMs: performance.now() - t0, version: py.version };
@@ -221,6 +223,12 @@ function handle(req: WorkerRequest): Promise<WorkerResponse> | WorkerResponse {
       clearIo("");
       const times = JSON.parse(judge.reference(req.runs)) as number[];
       return { id: req.id, ok: true, type: "reference", times };
+    }
+    case "generate": {
+      clearIo("");
+      const g = JSON.parse(judge.generateTest(req.code, req.arg)) as { in: string; out: string };
+      out.reset();
+      return { id: req.id, ok: true, type: "generate", input: g.in, output: g.out };
     }
   }
 }

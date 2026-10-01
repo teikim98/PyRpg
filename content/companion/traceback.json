@@ -60,6 +60,11 @@
   },
   {
     "exception": "TypeError",
+    "pattern": "'NoneType' object is not (subscriptable|iterable)|after \\* must be an iterable, not NoneType",
+    "text": "리스트인 줄 알았던 값이 `None`이야! `arr.sort()`, `arr.reverse()`, `arr.append(x)`처럼 리스트를 제자리에서 바꾸는 주문은 `None`을 돌려줘. 그래서 `arr = arr.sort()`라고 쓰면 리스트가 사라져. 정렬된 새 리스트가 필요하면 `sorted(arr)`, 아니면 `arr.sort()`만 한 줄에 써."
+  },
+  {
+    "exception": "TypeError",
     "text": "자료형이 맞지 않는 곳에 값을 넣었대. 강조된 줄에서 각 값이 문자열인지 숫자인지 확인해 봐. `print(type(x))`로 찍어 보면 바로 알 수 있어. Python은 JS처럼 자료형을 알아서 바꿔 주지 않아."
   },
   {
@@ -81,6 +86,11 @@
     "exception": "ValueError",
     "pattern": "not enough values to unpack|too many values to unpack",
     "text": "`a, b = ...`처럼 나눠 담을 때 왼쪽 변수 개수와 오른쪽 값 개수가 달라. 입력 한 줄에 값이 몇 개 있는지 확인해 봐. JS의 구조 분해는 모자라면 `undefined`로 채우지만, Python은 개수가 딱 맞아야 해."
+  },
+  {
+    "exception": "ValueError",
+    "pattern": "(max|min)\\(\\) (arg is an empty sequence|iterable argument is empty)",
+    "text": "빈 리스트에서 `max`나 `min`을 구하려고 했어. 비어 있으면 가장 큰 값도 없거든. 슬라이스 `arr[:i]`는 i번째를 포함하지 않아서, i가 0이면 빈 리스트가 돼. 범위를 다시 확인해 봐."
   },
   {
     "exception": "ValueError",
@@ -155,6 +165,11 @@
     "exception": "AttributeError",
     "pattern": "has no attribute 'length'",
     "text": "`.length`는 JS 말투야. Python에서 길이는 `len(s)`처럼 함수로 구해."
+  },
+  {
+    "exception": "AttributeError",
+    "pattern": "'list' object has no attribute '(filter|map|reduce|indexOf|includes|forEach|slice|splice|concat|join|unshift|shift)'",
+    "text": "JS 배열 주문을 Python 리스트에 썼어! `filter`/`map` → 리스트 컴프리헨션 `[x for x in arr if ...]`, `indexOf` → `arr.index(x)`, `includes` → `x in arr`, `slice(a, b)` → `arr[a:b]`, `shift()` → `arr.pop(0)`, `join` → `\" \".join(...)`(문자열 쪽에서 불러)."
   },
   {
     "exception": "AttributeError",

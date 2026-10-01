@@ -2,12 +2,13 @@
 
 content/ 아래 데이터를 읽어서 아래를 확인한다. 하나라도 실패하면 종료 코드 1.
 - 문제: 필수 파일, 테스트 수(공개 1+, 숨김 3+, 경계값 note), 큰 정수 규칙(literal_eval), 4300자리 제한,
+  큰 입력 생성기(gen, design.md §11.1: 실행해서 in/out을 채우고 게임 출력 상한 확인),
   모범답안 전부 AC, 오답·비효율 답안은 expectFail에 적은 테스트만 정확히 그 판정으로 실패,
   오답마다 첫 실패 테스트에서 자기 진단 규칙이 처음으로 걸리는지, 참조 무결성(주문서·스프라이트)
 - 변형 문제(plan.md §5.1): 필드·statement 파일, 공개 1+/숨김 3+, 변형 ID 중복, 테스트 형식·4300자리,
   원래 모범답안 전부 AC, wrong_*.py는 변형마다 하나 이상 실패, 보스 slow.py는 전부 AC(시간 결계 없음)
 - 레슨: 주문서 ID, 빈칸 연습 정답 실행 결과, ```python run 블록이 에러 없이 실행되는지
-- 대사: region1-spec.md §5, region02-spec.md §5의 ID, 대사 줄 형식
+- 대사: region1-spec.md §5, region02-spec.md §5, region03-spec.md §5의 ID, 대사 줄 형식
 - 지역: recommended 필드(번호·제목·사이트·레벨만), map.tmj가 있으면 맵 오브젝트 참조
 - 보조 캐릭터: profile.json, traceback.json(실제 CPython 에러 메시지로 규칙 매칭 확인)
 
@@ -50,6 +51,11 @@ REQUIRED_REGION_DIALOGUES = {
         "chest_loop", "chest_hidden_grove", "boss_intro", "boss_defeated", "east_gate_locked", "to_be_continued",
         "region_clear",
     ],
+    # docs/phase3/region03-spec.md §5
+    "r03": [
+        "region_intro", "cave_intro", "sign_tunnels", "npc_goblin_clerk", "chest_storeroom", "chest_hidden_pool",
+        "sign_mural", "boss_intro", "boss_defeated", "east_gate_locked", "to_be_continued", "region_clear",
+    ],
 }
 REQUIRED_COMMON_DIALOGUES = [
     "need_scroll", "campfire_rest", "knockout", "solution_unlocked", "retreat",
@@ -68,6 +74,14 @@ REQUIRED_REGION_CONTENT = {
         "problems": ["P0201", "P0202", "P0203", "P0204", "P0205", "P0206", "P0207", "P0208", "P0209", "P0210"],
         "boss": "P0210",
     },
+    # region03-spec.md §2, §3
+    "r03": {
+        "lessons": {"L3-1": "scroll.list", "L3-2": "scroll.slice", "L3-3": "scroll.methods",
+                    "L3-4": "scroll.comprehension", "L3-5": "scroll.grid"},
+        "problems": ["P0301", "P0302", "P0303", "P0304", "P0305", "P0306", "P0307", "P0308", "P0309", "P0310",
+                     "P0311"],
+        "boss": "P0311",
+    },
 }
 # 명세의 아트 표(region02-spec.md §6 등)에 있어서 아트 담당이 만들 스프라이트.
 # 아직 assets/manifest.json에 없으면 오류 대신 경고로 둔다(콘텐츠와 아트를 따로 작업하므로)
@@ -75,6 +89,11 @@ PENDING_SPRITES = {
     "r02": {
         "monster_fork_sprout", "monster_leap_owl", "monster_loop_snake", "monster_count_shroom",
         "monster_hail_wisp", "monster_acorn_mite", "boss_crossroad_tree", "npc_traveler", "npc_woodcutter",
+    },
+    # region03-spec.md §6
+    "r03": {
+        "monster_index_goblin", "monster_slice_bat", "monster_stack_crab", "monster_mirror_slime",
+        "monster_grid_golem", "boss_goblin_chief", "npc_goblin",
     },
 }
 # 맵 오브젝트 종류별 필수 props(src/contracts/world.ts)
@@ -112,6 +131,10 @@ TRACEBACK_SAMPLES = [
     ("console.log(1)", "NameError", True),
     ("(1).strip()", "AttributeError", True),
     ("[].push(1)", "AttributeError", True),
+    ("[].filter(1)", "AttributeError", True),
+    ("x = [3, 1].sort()\nx[0]", "TypeError", True),
+    ("print(*[1].reverse())", "TypeError", True),
+    ("max([])", "ValueError", True),
     ('"a".length', "AttributeError", True),
     ('"a".toUpperCase()', "AttributeError", True),
     ("input()", "EOFError", False),
@@ -270,6 +293,25 @@ def load_json(rep, path):
 def read_text(path):
     with open(path, encoding="utf-8") as f:
         return f.read()
+
+
+# 게임 워커가 모으는 stdout 상한(src/python/worker.ts OUTPUT_LIMIT). 넘으면 출력이 잘려서 WA가 된다
+GAME_OUTPUT_LIMIT = 1 << 20
+_GEN_CACHE = {}
+
+
+def generate_test(path, arg):
+    """큰 입력 생성기(design.md §11.1). 게임 채점기(src/python/judge.py generate_test)와 같은 규칙:
+    새 globals에서 파일을 실행하고 generate(arg)가 (입력, 기대 출력) 문자열 튜플을 돌려준다."""
+    key = (path, arg)
+    if key not in _GEN_CACHE:
+        g = {"__name__": "pyrpg_gen", "__builtins__": __builtins__}
+        exec(compile(read_text(path), "<gen>", "exec", dont_inherit=True), g)
+        result = g["generate"](arg)
+        if not (isinstance(result, tuple) and len(result) == 2 and all(isinstance(x, str) for x in result)):
+            raise TypeError("generate(arg)는 (입력, 출력) 문자열 튜플을 돌려줘야 함")
+        _GEN_CACHE[key] = result
+    return _GEN_CACHE[key]
 
 
 class Runner:
@@ -432,6 +474,26 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
                 rep.error(tw, f"{m}자리 정수(4300자리 제한, design.md §9.4)")
         return True
 
+    # 큰 입력 생성기(design.md §11.1): 실행해서 in/out을 채운 뒤 일반 테스트처럼 검사한다
+    for i, t in enumerate(tests):
+        if isinstance(t, dict) and "gen" in t:
+            tw = f"{where} 테스트 {test_label(i)}"
+            gen, arg = t.get("gen"), t.get("genArg", "")
+            if kind != "stdin" or t.get("public") or "in" in t or "out" in t:
+                rep.error(tw, "gen은 stdin형 숨김 테스트에만, in/out 없이")
+                continue
+            if not isinstance(gen, str) or not re.fullmatch(r"[A-Za-z0-9_]+\.py", gen) or gen not in files or \
+                    not isinstance(arg, str):
+                rep.error(tw, f"gen 파일 {gen!r}이 문제 폴더에 없거나 genArg가 문자열이 아님")
+                continue
+            try:
+                t["in"], t["out"] = generate_test(os.path.join(folder, gen), arg)
+            except Exception as e:  # noqa: BLE001 - 생성기 오류를 그대로 보고
+                rep.error(tw, f"생성기 {gen}({arg!r}) 실패: {type(e).__name__}: {e}")
+                continue
+            rep.info(f"{tw} gen {gen}({arg!r}) → 입력 {len(t['in'])}자, 출력 {len(t['out'])}자")
+            if len(t["out"]) > GAME_OUTPUT_LIMIT:
+                rep.error(tw, f"기대 출력 {len(t['out'])}자가 게임 출력 상한 {GAME_OUTPUT_LIMIT}자를 넘음(src/python/worker.ts)")
     for i, t in enumerate(tests):
         tw = f"{where} 테스트 {test_label(i)}"
         if not check_test_format(tw, t):

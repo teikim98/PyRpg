@@ -1,0 +1,16 @@
+{
+  "id": "L3-4",
+  "title": "한 줄 주문: 리스트 컴프리헨션",
+  "scroll": {
+    "id": "scroll.comprehension",
+    "name": "한 줄 주문서",
+    "summary": "`for x in arr:`로 값을 바로 꺼내고, 칸 번호가 필요하면 `range(len(arr))`나 `enumerate`. `[식 for x in arr]`은 JS의 map, `[x for x in arr if 조건]`은 filter. 도는 중인 리스트에서 지우지 말고 새 리스트를 만든다."
+  },
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 조건을 채워서 짝수만 골라 제곱한 `[4, 16]`이 출력되게 해 봐.",
+    "code": "arr = [1, 2, 3, 4]\nprint([x * x for x in arr if ___])\n",
+    "expectedOutput": "[4, 16]\n",
+    "answer": "x % 2 == 0"
+  }
+}

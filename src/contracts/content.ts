@@ -6,12 +6,30 @@ export type Emotion = "neutral" | "happy" | "worried" | "surprised" | "serious";
 export type ProblemKind = "stdin" | "function";
 
 export interface StdinTest {
+  /** gen이 있으면 빈 문자열(실행기가 채점 직전에 생성기로 만든다) */
   in: string;
+  /** gen이 있으면 빈 문자열 */
   out: string;
   public?: boolean;
   /** 보스 페이즈 번호. 생략하면 1 */
   phase?: number;
   note?: string;
+  /** 큰 입력 생성기(design.md §11.1). 숨김 테스트에만 쓴다 */
+  gen?: TestGenerator;
+}
+
+/**
+ * 큰 입력 생성기(design.md §11.1). problem.json에는 `"gen": "gen_big.py", "genArg": "desc"`로 적고,
+ * 로더가 파일 내용을 code에 담는다. 생성기 파일은 `generate(arg)`를 정의하고 (입력, 기대 출력) 문자열 튜플을
+ * 돌려준다. 시드를 고정해서 언제나 같은 값을 만든다(CPython 검증기와 Pyodide 실행기가 같은 값을 쓴다)
+ */
+export interface TestGenerator {
+  /** 문제 폴더 안의 파일 이름. 예: "gen_big.py" */
+  file: string;
+  /** 파일 내용(Python) */
+  code: string;
+  /** generate(arg)에 넘길 문자열. problem.json의 genArg(생략하면 "") */
+  arg: string;
 }
 
 export interface FunctionTest {
