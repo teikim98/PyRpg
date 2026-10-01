@@ -84,6 +84,8 @@ export function validateSave(raw: unknown): ValidationResult {
         "version", "createdAt", "updatedAt", "player", "location", "lastCampfire", "scrolls", "lessonsCompleted",
         "problems", "removedObjects", "flags", "inventory", "equipment", "titles", "shadows", "streak", "history",
       ],
+      // 단위 3-1에서 더한 선택 항목(옛 저장에는 없다)
+      optional: ["quests", "activeTitle", "cosmetics"],
     })
   ) {
     return { ok: false, errors: c.errors };
@@ -168,6 +170,28 @@ export function validateSave(raw: unknown): ValidationResult {
     c.oneOf(v.grade, `${p}.grade`, GRADES);
     c.bool(v.shadow, `${p}.shadow`);
   });
+
+  if (d.quests !== undefined && c.obj(d.quests, "quests", { required: ["date", "ids", "progress", "claimed", "chest"] })) {
+    const q = d.quests;
+    c.date(q.date, "quests.date");
+    c.strArr(q.ids, "quests.ids");
+    c.arr(q.progress, "quests.progress", (v, p) => c.int(v, p));
+    c.arr(q.claimed, "quests.claimed", (v, p) => c.bool(v, p));
+    c.bool(q.chest, "quests.chest");
+    if (Array.isArray(q.ids) && Array.isArray(q.progress) && Array.isArray(q.claimed)) {
+      c.custom(q.ids.length === q.progress.length && q.ids.length === q.claimed.length, "quests", "ids·progress·claimed의 길이가 같아야 합니다");
+    }
+  }
+  if (d.activeTitle !== undefined) {
+    c.str(d.activeTitle, "activeTitle", true);
+    if (typeof d.activeTitle === "string" && Array.isArray(d.titles)) {
+      c.custom(d.titles.includes(d.activeTitle), "activeTitle", "얻지 않은 칭호입니다");
+    }
+  }
+  if (d.cosmetics !== undefined && c.obj(d.cosmetics, "cosmetics", { required: [], optional: ["player", "companion"] })) {
+    if (d.cosmetics.player !== undefined) c.str(d.cosmetics.player, "cosmetics.player", true);
+    if (d.cosmetics.companion !== undefined) c.str(d.cosmetics.companion, "cosmetics.companion", true);
+  }
 
   if (c.errors.length) return { ok: false, errors: c.errors };
   return { ok: true, value: raw as unknown as SaveData };

@@ -1,0 +1,104 @@
+[
+  {
+    "id": "potion",
+    "name": "회복약",
+    "kind": "consumable",
+    "description": "전투 중에 마시면 HP를 40 회복한다. 5개까지 가질 수 있다.",
+    "price": 30,
+    "minLevel": 1,
+    "heal": 40,
+    "maxStack": 5
+  },
+  {
+    "id": "ice-rune",
+    "name": "얼음 룬",
+    "kind": "iceRune",
+    "description": "학습하지 못한 하루를 얼려서 스트릭을 지켜 준다. 모닥불 불씨와 합쳐 2개까지.",
+    "price": 100,
+    "minLevel": 1
+  },
+  {
+    "id": "sturdy-cloak",
+    "name": "튼튼한 망토",
+    "kind": "accessory",
+    "description": "최대 HP +20.",
+    "price": 150,
+    "minLevel": 1,
+    "effect": { "type": "maxHp", "value": 20 }
+  },
+  {
+    "id": "guide-feather",
+    "name": "길잡이 깃털",
+    "kind": "accessory",
+    "description": "전투마다 힌트 2단계를 대가 없이 볼 수 있다. 그림자 몬스터 등록은 그대로.",
+    "source": "지역 2 보스",
+    "rewardFrom": "P0210",
+    "effect": { "type": "guideFeather" }
+  },
+  {
+    "id": "echo-ring",
+    "name": "메아리 고리",
+    "kind": "accessory",
+    "description": "예제 실행 결과 옆에 각 줄의 실행 횟수를 보여 준다.",
+    "source": "지역 6 상점",
+    "effect": { "type": "lineCounts" },
+    "pending": true
+  },
+  {
+    "id": "archivist-glasses",
+    "name": "기록관의 안경",
+    "kind": "accessory",
+    "description": "Traceback 해설에 관련 코덱스 레슨 링크를 붙여 준다.",
+    "source": "지역 4 상자",
+    "effect": { "type": "codexLinks" },
+    "pending": true
+  },
+  {
+    "id": "hourglass-charm",
+    "name": "모래시계 부적",
+    "kind": "accessory",
+    "description": "보스의 시간 결계에서 시간 게이지에 목표 복잡도(예: O(N log N))를 보여 준다.",
+    "source": "지역 7 보스",
+    "effect": { "type": "targetComplexity" }
+  },
+  {
+    "id": "dye-player-dawn",
+    "name": "주문사 염료: 새벽빛",
+    "kind": "cosmetic",
+    "description": "주인공의 옷을 새벽빛 청록으로 물들인다.",
+    "price": 60,
+    "minLevel": 1,
+    "target": "player",
+    "tint": "#a6ecf2"
+  },
+  {
+    "id": "dye-nuri-blossom",
+    "name": "누리 염료: 꽃잎",
+    "kind": "cosmetic",
+    "description": "누리의 옷을 꽃잎 분홍으로 물들인다.",
+    "price": 60,
+    "minLevel": 1,
+    "target": "companion",
+    "tint": "#f5c0cf"
+  },
+  {
+    "id": "dye-player-ember",
+    "name": "주문사 염료: 노을",
+    "kind": "cosmetic",
+    "description": "주인공의 옷을 노을 주황으로 물들인다.",
+    "price": 90,
+    "minLevel": 5,
+    "target": "player",
+    "tint": "#ffc58a"
+  },
+  {
+    "id": "dye-nuri-starlight",
+    "name": "누리 염료: 별밤",
+    "kind": "cosmetic",
+    "description": "누리의 옷을 별밤 보라로 물들인다.",
+    "price": 120,
+    "minLevel": 10,
+    "target": "companion",
+    "tint": "#b9a6ff"
+  }
+]

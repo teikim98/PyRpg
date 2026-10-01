@@ -79,6 +79,26 @@ export interface SaveData {
   shadows: ShadowEntry[];
   streak: StreakState;
   history: AttemptLog[];
+  // ── 아래는 단위 3-1에서 더한 선택 항목(없으면 기본값). 버전은 1 그대로 ──
+  /** 오늘의 일일 퀘스트(§7.5) */
+  quests?: DailyQuestState;
+  /** 칭호 가운데 HUD·프로필에 보일 것(§7.4) */
+  activeTitle?: string;
+  /** 꾸미기 아이템 적용 상태(대상별 아이템 ID) */
+  cosmetics?: { player?: string; companion?: string };
+}
+
+export interface DailyQuestState {
+  /** YYYY-MM-DD(새벽 4시 경계) */
+  date: string;
+  /** content/quests.json pool의 ID, perDay개 */
+  ids: string[];
+  /** ids와 같은 순서의 진행 수 */
+  progress: number[];
+  /** 보상을 받은 퀘스트(ids와 같은 순서) */
+  claimed: boolean[];
+  /** 모두 완료 상자를 받았는가 */
+  chest: boolean;
 }
 
 export interface BattleOutcome {
@@ -91,6 +111,8 @@ export interface BattleOutcome {
   finalCode: string;
   hpLeft: number;
   elapsedMs: number;
+  /** 보스 시간 결계 페이즈를 첫 시전에 통과했는가(칭호 '시간을 돌린 자', §7.4). 보스가 아니면 생략 */
+  timeBarrierFirstTry?: boolean;
 }
 
 export interface RewardSummary {

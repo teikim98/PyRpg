@@ -11,6 +11,10 @@ import { createHudUI } from "./hud";
 import { createLessonUI } from "./lesson";
 import { createMenuUI } from "./menu";
 import { createRewardUI } from "./reward";
+import { createBoardUI } from "./board";
+import { createEquipmentUI } from "./equipment";
+import { createShopUI } from "./shop";
+import { createTitlesUI } from "./titles";
 
 export type { UiOptions } from "./env";
 
@@ -48,6 +52,10 @@ export function createUi(root: HTMLElement, options: UiOptions = {}): UiServices
     hud: createHudUI(env),
     menu: createMenuUI(env),
     reward: createRewardUI(env),
+    board: createBoardUI(env),
+    shop: createShopUI(env),
+    equipment: createEquipmentUI(env),
+    titles: createTitlesUI(env),
     isModalOpen: () => stack.size > 0,
   };
 }

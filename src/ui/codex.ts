@@ -1,7 +1,7 @@
 // 코덱스(design.md §5.2 5단계): 획득한 주문서의 레슨을 다시 열람하고 예제를 실행한다.
 import type { Lesson } from "../contracts/content";
 import type { PythonRunner } from "../contracts/runner";
-import type { CodexUI, NameContext } from "../contracts/ui";
+import type { CodexUI, NameContext, PurifiedShadowView } from "../contracts/ui";
 import { h } from "./dom";
 import type { UiEnv } from "./env";
 import { renderInline, substituteNames } from "./markdown";
@@ -9,7 +9,7 @@ import { mountMarkdown, type MountedMarkdown } from "./runnable";
 
 export function createCodexUI(env: UiEnv): CodexUI {
   return {
-    open(lessons: Lesson[], runner: PythonRunner, names: NameContext) {
+    open(lessons: Lesson[], runner: PythonRunner, names: NameContext, extra?: { purified?: PurifiedShadowView[] }) {
       return new Promise<void>((resolve) => {
         let mounted: MountedMarkdown | null = null;
         const close = () => {
@@ -41,6 +41,20 @@ export function createCodexUI(env: UiEnv): CodexUI {
           detail.append(h("p", { class: "codex-empty" }, "아직 획득한 주문서가 없어. 마을의 비석을 찾아보자!"));
         }
         let firstBtn: HTMLButtonElement | null = null;
+        // 정화된 그림자(design.md §7.6)
+        const purified = extra?.purified ?? [];
+        const purifiedBox = h(
+          "section",
+          { class: "codex-purified", "aria-label": "정화된 그림자" },
+          h("h3", {}, `정화된 그림자 ${purified.length}`),
+          purified.length
+            ? h(
+                "ul",
+                { class: "codex-purified-list" },
+                ...purified.map((p) => h("li", { "data-concept": p.concept }, p.name, p.returnCleared ? h("span", { class: "codex-purified-done" }, " ✓ 귀환까지") : null)),
+              )
+            : h("p", { class: "codex-summary" }, "칸 5까지 이겨 낸 그림자가 여기 모여."),
+        );
         for (const lesson of lessons) {
           const btn = h(
             "button",
@@ -57,7 +71,7 @@ export function createCodexUI(env: UiEnv): CodexUI {
             "div",
             { class: "panel codex-panel" },
             h("header", { class: "codex-head" }, h("h2", {}, "코덱스"), h("span", { class: "codex-count" }, `주문서 ${lessons.length}개`), closeBtn),
-            h("div", { class: "codex-main" }, h("nav", { class: "codex-nav", "aria-label": "주문서 목록" }, list), detail),
+            h("div", { class: "codex-main" }, h("nav", { class: "codex-nav", "aria-label": "주문서 목록" }, list, purifiedBox), detail),
           ),
         );
         if (firstBtn) showLesson(lessons[0], firstBtn);

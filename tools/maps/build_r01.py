@@ -35,7 +35,7 @@ TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 T.rrrrr.TT.TT.rrrrrr.TTrrrrrrTrrrrrrrrT#######Z%%%%####T
 T.rrrrr,l___l,rrrrrr,.TrrrrrrTrrrrrrrrT#######%%%%U####T
 T.hwdwh*_____*hwwdwh*.ThwdwwhThwwdwwwhT#######%%%%%####T
-T.___________________.Tl3:mKm*xmm:lxmmx#########H######T
+T.___________________.Tl3:mKk*xmm:lxmmx#########H######T
 Tl___*__________*_____6::::::::7:::::::#--4-N-----#---#T
 T.__**____l____**___l.T::::::::x:::::::8----------Q---#T
 T.___________________.TlmYm**lxxmml::xl#----------#---#T
@@ -43,7 +43,7 @@ T.__l___**___**___l__.TrrrrrrTrrrrr::TT#-E--------#---#T
 T.___________________.TrrrrrrTrrrrr::TT#############--#T
 Tf**ff**ff*5*ff**ff**fThwwwwhThwwwh::TT#rrrrrrrrrrr#--#T
 T9___________________.TTTTTTTTTTTTT0,TT#rrrrrrrrrrr#--#T
-T.__M_____l_____F____.TTTTTTTTTTTTTTTTT#hwwhhwwhhwh#--#T
+T.__M_____l_____F_P__.TTTTTTTTTTTTTTTTT#hwwhhwwhhwh#--#T
 T.___________________.TTTTTTTTTTTTTTTTT#rrrrrrrrrrr#--#T
 T.**___2_______B___**.TTTTrrrrTTrrrrTTT#rrrrrrrrrrr#--#T
 T.___________________.TTTThwwhTThwwhTTT#hwwhwwhwwhh#--#T
@@ -120,6 +120,8 @@ OBJECTS: dict[str, tuple[str, str, dict, str | None]] = {
     "B": ("sign_plaza", "sign", {"dialogue": "sign_plaza"}, None),
     "M": ("npc_frozen_merchant", "npc", {"dialogue": "npc_frozen_merchant", "sprite": "npc_merchant"}, None),
     "F": ("campfire_plaza", "campfire", {}, None),
+    # 그림자 게시판 + 일일 퀘스트(광장 캠프파이어 옆, docs/phase3/plan.md §5.2)
+    "P": ("board_shadow", "board", {}, None),
     "5": ("m_P0101", "monster", {"problem": "P0101"}, None),
     "6": ("m_P0106", "monster", {"problem": "P0106"}, None),
     "9": ("m_P0109", "monster", {"problem": "P0109"}, None),
@@ -127,6 +129,8 @@ OBJECTS: dict[str, tuple[str, str, dict, str | None]] = {
     "3": ("rune_L1-3", "rune", {"lesson": "L1-3"}, None),
     "K": ("npc_shopkeeper", "npc", {"dialogue": "npc_shopkeeper", "sprite": "npc_villager"}, None),
     "Y": ("chest_shop", "chest", {"gold": 30, "dialogue": "chest_shop"}, None),
+    # 상점(가게 주인 옆 가판대, docs/phase3/plan.md §5.2)
+    "k": ("shop_echo", "shop", {}, None),
     "7": ("m_P0102", "monster", {"problem": "P0102"}, None),
     "8": ("m_P0103", "monster", {"problem": "P0103"}, "path"),
     "0": ("m_P0108", "monster", {"problem": "P0108"}, None),
@@ -160,9 +164,9 @@ OBJECTS: dict[str, tuple[str, str, dict, str | None]] = {
 # 진행 순서 검증: (이 단계에서 제거하는 오브젝트, 이 단계에서 닿아야 하는 것, 아직 닿으면 안 되는 것)
 STAGES: list[tuple[str | None, list[str], list[str]]] = [
     (None, ["t_prologue", "rune_L1-1", "sign_well", "gate_well"], ["rune_L1-2", "m_P0101"]),
-    ("gate_well", ["rune_L1-2", "sign_plaza", "npc_frozen_merchant", "campfire_plaza", "m_P0109", "m_P0101"], ["m_P0106"]),
+    ("gate_well", ["rune_L1-2", "sign_plaza", "npc_frozen_merchant", "campfire_plaza", "board_shadow", "m_P0109", "m_P0101"], ["m_P0106"]),
     ("m_P0101", ["m_P0106"], ["rune_L1-3"]),
-    ("m_P0106", ["rune_L1-3", "npc_shopkeeper", "chest_shop", "m_P0102"], ["m_P0103", "m_P0108"]),
+    ("m_P0106", ["rune_L1-3", "npc_shopkeeper", "shop_echo", "chest_shop", "m_P0102"], ["m_P0103", "m_P0108"]),
     ("m_P0102", ["m_P0103", "m_P0108"], ["rune_L1-4"]),
     ("m_P0103", ["rune_L1-4", "sign_alley_riddle", "npc_echo_child", "m_P0104", "chest_hidden", "m_P0110"], ["campfire_alley", "m_P0107"]),
     ("m_P0104", ["campfire_alley", "m_P0107"], ["t_boss_intro", "m_P0105"]),

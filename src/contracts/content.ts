@@ -62,6 +62,20 @@ export interface ProblemCompare {
   sequenceAsList?: boolean;
 }
 
+/**
+ * 그림자 몬스터용 변형 문제(docs/phase3/plan.md §5.1). 이야기와 입력값만 바꾸고 형식·시그니처는 원래 문제와 같다.
+ * 그래서 원래 문제의 모범답안이 변형의 모든 테스트를 통과한다
+ */
+export interface ProblemVariant {
+  /** 예: "P0101-v1" */
+  id: string;
+  title: string;
+  /** Markdown 본문(problem.json의 statement 경로에서 읽은 내용) */
+  statement: string;
+  /** 보스 변형은 1페이즈 테스트만 */
+  tests: ProblemTest[];
+}
+
 export interface Problem {
   id: string;
   regionId: string;
@@ -98,6 +112,10 @@ export interface Problem {
   hints: [string, string, string];
   diagnoses: DiagnosisRule[];
   reward: { xp: number; gold: number };
+  /** 그림자 전투에서 돌려 쓰는 변형(§7.6). 없으면 원래 문제를 그대로 낸다 */
+  variants?: ProblemVariant[];
+  /** 보스 시간 결계의 목표 복잡도(예: "O(√N)"). 모래시계 부적(§7.3)이 시간 게이지에 보여 준다 */
+  targetComplexity?: string;
 }
 
 export interface Scroll {
@@ -177,10 +195,91 @@ export interface TracebackRule {
   text: string;
 }
 
+// ───────────── 장비·칭호·일일 퀘스트(design.md §7.2~§7.5, content/items.json·titles.json·quests.json) ─────────────
+
+export type ItemKind = "consumable" | "iceRune" | "accessory" | "cosmetic";
+
+/** 장신구 효과. pending이면 아직 화면에 연결하지 않은 효과('준비 중') */
+export type AccessoryEffect =
+  | { type: "maxHp"; value: number }
+  | { type: "guideFeather" }
+  | { type: "targetComplexity" }
+  | { type: "lineCounts" }
+  | { type: "codexLinks" };
+
+export interface ItemDef {
+  id: string;
+  name: string;
+  kind: ItemKind;
+  description: string;
+  /** 상점 가격(골드). 없으면 상점에서 팔지 않는다 */
+  price?: number;
+  /** 상점에서 살 수 있는 레벨(§7.1: 열리지 않은 품목은 실루엣) */
+  minLevel?: number;
+  /** 상점에 없을 때 얻는 곳 안내. 예: "지역 2 보스" */
+  source?: string;
+  /** 이 문제를 처음 이기면 얻는다(예: 지역 2 보스 → 길잡이 깃털) */
+  rewardFrom?: string;
+  /** 소모품: 전투 중 HP 회복량 */
+  heal?: number;
+  /** 소모품 최대 보유 수 */
+  maxStack?: number;
+  /** 장신구 */
+  effect?: AccessoryEffect;
+  /** 효과를 아직 연결하지 않음('준비 중'으로 표시) */
+  pending?: boolean;
+  /** 꾸미기: 색을 바꿀 대상과 색 */
+  target?: "player" | "companion";
+  tint?: string;
+}
+
+export type TitleCondition =
+  | { type: "firstWin" }
+  | { type: "noHintRegion" }
+  | { type: "timeBarrierFirstTry" }
+  | { type: "shadowWins"; count: number }
+  | { type: "persistence"; attempts: number }
+  | { type: "goodWeeks"; weeks: number; days: number }
+  | { type: "regionClear"; region: string };
+
+export interface TitleDef {
+  id: string;
+  name: string;
+  description: string;
+  condition: TitleCondition;
+}
+
+/** 퀘스트 진행을 올리는 사건 */
+export type QuestEventType = "win" | "anyWin" | "shadow" | "lesson" | "codexRun" | "rest";
+
+export interface QuestDef {
+  id: string;
+  text: string;
+  event: QuestEventType;
+  count: number;
+  /** win 사건 조건 */
+  filter?: { noHint?: boolean; firstCast?: boolean };
+  /** 오늘 뽑힐 수 있는 조건(할 수 없는 퀘스트는 뽑지 않는다) */
+  needs?: "shadowDue" | "battleLeft" | "lessonLeft" | "lessonDone";
+}
+
+export interface QuestContent {
+  /** 퀘스트 하나의 보상 */
+  reward: { xp: number; gold: number };
+  /** 하루 3개를 다 하면 받는 상자(내용물을 미리 보여 준다) */
+  chest: { gold: number; items: Record<string, number> };
+  /** 하루에 뽑는 수 */
+  perDay: number;
+  pool: QuestDef[];
+}
+
 export interface GameContent {
   regions: Region[];
   companion: CompanionProfile;
   traceback: TracebackRule[];
   /** 공통 대사(캠프파이어, 쓰러짐, 주문서 없음 등) */
   commonDialogues: DialogueMap;
+  items: ItemDef[];
+  titles: TitleDef[];
+  quests: QuestContent;
 }

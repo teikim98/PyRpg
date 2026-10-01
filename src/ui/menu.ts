@@ -1,4 +1,4 @@
-// 메뉴: 코덱스 / 저장 내보내기 / 저장 불러오기 / 처음부터 / 닫기
+// 메뉴: 코덱스 / 장비 / 칭호 / 퀘스트 / 저장 내보내기 / 저장 불러오기 / 처음부터 / 닫기
 import type { MenuActions, MenuUI } from "../contracts/ui";
 import { h } from "./dom";
 import type { UiEnv } from "./env";
@@ -67,6 +67,9 @@ export function createMenuUI(env: UiEnv): MenuUI {
           "div",
           { class: "menu-list" },
           mk("코덱스", "menu-codex", () => void busy(() => actions.openCodex())),
+          actions.openEquipment ? mk("장비", "menu-equipment", () => void busy(() => actions.openEquipment!())) : null,
+          actions.openTitles ? mk("칭호", "menu-titles", () => void busy(() => actions.openTitles!())) : null,
+          actions.openQuests ? mk("퀘스트", "menu-quests", () => void busy(() => actions.openQuests!())) : null,
           mk("저장 내보내기", "menu-export", () => void busy(() => actions.exportSave(), "저장 파일을 내보냈어.")),
           mk("저장 불러오기", "menu-import", () => fileInput.click()),
           mk("처음부터", "menu-reset", async () => {

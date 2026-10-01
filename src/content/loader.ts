@@ -16,9 +16,21 @@ import type {
   Region,
   Scroll,
   BlankExercise,
+  ItemDef,
+  ProblemVariant,
+  QuestContent,
   TiledMap,
+  TitleDef,
   TracebackRule,
 } from "../contracts/content";
+
+/** problem.json의 variants 항목. statement는 문제 폴더 기준 .md 경로(docs/phase3/plan.md §5.1) */
+export interface VariantFile {
+  id: string;
+  title: string;
+  statement: string;
+  tests: ProblemTest[];
+}
 
 /** problem.json의 파일 형식. 코드·본문은 옆의 .py/.md 파일에 있다 */
 export interface ProblemFile {
@@ -46,6 +58,8 @@ export interface ProblemFile {
   extraDiagnoses?: DiagnosisRule[];
   hints: [string, string, string];
   reward: { xp: number; gold: number };
+  variants?: VariantFile[];
+  targetComplexity?: string;
 }
 
 export interface RegionFile {
@@ -91,6 +105,9 @@ export function collectSources(): ContentSources {
       "../../content/regions/*/lessons/*/lesson.json",
       "../../content/common/dialogue.json",
       "../../content/companion/*.json",
+      "../../content/items.json",
+      "../../content/titles.json",
+      "../../content/quests.json",
     ],
     { eager: true, import: "default" },
   );
@@ -98,6 +115,7 @@ export function collectSources(): ContentSources {
     [
       "../../content/regions/*/problems/*/*.md",
       "../../content/regions/*/problems/*/*.py",
+      "../../content/regions/*/problems/*/variants/*.md",
       "../../content/regions/*/lessons/*/lesson.md",
       // 맵은 월드 담당이 만든다. 아직 없으면 빈 객체로 둔다
       "../../content/regions/*/map.tmj",
@@ -152,7 +170,18 @@ function buildProblem(src: ContentSources, regionDir: string, regionId: string, 
   if (p.practice) problem.practice = true;
   if (p.budgetUnits !== undefined) problem.budgetUnits = p.budgetUnits;
   if (p.compare) problem.compare = p.compare;
+  if (p.targetComplexity) problem.targetComplexity = p.targetComplexity;
+  if (p.variants?.length) problem.variants = p.variants.map((v) => buildVariant(src, base, v));
   return problem;
+}
+
+function buildVariant(src: ContentSources, base: string, v: VariantFile): ProblemVariant {
+  const where = `${base}problem.json variants`;
+  need(v.id, where, "id");
+  need(v.title, where, "title");
+  if (!Array.isArray(v.tests) || v.tests.length === 0) throw new ContentError(where, `${v.id}: tests 없음`);
+  const path = `${base}${need(v.statement, where, "statement").replace(/^\.\//, "")}`;
+  return { id: v.id, title: v.title, statement: need(src.text[path], path, "변형 본문"), tests: v.tests };
 }
 
 function buildLesson(src: ContentSources, regionDir: string, regionId: string, dir: string): Lesson {
@@ -220,6 +249,9 @@ export function buildContent(src: ContentSources): GameContent {
     companion: need(src.json["companion/profile.json"] as CompanionProfile | undefined, "companion/", "profile.json"),
     traceback: (src.json["companion/traceback.json"] as TracebackRule[] | undefined) ?? [],
     commonDialogues: (src.json["common/dialogue.json"] as DialogueMap | undefined) ?? {},
+    items: (src.json["items.json"] as ItemDef[] | undefined) ?? [],
+    titles: (src.json["titles.json"] as TitleDef[] | undefined) ?? [],
+    quests: (src.json["quests.json"] as QuestContent | undefined) ?? { reward: { xp: 30, gold: 20 }, chest: { gold: 0, items: {} }, perDay: 3, pool: [] },
   };
 }
 

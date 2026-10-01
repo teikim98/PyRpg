@@ -77,6 +77,10 @@ export function createBattleUI(env: UiEnv): BattleUI {
         let hintLevel: HintLevel = ctx.hintLevel;
         let solutionViewed = false;
         let busy = false;
+        // 시간 결계 페이즈(2페이즈 이후)를 모두 첫 시전에 통과했는가(칭호 '시간을 돌린 자')
+        let barrierFirstTry = true;
+        let potions = ctx.potions?.count ?? 0;
+        const freeHint2 = ctx.perks?.freeHint2 === true;
         let closed = false;
         // 승리·쓰러짐 배너가 뜬 뒤에는 버튼을 다시 켜지 않는다
         let ended = false;
@@ -84,23 +88,26 @@ export function createBattleUI(env: UiEnv): BattleUI {
         const timers: number[] = [];
 
         const modal = env.stack.open({ className: "battle-modal", label: `전투: ${p.enemy.name}` });
-        const root = h("div", { class: `battle ${p.boss ? "is-boss" : ""}`, "data-problem": p.id });
+        const root = h("div", { class: `battle ${p.boss ? "is-boss" : ""} ${ctx.shadow ? "is-shadow" : ""}`, "data-problem": p.id });
         modal.el.append(root);
 
         // ---------- 위: 적과 나 ----------
         const sprite = createSprite(p.enemy.sprite, p.boss ? 3 : 4, p.enemy.name);
-        const enemyName = h("div", { class: "enemy-name" }, p.enemy.name);
+        const enemyName = h("div", { class: "enemy-name" }, ctx.shadow ? `${p.enemy.name}의 그림자` : p.enemy.name);
         const phaseLabel = h("div", { class: "phase-label", hidden: !phases.length });
         const segs = h("div", { class: "enemy-hp", role: "meter", "aria-label": `${p.enemy.name} HP` });
         const hiddenInfo = h("span", { class: "enemy-hidden" });
         const gaugeFill = h("div", { class: "bar-fill" });
         const gaugeText = h("span", { class: "time-gauge-text" }, "—");
+        // 모래시계 부적(design.md §7.3): 목표 복잡도
+        const gaugeTarget = ctx.perks?.targetComplexity ? h("span", { class: "time-gauge-target" }, `목표 ${ctx.perks.targetComplexity}`) : null;
         const gauge = h(
           "div",
           { class: "time-gauge", hidden: true, "aria-label": "시간 게이지" },
           h("span", { class: "time-gauge-label" }, "시간 결계"),
           h("div", { class: "bar bar-time" }, gaugeFill),
           gaugeText,
+          gaugeTarget,
         );
         const hpFill = h("div", { class: "bar-fill" });
         const hpText = h("span", { class: "player-hp-text" });
@@ -244,7 +251,8 @@ export function createBattleUI(env: UiEnv): BattleUI {
           b.addEventListener("click", () => void openHint(lv));
           return b;
         });
-        const btnSolution = h("button", { class: "btn act-solution", type: "button" }, "해설서");
+        const btnSolution = h("button", { class: "btn act-solution", type: "button", hidden: ctx.shadow === true }, "해설서");
+        const btnPotion = h("button", { class: "btn act-potion", type: "button", hidden: potions <= 0 });
         const btnRetreat = h("button", { class: "btn act-retreat", type: "button" }, "후퇴");
         const actions = h(
           "div",
@@ -254,6 +262,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
           h("span", { class: "act-sep", "aria-hidden": "true" }),
           ...hintBtns,
           btnSolution,
+          btnPotion,
           h("span", { class: "act-sep", "aria-hidden": "true" }),
           btnRetreat,
         );
@@ -270,13 +279,19 @@ export function createBattleUI(env: UiEnv): BattleUI {
             const opened = lv <= hintLevel;
             b.disabled = busy || lv > hintLevel + 1;
             b.classList.toggle("is-open", opened);
-            b.textContent = opened ? `힌트 ${lv} ✓` : `힌트 ${lv} (${hintShortCost(lv)})`;
-            b.title = opened ? "다시 보기" : `대가: ${HINT_COSTS[lv].label}`;
+            const free = lv === 2 && freeHint2;
+            b.textContent = opened ? `힌트 ${lv} ✓` : free ? "힌트 2 (깃털: 무료)" : `힌트 ${lv} (${hintShortCost(lv)})`;
+            b.title = opened ? "다시 보기" : free ? "길잡이 깃털: 보상 대가 없음(그림자 몬스터 등록은 그대로)" : `대가: ${HINT_COSTS[lv].label}`;
+            b.classList.toggle("is-free", free && !opened);
           });
           const canSolution = ctx.knockouts >= 3;
           btnSolution.disabled = busy || !canSolution;
           btnSolution.title = canSolution ? "모범답안과 풀이(보상 0)" : `같은 적에게 세 번 쓰러지면 열 수 있어 (${Math.min(ctx.knockouts, 3)}/3)`;
           btnSolution.textContent = canSolution ? "해설서" : `해설서 (${Math.min(ctx.knockouts, 3)}/3)`;
+          btnPotion.hidden = potions <= 0;
+          btnPotion.textContent = `${ctx.potions?.name ?? "회복약"} ×${potions}`;
+          btnPotion.disabled = busy || ended || hp >= maxHp;
+          btnPotion.title = `HP ${ctx.potions?.heal ?? 0} 회복`;
         };
         const setBusy = (v: boolean) => {
           busy = v || ended;
@@ -420,6 +435,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
               return;
             }
             // 실패: 반격
+            if (phases.length && phaseIdx >= 1) barrierFirstTry = false;
             const dmg = computeDamage(p.enemy.attack, res.passed, res.total);
             setHp(hp - dmg);
             restartAnim(root, "is-damaged");
@@ -485,7 +501,8 @@ export function createBattleUI(env: UiEnv): BattleUI {
         const openHint = async (lv: 1 | 2 | 3) => {
           if (busy || lv > hintLevel + 1) return;
           if (lv > hintLevel && lv > 1) {
-            const ok = await confirmDialog(env, `힌트 ${lv}단계`, `이 힌트를 열면 ${HINT_COSTS[lv].label}. 열어 볼까?`, "열기");
+            const cost = lv === 2 && freeHint2 ? "길잡이 깃털 덕분에 보상은 그대로야. 그래도 그림자 몬스터로는 등록돼" : `이 힌트를 열면 ${HINT_COSTS[lv].label}`;
+            const ok = await confirmDialog(env, `힌트 ${lv}단계`, `${cost}. 열어 볼까?`, "열기");
             if (!ok || closed) return;
           }
           if (lv > hintLevel) {
@@ -526,7 +543,24 @@ export function createBattleUI(env: UiEnv): BattleUI {
           finalCode: editor.getCode(),
           hpLeft: result === "knockout" ? 0 : hp,
           elapsedMs: Date.now() - startedAt,
+          ...(phases.length > 1 && result === "victory" ? { timeBarrierFirstTry: barrierFirstTry } : {}),
         });
+
+        const usePotion = () => {
+          if (busy || ended || potions <= 0 || hp >= maxHp) return;
+          potions--;
+          const before = hp;
+          setHp(Math.min(maxHp, hp + (ctx.potions?.heal ?? 0)));
+          floatText(`+${hp - before}`, "float-heal");
+          try {
+            ctx.onUsePotion?.();
+          } catch (e) {
+            console.error(e);
+          }
+          reportProgress();
+          updateButtons();
+          say("happy", `${escapeHtml(ctx.potions?.name ?? "회복약")}을 마셨어! HP가 ${hp - before} 돌아왔어.`);
+        };
 
         const finish = (result: BattleOutcome["result"]) => {
           if (closed) return;
@@ -544,6 +578,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
         customBtn.addEventListener("click", () => void runCustom());
         btnSolution.addEventListener("click", () => void openSolution());
         btnRetreat.addEventListener("click", () => finish("retreat"));
+        btnPotion.addEventListener("click", usePotion);
 
         // 시간 기반 우회 제안(design.md §7.1)
         if (!p.practice) {
@@ -568,7 +603,9 @@ export function createBattleUI(env: UiEnv): BattleUI {
         updateButtons();
         say(
           "neutral",
-          p.boss
+          ctx.shadow
+            ? `<strong>${escapeHtml(p.enemy.name)}의 그림자</strong>가 나타났어! 예전에 막혔던 개념이야. 이야기와 값은 달라도 같은 주문으로 이길 수 있어.`
+            : p.boss
             ? `보스 <strong>${escapeHtml(p.enemy.name)}</strong>이(가) 나타났어! 페이즈마다 한 번에 모든 테스트를 통과해야 해.`
             : `<strong>${escapeHtml(p.enemy.name)}</strong>이(가) 길을 막고 있어! 한 번의 시전에서 모든 테스트를 통과해야 쓰러뜨릴 수 있어.`,
         );

@@ -14,7 +14,9 @@ export type MapObjectType =
   | "rune"      // 레슨 비석. props: lesson
   | "trigger"   // 밟으면 발동. props: dialogue?, lesson?, once(boolean), joinCompanion?(대사 뒤 보조 캐릭터 합류)
   | "warp"      // props: requires, lockedDialogue, openDialogue, target(지역 ID)?, targetSpawn(도착 지역의 오브젝트 ID)?
-  | "spawn";    // 새 게임 시작 위치(보이지 않음)
+  | "spawn"     // 새 게임 시작 위치(보이지 않음)
+  | "board"     // 그림자 게시판 + 일일 퀘스트 + 스트릭(§7.5, §7.6). props: (없음)
+  | "shop";     // 상점(§7.2). props: (없음)
 
 export interface MapObjectDef {
   /** 맵 안에서 고유. 저장 데이터 removedObjects에 쓰인다 */
@@ -50,6 +52,8 @@ export interface WorldController {
   setCompanionVisible(visible: boolean): void;
   /** 맵의 모든 오브젝트(제거된 것 포함) */
   getObjects(): MapObjectDef[];
+  /** 꾸미기 아이템의 색(§7.2). null이면 원래 색. 구현이 없으면 무시 */
+  setTint?(target: "player" | "companion", color: number | null): void;
 }
 
 export interface WorldFactory {

@@ -58,6 +58,7 @@ export const createWorld: WorldFactory = {
       teleport: (x, y, facing) => scene.teleport(x, y, facing),
       setCompanionVisible: (visible) => scene.setCompanionVisible(visible),
       getObjects: () => scene.getObjects(),
+      setTint: (target, color) => scene.setTint(target, color),
     };
   },
 };

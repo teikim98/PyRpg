@@ -42,6 +42,8 @@ const SPEC: Record<string, { type: string; props: Record<string, string | number
   "rune_L2-4": { type: "rune", props: { lesson: "L2-4" } },
   npc_woodcutter: { type: "npc", props: { dialogue: "npc_woodcutter", sprite: "npc_woodcutter" } },
   campfire_stream: { type: "campfire", props: {} },
+  // 단위 3-1: 개울 쉼터의 그림자 게시판(docs/phase3/plan.md §5.2)
+  board_shadow_r02: { type: "board", props: {} },
   m_P0207: { type: "monster", props: { problem: "P0207" } },
   m_P0208: { type: "monster", props: { problem: "P0208" } },
   chest_hidden_grove: { type: "chest", props: { gold: 60, dialogue: "chest_hidden_grove" } },

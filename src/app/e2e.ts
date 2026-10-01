@@ -20,6 +20,11 @@ export interface E2eSeed {
   at?: { x: number; y: number; facing?: Facing };
   hp?: number;
   flags?: string[];
+  /**
+   * 저장 데이터 최상위 항목을 통째로 바꾼다(그림자·인벤토리·퀘스트 등 시스템 화면 준비용).
+   * quests.date가 "today"면 앱의 오늘 날짜(새벽 4시 경계)로 채운다
+   */
+  patch?: Partial<SaveData>;
 }
 
 export interface E2eHook {
@@ -155,6 +160,11 @@ export function createE2eHook(
       for (const f of seed.flags ?? []) s.flags[f] = true;
       if (seed.at) s.location = { regionId: app.region.id, x: seed.at.x, y: seed.at.y, facing: seed.at.facing ?? "down" };
       if (seed.hp !== undefined) s.player.hp = seed.hp;
+      if (seed.patch) {
+        const patch = structuredClone(seed.patch);
+        if (patch.quests?.date === "today") patch.quests.date = s.streak.todayDate;
+        Object.assign(s, patch);
+      }
       return app.overwriteSave(s);
     },
   };
