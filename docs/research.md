@@ -1,6 +1,6 @@
 # PyRpg 리서치 (Phase 0)
 
-> **상태: 부분 완료.** 2026-10-01에 조사를 진행하던 도중 중단했습니다. 이 문서에는 확인을 마친 내용만 옮겼고, 끝내지 못한 항목은 '미착수'로 표시했습니다. 남은 조사 범위는 [`progress.md`](./progress.md)에 정리했습니다.
+> **상태: 완료(2026-10-01).** 이전 세션에서 중단된 조사를 이번 세션에서 마쳤습니다. 다만 이 세션의 네트워크 프록시가 solved.ac, 프로그래머스, 백준, pyodide.org, Codédex, Duolingo 블로그 등 여러 공식 사이트를 막았습니다. 그래서 GitHub에 공개된 원문(소스 코드, 문서 원본 Markdown, 도서 저장소)과 직접 측정으로 대신 확인했고, 그래도 확인하지 못한 항목은 각 절에 '미확인'으로 남겼습니다.
 >
 > 표기: **미확인** = 출처에서 확인하지 못함 · **추정** = 근거가 약함(검색 요약, 커뮤니티 글 등) · **직접 측정** = 조사 중에 로컬에서 직접 확인한 값
 >
@@ -14,12 +14,18 @@
 | 2 | 프로그래머스 고득점 Kit에서 **완전탐색과 DFS/BFS가 '출제 빈도 높음, 평균 점수 낮음'**으로 표시되어 있습니다. 반면 Kit에는 구현·시뮬레이션, 문자열, 누적합·투 포인터, 최단경로 카테고리가 없습니다. | design.md §6 커리큘럼 |
 | 3 | **Pyodide는 유지보수 라인이 두 개입니다.** 314.0.7(Python 3.14.2)과 0.29.5(Python 3.13.2)입니다. 314 라인은 classic worker를 더 이상 지원하지 않으므로 module worker를 써야 합니다. 코어 파일 크기는 약 13.5 MB(gzip 약 6.3 MB)입니다. | design.md §9 기술 스택 |
 | 4 | Boot.dev는 스트릭에 2단 보호 장치(자동 충전형 Ember, 구매형 Frozen Flame)를 두고, 해답을 보면 XP를 잃게 합니다. 복습은 간격 반복을 반영한 맞춤 연습(Training Grounds)으로 제공합니다. | design.md §7 진행도·보상·복습 |
+| 5 | 국내 코딩테스트에서 가장 많이 나오는 유형은 **구현·시뮬레이션, 그래프 탐색, 완전탐색**입니다(공식·준공식·개인 자료 공통). 프로그래머스 Kit에는 구현 카테고리가 없습니다. | design.md §6(구현·시뮬레이션 지역 신설) |
+| 6 | **Pyodide에서 C 코드를 거치는 재귀는 깊이 수백에서 런타임 전체를 죽입니다**(`@lru_cache` 약 380, Chromium 직접 측정). 순수 Python 재귀는 `setrecursionlimit`만 올리면 100만 단계도 됩니다. | design.md §6 보스 설계, §9 실행기 |
+| 7 | **무한루프는 COOP/COEP 헤더 + interrupt buffer로 약 0.5초 만에 멈추고 워커를 재사용할 수 있습니다.** 헤더가 없으면 워커를 종료하고 다시 만들어야 하며 1.7~2.7초가 걸립니다(직접 측정). | design.md §9 |
+| 8 | Pyodide는 CPython보다 1.5~2.6배 느리고, 같은 코드도 실행마다 최대 1.5배 흔들립니다(직접 측정). 고정 ms 시간 제한은 공정하지 않습니다. | design.md §9 시간 제한 보정 |
+| 9 | Phaser는 `window`에서 키를 받아 등록된 키에 `preventDefault`를 겁니다. 대책 없이 에디터를 겹치면 `def f(a, b):`가 `eff(,b):`로 입력됩니다(직접 측정). | design.md §9 |
+| 10 | 스트릭을 쓰는 서비스는 모두 보호 장치를 늘리는 쪽으로 바꿨고, 힌트에는 대가를 거의 두지 않고 해답 전체 공개에만 큰 대가를 둡니다. CodeCombat은 오래 막히면 같은 개념의 연습 레벨로 돌려보냅니다. | design.md §5.3, §7 |
 
 ---
 
 ## 1. 학습 게임의 동기부여 장치
 
-### 1.1 Boot.dev (조사 완료)
+### 1.1 Boot.dev
 
 | 항목 | 내용 | 근거 |
 |---|---|---|
@@ -689,14 +695,14 @@ tony9402의 표(29행)를 유형별로 묶어 "그 유형이 나온 시험 수"�
 #### 2.7.3 연쇄 수정이 필요한 곳(design.md 작성 시)
 
 - design.md §2.2 막 구분(1~4 / 5~7 / 8~11 / 12~15 / 16)을 권장안 기준 **1~4 / 5~7 / 8~12 / 13~16 / 17**로 바꾸는 안을 검토합니다(구현·시뮬레이션이 그래프 막의 입구가 됨).
-- §6 매핑 표의 문제 수: 17개 지역 × (일반 전투 8~15 + 보스 1~2)로 200문제 이상 목표는 그대로 충족 가능합니다.
+- design.md §6 매핑 표의 문제 수: 17개 지역 × (일반 전투 8~15 + 보스 1~2)로 200문제 이상 목표는 그대로 충족 가능합니다.
 - 2.5.2의 추천 문제 표는 초안 번호 기준입니다. 권장안을 채택하면 "13 그리디 → 10", 2.5.4의 구현·정수론 후보를 지역 13·7에 배치합니다.
 
 ---
 
 ## 3. 기술 조사
 
-### 3.1 Pyodide 버전과 크기(조사 완료)
+### 3.1 Pyodide 버전과 크기
 
 - npm dist-tags(https://registry.npmjs.org/pyodide 조회): `latest` = **314.0.7**(2026-09-14), `stable-0.29` = **0.29.5**(2026-09-16), `stable-0.27` = 0.27.8, `next` = 315.0.0-alpha.2입니다. 즉 **유지보수 중인 라인이 두 개**입니다.
 - 버전 번호 체계가 바뀌었습니다. 0.29.x 다음 버전이 314.0.0(2026-06-09)이며, 314.0.0의 changelog에는 "Upgraded to Python 3.14.2"와 "ABI Break Upgraded Emscripten to 5.0.3"이 적혀 있습니다. (https://pyodide.org/en/stable/project/changelog.html)
@@ -720,12 +726,473 @@ tony9402의 표(29행)를 유형별로 묶어 "그 유형이 나온 시험 수"�
   `python_stdlib.zip`은 이미 압축된 파일이라 gzip으로 거의 줄지 않습니다.
 - 공식 문서에 따르면 전체 배포판은 "200+ megabytes"이고, 최소 실행 파일 묶음인 pyodide-core는 "npm install pyodide를 했을 때 설치되는 파일과 같은 묶음"입니다. (https://pyodide.org/en/stable/usage/downloading-and-deploying.html)
 
-**버전 선택 검토 포인트(미결정)**: 0.29 라인은 Python 3.13이라서, 샘플 문제를 검증한 로컬 CPython 3.13.3과 minor 버전이 같습니다. 314 라인은 최신이지만 큰 breaking change를 막 겪은 버전입니다. '안정성 우선' 원칙에 비춰 보면 0.29 라인이 유력하지만, 0.29 라인의 지원 종료 시점을 확인한 뒤에 design.md §9에서 결정합니다.
+**버전 선택 검토 포인트**: 3.10.1에서 314.0.7을 권장하는 것으로 결론 냈습니다. 아래는 이전 세션의 검토 내용입니다. 0.29 라인은 Python 3.13이라서, 샘플 문제를 검증한 로컬 CPython 3.13.3과 minor 버전이 같습니다. 314 라인은 최신이지만 큰 breaking change를 막 겪은 버전입니다. '안정성 우선' 원칙에 비춰 보면 0.29 라인이 유력하지만, 0.29 라인의 지원 종료 시점을 확인한 뒤에 design.md §9에서 결정합니다.
 
-### 3.2 미착수 항목
+> 3.2~3.10의 조사 환경: pyodide.org, blog.pyodide.org, MDN, kenney.nl, opengameart.org가 차단되어, 공식 문서는 같은 내용의 원본 Markdown(GitHub의 `pyodide/pyodide` 314.0.7 태그, `pyodide/pyodide-blog`, `mdn/content` 등)을 raw.githubusercontent.com에서 읽었습니다. **직접 측정**은 Node 22.22.0, CPython 3.11.15, Chromium 153(headless, `@sparticuz/chromium`), Intel Xeon 2.10GHz 4코어 컨테이너에서 Pyodide 314.0.7과 0.29.5를 직접 실행해 얻은 값입니다.
 
-- Pyodide: Vite 로컬 번들 방법, Web Worker 패턴, `setStdin`·`setStdout` 시그니처, 무한루프 처리(`worker.terminate()`와 interrupt buffer 비교, COOP/COEP 헤더), CPython 대비 속도, 재귀 깊이 한계, 메모리와 큰 정수, 테스트별 전역 상태 격리, JS↔Python 큰 정수 변환
-- 게임 엔진(Phaser 3/4 상태와 대안), CodeMirror 6(한글 IME 포함), 저장 방식, Tiled/LDtk, CC0 에셋과 한국어 픽셀 폰트, Electron/Tauri 제약, Playwright로 canvas 게임 테스트
+### 3.2 Pyodide
+
+#### 3.2.1 Vite로 로컬 번들하기
+
+공식 문서 'Working with Bundlers'의 Vite 절차는 다음과 같습니다[TE1].
+
+- `npm install pyodide vite-plugin-static-copy`
+- `optimizeDeps: { exclude: ["pyodide"] }`로 Vite 사전 번들링에서 Pyodide를 제외합니다.
+- `vite-plugin-static-copy`로 `node_modules/pyodide/*`를 빌드 출력에 복사합니다. 제외 패턴은 `!**/*.{md,html}`, `!**/*.d.ts`, `!**/*.whl`, `!**/pyodide/node_modules`입니다.
+- 문서에 적힌 검증 조합은 "Pyodide 0.26.2, Vite 5.4.9, vite-plugin-static-copy 2.0.0"입니다. 즉 **최신 조합으로는 공식 검증이 없습니다.**
+- 별도의 공식 "pyodide vite plugin" npm 패키지는 없습니다. Webpack용으로만 공식 플러그인(`pyodide-webpack-plugin`)이 있습니다[TE1]. npm 검색(`npm search pyodide vite`)에서도 공식 Vite 플러그인은 나오지 않았습니다.
+
+**직접 측정: Vite 8.3.1 + vite-plugin-static-copy 4.1.1 + Pyodide 314.0.7(그리고 0.29.5) 조합으로 빌드하고 Chromium에서 실행해 봤습니다.**
+
+| 항목 | 결과 |
+|---|---|
+| 공식 문서 설정 그대로 | 빌드는 되지만 `dist/pyodide/node_modules/pyodide/...`처럼 **디렉터리 구조가 그대로 복사**되어 `indexURL`이 어긋났습니다. vite-plugin-static-copy 4.x README에 "Directory structure is always preserved... Use `rename: { stripBase: true }` for flat copy"라고 적혀 있습니다. |
+| 수정 | target에 `rename: { stripBase: true }`를 추가하고 `!**/*.map`도 제외했습니다. 결과 `dist/pyodide/`에 `pyodide.mjs`, `pyodide.asm.mjs`, `pyodide.asm.wasm`, `python_stdlib.zip`, `pyodide-lock.json` 등 7개 파일이 남았고 `dist` 전체는 13 MB입니다. |
+| 워커 코드 | `pyodide.mjs`는 워커 청크(약 20 kB)에 번들되고, 나머지 무거운 파일은 `indexURL`에서 런타임에 받아 옵니다. `loadPyodide({ indexURL: new URL("../pyodide/", import.meta.url).href })`로 dev와 build 모두에서 경로가 맞았습니다. |
+| 빌드 경고 | `node:url`, `node:vm`, `node:crypto`, `node:child_process`, `node:fs`가 "externalized for browser compatibility"라는 경고가 나오지만 브라우저 실행에는 문제가 없었습니다. |
+| 워커 생성 | `new Worker(new URL("./py.worker.ts", import.meta.url), { type: "module" })`와 Vite 설정 `worker: { format: "es" }`로 동작했습니다. **0.29.5도 module worker에서 그대로 동작**했습니다. |
+
+#### 3.2.2 Web Worker 패턴
+
+- 314 라인 공식 문서: "Pyodide requires a module-type worker because `pyodide.asm.mjs` is an ES module. Classic workers using `importScripts()` are not supported."[TE2]
+- 공식 예제는 워커 안에서 `loadPyodide()`를 한 번 호출해 promise를 보관하고, 메시지마다 `id`를 붙여 요청/응답을 짝짓습니다. 실행할 때는 `const globals = pyodide.globals.get("dict")(...)`로 **새 dict를 만들어 `runPythonAsync(python, { globals })`에 넘깁니다**[TE2].
+- 314.0.0 changelog: `runPythonAsync()`는 이제 Python 실행 전에 항상 한 번 이벤트 루프에 양보합니다(stack switching 메모리 누수 수정의 부작용)[TE3].
+- 314.0.7(2026-09-14)에서 `runPython`/`runPythonAsync`에 `dedent` 옵션이 추가되었습니다(기본 `True`)[TE3].
+
+**직접 측정(Chromium 153, 314.0.7)**: 워커 첫 부팅(`loadPyodide` + 첫 `runPython`) 약 **2.4~2.7초**, 워커를 종료하고 새로 만들 때(브라우저 캐시 사용) 약 **1.7~2.7초**가 걸렸습니다. Node 22에서는 `loadPyodide`가 314.0.7 약 2.5초, 0.29.5 약 1.7초였습니다.
+
+#### 3.2.3 `setStdin` / `setStdout` / `setStderr` 시그니처
+
+314.0.7의 `pyodide.d.ts`에서 그대로 옮겼습니다(**직접 확인**).
+
+```ts
+type InFuncType = () => null | undefined | string | ArrayBuffer | Uint8Array | number;
+declare function setStdin(options?: {
+  stdin?: InFuncType;
+  read?: (buffer: Uint8Array) => number;
+  error?: boolean;
+  isatty?: boolean;
+  autoEOF?: boolean;
+}): void;
+interface BatchedWriteHandler { batched: (output: string) => void; }
+interface RawWriteHandler { raw: (charCode: number) => void; isatty?: boolean; getTerminalSize?: () => {rows:number; columns:number} | undefined; }
+interface Writer { isatty?: boolean; fsync?: () => void; write(buffer: Uint8Array): number; getTerminalSize?: ...; }
+type StdWriteOpts = BatchedWriteHandler | RawWriteHandler | Writer;
+declare function setStdout(options?: StdWriteOpts | {}): void;
+declare function setStderr(options?: StdWriteOpts | {}): void;
+```
+
+- 0.29.5는 `setStdin`이 같고, `setStdout`/`setStderr`는 `{ batched?, raw?, write?, isatty? }` 하나의 객체 타입입니다(유니온 타입이 아님). 사용법은 사실상 같습니다(**직접 확인**, d.ts diff).
+- `stdin` 콜백 반환값 규칙(공식 문서)[TE4]: 문자열은 한 줄(끝에 개행이 없으면 붙여 줌), `ArrayBuffer`/`Uint8Array`는 UTF-8 바이트, 0~255 숫자는 1바이트, **`undefined`/`null`은 EOF**입니다. `{ error: true }`는 stdin 읽기를 I/O 에러로 만듭니다. 인자 없이 `setStdin()`을 부르면 기본값으로 돌아갑니다.
+
+**직접 측정(314.0.7, 0.29.5 동일 결과)**:
+
+| 시나리오 | 결과 |
+|---|---|
+| `input()` 3번 + 리스트가 소진된 뒤 `input()` | 값이 순서대로 들어오고, 이후 `null` 반환 시 `EOFError` 발생 |
+| `sys.stdin.read()`에 전체 텍스트를 한 번에 반환 | `"5\n1 2 3 4 5\n"` 그대로 읽힘 |
+| `for l in sys.stdin` | 줄 단위로 `["5\n", "1 2 3 4 5\n"]` |
+| `setStdout({ batched })` | **줄 단위로 콜백**되고 개행 문자는 빠집니다. `print('x', end='')`처럼 개행 없는 출력은 다음 출력과 합쳐져 `"xEOF ok"`로 왔습니다. 채점용으로 정확한 바이트가 필요하면 `raw` 또는 `write` 핸들러를 쓰는 편이 안전합니다(추정). |
+
+#### 3.2.4 무한루프 처리: `worker.terminate()` vs interrupt buffer
+
+| 방식 | 조건 | 장점 | 단점 |
+|---|---|---|---|
+| `worker.terminate()` 후 워커 재생성 | 없음(어디서나 동작) | 어떤 코드든 확실히 멈춤. C 코드에 갇혀도, Pyodide가 fatal error로 죽어도 복구 가능 | 재부팅 비용 약 1.7~2.7초(직접 측정). 워커 안의 상태가 전부 사라짐 |
+| `pyodide.setInterruptBuffer(Uint8Array(SharedArrayBuffer))` + `buf[0]=2` | **Web Worker + SharedArrayBuffer 필요** → 페이지가 cross-origin isolated(COOP `same-origin` + COEP `require-corp` 또는 `credentialless`)여야 함[TE5][TE6] | `KeyboardInterrupt`로 깔끔히 중단되고 워커를 재사용 가능. 학습자에게 "시간 초과" 트레이스백을 보여줄 수 있음 | 헤더 설정이 필요하고, Python 바이트코드 사이 또는 `PyErr_CheckSignals`를 부르는 C 코드에서만 인터럽트가 걸림[TE5] |
+
+- 공식 문서 원문: "In order to use interrupts you must be using Pyodide in a webworker. You also will need to use a SharedArrayBuffer, which means that your server must set appropriate security headers."[TE5] 인터럽트가 처리되면 Pyodide가 버퍼 값을 0으로 되돌립니다.
+
+**직접 측정(Chromium 153, 314.0.7, vite preview)**:
+
+| 실험 | COOP/COEP 있음 | COOP/COEP 없음 |
+|---|---|---|
+| `crossOriginIsolated` / `SharedArrayBuffer` | `true` / 사용 가능 | `false` / **undefined** |
+| `while True: pass` 시작 500 ms 뒤 `buf[0]=2` | 약 502 ms에 `KeyboardInterrupt`, 다음 `1+1` 정상 | 인터럽트 불가 |
+| 큰 정수 연산(`x=3**(10**7); y=x*x*x`) 도중 300 ms 뒤 인터럽트 | 약 304 ms에 `KeyboardInterrupt` | – |
+| `Promise.race` 500 ms 타임아웃 후 `worker.terminate()` → 새 워커 | 정상 복구(재부팅 약 2.7초) | 정상 복구(재부팅 약 1.7초) |
+
+- 이 실험은 `crossOriginIsolated`가 실제로 `true`인지 확인했습니다. 테스트용 Chromium 기본 플래그 중 `--enable-features=SharedArrayBuffer`는 쓰지 않았습니다.
+
+#### 3.2.5 CPython 대비 속도
+
+- 공식 로드맵: "Pyodide is currently around 3x to 5x slower than native Python."[TE7] (문서 작성 시점 표기 없음, 추정치로 취급)
+
+**직접 측정(같은 머신, 각 2회 실행 중 빠른 값, 단위 초)**:
+
+| 벤치마크 | CPython 3.11.15(네이티브) | Pyodide 314.0.7(Node 22) | Pyodide 0.29.5(Node 22) | 배율(314/CPython) |
+|---|---|---|---|---|
+| `for i in range(10_000_000): s+=i` | 0.653 | 1.342 | 1.446 | 약 2.1배 |
+| dict 갱신 100만 회 | 0.153 | 0.272 | 0.318 | 약 1.8배 |
+| 리스트 컴프리헨션 + `sorted` 100만 개 | 0.224 | 0.325 | 0.391 | 약 1.5배 |
+| `20000!` 큰 정수 곱 | 0.065 | 0.098 | 0.093 | 약 1.5배 |
+| 1M 루프(기준 루프), Chromium 워커 | – | 0.105~0.150 | – | – |
+
+- 같은 기준 루프가 실행마다 **최대 약 1.5배까지 흔들렸습니다**(Node에서 128~181 ms, 브라우저 워커에서 105~150 ms). 시간 제한을 고정 ms로 두면 안 되는 근거입니다.
+- 이 측정은 로컬 CPython 3.11 기준입니다. 3.13/3.14 네이티브와 비교하지 않았습니다.
+
+#### 3.2.6 재귀 깊이 한계 (중요)
+
+- 기본 `sys.getrecursionlimit()`은 두 라인 모두 **1000**입니다(직접 측정).
+- CPython 3.11+는 순수 Python 함수끼리의 호출에 C 스택을 쓰지 않습니다. 그래서 **순수 Python 재귀는 `sys.setrecursionlimit`만 올리면 매우 깊게 들어갑니다.** 반면 C로 구현된 함수(`map`, `sum`, `functools.lru_cache`, `repr` 등)를 거치는 재귀는 프레임마다 WebAssembly/JS 스택을 소모합니다.
+
+**직접 측정(Chromium 153 module worker, `sys.setrecursionlimit(10**6)` 이후)**:
+
+| 재귀 형태 | 314.0.7 | 0.29.5 |
+|---|---|---|
+| 순수 Python `f(n-1)` | 1,000,000 성공(248 ms) | (Node에서 1,000,000 성공) |
+| 그래프 DFS(`for v in adj[u]: dfs(v)`) | 500,000 성공 | 500,000 성공 |
+| dict 메모 피보나치 | 100,000 성공 | 100,000 성공 |
+| **`@lru_cache` 피보나치** | 360 성공, **380에서 fatal** | 400 성공, **450에서 fatal** |
+| `1+sum(map(g,[n-1]))` | 500 성공, **520에서 fatal** | 540 성공, **560에서 fatal** |
+| 중첩 리스트 `repr` 10만 단계 | fatal | (미측정) |
+| **기본 한도(1000) 그대로** `map` 재귀 | **fatal**(Node에서는 `RecursionError`로 안전) | (미측정) |
+
+- 'fatal'은 `RangeError: Maximum call stack size exceeded` → "Pyodide has suffered a fatal error"가 뜨고, **이후 모든 호출이 "Pyodide already fatally failed and can no longer be used."로 실패**한다는 뜻입니다. 워커를 반드시 새로 만들어야 합니다.
+- 또 하나의 함정: fatal 이후 `PyProxy.destroy()` 같은 정리 코드가 다시 예외를 던져서, 워커가 **응답 메시지를 보내지 못하고 멈춘 것처럼** 보였습니다. 워커 쪽 `finally`는 반드시 `try/catch`로 감싸고, 메인 쪽은 응답 타임아웃을 둬야 합니다.
+- Node 22(기본 스택 약 984 KB)에서는 C 경유 재귀가 1000 정도에서 fatal이었습니다. 브라우저가 Node보다 한도가 더 낮았습니다. 브라우저 종류(Firefox/Safari)와 기기별 값은 **미확인**입니다.
+- **설계 영향**: 코딩테스트 풀이에서 흔한 `sys.setrecursionlimit(10**6)` + `@lru_cache` 패턴이 깊이 수백에서 런타임 전체를 죽입니다. 문제 설계 시 (1) 재귀 깊이가 큰 문제는 dict 메모/반복문 풀이를 유도하고, (2) 런타임이 fatal이면 "재귀가 너무 깊어요(브라우저 한계)" 같은 전용 안내를 보여 주고 워커를 재생성해야 합니다.
+
+#### 3.2.7 메모리와 큰 정수
+
+**직접 측정(Node 22, 두 라인 동일한 경향)**:
+
+| 항목 | 결과 |
+|---|---|
+| 부팅 직후 WASM 힙 | 314: 90 MB, 0.29: 86 MB |
+| `[0]*10_000_000` 이후 | 약 113~114 MB |
+| `bytearray(1 GiB)`, `bytearray(1.5 GiB)` | 성공(힙 약 1.6 GB까지 증가) |
+| `bytearray(2 GiB)` 이상 | `OverflowError: cannot fit 'int' into an index-sized integer`(wasm32라 `Py_ssize_t`가 32비트). 인터프리터는 살아 있음 |
+| `str(10**5000)` | `ValueError: Exceeds the limit (4300 digits) for integer string conversion` — CPython 3.11+와 같은 제한. `sys.set_int_max_str_digits(0)`로 해제 가능 |
+
+- WASM 힙은 한 번 커지면 줄지 않습니다(Emscripten 메모리 성장 특성, 추정). 메모리를 많이 쓴 실행 뒤에는 워커를 재생성하는 것이 깔끔합니다.
+- 4300자리 제한은 '큰 수 출력' 문제에서 학습자가 처음 보는 에러가 될 수 있습니다. 문제 데이터가 4300자리를 넘지 않게 하거나 채점 하네스에서 해제할지 결정해야 합니다.
+
+#### 3.2.8 테스트별 전역 상태 격리
+
+**직접 측정**:
+
+| 실험 | 결과 |
+|---|---|
+| `runPython("x = 42", { globals: g1 })` 후 `runPython("x", { globals: g2 })`(g2는 새 dict) | `NameError` → 사용자 전역 변수는 격리됨 |
+| `sys.modules` 변경을 다른 dict에서 확인 | **공유됨**(`True`). `sys.setrecursionlimit`, `sys.set_int_max_str_digits`, import한 모듈의 상태, `random.seed` 등 인터프리터 전역 상태는 dict로 격리되지 않음 |
+
+- 권장 하네스: 테스트 케이스마다 `pyodide.globals.get("dict")()`로 새 dict를 만들고, 실행 뒤 `destroy()`합니다. 실행 전 `sys.setrecursionlimit(1000)`, `sys.set_int_max_str_digits(4300)`, `sys.stdin`/`stdout` 핸들러를 재설정합니다. 숨은 상태까지 완전히 끊으려면 보스전 같은 중요한 채점은 새 워커에서 실행합니다(부팅 약 2초 비용).
+- 참고: dict에 `__builtins__`가 없으면 `exec`이 자동으로 넣어 줍니다(CPython 동작, 추정).
+
+#### 3.2.9 JS ↔ Python 큰 정수 변환
+
+공식 Type translations 문서(314.0.7)[TE8]와 314 릴리스 블로그[TE9] 기준입니다.
+
+| 방향 | 규칙 |
+|---|---|
+| Python `int` → JS | 절댓값이 `Number.MAX_SAFE_INTEGER`(2^53−1) 이하면 `Number`, 넘으면 `BigInt` |
+| `pyodide.ffi.JsBigInt` → JS | `BigInt`(314에서 추가) |
+| JS `Number` → Python | 절댓값이 MAX_SAFE_INTEGER 이하이고 소수부가 0이면 `int`, 아니면 `float` |
+| JS `BigInt` → Python | **314: `pyodide.ffi.JsBigInt`(int의 하위 클래스)** / 0.29: `int` |
+
+314 블로그 원문 요지: 예전에는 JS bigint가 Python `int`로 들어왔다가 다시 JS로 나갈 때 `number`가 되어 2^53 이상에서 정밀도를 잃었습니다. 314부터는 `JsBigInt`가 왕복을 보장합니다[TE9].
+
+**직접 측정**:
+
+| 값 | 314.0.7 | 0.29.5 |
+|---|---|---|
+| Python `2**31` → JS | `number` | `number` |
+| Python `2**53` → JS | `bigint` | `bigint` |
+| Python `-(2**60)`, `2**100` → JS | `bigint` | `bigint` |
+| JS `2n**80n`, `5n` → Python `type()` | `JsBigInt` | `int` |
+| JS `2**53`(Number) → Python | `float` | `float` |
+| JS `3.0` → Python | `int` | `int` |
+| `from pyodide.ffi import JsBigInt` | 가능, `isinstance(x, int)` = True | `ImportError` |
+| `[1, 2**60, 2**200].toJs()` | `number, bigint, bigint` | 동일 |
+
+- **설계 영향**: 채점 결과를 JS로 가져와 비교하면 같은 정답 리스트 안에 `number`와 `bigint`가 섞입니다. JSON 직렬화(`JSON.stringify`는 BigInt에서 예외)도 깨집니다. **채점 비교는 Python 안에서 하고, JS에는 문자열(`repr`)이나 boolean만 넘기는 것**이 안전합니다. 314에서는 JS에서 넘긴 BigInt가 `type(x) is int` 검사에서 `False`가 되므로 테스트 입력을 JS BigInt로 넘기지 말아야 합니다.
+
+#### 3.2.10 0.29 라인 지원 종료 시점
+
+| 근거 | 내용 |
+|---|---|
+| npm 릴리스 날짜(직접 조회) | 0.29.0 2025-10-20 → 0.29.3 2026-01-28 → 0.29.4 2026-05-07 → **0.29.5 2026-09-16**("Fix compatibility of python cli with Node 26") |
+| 이전 라인 | 0.27.8도 2026-09-16에 나왔습니다. dist-tag `stable-0.27`, `stable-0.29`가 함께 유지됩니다. |
+| 314 릴리스 블로그 | 새 버전 체계는 Python 버전에 맞추고, ABI 변경은 "typically once a year", 새 메이저는 "annually"라고만 적혀 있습니다[TE9]. **0.29의 지원 종료 날짜는 공식 문서·블로그·changelog에서 찾지 못했습니다(미확인).** |
+| 다음 메이저 | `next` dist-tag = 315.0.0-alpha.2(Python 3.15 계열 추정). 2027년 무렵 315 정식판이 나오면 314도 이전 라인이 됩니다(추정). |
+
+- 0.29 라인 패치는 최근 1년 동안 Node 호환성 등 작은 수정만 있었습니다. "보안·기능 지원 라인"이라기보다는 "가끔 호환성 패치를 받는 이전 라인"으로 보는 것이 맞습니다(추정).
+
+
+### 3.3 게임 엔진
+
+#### 3.3.1 Phaser 3 vs Phaser 4 상태
+
+| 항목 | 내용 |
+|---|---|
+| npm dist-tags(직접 조회) | `latest` = **4.2.1**(2026-07-09), `beta` = 4.0.0-rc.7, `alpha` = 4.0.0-alpha.4 |
+| 4.x 릴리스 | 4.0.0(2026-04-10) → 4.1.0(2026-04-30) → 4.2.0(2026-06-19) → 4.2.1(2026-07-09) |
+| 3.x 마지막 | **3.90.0 "Tsugumi"(2025-05-23)**. 이후 3.x 릴리스는 npm에 없습니다. 사실상 동결 상태입니다(지원 종료 공지 자체는 미확인). |
+| 라이선스 | MIT |
+| v4 핵심 변경(4.0.0 changelog 원문) | "built on a brand-new, highly efficient WebGL renderer"; v3 Pipeline 시스템을 RenderNode로 교체; **"The Canvas renderer is still available but should be considered deprecated"**; FX와 Mask를 Filter로 통합; `Geom.Point` 제거(Vector2로 대체); `roundPixels` 기본값이 `false`로 변경[TE10] |
+| v4에서 유지된 것 | `load.tilemapTiledJSON`(Tiled JSON), DOM Element 게임 오브젝트(`this.add.dom`), 키보드 capture API(`addCapture`/`removeCapture`/`disableGlobalCapture`) — 4.2.1 타입 정의로 직접 확인 |
+| 마이그레이션 가이드 | 패키지 안 `changelog/v4/4.0/MIGRATION-GUIDE.md`에 22개 항목 |
+| 새 기능(픽셀 RPG 관련) | `TilemapGPULayer`: 타일맵 레이어 하나를 셰이더 한 번으로 그리는 렌더러(WebGL 전용)[TE10] |
+
+- **판단**: 새 프로젝트라면 v3을 고를 이유가 적습니다. 다만 v4는 출시 6개월이고 튜토리얼과 커뮤니티 예제는 대부분 v3 기준입니다. v3 예제를 옮길 때 Point/FX/Mask/Pipeline 관련 코드만 피하면 타일맵·스프라이트·입력 코드는 대부분 그대로 쓸 수 있습니다(추정, 마이그레이션 가이드 목차 기준).
+- 픽셀아트 설정: `pixelArt: true`(텍스처 nearest 필터) + 정수 배율 `zoom`을 쓰는 것이 기본입니다. v4는 `roundPixels`가 기본 `false`이고 "axis-aligned and unscaled"인 객체에만 적용됩니다[TE10].
+
+#### 3.3.2 대안 비교
+
+**번들 크기는 직접 측정**(npm 패키지의 배포 파일을 `gzip -9`로 압축. Phaser는 Vite 8 빌드 결과도 측정).
+
+| 엔진 | 버전(npm latest) | 라이선스 | 크기(min / gzip) | 타일맵 지원 | 메모 |
+|---|---|---|---|---|---|
+| **Phaser** | 4.2.1 | MIT | 1.38 MB / 352 KB(`phaser.min.js`). Vite 빌드 1.38 MB / 358 KB | Tiled JSON 내장. LDtk 공식 지원 없음(npm `phaser-ldtk-importer` 0.0.0, 2024 — 사실상 미사용) | 씬·카메라·트윈·입력·사운드·로더가 모두 포함. 학습 자료 가장 많음 |
+| KAPLAY | 3001.0.19(`next` 4000.0.0-alpha.27.1) | MIT | 189 KB / 69 KB(`kaplay.mjs`, 미니파이 여부 미확인) | 공식 Tiled/LDtk 플러그인 npm에서 못 찾음 | Kaboom.js 후속. 가볍고 API가 단순. 4000 메이저가 알파 진행 중 |
+| Excalibur.js | 0.32.0(`next` 0.33.0-alpha.247) | BSD-2-Clause | 877 KB / 198 KB(`excalibur.min.js`) | 공식 `@excaliburjs/plugin-tiled` 0.32.0, `@excaliburjs/plugin-ldtk` 0.32.1 | TypeScript 우선. 아직 0.x |
+| PixiJS | 8.21.0 | MIT | 829 KB / 233 KB(`pixi.min.mjs`) | 없음(렌더러). 커뮤니티 `pixi-ldtk-loader` 2.3.3 | 렌더러만 제공. 씬·입력·충돌을 직접 만들어야 함 |
+| 순수 Canvas 2D | – | – | 0 | 직접 구현 | 그리드 이동 RPG면 충분히 가능하지만 애니메이션·카메라·로딩 등을 모두 직접 작성 |
+
+- **판단**: 타일 기반 탑다운 RPG + DOM 에디터 오버레이라면 **Phaser 4**가 무난합니다. 번들 크기(gzip 약 350 KB)는 Pyodide(약 6.3 MB)에 비하면 작습니다. LDtk를 꼭 쓰고 싶다면 Excalibur가 유일하게 공식 플러그인을 갖고 있습니다.
+
+#### 3.3.3 DOM UI 오버레이와 키보드 입력 충돌
+
+Phaser 4.2.1 소스(`src/input/keyboard/KeyboardManager.js`)를 직접 읽었습니다.
+
+- 키보드 리스너는 `inputKeyboardEventTarget`(기본값 **`window`**)에 `keydown`/`keyup`으로 붙습니다.
+- 핸들러는 `event.defaultPrevented`이거나 `enabled`가 false면 무시합니다. 그렇지 않으면 이벤트를 큐에 넣고, **capture 목록에 있는 키(수정키 없이 눌린 경우)에 `preventDefault()`를 호출**합니다.
+- `addKey`/`addKeys`의 `enableCapture` 기본값이 `true`입니다. 즉 WASD·Space·방향키를 게임 키로 등록하는 순간 **페이지 전체에서 그 키의 기본 동작이 막힙니다.**
+- 공식 타입 주석: `disableGlobalCapture()`는 "temporarily disable event capturing if, for example, you swap to a DOM element", `this.input.keyboard.enabled = false`는 입력 전체 정지 용도로 안내합니다.
+- Phaser 핸들러에는 `isComposing`(IME 조합 중) 검사가 없습니다(소스 grep으로 확인).
+
+**직접 측정(Chromium 153, Phaser 4.2.1 WebGL + CodeMirror 6 basicSetup, Playwright로 입력)**: 게임에 `addKeys("W,A,S,D,SPACE,UP,DOWN,LEFT,RIGHT")`를 등록하고, 에디터에 `def f(a, b):⏎return a + b⏎`와 한글 IME 조합(CDP `Input.imeSetComposition` → `insertText`)을 입력했습니다.
+
+| 방식 | 에디터에 들어간 내용 | Phaser 키 이벤트 |
+|---|---|---|
+| 대책 없음 | `eff(,b):\nreturn+b\n\n한글` — **d, a, 공백, s가 사라짐** | 39회(에디터 타이핑이 캐릭터를 움직임) |
+| ① 에디터 `focusin`에서 `kb.enabled=false; kb.disableGlobalCapture(); kb.resetKeys()`, `focusout`에서 복구 | `def f(a, b):\n    return a + b\n\n    한s글` — 정상 | 0회 |
+| ② 에디터 래퍼에서 `keydown`/`keyup`을 `stopPropagation()` | ①과 같음 | 0회 |
+
+- 추가 발견: **캔버스를 클릭해도 에디터 포커스가 빠지지 않았습니다**(`document.activeElement`가 계속 `.cm-content`). 그래서 ①은 `focusout`이 일어나지 않아 게임 키가 계속 꺼져 있었습니다. 캔버스 `pointerdown`에서 `view.contentDOM.blur()`를 직접 호출하거나 캔버스에 `tabindex`를 주어야 합니다. 명시적으로 `blur()`하면 게임 키가 다시 동작했습니다.
+- **권장**: ②(전파 차단)를 기본으로 쓰고, ①(Phaser 쪽 비활성화)을 함께 적용합니다. 그리고 "에디터 모드/탐험 모드"를 상태로 명확히 나눕니다. 게임 쪽 단축키 핸들러를 직접 만들 때는 `if (e.isComposing || e.keyCode === 229) return;`으로 IME 조합 중 입력을 무시해야 합니다(한글 조합 중 Enter/Space 오작동 방지, 일반 웹 관행 — 추정).
+- DOM 오버레이 배치: 에디터는 Phaser의 `this.add.dom()`보다 **캔버스 위에 절대 위치로 올린 일반 DOM**으로 두는 편이 단순합니다. Phaser DOM 오브젝트는 게임 좌표·스케일을 따라가므로 확대된 픽셀 화면에서 에디터 글자도 함께 커집니다(추정). 측정에서는 일반 절대 위치 DOM을 썼습니다.
+
+
+### 3.4 CodeMirror 6
+
+#### 3.4.1 버전(npm, 2026-10-01)
+
+| 패키지 | 버전 | 최종 수정 |
+|---|---|---|
+| `codemirror`(basicSetup 묶음) | 6.0.2 | 2026-02-07 |
+| `@codemirror/view` | 6.43.13 | 2026-09-22 |
+| `@codemirror/state` | 6.7.6 | 2026-09-22 |
+| `@codemirror/lang-python` | 6.2.1 | 2026-04-13 |
+| `@codemirror/language` | 6.12.4 | 2026-06-25 |
+| `@codemirror/commands` | 6.11.1 | 2026-09-15 |
+| `@codemirror/autocomplete` | 6.20.3 | 2026-06-03 |
+| `@codemirror/lint` | 6.9.7 | 2026-06-09 |
+| `monaco-editor`(비교용) | 0.57.0 | 2026-09-24 |
+
+모두 MIT 라이선스입니다.
+
+#### 3.4.2 자동 들여쓰기 (직접 측정)
+
+- `basicSetup + python()`만 쓰면 `def f(a, b):` 다음 Enter에서 **2칸**이 들어갔습니다. CodeMirror 기본 `indentUnit`이 2칸이기 때문입니다.
+- `indentUnit.of("    ")`(`@codemirror/language`)를 추가하면 **4칸**이 들어갔습니다(PEP 8 관례). 반드시 설정해야 합니다.
+- `return` 다음 줄에서 자동 내어쓰기(dedent)는 일어나지 않았습니다(같은 4칸 유지). Tab 키로 들여쓰려면 `indentWithTab` 키맵을 추가해야 합니다. 이때 키보드 사용자가 에디터에서 빠져나올 수 있게 Esc → Tab 탈출 안내가 필요합니다(CodeMirror 문서 관례, 추정).
+
+#### 3.4.3 번들 크기 (직접 측정, Vite 8.3.1 프로덕션 빌드)
+
+| 구성 | min | gzip |
+|---|---|---|
+| `codemirror` basicSetup + `lang-python` | 460 KB | 153 KB |
+| 최소 구성(view/state/commands + lineNumbers/history/indentOnInput + `lang-python`) | 355 KB | 120 KB |
+| **Monaco** 0.57.0(editor.api + python 언어 + editor.worker) | 메인 2,706 KB + 워커 304 KB + CSS 99 KB(`dist` 합계 3.0 MB) | 메인 695 KB + CSS 14 KB |
+
+#### 3.4.4 한글 IME
+
+- **직접 측정**: Chromium 153 headless에서 CDP `Input.imeSetComposition`으로 "ㅎ→하→한" 조합 후 확정, "글" 조합 후 확정, 이어서 방향키와 영문 입력까지 했을 때 CodeMirror 문서에 `한s글`로 정확히 들어갔습니다. 다만 **CDP 시뮬레이션은 실제 OS IME(Windows MS IME, macOS 한글 입력기)와 동작이 다를 수 있으므로** 실제 기기 수동 테스트가 필요합니다.
+- CodeMirror `@codemirror/view` CHANGELOG에는 composition 관련 수정이 꾸준히 있습니다(예: "Fix an issue causing the IME interface to appear in the wrong spot on Chrome Windows", "Fix the editor getting stuck in composition when Safari fails to fire a compositionend event"). Chrome에서는 `EditContext` API로 텍스트 입력을 받습니다(재활성화 기록 있음). **한국어만 콕 집은 미해결 이슈는 찾지 못했습니다(미확인).**
+- 한글 IME 문제는 에디터 자체보다 **주변 코드(게임 키 핸들러, Enter=제출 단축키)가 조합 중 이벤트를 처리할 때** 자주 생깁니다(검색 결과의 여러 제품 사례[TE11]). 3.3.3의 `isComposing` 검사가 그 대책입니다.
+
+#### 3.4.5 CodeMirror 6 vs Monaco
+
+| 기준 | CodeMirror 6 | Monaco |
+|---|---|---|
+| 번들(gzip) | 120~153 KB | 약 710 KB + 워커 |
+| 구조 | 확장 조합형. 필요한 기능만 넣음 | VS Code 에디터 그대로. 워커 설정 필요 |
+| Vite 통합 | import만 하면 됨 | 패키지 `exports`가 바뀌어(0.57.0: `monaco-editor/editor/editor.api`, 언어는 `languages/definitions/python/register`) 옛 예제의 `esm/vs/...` 경로가 **빌드 실패**(직접 측정) |
+| 모바일 | 지원 | 공식적으로 모바일 미지원(추정) |
+| 게임 UI 커스터마이즈 | 테마를 CSS로 자유롭게 | 가능하지만 VS Code 느낌이 강함 |
+| Python 자동완성/린트 | 기본은 키워드 수준. 직접 구현 필요 | 기본은 구문 강조 수준(Python 언어 서버 없음) |
+
+- **판단**: Pyodide(수 MB)와 함께 로드하는 게임이라는 점, 초보자용 단순 에디터라는 점에서 **CodeMirror 6**이 맞습니다.
+
+
+### 3.5 저장 방식(IndexedDB)
+
+**버전·라이선스는 npm 조회, 크기는 직접 측정**(esbuild로 최소 import만 번들·minify한 뒤 `gzip -9`).
+
+| 방식 | 버전(최종 수정) | 라이선스 | min / gzip | 특징 |
+|---|---|---|---|---|
+| raw IndexedDB | – | – | 0 | 콜백·이벤트 기반 API. 버전 업그레이드(`onupgradeneeded`)와 트랜잭션 수명 관리를 직접 해야 함 |
+| **idb** | 8.0.3(2025-05-07) | ISC | 3.3 KB / **1.4 KB** | IndexedDB를 Promise로 감싼 얇은 래퍼. 스키마·인덱스·트랜잭션을 그대로 노출. TypeScript 스키마 타입(`DBSchema`) 지원 |
+| idb-keyval | 6.3.0(2026-07-08) | Apache-2.0 | 0.6 KB / 0.4 KB | `get`/`set`만 있는 키-값 저장. 슬롯 몇 개짜리 세이브라면 이것만으로 충분 |
+| Dexie | 4.4.6(2026-09-10) | Apache-2.0 | 100 KB / 33 KB | 쿼리·인덱스·스키마 버전 관리·`liveQuery`. 데이터가 많고 검색이 필요할 때 유리 |
+| localForage | 1.10.0(**2022-06-19 이후 갱신 없음**) | Apache-2.0 | 31 KB / 10 KB | localStorage식 API. IndexedDB 미지원 브라우저 대비용 폴백이 목적이었으나 지금은 의미가 작음. 유지보수 정체 |
+
+- **판단**: 세이브 데이터는 '슬롯별 JSON 문서 + 제출 코드 기록' 정도이므로 **idb**(스키마·마이그레이션 제어 필요 시) 또는 idb-keyval(최소)이면 충분합니다. Dexie는 기능이 과합니다.
+- 브라우저가 저장소를 비울 수 있으므로 `navigator.storage.persist()` 요청과 **세이브 내보내기/가져오기(JSON 파일)** 기능을 함께 두는 것이 안전합니다(일반 관행, 추정). Electron으로 감싸면 origin이 커스텀 프로토콜(`app://...`)이 되므로 웹판과 세이브가 공유되지 않습니다(추정).
+
+
+### 3.6 맵 에디터: Tiled vs LDtk
+
+| 항목 | Tiled | LDtk |
+|---|---|---|
+| 최신 버전 | **1.12.2(2026-05-27)**(GitHub `NEWS.md`) | **1.5.3**(GitHub `app/package.json`, `docs/CHANGELOG.md` 첫 항목. 릴리스 날짜 미확인) |
+| 라이선스 | 에디터 본체(`src/tiled`)는 **GPL**, `libtiled`·`tmxviewer` 등은 BSD 2-clause(저장소 `COPYING`) | **MIT**(Copyright 2020 Sébastien Benard - Deepnight Games) |
+| 만든 맵의 권리 | 공식 포럼 답변: 맵은 "your own work and copyright, they are not 'works based on the program'"[TE12] | MIT 도구라 제약 없음 |
+| Phaser 지원 | **내장**: `this.load.tilemapTiledJSON()`(Phaser 4.2.1 타입에서 확인) | 공식 없음. 직접 JSON 파싱 필요(npm `phaser-ldtk-importer` 0.0.0은 사실상 미사용) |
+| Excalibur 지원 | `@excaliburjs/plugin-tiled` 0.32.0 | `@excaliburjs/plugin-ldtk` 0.32.1 |
+| 특징 | 범용·오래됨. 오브젝트 레이어, 커스텀 프로퍼티, 자동 타일(terrain) | 레벨 단위 월드 설계, 엔티티 정의, 자동 레이어 규칙이 강력. 'Super Simple Export'로 PNG+CSV 출력 가능 |
+
+- **판단**: Phaser를 쓴다면 **Tiled JSON**이 마찰이 가장 적습니다. Kenney Tiny Dungeon처럼 Tiled 샘플 파일이 함께 오는 에셋도 있습니다(검색 요약, 추정). LDtk는 Phaser 연동 코드를 직접 써야 합니다.
+
+
+### 3.7 에셋과 한국어 픽셀 폰트
+
+#### 3.7.1 CC0 픽셀 에셋
+
+| 출처 | 라이선스 | 확인 수준 |
+|---|---|---|
+| **Kenney**(kenney.nl) | 에셋 페이지의 게임 에셋은 CC0(퍼블릭 도메인), 상업적 사용 가능, 출처 표기 불필요(원하면 "Kenney" 표기) | 검색 결과 요약으로 확인(**kenney.nl은 이 환경에서 직접 열리지 않음 → 원문 미확인**). 다운로드 zip 안의 `License.txt`로 재확인 필요 |
+| Kenney Tiny Dungeon / Tiny Town | CC0, 16×16 픽셀, Tiny Dungeon은 130+ 스프라이트와 Tiled 샘플 파일 포함 | 검색 요약(추정) |
+| OpenGameArt.org | **에셋마다 다름**(CC0, CC-BY, CC-BY-SA, GPL 등 혼재). 필터로 CC0만 골라야 함 | 이 환경에서 직접 열리지 않음(미확인) |
+| itch.io 무료 에셋 | 제작자마다 다름 | – |
+
+- 운영 원칙: 에셋별로 출처 URL, 라이선스, 내려받은 날짜를 `CREDITS`/`assets/LICENSES.md`에 기록합니다. CC-BY-SA는 파생물 라이선스 전파가 있으므로 피하는 편이 단순합니다.
+
+#### 3.7.2 한국어 픽셀 폰트
+
+| 폰트 | 버전/배포 | 라이선스 | 크기·특징 |
+|---|---|---|---|
+| **Galmuri(갈무리)** | npm `galmuri` **2.40.3**(2025-08-13) | **SIL OFL 1.1**(Copyright 2019–2025 Lee Minseo) | Nintendo DS 폰트에서 영감을 받은 비트맵 폰트. Galmuri14(15px)/11(12px)/11 Bold/11 Condensed/9(10px)/7(8px)과 **고정폭 GalmuriMono7/9/11**. Galmuri7을 뺀 나머지는 한글 11,172자 지원(Galmuri7은 4,358자). woff2: Galmuri11 505 KB, GalmuriMono11 489 KB, Galmuri9 430 KB, Galmuri7 316 KB(직접 측정, npm tarball) |
+| **Neo둥근모 / Neo둥근모 Code** | npm `@kfonts/neodgm`, `@kfonts/neodgm-code` 0.5.0 | **SIL OFL 1.1**(Copyright 2017–2024 Eunbin Jeong) | 둥근모꼴 계승. **Code 변형은 코드용 고정폭** → 에디터 폰트 후보. README: "상업적 또는 비 상업적 용도로 어디서든 자유롭게 이용" |
+
+- Galmuri README의 법적 고지: Galmuri14/11/9의 한글 2,355자 등 일부 글리프는 직접 창작이 아니라고 밝히며, 미국·한국에서 서체 디자인과 비트맵 폰트는 일반적으로 저작권 대상이 아니라는 견해를 적어 두었습니다. OFL이므로 게임에 **임베드·번들은 자유**롭고, 폰트 자체를 단독 판매하거나 OFL 외 라이선스로 재배포하는 것만 제한됩니다(OFL 일반 조건).
+- 픽셀 폰트는 **원래 크기의 정수배**(예: Galmuri11은 12px, 24px)로만 써야 깨지지 않습니다. 코드 에디터에는 Neo둥근모 Code나 GalmuriMono11을 후보로 두고, 한글·영문 폭(전각/반각) 정렬은 실제 렌더링으로 확인이 필요합니다(미확인).
+- 용량 절감: 대사·UI에 쓰는 글자만 서브셋하면 크게 줄일 수 있지만, 학습자가 한글 주석·문자열을 자유롭게 입력하는 에디터 폰트는 서브셋하면 안 됩니다.
+
+
+### 3.8 패키징: Electron vs Tauri (Pyodide 관점)
+
+| 항목 | Electron | Tauri |
+|---|---|---|
+| 최신 버전(npm) | `electron` **44.5.1**(2026-09-30), `electron-builder` 26.15.3, `@electron-forge/cli` 8.0.1 | `@tauri-apps/cli`·`@tauri-apps/api` **2.12.1**(2026-09-30) |
+| 렌더링 엔진 | Chromium 번들 → **모든 OS에서 웹 버전(Chrome)과 같은 동작**. 재귀 한계·WASM 성능도 Chrome 측정값과 비슷할 것(추정) | 시스템 웹뷰: Windows **WebView2(Chromium)**, macOS **WKWebView(WebKit)**, Linux **WebKitGTK**[TE13]. → **macOS·Linux는 Safari 계열 엔진**에서 Pyodide를 돌리게 되어 OS마다 재귀 한계·성능·IME 동작이 달라짐 |
+| 로컬 파일 로딩 | 공식 보안 가이드 18번: "Avoid usage of the `file://` protocol and prefer usage of custom protocols"[TE14]. `protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true } }])` + `protocol.handle('app', ...)`으로 `Response`를 반환[TE15] | 기본이 커스텀 프로토콜(`tauri://` 계열)로 번들 자산 제공 |
+| COOP/COEP | `protocol.handle`에서 반환하는 `Response`에 헤더를 직접 넣을 수 있음(API 구조상 가능, 실측은 미확인) | **v2.1.0부터** `tauri.conf.json`의 `app.security.headers`에 `Cross-Origin-Opener-Policy`, `Cross-Origin-Embedder-Policy` 지정 가능. 공식 문서가 SharedArrayBuffer 용도로 예시를 듦[TE16] |
+| WASM·module worker | Chromium 그대로 → 문제 없음(웹판에서 실측한 조합과 같음) | WebView2는 문제 없을 것(추정). **WKWebView/WebKitGTK에서 module worker + Pyodide 314 + SharedArrayBuffer 동작은 미확인** |
+| 배포 크기 | Chromium 포함으로 큼(일반적으로 수십~100 MB대, 추정) | 작음(시스템 웹뷰 사용) |
+
+- `file://`로 그냥 열면 생기는 문제(일반 브라우저 기준): module worker와 `fetch`가 `file://` origin에서 막히거나 opaque origin이 되어 Pyodide의 `fetch(pyodide.asm.wasm)`, IndexedDB 저장이 깨질 수 있습니다(추정, 실측 안 함). 커스텀 프로토콜로 서빙하는 것이 정석입니다.
+- **판단**: "웹에서 검증한 동작을 그대로 데스크톱으로"가 목표라면 **Electron**이 위험이 낮습니다. Tauri는 크기는 유리하지만 macOS/Linux에서 WebKit 엔진 검증을 따로 해야 합니다.
+- 참고: 정적 호스팅(GitHub Pages 등)처럼 응답 헤더를 못 넣는 곳에서는 서비스 워커로 COOP/COEP를 흉내 내는 `coi-serviceworker`(npm 0.1.7, **2023-07 이후 갱신 없음**, MIT)가 쓰이곤 합니다. 첫 방문 때 페이지가 한 번 새로고침되는 방식이라(추정) 게임에서는 호스팅 쪽에서 헤더를 설정하는 편이 낫습니다.
+- COOP/COEP 조건(MDN): 문서가 secure context이고 `Cross-Origin-Opener-Policy: same-origin` + `Cross-Origin-Embedder-Policy: require-corp` 또는 `credentialless`여야 `crossOriginIsolated`가 true가 되고 `SharedArrayBuffer`를 워커에 보낼 수 있습니다[TE6][TE17]. COEP `require-corp`에서는 외부 리소스(CDN 폰트·이미지)가 CORP/CORS 헤더 없이는 막히므로 **에셋을 전부 로컬 번들하는 이 프로젝트 방침과 잘 맞습니다**.
+
+
+### 3.9 E2E: Playwright로 canvas 게임 테스트
+
+- 버전: `@playwright/test` **1.63.0**(npm, 직접 설치). Chromium 다운로드는 `cdn.playwright.dev`에서 받는데 이 조사 환경에서는 차단되어, npm 패키지 `@sparticuz/chromium` 153.0.0(Chromium 153.0.8010.0)을 `executablePath`로 지정해 대신 실행했습니다. **CI에서는 브라우저 다운로드 경로가 열려 있는지 먼저 확인**해야 합니다.
+
+#### 3.9.1 이번 조사에서 실제로 쓴 패턴(직접 측정으로 동작 확인)
+
+| 패턴 | 방법 | 비고 |
+|---|---|---|
+| 테스트 훅 노출 | 게임 코드가 `window.__game`, `window.ready`, 씬 참조, 이벤트 카운터를 노출하고 Playwright가 `page.waitForFunction(() => window.ready)` → `page.evaluate(...)`로 상태를 읽음 | 픽셀 비교 없이 "플레이어 좌표", "현재 씬", "에디터 내용"을 검증. 프로덕션 빌드에서는 `import.meta.env.MODE === 'test'`일 때만 노출(권장) |
+| 에디터 입력 | `page.click('.cm-content')` → `page.keyboard.type(...)` | CodeMirror 자동 들여쓰기까지 실제로 반영됨 |
+| 한글 IME | CDP 세션: `Input.imeSetComposition` → `Input.insertText` | Chromium 전용. 실제 OS IME와 다를 수 있음 |
+| Pyodide 워커 결과 | 페이지에서 워커 응답을 Promise로 받아 `page.evaluate`로 반환. 콘솔 로그(`page.on('console')`)로 진행 상황 추적 | 워커 부팅 2~3초 → 테스트 타임아웃 여유 필요 |
+| COOP/COEP 검증 | `vite preview`에 `preview.headers` 설정 → `page.evaluate(() => crossOriginIsolated)` | 헤더 유무 두 서버를 띄워 비교 |
+| WebGL | headless Chromium에서 Phaser 4가 `WEBGL` 렌더러로 기동(SwiftShader) | |
+
+#### 3.9.2 그 밖의 권장 사항(문서 기반·추정)
+
+- `page.clock`(Clock API: `install`, `fastForward`, `runFor`, `pauseAt` — 1.63 타입 정의에서 확인)으로 게임 타이머를 제어할 수 있습니다. 다만 **Web Worker 안의 시간은 페이지 clock과 별개일 가능성이 큽니다(미확인)** → 보스 '시간 장벽' 테스트는 워커가 보고한 측정값을 주입·모킹하는 훅으로 처리하는 편이 안전합니다.
+- 스크린샷 비교(`toHaveScreenshot`)는 WebGL 렌더링이 GPU/드라이버마다 미세하게 달라 불안정할 수 있습니다. 픽셀아트라도 비교는 핵심 화면 몇 개로 제한하고 상태 검증 위주로 갑니다(추정).
+- Playwright `webServer` 설정으로 `vite preview`를 띄우고, 같은 COOP/COEP 헤더를 적용해 실제 배포 조건과 맞춥니다.
+- 무한루프·fatal 재귀 같은 "워커가 죽는" 시나리오를 E2E에 꼭 넣습니다(이번 조사에서 응답이 영영 오지 않는 버그를 실제로 겪었음).
+
+
+### 3.10 권장안
+
+#### 3.10.1 Pyodide 버전: **314.0.7을 정확히 고정(`"pyodide": "314.0.7"`)**, 0.29.5는 대체 경로로 유지
+
+| 비교 항목(근거) | 314.0.7 | 0.29.5 |
+|---|---|---|
+| 지원 전망 | 현행 라인. 3개월 동안 패치 7회. Python 3.15 기반 315가 나올 때까지(연 1회 메이저, 2027년 추정) 주력 | 이전 라인. 2026년 패치는 호환성 수정 위주로 3회. **종료일 미공지(미확인)**. 315가 나오면 두 단계 뒤처짐 |
+| Python 버전 | 3.14.2 | 3.13.2(로컬 검증용 CPython 3.13.3과 minor 일치) |
+| 워커 | module worker만 | module worker도 동작(직접 측정) → 워커 코드는 두 버전에서 같게 쓸 수 있음 |
+| 속도(Node, 직접 측정) | 10M 루프 1.34초, 함수 안 1M 루프 60 ms | 1.45초, 80 ms |
+| C 스택 재귀 한계(Chromium, 직접 측정) | `lru_cache` 360 성공/380 fatal | 400 성공/450 fatal(약간 여유) |
+| 크기(코어 gzip) | 약 6.3 MB | 약 5.5 MB |
+| 큰 정수 FFI | JS BigInt → `JsBigInt`(int 하위 클래스) | JS BigInt → `int` |
+
+**이유**:
+1. **지원 기간**: 지금 시작하는 프로젝트가 출시될 무렵 0.29는 두 세대 전 라인이 될 가능성이 큽니다. 0.29는 종료일조차 공지되지 않았습니다.
+2. **'안정성 우선'의 실질**: 314의 breaking change(module worker 강제, `.asm.mjs`, stdlib 동봉, ssl stub, JsBigInt)는 이 게임의 사용 범위(표준 라이브러리 순수 Python, module worker, 채점은 Python 안에서 수행)에 거의 영향이 없음을 직접 확인했습니다. 0.29가 더 나은 점은 재귀 한계 약 10% 여유와 크기 약 0.8 MB 정도입니다.
+3. **전환 비용이 낮음**: 같은 Vite 설정과 워커 코드로 두 버전이 모두 동작했습니다. 그래서 314로 시작하고, 문제가 생기면 `package.json` 한 줄로 0.29.5로 되돌릴 수 있습니다.
+4. 후속 조치: 샘플 문제 정답 검증 기준을 **로컬 CPython 3.14**로 옮깁니다(3.13 대비 문법 차이는 적지만, 에러 메시지 문구는 버전마다 다름).
+
+#### 3.10.2 npm 라이브러리 목록(2026-10-01 npm `latest` 기준, 모두 정확한 버전 고정 권장)
+
+| 용도 | 패키지 | 버전 | 라이선스 | 비고 |
+|---|---|---|---|---|
+| 빌드 | `vite` | 8.3.1 | MIT | |
+| 빌드 | `vite-plugin-static-copy` | 4.1.1 | MIT | `rename: { stripBase: true }` 필요(직접 측정) |
+| 언어 | `typescript` | 7.0.2(또는 6.0.3) | Apache-2.0 | 7.0.2는 2026-07 출시된 최신 메이저. 도구 호환 문제가 생기면 6.0.3으로(추정) |
+| Python | `pyodide` | **314.0.7** | MPL-2.0(npm `license` 필드) | 대체: 0.29.5 |
+| 엔진 | `phaser` | 4.2.1 | MIT | |
+| 에디터 | `codemirror` | 6.0.2 | MIT | basicSetup |
+| 에디터 | `@codemirror/lang-python` | 6.2.1 | MIT | |
+| 에디터 | `@codemirror/language` | 6.12.4 | MIT | `indentUnit.of("    ")` |
+| 에디터 | `@codemirror/view` / `state` / `commands` | 6.43.13 / 6.7.6 / 6.11.1 | MIT | |
+| 저장 | `idb` | 8.0.3 | ISC | 또는 `idb-keyval` 6.3.0 |
+| 폰트 | `galmuri` | 2.40.3 | OFL-1.1 | UI·대사 |
+| 폰트 | `@kfonts/neodgm-code` | 0.5.0 | OFL-1.1 | 에디터(후보) |
+| 테스트 | `@playwright/test` | 1.63.0 | Apache-2.0 | |
+| 테스트 | `vitest` | 5.0.3 | MIT | 단위 테스트(추정 선택) |
+| (나중) 데스크톱 | `electron` | 44.5.1 | MIT | `electron-builder` 26.15.3 또는 `@electron-forge/cli` 8.0.1 |
+
+- Comlink(4.4.2, 2024-11 이후 갱신 없음)는 쓰지 않는 편을 권합니다. 워커가 죽고 다시 만들어지는 상황(무한루프·fatal)을 직접 관리해야 하므로, `id` 기반 요청/응답 + 타임아웃을 직접 구현하는 편이 명확합니다.
+
+#### 3.10.3 보스 '시간 장벽' 제한 시간 보정 방법
+
+측정 근거: 같은 기준 루프가 실행마다 최대 약 1.5배 흔들렸고(직접 측정), Pyodide는 CPython보다 1.5~2.6배 느렸습니다(직접 측정). 기기 성능 차이까지 생각하면 **고정 ms 제한은 공정하지 않습니다.**
+
+1. **기준 루프 측정(워커 부팅 직후)**: 워커에서 기준 코드를 5회 실행하고 **중앙값**을 `ref_ms`로 저장합니다. 첫 1~2회는 버리고(JIT·캐시 워밍업), 측정 시간은 1회 100~150 ms 수준으로 둡니다(직접 측정: 1M 루프가 브라우저에서 105~150 ms).
+   ```python
+   def _ref():
+       s = 0
+       for i in range(1_000_000): s += i
+       d = {}
+       for i in range(200_000): d[i & 1023] = d.get(i & 1023, 0) + 1
+       return s
+   ```
+   기준 코드에는 루프·dict·리스트 연산을 섞어 문제 풀이 부하와 비슷하게 만듭니다.
+2. **문제별 예산을 '기준 단위'로 저장**: 출제 시 모범 답안과 '느린 오답'(예: O(N²))을 같은 기준 루프와 함께 **Pyodide에서** 측정해 `budget_units = t_model / ref_ms`를 정합니다. 제한은 모범 답안의 3~5배, 느린 오답의 1/3 이하가 되도록 입력 크기를 조정해 **두 풀이 사이에 충분한 간격**을 둡니다.
+3. **실행 시 제한** = `budget_units × ref_ms(현재 기기) × 여유 배수(1.5)` + 고정 오버헤드(예: 50 ms). 기기가 느리면 제한도 함께 늘어납니다.
+4. **판정은 경계에서 관대하게**: 제한을 넘으면 한 번 더 실행해 둘 다 넘을 때만 실패로 처리합니다(측정 흔들림 대응). 보스전 연출에서는 "기준 대비 N배"처럼 상대값으로 보여 줍니다.
+5. **기준 재측정**: 탭이 백그라운드였다가 돌아오거나 30분 이상 지났으면 다시 측정합니다(브라우저 절전·스로틀링 대응, 추정).
+6. **(선택) 결정적 대안 — 스텝 예산**: `sys.monitoring`(3.12+)의 `JUMP` 이벤트로 루프 반복 횟수를 세어 상한을 넘으면 예외를 던지는 방식도 동작했습니다. 다만 1M 루프가 60 ms → 209 ms(314), 80 ms → 293 ms(0.29)로 **약 3.5배 느려졌습니다**(직접 측정; `sys.settrace`는 약 4배). 기기와 무관하게 같은 결과가 나오므로 "반복 횟수 제한" 같은 교육용 연출에는 적합하지만 일반 채점에는 부담이 큽니다.
+
+#### 3.10.4 무한루프·런타임 사망 대응 전략
+
+1. **배포 조건**: 웹은 COOP `same-origin` + COEP `require-corp`(또는 `credentialless`) 헤더를 설정하고, Vite `server.headers`·`preview.headers`에도 같은 값을 넣습니다. Electron은 커스텀 프로토콜 응답에 헤더를 넣습니다.
+2. **1단계 — 소프트 중단(interrupt buffer)**: `crossOriginIsolated`가 true면 `SharedArrayBuffer(1)`을 워커에 넘겨 `setInterruptBuffer`로 등록합니다. 제한 시간에 `buf[0] = 2`를 씁니다 → `KeyboardInterrupt`를 '시간 초과'로 번역해 보여 주고 **워커는 재사용**합니다(직접 측정: 약 500 ms 지점에서 즉시 중단, 이후 정상 실행). 실행 전마다 `buf[0] = 0`으로 초기화합니다.
+3. **2단계 — 하드 중단(terminate)**: 인터럽트 후 일정 시간(예: 1초) 안에 응답이 없거나, SharedArrayBuffer를 쓸 수 없는 환경이면 `worker.terminate()` 후 새 워커를 만듭니다(직접 측정: 재부팅 약 1.7~2.7초). 재부팅 동안 "마력 재충전 중" 같은 연출로 대기 시간을 가립니다.
+4. **fatal 감지**: 응답 오류 메시지에 "fatally failed" 또는 `Maximum call stack size exceeded`가 있으면 **즉시 워커를 폐기**하고 재생성합니다. 학습자에게는 "재귀가 브라우저 한계보다 깊어요 — 반복문이나 dict 메모를 써 보세요"처럼 안내합니다(`lru_cache` 깊이 약 360에서 fatal, 직접 측정).
+5. **워커 코드 방어**: `finally` 안의 정리 코드(`destroy()` 등)를 `try/catch`로 감싸 응답이 반드시 전송되게 하고, 메인 쪽에는 모든 요청에 타임아웃을 둡니다(직접 측정에서 이 처리가 없으면 응답이 오지 않았음).
+6. **예비 워커(선택)**: 보스전 직전에 두 번째 워커를 미리 부팅해 두면 terminate 후 대기 시간을 거의 없앨 수 있습니다. 대신 메모리가 약 90 MB 더 듭니다(직접 측정: 부팅 직후 WASM 힙 약 90 MB).
+7. **실행 전 초기화**: 실행마다 새 globals dict, `sys.setrecursionlimit(1000)` 복구, `sys.set_int_max_str_digits` 복구, stdin/stdout 핸들러 재설정을 합니다. 문제 간 상태 누출이 의심되면 워커를 재생성합니다.
 
 ---
 
@@ -817,6 +1284,32 @@ tony9402의 표(29행)를 유형별로 묶어 "그 유형이 나온 시험 수"�
 - api.github.com 검색·contents: 세션 저장소 범위 밖이라 403(raw.githubusercontent.com과 github.com 페이지는 가능)
 
 ### 기술
+
+- [TE1] Pyodide 314.0.7 문서 "Working with Bundlers" 원본: https://raw.githubusercontent.com/pyodide/pyodide/314.0.7/docs/usage/working-with-bundlers.md (게시 위치: https://pyodide.org/en/stable/usage/working-with-bundlers.html)
+- [TE2] Pyodide 문서 "Using Pyodide in a web worker": https://raw.githubusercontent.com/pyodide/pyodide/314.0.7/docs/usage/webworker.md
+- [TE3] Pyodide Change Log: https://raw.githubusercontent.com/pyodide/pyodide/314.0.7/docs/project/changelog.md , 0.29.5: https://raw.githubusercontent.com/pyodide/pyodide/0.29.5/docs/project/changelog.md
+- [TE4] Pyodide 문서 "Redirecting standard streams": https://raw.githubusercontent.com/pyodide/pyodide/314.0.7/docs/usage/streams.md
+- [TE5] Pyodide 문서 "Interrupting execution": https://raw.githubusercontent.com/pyodide/pyodide/314.0.7/docs/usage/keyboard-interrupts.md
+- [TE6] MDN SharedArrayBuffer(Security requirements) 원본: https://raw.githubusercontent.com/mdn/content/main/files/en-us/web/javascript/reference/global_objects/sharedarraybuffer/index.md
+- [TE7] Pyodide Roadmap: https://raw.githubusercontent.com/pyodide/pyodide/314.0.7/docs/project/roadmap.md
+- [TE8] Pyodide 문서 "Type translations": https://raw.githubusercontent.com/pyodide/pyodide/314.0.7/docs/usage/type-conversions.md
+- [TE9] Pyodide 314.0 릴리스 블로그 원본: https://raw.githubusercontent.com/pyodide/pyodide-blog/main/content/posts/314-release.md (게시 위치: https://blog.pyodide.org/posts/314-release)
+- [TE10] Phaser 4.0.0 Changelog·Migration Guide(npm `phaser@4.2.1` 패키지 내 `changelog/v4/4.0/`): https://github.com/phaserjs/phaser/tree/master/changelog/v4/4.0
+- [TE11] 한글 IME 문제 사례(검색 결과): https://discuss.ai.google.dev/t/bug-korean-hangul-ime-input-broken-in-chat-agent-input-field-duplicate-chars-ghost-text/172287 , https://community.anytype.io/t/korean-characters-are-lost-while-typing-in-code-blocks/28680
+- [TE12] Tiled 포럼 "License of maps created with Tiled"(검색 결과 요약): https://discourse.mapeditor.org/t/license-of-maps-created-with-tiled/7887 , Tiled `COPYING`: https://raw.githubusercontent.com/mapeditor/tiled/master/COPYING , Tiled NEWS: https://raw.githubusercontent.com/mapeditor/tiled/master/NEWS.md
+- [TE13] Tauri v2 "Webview Versions"(검색 결과 요약): https://v2.tauri.app/reference/webview-versions/
+- [TE14] Electron Security 튜토리얼: https://raw.githubusercontent.com/electron/electron/main/docs/tutorial/security.md
+- [TE15] Electron `protocol` API(v44.5.1): https://raw.githubusercontent.com/electron/electron/v44.5.1/docs/api/protocol.md
+- [TE16] Tauri v2 "HTTP Headers": https://raw.githubusercontent.com/tauri-apps/tauri-docs/v2/src/content/docs/security/http-headers.mdx
+- [TE17] MDN `Window.crossOriginIsolated` 원본: https://raw.githubusercontent.com/mdn/content/main/files/en-us/web/api/window/crossoriginisolated/index.md
+- [TE18] LDtk LICENSE: https://raw.githubusercontent.com/deepnight/ldtk/master/LICENSE , 버전: https://raw.githubusercontent.com/deepnight/ldtk/master/app/package.json
+- [TE19] Galmuri README·OFL: https://raw.githubusercontent.com/quiple/galmuri/main/README.md , https://raw.githubusercontent.com/quiple/galmuri/main/ofl.md
+- [TE20] Neo둥근모 README: https://raw.githubusercontent.com/neodgm/neodgm/main/README.md
+- [TE21] Kenney 라이선스(검색 결과 요약, 원문 접속 차단): https://kenney.nl/support , Tiny Dungeon: https://opengameart.org/content/tiny-dungeon
+- [TE22] npm 레지스트리(버전·날짜·라이선스 조회 전부): https://registry.npmjs.org/ — `pyodide`, `phaser`, `kaplay`, `excalibur`, `pixi.js`, `codemirror`, `@codemirror/*`, `monaco-editor`, `idb`, `idb-keyval`, `dexie`, `localforage`, `galmuri`, `@kfonts/neodgm(-code)`, `electron`, `electron-builder`, `@electron-forge/cli`, `@tauri-apps/cli`, `@tauri-apps/api`, `@excaliburjs/plugin-tiled`, `@excaliburjs/plugin-ldtk`, `vite`, `vite-plugin-static-copy`, `typescript`, `vitest`, `@playwright/test`, `coi-serviceworker`, `comlink`
+- [TE23] vite-plugin-static-copy 4.1.1 README(npm 패키지 내): https://www.npmjs.com/package/vite-plugin-static-copy
+
+이전 세션(3.1):
 
 - https://registry.npmjs.org/pyodide
 - https://pyodide.org/en/stable/project/changelog.html
