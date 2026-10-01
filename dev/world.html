@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PyRpg 월드 테스트</title>
+    <link rel="icon" href="data:," />
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #111318;
+        color: #d8d8e0;
+        font: 12px/1.4 monospace;
+      }
+      #world {
+        width: 960px;
+        height: 540px;
+        background: #000;
+      }
+      #status {
+        padding: 4px 8px;
+      }
+      #log {
+        margin: 0;
+        padding: 4px 8px;
+        height: 140px;
+        overflow: auto;
+        white-space: pre-wrap;
+      }
+      /* 키보드 격리 확인용(E2E). 화면 구석에 작게 둔다 */
+      #probe {
+        position: fixed;
+        right: 4px;
+        bottom: 4px;
+        width: 160px;
+        height: 36px;
+        opacity: 0.35;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="world"></div>
+    <div id="status">방향키·WASD 이동, Space/Enter/Z 상호작용, Esc/M 메뉴</div>
+    <pre id="log"></pre>
+    <textarea id="probe" aria-label="키보드 격리 확인용 입력칸"></textarea>
+    <script type="module" src="./world.ts"></script>
+  </body>
+</html>
