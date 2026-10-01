@@ -1,6 +1,6 @@
 // 전투 화면(design.md §5.3, §7.1, §9.7)
 import type { Emotion } from "../contracts/content";
-import type { JudgeResult, TestResult } from "../contracts/runner";
+import type { JudgeResult, PyError, TestResult } from "../contracts/runner";
 import type { BattleOutcome, HintLevel } from "../contracts/state";
 import type { BattleContext, BattleUI } from "../contracts/ui";
 import { createPortrait, createSprite } from "./assets";
@@ -276,6 +276,8 @@ export function createBattleUI(env: UiEnv): BattleUI {
         };
 
         // ---------- 판정 해설 ----------
+        // explain()은 'n번째 줄: '을 앞에 붙이는데, 여기서는 줄 번호를 따로 강조해 보여 주므로 본문만 쓴다
+        const explainBody = (error: PyError) => ctx.explain({ ...error, line: undefined }, ctx.traceback);
         const explainResult = (res: JudgeResult): { emotion: Emotion; html: string } => {
           const first = firstFailed(res);
           if (res.fatal) {
@@ -291,7 +293,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
           if (first.verdict === "TLE") {
             const line = first.error?.line;
             if (line) editor.highlightLine(line);
-            const ex = first.error ? ctx.explain(first.error, ctx.traceback) : genericVerdictMessage("TLE");
+            const ex = first.error ? explainBody(first.error) : genericVerdictMessage("TLE");
             const where = line ? `<span class="err-line">${line}번째 줄</span>을 도는 중에 멈췄어. ` : "";
             let html = `${where}${renderInline(substituteNames(ex, names))}`;
             if (diag) html += `<div class="diag">${renderInline(substituteNames(diag, names))}</div>`;
@@ -300,7 +302,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
           if (first.error) {
             const line = first.error.line;
             if (line) editor.highlightLine(line);
-            const ex = ctx.explain(first.error, ctx.traceback);
+            const ex = explainBody(first.error);
             const where = line ? `<span class="err-line">${line}번째 줄</span>에서 ` : "";
             let html = `주문이 폭발했어! ${where}<code>${escapeHtml(first.error.type)}</code>가 났어. ${renderInline(substituteNames(ex, names))}`;
             if (diag) html += `<div class="diag">${renderInline(substituteNames(diag, names))}</div>`;

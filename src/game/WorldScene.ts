@@ -273,6 +273,9 @@ export class WorldScene extends Phaser.Scene {
       isEditableElement(document.activeElement) || (e ? isEditableElement(e.target) : false);
 
     const onKeyDown = (e: KeyboardEvent) => {
+      // UI가 이미 처리한 키(모달을 닫은 Esc 등)는 무시한다. 모달이 닫히면서 입력이 다시 켜진 뒤
+      // 같은 keydown이 window까지 올라와 메뉴를 다시 여는 일이 있었다
+      if (e.defaultPrevented) return;
       if (!this.inputEnabled || !this.region) return;
       if (e.isComposing || e.keyCode === 229) return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;

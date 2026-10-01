@@ -145,6 +145,8 @@ async function doLesson(page: Page, answer: string, shotName?: string): Promise<
 
 // ───────────── 전투 ─────────────
 
+const count = (text: string | null, needle: string) => (text ?? "").split(needle).length - 1;
+
 const editor = (page: Page) => page.locator(".battle-editor .cm-content");
 /** 에디터에 보이는 코드(짧은 코드라 모든 줄이 그려져 있다) */
 const editorText = (page: Page) =>
@@ -234,7 +236,15 @@ test.describe.serial("지역 1 전체 플레이", () => {
     expect((await said(page)).at(-1)).toBe("gate_well_locked");
     expect((await obj(page, "gate_well")).removed).toBe(false);
 
-    // 우물가 비석 → 레슨 L1-1
+    // 우물가 비석 → 레슨을 Esc로 닫으면 완료되지 않고, 그 Esc가 메뉴를 열지도 않는다
+    await interact(page, "rune_L1-1");
+    await settle(page, ".lesson-modal");
+    await page.keyboard.press("Escape");
+    await expect(page.locator(".lesson-modal")).toHaveCount(0);
+    await page.waitForTimeout(300);
+    await expect(page.locator(".menu-modal")).toHaveCount(0);
+    expect((await save(page)).lessonsCompleted).toEqual([]);
+    // 다시 열어 완료
     await interact(page, "rune_L1-1");
     await doLesson(page, "input()", "02-lesson.png");
     expect((await said(page)).slice(-2)).toEqual(["lesson_L1-1_intro", "lesson_L1-1_done"]);
@@ -359,6 +369,7 @@ test.describe.serial("지역 1 전체 플레이", () => {
     // TLE를 '폭발'(RE)로 말하지 않는다
     await expect(page.locator(".battle-msg-text")).not.toContainText("폭발");
     await expect(page.locator(".battle-msg-text .err-line")).toHaveText("4번째 줄");
+    expect(count(await page.locator(".battle-msg-text").textContent(), "4번째 줄")).toBe(1);
     await shot(page, "05-boss-tle.png");
     // 공식 → 승리
     await typeCode(page, solution("P0105"));
@@ -398,6 +409,24 @@ test.describe.serial("지역 1 전체 플레이", () => {
     }
     // 선택 몬스터는 남아 있다
     for (const id of ["m_P0108", "m_P0109", "m_P0110"]) expect(s.removedObjects).not.toContain(id);
+
+    // 메뉴(M) → 코덱스: 얻은 주문서 4개, 예제 실행
+    await page.keyboard.press("KeyM");
+    await expect(page.locator(".menu-modal")).toBeVisible();
+    await page.locator(".menu-codex").click();
+    await expect(page.locator(".codex-item")).toHaveCount(4);
+    await page.locator('.codex-item[data-lesson="L1-3"]').click();
+    await page.locator(".codex-detail .md-run-btn").first().click();
+    await expect(page.locator(".codex-detail .md-run-out").first()).not.toHaveText(/실행 중|^$/);
+    await page.keyboard.press("Escape");
+    await expect(page.locator(".codex-modal")).toHaveCount(0);
+    await expect(page.locator(".menu-modal")).toBeVisible();
+    // 메뉴를 닫은 Esc가 메뉴를 다시 열지 않는다
+    await page.keyboard.press("Escape");
+    await expect(page.locator(".menu-modal")).toHaveCount(0);
+    await page.waitForTimeout(300);
+    await expect(page.locator(".menu-modal")).toHaveCount(0);
+    await settle(page);
 
     // 보스가 있던 칸을 지나 동쪽 문
     await walkTo(page, boss.x, boss.y);
@@ -494,6 +523,8 @@ test.describe("실패와 복구", () => {
       await cast(page);
       await expect(page.locator(".battle-msg-text")).toContainText("주문이 폭발했어");
       await expect(page.locator(".battle-msg-text .err-line")).toHaveText("2번째 줄");
+      // 줄 번호는 한 번만(해설 본문에 'n번째 줄:'이 다시 붙지 않는다)
+      expect(count(await page.locator(".battle-msg-text").textContent(), "2번째 줄")).toBe(1);
       await expect(page.locator(".battle-msg-text code").first()).toHaveText("TypeError");
       await expect(page.locator(".cm-error-line")).toHaveCount(1);
       await typeCode(page, wrong);
@@ -617,7 +648,9 @@ test.describe("키보드와 오프라인", () => {
     await settle(page);
     const gate = await obj(page, "gate_well");
     await seedAndReload(page, { lessons: ["L1-1", "L1-2"], removed: ["gate_well"], at: { x: gate.x, y: gate.y - 1 }, flags: ["trigger.r01.t_prologue"] });
-    await bump(page, "m_P0101");
+    // 방향키를 누른 채로 몬스터에 부딪혀 전투를 연다(키를 떼지 않음)
+    const dir = await approach(page, "m_P0101");
+    await page.keyboard.down(KEY[dir]);
     await settle(page, ".battle-modal");
     const before = await where(page);
     await editor(page).click();
@@ -637,14 +670,25 @@ test.describe("키보드와 오프라인", () => {
     await expect(page.locator(".battle-modal")).toBeVisible();
     await expect(page.locator(".menu-modal")).toHaveCount(0);
 
-    // 후퇴 후 캔버스를 누르면 방향키로 다시 움직인다
+    // 방향키를 누른 채로 후퇴. 키 자동 반복으로는 같은 몬스터와 다시 싸우지 않는다
+    // (위에서 같은 키를 press로 뗐으므로 여기서 다시 누른다. 이 keydown은 에디터가 받는다)
+    await page.keyboard.down(KEY[dir]);
     await page.locator(".act-retreat").click();
     await settle(page);
+    for (let i = 0; i < 5; i++) await page.keyboard.down(KEY[dir]); // repeat=true
+    await page.waitForTimeout(400);
+    await expect(page.locator(".battle-modal")).toHaveCount(0);
+    expect(await where(page)).toMatchObject({ x: before.x, y: before.y });
+    await page.keyboard.up(KEY[dir]);
+    // 캔버스를 누르면(에디터 포커스 없이) 방향키로 다시 움직인다
     await page.locator("#game canvas").click({ position: { x: 20, y: 400 } });
     expect(await page.evaluate(() => document.activeElement?.closest?.(".cm-editor") ?? null)).toBeNull();
-    const w = await where(page);
-    await step(page, w.facing);
-    expect(await where(page)).not.toMatchObject({ x: w.x, y: w.y });
+    await step(page, OPP[dir]);
+    expect(await where(page)).not.toMatchObject({ x: before.x, y: before.y });
+    // 새로 누르면 다시 붙는다
+    await bump(page, "m_P0101");
+    await settle(page, ".battle-modal");
+    expect(await editorText(page)).toContain("def f(a, b):");
   });
 
   test("오프라인: 외부 요청 없이 부팅(Pyodide는 같은 출처), 네트워크를 끊은 뒤에도 레슨 채점·무한루프 중단이 동작", async ({ page, context }) => {
