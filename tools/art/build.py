@@ -1,10 +1,13 @@
-"""지역 1 도트 아트 빌드: assets/manifest.json에 적힌 PNG를 모두 만들고 미리보기 시트를 그린다.
+"""도트 아트 빌드: assets/manifest.json에 적힌 PNG를 모두 만들고 미리보기 시트를 그린다.
 
-    python3 tools/art/build.py            # assets/ 아래 PNG + docs/phase2/art-preview.png 생성
+    python3 tools/art/build.py            # assets/ 아래 PNG + 미리보기 2장 생성
     python3 tools/art/check.py            # 크기·형식 검사 + 다시 빌드한 결과와 바이트 비교
 
-그림은 tools/art/의 tiles.py · characters.py · monsters.py · boss.py · portraits.py에
+그림은 tools/art/의 tiles.py · characters.py · monsters.py · boss.py · portraits.py(지역 1)와
+forest_tiles.py · forest_npcs.py · forest_monsters.py · forest_boss.py(지역 2)에
 팔레트 문자 그리드(또는 도형으로 그리는 코드)로 정의되어 있다. 같은 코드면 언제나 같은 바이트가 나온다.
+
+미리보기: docs/phase2/art-preview.png(지역 1 에셋), docs/phase3/art-preview-r02.png(지역 2 에셋 + 숲 장면)
 """
 import json
 import os
@@ -15,15 +18,24 @@ sys.path.insert(0, HERE)
 
 from boss import BOSSES  # noqa: E402
 from characters import CHARACTERS  # noqa: E402
+from forest_boss import FOREST_BOSSES  # noqa: E402
+from forest_monsters import FOREST_MONSTERS  # noqa: E402
+from forest_npcs import FOREST_CHARACTERS  # noqa: E402
+from forest_tiles import FOREST_TILES  # noqa: E402
 from gridlib import Canvas, sheet  # noqa: E402
 from monsters import MONSTERS, OBJECTS  # noqa: E402
 from png import encode_png  # noqa: E402
 from portraits import PORTRAITS  # noqa: E402
-from tiles import TILES  # noqa: E402
+from tiles import TILES as R01_TILES  # noqa: E402
+
+TILES = {**R01_TILES, **FOREST_TILES}
+# 지역 2에서 새로 생긴 에셋(미리보기를 지역별로 나눌 때 쓴다)
+R02_NAMES = set(FOREST_TILES) | set(FOREST_CHARACTERS) | set(FOREST_MONSTERS) | set(FOREST_BOSSES)
 
 ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
 ASSETS = os.path.join(ROOT, "assets")
 PREVIEW = os.path.join(ROOT, "docs", "phase2", "art-preview.png")
+PREVIEW_R02 = os.path.join(ROOT, "docs", "phase3", "art-preview-r02.png")
 
 
 def load_manifest():
@@ -33,7 +45,7 @@ def load_manifest():
 
 def sprite_frames(name: str):
     """논리 이름 → 프레임 그리드 리스트."""
-    for table in (CHARACTERS, MONSTERS, OBJECTS, BOSSES):
+    for table in (CHARACTERS, MONSTERS, OBJECTS, BOSSES, FOREST_CHARACTERS, FOREST_MONSTERS, FOREST_BOSSES):
         if name in table:
             return table[name]
     raise KeyError(f"no art defined for sprite {name!r}")
@@ -103,7 +115,59 @@ PANEL = (72, 75, 86, 255)
 HEAD = (246, 220, 124, 255)
 
 
-def render_preview(manifest, assets):
+SCENE_R01_ROWS = [
+    "TTggDWWWRRRRgg",
+    "TgggDWHHRORRgf",
+    "ggggDppppppppg",
+    "gwgggpPPPPPpgg",
+    "ggfggpPlPPcPpg",
+    "BBgggpPPPmPPpF",
+    "ggggggpppppppg",
+    "fffgggggkkkkkk",
+]
+SCENE_R01_KEY = {"g": "grass", "f": "grass_flower", "p": "path", "P": "plaza_stone", "w": "well", "T": "tree",
+                 "B": "bush", "W": "house_wall", "H": "house_window", "R": "house_roof", "O": "house_door",
+                 "D": "fence", "l": "lamp_post", "c": "crate", "m": "market_stall", "F": "flower_bed", "k": "water"}
+SCENE_R01_ACTORS = [("player", 2, 5, 3), ("nuri", 0, 6, 3), ("npc_merchant", 0, 10, 3), ("monster_type_slime", 0, 7, 4),
+                    ("obj_sign", 0, 3, 2), ("obj_rune", 1, 1, 4), ("obj_campfire", 0, 11, 6), ("obj_chest", 0, 12, 4),
+                    ("npc_child", 6, 9, 6), ("monster_remainder_bat", 0, 12, 1)]
+
+SCENE_R01 = (SCENE_R01_ROWS, SCENE_R01_KEY, SCENE_R01_ACTORS)
+
+# 갈림길 숲: 갈라지는 뿌리 길, 디딤돌로 건너는 멈춘 개울, 전나무 숲 벽
+SCENE_R02_ROWS = [
+    "PPPPPPTPPPP~~PPPTPPP",
+    "P,.gg..mPP.~~.,..BPP",
+    "P.rrrrrrrrroorrrrr.P",
+    "P.r..S...r.~~..gr.PP",
+    "P.r.L....r.~~.m.r..P",
+    "P,rrrrYrrr.~~..,r.BP",
+    "P..g.r...,.~~.rrr..P",
+    "PB.,.r..m..~~.r..S.P",
+    "PPPPPrPPPPP~~PPrPPPP",
+]
+SCENE_R02_KEY = {".": "forest_floor", ",": "fallen_leaves", "g": "tall_grass", "S": "stump", "L": "log",
+                 "m": "mushroom_patch", "~": "stream", "o": "stepping_stone", "Y": "signpost_fork", "P": "pine_tree",
+                 "B": "moss_stone", "r": "root_floor", "T": "tree"}
+SCENE_R02_ACTORS = [("player", 4, 4, 2), ("nuri", 4, 3, 2), ("monster_fork_sprout", 0, 9, 2),
+                    ("monster_leap_owl", 0, 16, 3), ("monster_loop_snake", 0, 5, 6), ("monster_count_shroom", 0, 7, 4),
+                    ("monster_hail_wisp", 0, 13, 6), ("monster_acorn_mite", 0, 16, 7), ("npc_traveler", 0, 2, 4),
+                    ("npc_woodcutter", 2, 15, 1), ("obj_rune", 1, 14, 2), ("obj_campfire", 0, 18, 6),
+                    ("obj_chest", 0, 1, 1), ("obj_sign", 0, 3, 3)]
+SCENE_R02 = (SCENE_R02_ROWS, SCENE_R02_KEY, SCENE_R02_ACTORS)
+
+
+def subset(manifest, keep, tiles=None):
+    """미리보기용 매니페스트 사본: keep(이름)이 참인 스프라이트·초상화와 tiles(없으면 keep)로 고른 타일만."""
+    tiles = tiles or keep
+    out = dict(manifest)
+    out["tilesets"] = {k: {**t, "tiles": [n for n in t["tiles"] if tiles(n)]} for k, t in manifest["tilesets"].items()}
+    out["sprites"] = {k: v for k, v in manifest["sprites"].items() if keep(k)}
+    out["portraits"] = {k: v for k, v in manifest["portraits"].items() if keep(k)}
+    return out
+
+
+def render_preview(manifest, assets, scene_def=SCENE_R01):
     S = 4
     ts = manifest["tileSize"]
     W = 1200
@@ -186,9 +250,10 @@ def render_preview(manifest, assets):
             text(c, n, pad, y + spr["frameHeight"] * S + 6, 1)
     blocks.append((32 * S + 20, draw_big))
 
-    psize = max(p["size"] for p in manifest["portraits"].values())
+    psize = max((p["size"] for p in manifest["portraits"].values()), default=0)
     PS = 3  # 대화창과 같은 배율
-    section(f"portraits ({psize}x{psize}, 3x)  nuri: neutral / happy / worried / surprised / serious")
+    if psize:
+        section(f"portraits ({psize}x{psize}, 3x)  nuri: neutral / happy / worried / surprised / serious")
 
     def draw_portraits(c, y):
         x = pad
@@ -204,26 +269,12 @@ def render_preview(manifest, assets):
             size = manifest["portraits"][n]["size"]
             g = Canvas(size, size).draw(portrait_grid(n))
             c.paste(g, x + 8 + (k % 2) * (size + 6), y + (k // 2) * (size + 6), 1)
-    blocks.append((max(psize * PS, 3 * (psize + 6)) + 20, draw_portraits))
+    if psize:
+        blocks.append((max(psize * PS, 3 * (psize + 6)) + 20, draw_portraits))
 
     # 5) 장면 예시(2x): 타일 위에 캐릭터·오브젝트를 올려 어울림 확인
     section("sample scene (2x)")
-    scene = [
-        "TTggDWWWRRRRgg",
-        "TgggDWHHRORRgf",
-        "ggggDppppppppg",
-        "gwgggpPPPPPpgg",
-        "ggfggpPlPPcPpg",
-        "BBgggpPPPmPPpF",
-        "ggggggpppppppg",
-        "fffgggggkkkkkk",
-    ]
-    key = {"g": "grass", "f": "grass_flower", "p": "path", "P": "plaza_stone", "w": "well", "T": "tree",
-           "B": "bush", "W": "house_wall", "H": "house_window", "R": "house_roof", "O": "house_door",
-           "D": "fence", "l": "lamp_post", "c": "crate", "m": "market_stall", "F": "flower_bed", "k": "water"}
-    actors = [("player", 2, 5, 3), ("nuri", 0, 6, 3), ("npc_merchant", 0, 10, 3), ("monster_type_slime", 0, 7, 4),
-              ("obj_sign", 0, 3, 2), ("obj_rune", 1, 1, 4), ("obj_campfire", 0, 11, 6), ("obj_chest", 0, 12, 4),
-              ("npc_child", 6, 9, 6), ("monster_remainder_bat", 0, 12, 1)]
+    scene, key, actors = scene_def
 
     def draw_scene(c, y):
         sc = Canvas(len(scene[0]) * ts, len(scene) * ts)
@@ -251,8 +302,12 @@ def build(write: bool = True):
     out = {}
     for rel, c in assets.items():
         out[os.path.join(ASSETS, rel)] = encode_png(c.width, c.height, c.rows())
-    prev = render_preview(manifest, assets)
+    r01 = subset(manifest, lambda n: n not in R02_NAMES)
+    prev = render_preview(r01, assets)
     out[PREVIEW] = encode_png(prev.width, prev.height, prev.rows())
+    r02 = subset(manifest, lambda n: n in R02_NAMES or n in ("player", "nuri"), lambda n: n in R02_NAMES)
+    prev = render_preview(r02, assets, SCENE_R02)
+    out[PREVIEW_R02] = encode_png(prev.width, prev.height, prev.rows())
     if write:
         for path, data in out.items():
             os.makedirs(os.path.dirname(path), exist_ok=True)
