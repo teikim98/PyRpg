@@ -213,7 +213,9 @@ describe("앱 시작", () => {
 
 describe("지역 간 이동(warp target/targetSpawn)", () => {
   it("대상 지역이 없으면 openDialogue만 보여 주고 머문다", async () => {
-    const content = makeContent(false);
+    // 동쪽 문의 대상(r02)을 콘텐츠에서 빼서 '아직 없는 지역'을 만든다
+    const full = makeContent(false);
+    const content = { ...full, regions: full.regions.filter((r) => r.id !== "r02") };
     const store = new MemoryStore();
     store.data = atEastGate(content);
     const h = harness(content, store);

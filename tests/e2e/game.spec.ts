@@ -441,8 +441,18 @@ test.describe.serial("지역 1 전체 플레이", () => {
     const n = (await said(page)).length;
     await interact(page, "warp_east");
     await settle(page);
-    // 처음 건널 때 openDialogue(다음 지역이 있으면 이어서 그 지역 대사)
-    expect((await said(page))[n]).toBe("to_be_continued");
+    // 처음 건널 때 openDialogue, 이어서 갈림길 숲(r02)에 도착해서 지역 첫 대사
+    const after = (await said(page)).slice(n);
+    expect(after[0]).toBe("to_be_continued");
+    expect(after).toContain("region_intro");
+    await expect(page.locator(".hud-region")).toHaveText("갈림길 숲");
+    expect((await save(page)).location.regionId).toBe("r02");
+
+    // 서쪽 문으로 에코 마을에 돌아온다(다음 테스트가 지역 1을 이어서 쓴다)
+    await interact(page, "warp_west");
+    await settle(page);
+    await expect(page.locator(".hud-region")).toHaveText("에코 마을");
+    expect((await save(page)).location.regionId).toBe("r01");
   });
 
   test("저장/불러오기: 새로고침하면 위치·진행·처치한 몬스터가 그대로, 내보내기 → 초기화 → 불러오기", async () => {
