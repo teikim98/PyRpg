@@ -6,7 +6,16 @@ export type WorkerRequest =
   | { id: number; type: "init"; interruptBuffer?: SharedArrayBuffer }
   | { id: number; type: "run"; code: string; stdin: string }
   | { id: number; type: "stdinTest"; code: string; stdin: string; expected: string }
-  | { id: number; type: "functionTest"; code: string; entry: string; args: string; expect: string }
+  | {
+      id: number;
+      type: "functionTest";
+      code: string;
+      entry: string;
+      args: string;
+      expect: string;
+      /** Problem.compare를 JSON 문자열로. 없으면 "" */
+      compare: string;
+    }
   | { id: number; type: "reference"; runs: number };
 
 export interface RunReply {

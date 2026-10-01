@@ -143,7 +143,14 @@ OBJECTS: dict[str, tuple[str, str, dict, str | None]] = {
     "O": (
         "warp_east",
         "warp",
-        {"lockedDialogue": "east_gate_locked", "requires": "problem:P0105", "openDialogue": "to_be_continued"},
+        {
+            "lockedDialogue": "east_gate_locked",
+            "requires": "problem:P0105",
+            "openDialogue": "to_be_continued",
+            # 지역 간 이동(docs/phase3/region02-spec.md §4)
+            "target": "r02",
+            "targetSpawn": "spawn_west",
+        },
         "floor_stone",
     ),
 }

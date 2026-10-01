@@ -97,6 +97,8 @@ test.describe("world (dev/world.html)", () => {
       lockedDialogue: "east_gate_locked",
       requires: "problem:P0105",
       openDialogue: "to_be_continued",
+      target: "r02",
+      targetSpawn: "spawn_west",
     });
     // 숨겨진 방 입구는 표지판에서 동쪽 7칸, 북쪽 4칸
     const sign = byId.get("sign_alley_riddle")!;

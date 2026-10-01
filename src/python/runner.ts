@@ -349,6 +349,7 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
           entry: problem.entry ?? "solution",
           args: (t as FunctionTest).args,
           expect: (t as FunctionTest).expect,
+          compare: problem.compare ? JSON.stringify(problem.compare) : "",
         };
     const ex = await execute<TestReply>(body, limit, (res) => (res.ok && res.type === "test" ? res.result : undefined));
     const r = ex.reply;
@@ -430,6 +431,8 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
           const r = one.reply;
           result = { ...base, verdict: r.verdict, timeMs: r.timeMs, actual: r.actual };
           if (r.error) result.error = r.error;
+          // 함수형의 print 출력(stdin형은 actual이 곧 stdout)
+          if (!isStdinTest(t) && r.stdout) result.stdout = r.stdout;
         }
       }
       tests.push(result);

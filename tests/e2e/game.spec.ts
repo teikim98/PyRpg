@@ -438,9 +438,11 @@ test.describe.serial("지역 1 전체 플레이", () => {
 
     // 보스가 있던 칸을 지나 동쪽 문
     await walkTo(page, boss.x, boss.y);
+    const n = (await said(page)).length;
     await interact(page, "warp_east");
     await settle(page);
-    expect((await said(page)).at(-1)).toBe("to_be_continued");
+    // 처음 건널 때 openDialogue(다음 지역이 있으면 이어서 그 지역 대사)
+    expect((await said(page))[n]).toBe("to_be_continued");
   });
 
   test("저장/불러오기: 새로고침하면 위치·진행·처치한 몬스터가 그대로, 내보내기 → 초기화 → 불러오기", async () => {
@@ -640,12 +642,71 @@ test.describe("실패와 복구", () => {
     ].join("\n");
     await typeCode(page, deep);
     await cast(page);
-    await expect(page.locator(".battle-msg-text")).toContainText("실행기가 버티지 못하고 다시 시작했어");
-    await expect(page.locator(".battle-msg-text")).toContainText("재귀");
+    // 공통 대사 fatal_recursion(content/common/dialogue.json)
+    await expect(page.locator(".battle-msg-text")).toContainText("룬 엔진이 통째로 꺼졌다가 다시 켜졌어");
+    await expect(page.locator(".battle-msg-text")).toContainText("재귀가 너무 깊어");
     expect(await editorText(page)).toBe(deep);
     await typeCode(page, solution("P0101"));
     await cast(page);
     await expect(page.locator(".battle-banner.is-victory")).toBeVisible();
+  });
+});
+
+test.describe("지역 간 이동", () => {
+  // ?e2e&fixtures: 시험 지역 r99를 넣고 에코 마을 warp_east를 r99의 spawn_west로 잇는다(src/app/e2e.ts addE2eFixtures)
+  test("동쪽 문 → r99 spawn 옆(등지는 방향), 첫 대사·트리거·HUD·저장, 새로고침해도 r99, 돌아오기", async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/?e2e&fixtures");
+    await page.waitForFunction(() => (window as any).__pyrpg?.ready === true, null, { timeout: 60_000 });
+    await settle(page);
+    const boss = await obj(page, "m_P0105");
+    await seedAndReload(page, {
+      lessons: ["L1-1", "L1-2", "L1-3", "L1-4"],
+      removed: ["m_P0105"],
+      at: { x: boss.x, y: boss.y },
+      flags: ["trigger.r01.t_prologue", "companion.joined", "region.r01.clear"],
+    });
+    expect(await said(page)).toEqual([]);
+
+    await interact(page, "warp_east");
+    await settle(page);
+    expect(await said(page)).toEqual(["to_be_continued", "r99_intro", "r99_hello"]);
+    let st = await page.evaluate(() => (window as any).__pyrpg.state());
+    expect(st.save.location).toEqual({ regionId: "r99", x: 2, y: 2, facing: "right" });
+    expect(st.pos).toEqual({ x: 2, y: 2, facing: "right" });
+    await expect(page.locator(".hud-region")).toHaveText("시험의 들판");
+    // 새 지역에서도 실제 키로 움직인다
+    await step(page, "right");
+    await step(page, "down");
+    const w = await where(page);
+    expect({ x: w.x, y: w.y }).toEqual({ x: 3, y: 3 });
+
+    // 새로고침: r99의 같은 칸에서 시작하고 첫 대사·트리거는 다시 나오지 않는다
+    await page.reload();
+    await page.waitForFunction(() => (window as any).__pyrpg?.ready === true, null, { timeout: 60_000 });
+    await settle(page);
+    expect(await said(page)).toEqual([]);
+    st = await page.evaluate(() => (window as any).__pyrpg.state());
+    expect(st.save.location.regionId).toBe("r99");
+    expect({ x: st.pos.x, y: st.pos.y }).toEqual({ x: 3, y: 3 });
+    await expect(page.locator(".hud-region")).toHaveText("시험의 들판");
+
+    // 돌아가기: warp_west → 에코 마을 warp_east 옆, 문을 등진다
+    await interact(page, "warp_west");
+    await settle(page);
+    expect(await said(page)).toEqual(["r99_back"]);
+    await expect(page.locator(".hud-region")).toHaveText("에코 마을");
+    const gate = await obj(page, "warp_east");
+    const back = await where(page);
+    expect(Math.abs(back.x - gate.x) + Math.abs(back.y - gate.y)).toBe(1);
+    expect((await save(page)).location.regionId).toBe("r01");
+
+    // 두 번째로 건널 때는 openDialogue 없이 바로
+    await interact(page, "warp_east");
+    await settle(page);
+    expect(await said(page)).toEqual(["r99_back"]);
+    await expect(page.locator(".hud-region")).toHaveText("시험의 들판");
   });
 });
 

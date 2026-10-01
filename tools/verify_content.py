@@ -76,6 +76,7 @@ PENDING_SPRITES = {
     },
 }
 # 맵 오브젝트 종류별 필수 props(src/contracts/world.ts)
+COMPARE_KEYS = {"sequenceAsList"}
 MAP_OBJECT_TYPES = {"npc", "sign", "chest", "door", "monster", "campfire", "rune", "trigger", "warp", "spawn"}
 
 # Traceback 해설 확인용: (코드, 예외 이름, 특정 패턴 규칙이 걸려야 하는지)
@@ -134,13 +135,20 @@ mode, path, result_path = sys.argv[1], sys.argv[2], sys.argv[3]
 res = {"ok": True}
 try:
     src = open(path, encoding="utf-8").read()
-    g = {"__name__": "__main__", "__builtins__": __builtins__}
+    # 함수형은 게임 채점기(judge.py FUNCTION_MODULE_NAME)처럼 __main__이 아닌 이름으로 실행한다
+    g = {"__name__": "solution_module" if mode == "function" else "__main__", "__builtins__": __builtins__}
     exec(compile(src, "<user>", "exec"), g)
     if mode == "function":
         entry, args, expect = sys.argv[4], sys.argv[5], sys.argv[6]
+        compare = json.loads(sys.argv[7]) if len(sys.argv) > 7 and sys.argv[7] else {}
         ret = g[entry](*ast.literal_eval(args))
         sys.stdout.flush()
-        res = {"ok": True, "repr": repr(ret), "equal": ret == ast.literal_eval(expect)}
+        def seq(v):
+            # judge.py sequences_as_lists와 같은 규칙
+            return [seq(x) for x in v] if isinstance(v, (list, tuple)) else v
+        want = ast.literal_eval(expect)
+        equal = seq(ret) == seq(want) if compare.get("sequenceAsList") else ret == want
+        res = {"ok": True, "repr": repr(ret), "equal": bool(equal)}
 except SystemExit as e:
     if e.code not in (None, 0):
         res = {"ok": False, "type": "SystemExit", "message": str(e.code)}
@@ -267,14 +275,14 @@ class Runner:
         self.tmp = tempfile.mkdtemp(prefix="verify_content_")
         self.count = 0
 
-    def run(self, code_path, kind, stdin="", entry=None, args=None, expect=None, timeout=2.0):
+    def run(self, code_path, kind, stdin="", entry=None, args=None, expect=None, timeout=2.0, compare=None):
         """한 번 실행. 반환: dict(verdict, stdout, actual, error_type, error_message, timed_out)"""
         self.count += 1
         fd, result_path = tempfile.mkstemp(suffix=".json", dir=self.tmp)
         os.close(fd)
         cmd = [self.python, "-c", HARNESS, kind, code_path, result_path]
         if kind == "function":
-            cmd += [entry, args, expect]
+            cmd += [entry, args, expect, json.dumps(compare) if compare else ""]
         try:
             proc = subprocess.run(cmd, input=stdin, capture_output=True, text=True, encoding="utf-8",
                                   timeout=timeout)
@@ -346,6 +354,12 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
         rep.error(where, f"kind {kind!r}")
         return None
     entry = p.get("entry", "solution")
+    compare = p.get("compare")
+    if compare is not None:
+        if kind != "function" or not isinstance(compare, dict) or set(compare) - COMPARE_KEYS or \
+                not all(isinstance(v, bool) for v in compare.values()):
+            rep.error(where, f"compare는 함수형에만, {sorted(COMPARE_KEYS)} 불리언 옵션: {compare!r}")
+            compare = None
     enemy = p["enemy"]
     if not isinstance(enemy.get("name"), str) or not isinstance(enemy.get("attack"), int) or enemy["attack"] <= 0:
         rep.error(where, "enemy.name/attack 형식 오류")
@@ -451,6 +465,14 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
     for f in sorted(files):
         if (f.startswith("wrong_") or f == "slow.py") and f not in wrong_files:
             rep.error(where, f"{f}가 problem.json의 wrong[]에 없음")
+    accepted = p.get("accepted", [])
+    if not isinstance(accepted, list) or not all(isinstance(a, dict) and isinstance(a.get("file"), str) for a in accepted):
+        rep.error(where, "accepted는 {file, title} 배열")
+        accepted = []
+    accepted_files = [a["file"] for a in accepted]
+    for f in sorted(files):
+        if f.startswith("alt_") and f not in accepted_files:
+            rep.error(where, f"{f}가 problem.json의 accepted[]에 없음")
 
     def judge(code_file):
         path = os.path.join(folder, code_file)
@@ -460,7 +482,7 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
                 jobs.append(pool.submit(runner.run, path, "stdin", stdin=t["in"], expect=t["out"], timeout=limit))
             else:
                 jobs.append(pool.submit(runner.run, path, "function", entry=entry, args=t["args"],
-                                        expect=t["expect"], timeout=limit))
+                                        expect=t["expect"], timeout=limit, compare=compare))
         return [j.result() for j in jobs]
 
     def diagnose(results):
@@ -500,6 +522,18 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
             rep.error(where, f"모범답안이 실패: {bad} {[(r['error_type'], r['error_message']) for r in res if r['verdict'] == 'RE'][:1]}")
         else:
             rep.info(f"{where} solution.py  OK  {len(res)}/{len(res)} AC")
+
+    # 정답으로 인정하는 다른 답안(예: 튜플 반환): 전부 AC여야 한다
+    for f in accepted_files:
+        if f not in files:
+            rep.error(f"{where} {f}", "파일 없음")
+            continue
+        res = judge(f)
+        bad = {i + 1: r["verdict"] for i, r in enumerate(res) if r["verdict"] != "AC"}
+        if bad:
+            rep.error(f"{where} {f}", f"정답으로 인정해야 하는 답안이 실패: {bad}")
+        else:
+            rep.info(f"{where} {f}  OK  {len(res)}/{len(res)} AC")
 
     test_phase = {i + 1: t.get("phase", 1) for i, t in enumerate(tests)}
     for w in p["wrong"]:
@@ -722,6 +756,40 @@ def check_map(rep, region_id, map_path, problems, lessons, dialogues, scrolls, s
         rep.error(where, "spawn 오브젝트가 없음")
 
 
+def check_warps(rep, rdir):
+    """지역 간 이동(docs/phase3/region02-spec.md §4): warp의 target 지역과 targetSpawn 오브젝트가 있는지.
+    아직 만들지 않은 지역을 가리키면 경고(게임은 openDialogue만 보여 주고 머문다)."""
+    regions = {}
+    warps = []
+    for name in sorted(os.listdir(rdir)):
+        folder = os.path.join(rdir, name)
+        try:
+            with open(os.path.join(folder, "region.json"), encoding="utf-8") as f:
+                rid = json.load(f).get("id")
+            with open(os.path.join(folder, "map.tmj"), encoding="utf-8") as f:
+                m = json.load(f)
+        except (OSError, json.JSONDecodeError):
+            continue
+        objs = [o for layer in m.get("layers", []) if layer.get("type") == "objectgroup" for o in layer.get("objects", [])]
+        regions[rid] = {o.get("name") for o in objs}
+        for o in objs:
+            if (o.get("type") or o.get("class")) == "warp":
+                warps.append((rid, o.get("name"), tiled_props(o)))
+    for rid, oid, props in warps:
+        where = f"{rid}/map.tmj {oid}"
+        target, spawn = props.get("target"), props.get("targetSpawn")
+        if spawn is not None and target is None:
+            rep.error(where, "targetSpawn만 있고 target이 없음")
+        if target is None:
+            continue
+        if not isinstance(spawn, str) or not spawn:
+            rep.error(where, "target이 있으면 targetSpawn도 필요")
+        elif target not in regions:
+            rep.warn(where, f"target={target!r} 지역이 아직 없음(openDialogue만 보여 주고 머묾)")
+        elif spawn not in regions[target]:
+            rep.error(where, f"targetSpawn={spawn!r}가 {target} 맵에 없음")
+
+
 # ---------------------------------------------------------------- 보조 캐릭터
 
 def check_companion(rep, runner, portraits):
@@ -902,6 +970,8 @@ def main():
         for name in sorted(os.listdir(rdir)):
             if os.path.isdir(os.path.join(rdir, name)):
                 check_region(rep, runner, pool, os.path.join(rdir, name), sprites, common)
+
+    check_warps(rep, rdir)
 
     print(f"실행 {runner.count}회, 경고 {len(rep.warnings)}개, 오류 {len(rep.errors)}개")
     print("ALL OK" if not rep.errors else "FAILED")

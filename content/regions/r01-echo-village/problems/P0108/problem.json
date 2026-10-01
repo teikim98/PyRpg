@@ -8,6 +8,7 @@
   "concept": "scroll.arith",
   "boss": false,
   "timeLimitMs": 2000,
+  "compare": { "sequenceAsList": true },
   "estimatedMinutes": 8,
   "tests": [
     { "args": "(3661,)", "expect": "[1, 1, 1]", "public": true, "note": "기본 동작" },
@@ -23,6 +24,9 @@
       "when": { "verdict": "WA", "outputMatches": "^\\[0, 0, 0\\]$" },
       "text": "아직 `h`, `m`, `s`가 모두 처음 값 `0` 그대로예요. 각 칸에 `sec`로 계산하는 식을 적어 보세요."
     }
+  ],
+  "accepted": [
+    { "file": "alt_tuple.py", "title": "튜플 h, m, s 반환(sequenceAsList)" }
   ],
   "wrong": [
     {

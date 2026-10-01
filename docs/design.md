@@ -248,6 +248,7 @@ Python 에러 메시지는 초급자에게 낯설기 때문에, 보조 캐릭터
 
 - stdin형 문제에서는 `input()`과 `sys.stdin.readline()`이 모두 동작해야 합니다. 레슨과 대사에서는 `sys.stdin.readline`을 쓰는 습관을 꾸준히 권장합니다.
 - 테스트마다 Python 전역 상태를 새로 만들어서, 이전 테스트에서 만든 변수가 다음 테스트에 남지 않게 합니다.
+- 함수 구현형 세부(Phase 3 단위 3-0): 비교는 Python `==` 그대로라서 `1` 대신 `True`도 통과합니다. 문제 데이터에 `"compare": {"sequenceAsList": true}`가 있으면 튜플과 리스트를 구별하지 않습니다(예: P0108의 `return h, m, s`). 채점 때 `__name__`은 `"solution_module"`이라 `if __name__ == "__main__":` 블록은 실행되지 않고, `print` 출력은 채점에 쓰지 않고 [예제 실행] 결과에 보여 줍니다.
 
 ---
 

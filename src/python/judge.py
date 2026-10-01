@@ -17,6 +17,9 @@ RECURSION_LIMIT = 1000
 INT_MAX_STR_DIGITS = 4300
 REPR_LIMIT = 4000
 MESSAGE_LIMIT = 2000
+# 함수 구현형 채점 때의 __name__. "__main__"이 아니어서 if __name__ == "__main__": 블록은 실행되지 않는다
+# (tools/verify_content.py HARNESS와 같은 값)
+FUNCTION_MODULE_NAME = "solution_module"
 
 
 _BUILTINS = dict(builtins.__dict__)
@@ -141,14 +144,14 @@ def _safe_repr(value):
         return "<" + type(value).__name__ + ": repr 실패>"
 
 
-def _exec_user(code, extra=None):
+def _exec_user(code, extra=None, module_name="__main__"):
     """새 globals에서 사용자 코드를 실행한다. (status, error, globals, elapsed_ms)
 
     status: "ok" | "error" | "timeout"
     """
     _reset_interpreter()
     _register_source(code)
-    g = {"__name__": "__main__", "__builtins__": builtins}
+    g = {"__name__": module_name, "__builtins__": builtins}
     start = time.perf_counter()
     status, error = "ok", None
     try:
@@ -202,8 +205,23 @@ def run_stdin_test(code, expected):
     )
 
 
-def run_function_test(code, entry, args_src, expect_src):
+def sequences_as_lists(v):
+    """튜플·리스트를 (중첩까지) 리스트로 바꾼다. 비교 옵션 sequenceAsList용(tools/verify_content.py와 같은 규칙)."""
+    if isinstance(v, (list, tuple)):
+        return [sequences_as_lists(x) for x in v]
+    return v
+
+
+def results_equal(expected, result, compare=None):
+    """함수형 반환값 비교. 기본은 Python ==(True == 1도 같음). compare.sequenceAsList면 튜플과 리스트를 구별하지 않는다."""
+    if compare and compare.get("sequenceAsList"):
+        return bool(sequences_as_lists(expected) == sequences_as_lists(result))
+    return bool(expected == result)
+
+
+def run_function_test(code, entry, args_src, expect_src, compare_json=""):
     try:
+        compare = json.loads(compare_json) if compare_json else None
         args = ast.literal_eval(args_src)
         expected = ast.literal_eval(expect_src)
     except Exception as e:
@@ -219,8 +237,9 @@ def run_function_test(code, entry, args_src, expect_src):
             raise NameError(f"name '{entry}' is not defined")
         box["result"] = fn(*args)
 
-    status, error, _g, elapsed = _exec_user(code, call)
-    pyrpg_io.take_stdout()
+    status, error, _g, elapsed = _exec_user(code, call, FUNCTION_MODULE_NAME)
+    # 사용자 print 출력은 채점에 쓰지 않고 [예제 실행] 결과에 보여 준다
+    stdout = _clip(pyrpg_io.take_stdout() or "", REPR_LIMIT)
     actual = ""
     if status == "timeout":
         verdict = "TLE"
@@ -233,13 +252,14 @@ def run_function_test(code, entry, args_src, expect_src):
         result = box["result"]
         actual = _safe_repr(result)
         try:
-            same = bool(expected == result)
+            same = results_equal(expected, result, compare)
         except BaseException as e:
             same = False
             error = _error_info(e)
         verdict = "AC" if same else "WA"
     return json.dumps(
-        {"verdict": verdict, "actual": actual, "error": error, "timeMs": elapsed}, ensure_ascii=False
+        {"verdict": verdict, "actual": actual, "error": error, "timeMs": elapsed, "stdout": stdout},
+        ensure_ascii=False,
     )
 
 

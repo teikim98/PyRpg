@@ -1032,6 +1032,16 @@
        "name": "openDialogue",
        "type": "string",
        "value": "to_be_continued"
+      },
+      {
+       "name": "target",
+       "type": "string",
+       "value": "r02"
+      },
+      {
+       "name": "targetSpawn",
+       "type": "string",
+       "value": "spawn_west"
       }
      ]
     }

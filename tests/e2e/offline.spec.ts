@@ -31,3 +31,32 @@ test("오프라인 새로고침과 워커 재생성", async ({ page, context }) 
     await context.setOffline(false);
   }
 });
+
+// plan §1 8: 앱 캐시 이름은 빌드마다 바뀌고(빌드 ID), 새 service worker가 켜질 때 옛 캐시를 지운다
+test("빌드 ID가 들어간 캐시 이름, 옛 캐시 삭제", async ({ browser }) => {
+  test.setTimeout(120_000);
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  try {
+    // service worker를 등록하지 않는 개발용 페이지에서 옛 버전 캐시를 미리 만든다
+    await page.goto("/dev/state.html");
+    await page.evaluate(async () => {
+      for (const name of ["pyrpg-app-v1", "pyrpg-app-oldbuild", "pyrpg-pyodide-0.0.1"]) {
+        await (await caches.open(name)).put("/old.txt", new Response("old"));
+      }
+    });
+    const sw = await (await page.request.get("/sw.js")).text();
+    const id = /const BUILD_ID = "([0-9a-f]{12})";/.exec(sw)?.[1];
+    expect(id, "sw.js에 빌드 ID").toBeTruthy();
+    expect(sw).not.toContain("__PYRPG_BUILD_ID__");
+
+    await page.goto("/?e2e");
+    await page.waitForFunction(() => (window as any).__pyrpg?.ready === true, null, { timeout: 60_000 });
+    await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
+    await expect
+      .poll(() => page.evaluate(() => caches.keys().then((k) => k.sort())), { timeout: 30_000 })
+      .toEqual([`pyrpg-app-${id}`, "pyrpg-pyodide-314.0.7"].sort());
+  } finally {
+    await context.close();
+  }
+});

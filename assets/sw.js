@@ -5,8 +5,10 @@
 // - 처음 접속에서 service worker가 페이지를 제어하기 전에 받은 파일(번들·폰트·이미지)은 페이지가
 //   message로 목록을 보내 오면 캐시에 넣는다(한 번 접속만으로 오프라인 실행)
 // 캐시된 응답은 COOP/COEP 헤더도 함께 저장되므로 오프라인에서도 cross-origin isolated가 유지된다.
+// - 앱 캐시 이름은 빌드마다 바뀐다(vite.config.ts가 빌드 ID를 넣는다). activate에서 옛 캐시를 지운다
+const BUILD_ID = "__PYRPG_BUILD_ID__";
 const PYODIDE_CACHE = "pyrpg-pyodide-314.0.7";
-const APP_CACHE = "pyrpg-app-v1";
+const APP_CACHE = `pyrpg-app-${BUILD_ID}`;
 const PYODIDE_FILES = ["pyodide.mjs", "pyodide.asm.mjs", "pyodide.asm.wasm", "python_stdlib.zip", "pyodide-lock.json"];
 
 self.addEventListener("install", (event) => {

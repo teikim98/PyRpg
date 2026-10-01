@@ -35,6 +35,7 @@ export interface BattleOverrides {
   hintLevel?: HintLevel;
   regionOrder?: number;
   draft?: string;
+  companionLines?: BattleContext["companionLines"];
 }
 
 export function mountHarness(game: HTMLElement) {
@@ -45,6 +46,8 @@ export function mountHarness(game: HTMLElement) {
   const drafts: string[] = [];
   const menuCalls: string[] = [];
   const results: unknown[] = [];
+  /** onVictory로 받은 결과(AC 순간) */
+  const victories: BattleOutcome[] = [];
   const logEl = document.getElementById("log");
   const record = <T>(label: string, p: Promise<T>): Promise<T> =>
     p.then((v) => {
@@ -75,6 +78,7 @@ export function mountHarness(game: HTMLElement) {
     drafts,
     menuCalls,
     results,
+    victories,
     problems,
     dialogue: (lines = dialogueLines) => record("dialogue", ui.dialogue.play(lines, names)),
     lesson: () => record("lesson", ui.lesson.open(L12, fake, names)),
@@ -94,6 +98,8 @@ export function mountHarness(game: HTMLElement) {
         explain: fakeExplain,
         diagnose: fakeDiagnose,
         onDraft: (code) => drafts.push(code),
+        onVictory: (outcome) => victories.push(outcome),
+        companionLines: o.companionLines,
       };
       return record(`battle ${id}`, ui.battle.open(ctx));
     },

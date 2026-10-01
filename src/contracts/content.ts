@@ -56,6 +56,12 @@ export interface BossPhase {
   intro?: string;
 }
 
+/** 함수 구현형 반환값 비교 옵션. 생략하면 Python == 그대로(True == 1도 같음) */
+export interface ProblemCompare {
+  /** 튜플과 리스트를 구별하지 않는다(중첩 포함). 예: [1, 1, 1] 대신 (1, 1, 1)을 반환해도 정답 */
+  sequenceAsList?: boolean;
+}
+
 export interface Problem {
   id: string;
   regionId: string;
@@ -75,6 +81,8 @@ export interface Problem {
   concept: string;
   /** 일반 테스트의 시간 상한(ms). 로컬 검증 기준 */
   timeLimitMs: number;
+  /** 함수 구현형 비교 옵션(judge.py, tools/verify_content.py가 같은 규칙으로 비교) */
+  compare?: ProblemCompare;
   /** 시간 결계 페이즈의 기기별 예산(§9.6). 없으면 timeLimitMs 사용 */
   budgetUnits?: number;
   estimatedMinutes: number;

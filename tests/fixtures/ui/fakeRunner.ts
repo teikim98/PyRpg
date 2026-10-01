@@ -11,6 +11,8 @@ export interface JudgeSpec {
   error?: PyError;
   timeMs?: number;
   fatal?: boolean;
+  /** 함수형: 테스트마다 돌려줄 print 출력 */
+  stdout?: string;
 }
 
 export interface RunSpec {
@@ -149,6 +151,7 @@ export class FakeRunner implements PythonRunner {
         actual: failed ? (verdict === "RE" || verdict === "TLE" ? "" : spec.actual ?? "0") : expected,
         error,
       };
+      if (spec.stdout) r.stdout = spec.stdout;
       tests.push(r);
       opts.onProgress?.(r);
     }
