@@ -466,11 +466,15 @@ test.describe.serial("지역 2 갈림길 숲 전체 플레이", () => {
     const lines = await said(page);
     expect(lines.indexOf("boss_defeated")).toBeGreaterThan(-1);
     expect(lines.indexOf("region_clear")).toBeGreaterThan(lines.indexOf("boss_defeated"));
-    // 실전 추천: 지역 2는 백준 6개(재개 전이라 링크 비활성)
+    // 실전 추천: 프로그래머스 3개(조건문·반복문만으로 풀림) 먼저, 백준 3개(재개 전이라 링크 비활성)
     await expect(page.locator(".recommend-modal")).toContainText("갈림길 숲");
     await expect(page.locator(".recommend-item")).toHaveCount(6);
-    await expect(page.locator(".recommend-item.site-boj .recommend-link.is-disabled")).toHaveCount(6);
-    await expect(page.locator(".recommend-item a")).toHaveCount(0);
+    const links = page.locator(".recommend-item.site-programmers a.recommend-link");
+    await expect(links).toHaveCount(3);
+    await expect(links.first()).toHaveAttribute("href", "https://school.programmers.co.kr/learn/courses/30/lessons/12937");
+    for (let i = 0; i < 3; i++) await expect(page.locator(".recommend-item").nth(i)).toHaveAttribute("data-site", "programmers");
+    await expect(page.locator(".recommend-item.site-boj .recommend-link.is-disabled")).toHaveCount(3);
+    await expect(page.locator(".recommend-item.site-boj a")).toHaveCount(0);
     await expect(page.locator(".recommend-note")).toBeVisible();
     await shot(page, "r02-play-clear.png");
     await page.locator(".reward-ok").click();
