@@ -9,8 +9,8 @@ content/ 아래 데이터를 읽어서 아래를 확인한다. 하나라도 실�
   원래 모범답안 전부 AC, wrong_*.py는 변형마다 하나 이상 실패, 보스 slow.py는 전부 AC(시간 결계 없음)
 - 레슨: 주문서 ID, 빈칸 연습 정답 실행 결과, ```python run 블록이 에러 없이 실행되는지
 - 대사: region1-spec.md §5, region02-spec.md §5, region03-spec.md §5의 ID, 대사 줄 형식
-- 지역: recommended 필드(번호·제목·사이트·레벨만), map.tmj가 있으면 맵 오브젝트 참조
-- 보조 캐릭터: profile.json, traceback.json(실제 CPython 에러 메시지로 규칙 매칭 확인)
+- 지역: recommended 필드(번호·제목·사이트·레벨만), map.tmj가 있으면 맵 오브젝트 참조(상자의 item은 items.json의 ID)
+- 보조 캐릭터: profile.json, traceback.json(실제 CPython 에러 메시지로 규칙 매칭 확인, 규칙의 lesson은 실제 레슨 ID)
 
 채점 규칙은 게임(src/python)과 같다.
 - stdin형: 각 줄 끝 공백과 마지막 개행들을 무시하고 비교
@@ -139,6 +139,16 @@ TRACEBACK_SAMPLES = [
     ("max([])", "ValueError", True),
     ('"a".length', "AttributeError", True),
     ('"a".toUpperCase()', "AttributeError", True),
+    # 문자열(지역 4 대비, docs/phase3/region04-spec.md §3 흔한 실수)
+    ('s = "ab"\ns[0] = "x"', "TypeError", True),
+    ('" ".join([1, 2])', "TypeError", True),
+    ('"ab".index("z")', "ValueError", True),
+    ('"a".push("b")', "AttributeError", True),
+    ('"a".append("b")', "AttributeError", True),
+    ('"a".includes("b")', "AttributeError", True),
+    ('"a".indexOf("b")', "AttributeError", True),
+    ('"a".startsWith("a")', "AttributeError", True),
+    ("[].length", "AttributeError", True),
     ("input()", "EOFError", False),
     ("def f():\n    return f()\nf()", "RecursionError", False),
     ("let x = 1", "SyntaxError", False),
@@ -888,7 +898,7 @@ def tiled_props(obj):
     return props
 
 
-def check_map(rep, region_id, map_path, problems, lessons, dialogues, scrolls, sprites):
+def check_map(rep, region_id, map_path, problems, lessons, dialogues, scrolls, sprites, items):
     where = f"{region_id}/map.tmj"
     m = load_json(rep, map_path)
     if m is None:
@@ -927,6 +937,8 @@ def check_map(rep, region_id, map_path, problems, lessons, dialogues, scrolls, s
         if otype == "monster":
             if props.get("problem") not in problems:
                 rep.error(ow, f"problem={props.get('problem')!r} 문제가 없음")
+        if otype == "chest" and "item" in props and props["item"] not in items:
+            rep.error(ow, f"item={props['item']!r} 아이템이 items.json에 없음")
         if otype == "rune" and "lesson" not in props:
             rep.error(ow, "rune에 lesson 없음")
         if otype in ("sign", "npc") and "dialogue" not in props:
@@ -987,6 +999,18 @@ def check_warps(rep, rdir):
 
 # ---------------------------------------------------------------- 보조 캐릭터
 
+def all_lesson_ids():
+    """content/regions/*/lessons/<ID>/lesson.json의 레슨 ID(폴더 이름. check_lesson이 id와 같은지 따로 확인)"""
+    out = set()
+    rdir = os.path.join(CONTENT, "regions")
+    for name in os.listdir(rdir) if os.path.isdir(rdir) else []:
+        ldir = os.path.join(rdir, name, "lessons")
+        for lid in os.listdir(ldir) if os.path.isdir(ldir) else []:
+            if os.path.exists(os.path.join(ldir, lid, "lesson.json")):
+                out.add(lid)
+    return out
+
+
 def check_companion(rep, runner, portraits):
     prof = load_json(rep, os.path.join(CONTENT, "companion", "profile.json"))
     if prof is not None:
@@ -1003,13 +1027,17 @@ def check_companion(rep, runner, portraits):
     where = "companion/traceback.json"
     compiled = []
     default_at = {}
+    lesson_ids = all_lesson_ids()
     for i, r in enumerate(rules):
         if not isinstance(r, dict) or not isinstance(r.get("exception"), str) or not isinstance(r.get("text"), str):
             rep.error(where, f"{i}번째 규칙 형식 오류")
             compiled.append(None)
             continue
-        if set(r) - {"exception", "pattern", "text"}:
+        if set(r) - {"exception", "pattern", "text", "lesson"}:
             rep.error(where, f"{i}번째 규칙: 모르는 필드")
+        # 기록관의 안경(docs/phase3/region04-spec.md §6): 해설 아래 코덱스 바로가기가 가리킬 레슨
+        if "lesson" in r and r["lesson"] not in lesson_ids:
+            rep.error(where, f"{i}번째 규칙: lesson={r['lesson']!r} 레슨이 없음")
         if "pattern" in r:
             if r["exception"] in default_at:
                 rep.error(where, f"{r['exception']} 기본 규칙 뒤에 패턴 규칙이 있음(순서상 걸리지 않음)")
@@ -1044,7 +1072,7 @@ def check_companion(rep, runner, portraits):
 
 # ---------------------------------------------------------------- 지역
 
-def check_region(rep, runner, pool, folder, sprites, common_dialogues):
+def check_region(rep, runner, pool, folder, sprites, common_dialogues, items):
     data = load_json(rep, os.path.join(folder, "region.json"))
     if data is None:
         return
@@ -1133,7 +1161,7 @@ def check_region(rep, runner, pool, folder, sprites, common_dialogues):
     # 맵(월드 담당이 만든다. 없으면 건너뜀)
     map_path = os.path.join(folder, "map.tmj")
     if os.path.exists(map_path):
-        check_map(rep, rid, map_path, problems, lessons, {**common_dialogues, **dialogues}, scrolls, sprites)
+        check_map(rep, rid, map_path, problems, lessons, {**common_dialogues, **dialogues}, scrolls, sprites, items)
     else:
         rep.warn(rid, "map.tmj가 없어서 맵 오브젝트 참조 검사를 건너뜀")
 
@@ -1159,12 +1187,13 @@ def main():
         if did not in common:
             rep.error("common/dialogue.json", f"대사 ID {did!r}가 없음")
     check_companion(rep, runner, portraits)
+    items = {i.get("id") for i in (load_json(rep, os.path.join(CONTENT, "items.json")) or []) if isinstance(i, dict)}
 
     rdir = os.path.join(CONTENT, "regions")
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
         for name in sorted(os.listdir(rdir)):
             if os.path.isdir(os.path.join(rdir, name)):
-                check_region(rep, runner, pool, os.path.join(rdir, name), sprites, common)
+                check_region(rep, runner, pool, os.path.join(rdir, name), sprites, common, items)
 
     check_warps(rep, rdir)
 

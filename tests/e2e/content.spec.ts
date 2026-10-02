@@ -186,7 +186,8 @@ function cpython(code: string, stdin: string): string | undefined {
   if (!CPYTHON) return undefined;
   const r = spawnSync(CPYTHON, ["-c", code], { input: stdin, encoding: "utf-8", env: CPYTHON_ENV });
   if (r.error || r.status !== 0) return undefined;
-  return r.stdout;
+  // Windows의 CPython은 텍스트 모드 stdout에 줄바꿈을 \r\n으로 쓴다(Pyodide는 \n)
+  return r.stdout.replace(/\r\n/g, "\n");
 }
 
 for (const region of REGIONS) {

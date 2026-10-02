@@ -48,10 +48,9 @@
     "id": "archivist-glasses",
     "name": "기록관의 안경",
     "kind": "accessory",
-    "description": "Traceback 해설에 관련 코덱스 레슨 링크를 붙여 준다.",
+    "description": "Traceback 해설 아래에 다시 보면 좋은 코덱스 레슨 바로가기를 붙여 준다(배운 레슨만).",
     "source": "지역 4 상자",
-    "effect": { "type": "codexLinks" },
-    "pending": true
+    "effect": { "type": "codexLinks" }
   },
   {
     "id": "hourglass-charm",

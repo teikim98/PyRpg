@@ -1097,7 +1097,7 @@ stdin/stdout형 예(P0101):
 ### 11.4 맵(`map.tmj`)
 
 - Tiled의 JSON 포맷을 씁니다. 타일 레이어(`ground`, `deco`, `collision`)와 오브젝트 레이어(`objects`)로 나눕니다.
-- 오브젝트에는 `type`(npc, sign, chest, door, monster, campfire, warp)과 사용자 정의 속성을 적습니다. 예: 몬스터 `{ "problem": "P0101" }`, 잠긴 문 `{ "requires": "scroll.convert" }` 또는 `{ "puzzle": "Z0101" }`.
+- 오브젝트에는 `type`(npc, sign, chest, door, monster, campfire, warp)과 사용자 정의 속성을 적습니다. 예: 몬스터 `{ "problem": "P0101" }`, 잠긴 문 `{ "requires": "scroll.convert" }` 또는 `{ "puzzle": "Z0101" }`, 상자 `{ "gold": 50 }` 또는 `{ "item": "archivist-glasses" }`(`content/items.json`의 ID, 이미 가진 장신구면 다시 주지 않음).
 - 엔진은 오브젝트 `type`만 보고 동작을 정하므로, 새 지역을 만들 때 엔진 코드를 고치지 않습니다.
 
 ### 11.5 스키마 검증

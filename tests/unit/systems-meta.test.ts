@@ -217,7 +217,7 @@ describe("상점·장비·꾸미기(§7.2, §7.3)", () => {
   it("준비 중인 장신구는 효과가 없다", () => {
     const s = newSave();
     s.equipment = ["echo-ring"];
-    expect(equipmentEffects(s, items)).toEqual({ maxHpBonus: 0, guideFeather: false, targetComplexity: false });
+    expect(equipmentEffects(s, items)).toEqual({ maxHpBonus: 0, guideFeather: false, targetComplexity: false, codexLinks: false });
   });
 
   it("꾸미기: 대상마다 하나, 다시 누르면 원래 색", () => {

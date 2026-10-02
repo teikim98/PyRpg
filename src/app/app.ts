@@ -26,6 +26,7 @@ import {
   emptyRecord,
   ensureDailyQuests,
   equipmentEffects,
+  grantItem,
   hudState,
   itemsRewardedBy,
   lastStreakRepair,
@@ -56,6 +57,8 @@ import {
   type QuestEvent,
   type QuestContext,
 } from "../systems";
+import { codexLinkFor } from "./codexLink";
+import { objectParticle } from "./josa";
 import { checkRequires, missingScrolls } from "./requires";
 import { arrivalSpot } from "./travel";
 
@@ -298,14 +301,24 @@ export class App {
     await this.flushNotices();
   }
 
+  /** 상자: gold(금화)와 item(아이템 ID, docs/phase3/region04-spec.md §4.1). 이미 가진 장신구면 상자만 연다 */
   private async openChest(o: MapObjectDef): Promise<void> {
     if (this.save.removedObjects.includes(o.id)) return;
     const gold = Number(o.props.gold ?? 0);
     this.save.player.gold += gold;
+    const item = o.props.item !== undefined ? this.item(String(o.props.item)) : undefined;
+    if (o.props.item !== undefined && !item) console.warn(`상자 아이템 없음: ${String(o.props.item)}`);
+    let got: ItemDef | null = null;
+    if (item) {
+      const r = grantItem(this.save, item);
+      this.save = r.save;
+      if (r.granted) got = item;
+    }
     this.save.removedObjects.push(o.id);
     await this.world.removeObject(o.id, "open");
     if (o.props.dialogue) await this.say(String(o.props.dialogue));
     if (gold) this.deps.ui.hud.toast(`금화 ${gold}개를 얻었다!`);
+    if (got) this.deps.ui.hud.toast(`${got.name}${objectParticle(got.name)} 얻었다!`);
     await this.persist();
     this.refreshHud();
   }
@@ -476,6 +489,20 @@ export class App {
       perks: {
         freeHint2: fx.guideFeather,
         targetComplexity: fx.targetComplexity ? problem.targetComplexity : undefined,
+        // 기록관의 안경: 해설 아래 코덱스 바로가기. 코덱스는 전투 창 위에 열리고, 닫으면 전투로 돌아간다
+        codexLink: fx.codexLinks
+          ? {
+              lessonFor: (error) =>
+                codexLinkFor(error, { rules: this.deps.content.traceback, lessons: this.allLessons(), items: this.deps.content.items, save: this.save }),
+              open: async (lessonId) => {
+                if (!(await this.showCodex(lessonId))) return;
+                // 예제를 실행했으면 일일 퀘스트. 알림은 전투가 끝난 뒤에 보이고, 저장은 전투 중 임시 저장으로
+                // (persist()로 바로 저장하면 힌트 대가를 뺀 상태가 저장되므로 쓰지 않는다)
+                this.questEvent({ type: "codexRun" });
+                saveDuringBattle(true);
+              },
+            }
+          : undefined,
       },
       potions: potion ? { count: owned(this.save, potion.id), heal: potion.heal ?? 0, name: potion.name } : undefined,
       onUsePotion: () => {
@@ -599,25 +626,7 @@ export class App {
   private async openMenu(): Promise<void> {
     await this.deps.ui.menu.open({
       openCodex: async () => {
-        const lessons = this.allLessons().filter((l) => this.save.lessonsCompleted.includes(l.id));
-        // 코덱스에서 예제를 실행했는지 본다(일일 퀘스트 '코덱스 레슨 다시 실행')
-        let ran = false;
-        const r = this.deps.runner;
-        const tracked: PythonRunner = {
-          init: () => r.init(),
-          isReady: () => r.isReady(),
-          run: async (req) => {
-            const out = await r.run(req);
-            ran = true;
-            return out;
-          },
-          judge: (p, c, o) => r.judge(p, c, o),
-          referenceMs: () => r.referenceMs(),
-          dispose: () => r.dispose(),
-        };
-        const purified = purifiedShadows(this.save).map((e) => ({ concept: e.concept, name: this.conceptName(e.concept), returnCleared: returnCleared(e) }));
-        await this.deps.ui.codex.open(lessons, tracked, this.names, { purified });
-        if (ran) {
+        if (await this.showCodex()) {
           this.questEvent({ type: "codexRun" });
           await this.persist();
           this.refreshHud();
@@ -658,6 +667,31 @@ export class App {
         location.reload();
       },
     });
+  }
+
+  /**
+   * 배운 레슨의 코덱스를 연다. lessonId가 있으면 그 레슨을 펼친 채로(기록관의 안경).
+   * 예제를 실행했으면 true(일일 퀘스트 '코덱스 레슨 다시 실행'은 부르는 쪽에서)
+   */
+  private async showCodex(lessonId?: string): Promise<boolean> {
+    const lessons = this.allLessons().filter((l) => this.save.lessonsCompleted.includes(l.id));
+    let ran = false;
+    const r = this.deps.runner;
+    const tracked: PythonRunner = {
+      init: () => r.init(),
+      isReady: () => r.isReady(),
+      run: async (req) => {
+        const out = await r.run(req);
+        ran = true;
+        return out;
+      },
+      judge: (p, c, o) => r.judge(p, c, o),
+      referenceMs: () => r.referenceMs(),
+      dispose: () => r.dispose(),
+    };
+    const purified = purifiedShadows(this.save).map((e) => ({ concept: e.concept, name: this.conceptName(e.concept), returnCleared: returnCleared(e) }));
+    await this.deps.ui.codex.open(lessons, tracked, this.names, { purified, ...(lessonId ? { lesson: lessonId } : {}) });
+    return ran;
   }
 
   /** 저장 데이터를 통째로 바꾼다(불러오기). 화면에 반영하려면 새로고침 */

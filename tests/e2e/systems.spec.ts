@@ -1,5 +1,6 @@
 // 시스템 화면 E2E(단위 3-1, design.md §7.2~§7.6): 실제 게임(/?e2e)에서 실제 키·클릭으로
 // 그림자 게시판 → 그림자전, 일일 퀘스트와 상자, 상점, 장비(망토·깃털), 칭호를 확인한다.
+// 단위 3-4: 기록관의 안경(Traceback 해설 아래 코덱스 바로가기, region04-spec.md §6)
 // PW_PORT=4194 npx playwright test tests/e2e/systems.spec.ts
 import { mkdirSync, readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
@@ -319,5 +320,126 @@ test.describe.serial("시스템 화면(단위 3-1)", () => {
     await shot(page, "systems-titles.png");
     await closeAll(page);
     expect((await save(page)).activeTitle).toBe("first-spell");
+  });
+});
+
+test.describe.serial("기록관의 안경(단위 3-4)", () => {
+  const msgText = (page: Page) => page.locator(".battle-msg-text");
+  const codexLink = (page: Page) => page.locator(".battle-msg-text .codex-link");
+  const hpText = (page: Page) => page.locator(".player-hp-text").textContent();
+
+  /** 바로가기 → 그 레슨을 펼친 코덱스 → Esc로 닫으면 전투로 돌아와 코드·HP·포커스가 그대로 */
+  async function roundTrip(page: Page, lessonId: string, title: string, code: string): Promise<void> {
+    const hp = await hpText(page);
+    // 키보드로: 버튼에 포커스를 두고 Enter
+    await codexLink(page).focus();
+    await page.keyboard.press("Enter");
+    await expect(page.locator(".codex-modal")).toBeVisible();
+    await expect(page.locator(`.codex-item[data-lesson="${lessonId}"]`)).toHaveAttribute("aria-current", "true");
+    await expect(page.locator(".codex-lesson-title")).toHaveText(title);
+    await expect(page.locator(`.codex-item[data-lesson="${lessonId}"]`)).toBeFocused();
+    // 전투 창은 코덱스 아래에 그대로 있다
+    await expect(page.locator(".battle-modal")).toHaveCount(1);
+    await page.keyboard.press("Escape");
+    await expect(page.locator(".codex-modal")).toHaveCount(0);
+    await expect(page.locator(".battle-modal")).toBeVisible();
+    expect(await editorText(page)).toBe(code);
+    expect(await hpText(page)).toBe(hp);
+    await expect(codexLink(page)).toBeFocused();
+  }
+
+  test("장비에서 안경을 끼면 RE 해설 아래에 배운 레슨의 코덱스 바로가기, 코덱스를 닫으면 전투로. 빼면 없음", async ({ page }) => {
+    test.setTimeout(300_000);
+    await boot(page);
+    const gate = await obj(page, "gate_well");
+    await seedAndReload(page, {
+      lessons: ["L1-1", "L1-2"],
+      removed: ["gate_well"],
+      at: { x: gate.x, y: gate.y - 1 },
+      flags: ["trigger.r01.t_prologue", "companion.joined"],
+      patch: { inventory: { "archivist-glasses": 1 } },
+    });
+
+    // 장비: 안경은 '준비 중'이 아니고 낄 수 있다
+    await openMenu(page, ".menu-equipment", ".equip-modal");
+    const glasses = page.locator('.equip-item[data-item="archivist-glasses"]');
+    await expect(glasses).not.toContainText("준비 중");
+    await page.locator('.equip-toggle[data-item="archivist-glasses"]').click();
+    await expect(glasses).toHaveClass(/is-equipped/);
+    await closeAll(page);
+    expect((await save(page)).equipment).toEqual(["archivist-glasses"]);
+
+    // 진단이 없는 RE: 해설 본문 아래에 바로가기(L1-2 변환의 주문)
+    await bump(page, "m_P0101");
+    await settle(page, ".battle-modal");
+    const concat = "a, b = input().split()\nprint(a + 1)";
+    await typeCode(page, concat);
+    await cast(page);
+    await expect(msgText(page)).toContainText("TypeError");
+    await expect(codexLink(page)).toHaveText("📖 코덱스: 변환의 주문: 문자열과 숫자");
+    await expect(page.locator(".battle-msg-text .err-codex .codex-link")).toBeVisible();
+    await shot(page, "systems-glasses-link.png");
+    await roundTrip(page, "L1-2", "변환의 주문: 문자열과 숫자", concat);
+
+    // 아직 배우지 않은 레슨(IndexError → L3-1)이면 바로가기 없음
+    const index = "print([][1])";
+    await typeCode(page, index);
+    await cast(page);
+    await expect(msgText(page)).toContainText("IndexError");
+    await expect(codexLink(page)).toHaveCount(0);
+    // 직접 실행(예제 밖)의 에러 해설에도 붙는다
+    await typeCode(page, concat);
+    await page.locator(".custom-run-box summary").click();
+    await page.locator(".custom-stdin").fill("1 2");
+    await page.locator(".custom-run").click();
+    await expect(codexLink(page)).toBeVisible({ timeout: 60_000 });
+    await page.locator(".act-retreat").click();
+    await settle(page);
+    // 전투 중에 연 코덱스로 작성 코드가 지워지지 않았다
+    expect((await save(page)).problems.P0101.draft).toBe(concat);
+
+    // 안경을 빼면 지금과 똑같다(바로가기 없음)
+    await openMenu(page, ".menu-equipment", ".equip-modal");
+    await page.locator('.equip-toggle[data-item="archivist-glasses"]').click();
+    await expect(glasses).not.toHaveClass(/is-equipped/);
+    await closeAll(page);
+    await bump(page, "m_P0101");
+    await settle(page, ".battle-modal");
+    expect(await editorText(page)).toBe(concat);
+    await cast(page);
+    await expect(msgText(page)).toContainText("TypeError");
+    await expect(codexLink(page)).toHaveCount(0);
+    await page.locator(".act-retreat").click();
+    await settle(page);
+  });
+
+  test("진단이 먼저 나오고 일반 해설이 접혀 있어도 바로가기는 머리 줄의 [자세히] 옆에 보인다", async ({ page }) => {
+    test.setTimeout(240_000);
+    await boot(page);
+    const gate = await obj(page, "gate_well");
+    await seedAndReload(page, {
+      lessons: ["L1-1", "L1-2", "L1-3", "L1-4"],
+      removed: ["gate_well", "m_P0101", "m_P0106", "m_P0102", "m_P0103"],
+      at: { x: gate.x, y: gate.y - 1 },
+      flags: ["trigger.r01.t_prologue", "companion.joined"],
+      patch: { inventory: { "archivist-glasses": 1 }, equipment: ["archivist-glasses"] },
+    });
+    await bump(page, "m_P0104");
+    await settle(page, ".battle-modal");
+    // 문제 전용 진단이 있는 RE(str * str): 진단이 본문, 일반 해설은 [자세히]로 접힘
+    const code = readFileSync("content/regions/r01-echo-village/problems/P0104/wrong_b.py", "utf8").replace(/\r\n/g, "\n").replace(/\n$/, "");
+    await typeCode(page, code);
+    await cast(page);
+    await expect(page.locator(".battle-msg-text .diag")).toBeVisible();
+    await expect(page.locator(".battle-msg-text .err-explain")).toBeHidden();
+    await expect(page.locator(".battle-msg-text .err-head .codex-link")).toBeVisible();
+    await expect(codexLink(page)).toHaveText("📖 코덱스: 빠른 귀의 주문: sys.stdin.readline");
+    await shot(page, "systems-glasses-collapsed.png");
+    await roundTrip(page, "L1-4", "빠른 귀의 주문: sys.stdin.readline", code);
+    // [자세히]는 그대로 동작한다
+    await page.locator(".battle-msg-text .err-more").click();
+    await expect(page.locator(".battle-msg-text .err-explain")).toBeVisible();
+    await page.locator(".act-retreat").click();
+    await settle(page);
   });
 });

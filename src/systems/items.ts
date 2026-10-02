@@ -55,10 +55,12 @@ export interface EquipmentEffects {
   maxHpBonus: number;
   guideFeather: boolean;
   targetComplexity: boolean;
+  /** 기록관의 안경: 에러 해설 아래 코덱스 바로가기 */
+  codexLinks: boolean;
 }
 
 export function equipmentEffects(save: Pick<SaveData, "equipment">, items: ItemDef[]): EquipmentEffects {
-  const out: EquipmentEffects = { maxHpBonus: 0, guideFeather: false, targetComplexity: false };
+  const out: EquipmentEffects = { maxHpBonus: 0, guideFeather: false, targetComplexity: false, codexLinks: false };
   for (const id of save.equipment) {
     const it = items.find((i) => i.id === id);
     // 길잡이 깃털은 아이템 데이터가 없어도 ID로 알아본다(rewards.ts와 같은 규칙)
@@ -67,6 +69,7 @@ export function equipmentEffects(save: Pick<SaveData, "equipment">, items: ItemD
     if (it.effect.type === "maxHp") out.maxHpBonus += it.effect.value;
     if (it.effect.type === "guideFeather") out.guideFeather = true;
     if (it.effect.type === "targetComplexity") out.targetComplexity = true;
+    if (it.effect.type === "codexLinks") out.codexLinks = true;
   }
   return out;
 }
@@ -112,6 +115,24 @@ export function usePotion(save: SaveData, itemId: string): SaveData | null {
   s.inventory[itemId] = owned(s, itemId) - 1;
   if (s.inventory[itemId] === 0) delete s.inventory[itemId];
   return s;
+}
+
+/**
+ * 상자·보상으로 아이템 하나를 준다(docs/phase3/region04-spec.md §4.1). 장신구·꾸미기는 하나만 가지므로
+ * 이미 있으면 주지 않는다. 소모품은 최대 보유 수까지, 얼음 룬은 보호 수 상한까지. 못 주면 granted=false(입력 그대로)
+ */
+export function grantItem(save: SaveData, item: ItemDef): { save: SaveData; granted: boolean } {
+  if ((item.kind === "accessory" || item.kind === "cosmetic") && owned(save, item.id) > 0) return { save, granted: false };
+  if (item.kind === "consumable" && owned(save, item.id) >= (item.maxStack ?? 99)) return { save, granted: false };
+  const s: SaveData = structuredClone(save);
+  if (item.kind === "iceRune") {
+    const next = addIceRune(s.streak);
+    if (!next) return { save, granted: false };
+    s.streak = next;
+  } else {
+    s.inventory[item.id] = owned(s, item.id) + 1;
+  }
+  return { save: s, granted: true };
 }
 
 /** 이 문제를 처음 이겼을 때 받는 아이템(예: 지역 2 보스 → 길잡이 깃털) */
