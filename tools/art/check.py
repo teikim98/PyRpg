@@ -30,7 +30,9 @@ GROUND_TILES = {"grass", "grass_flower", "path", "plaza_stone", "water", "house_
                 "forest_floor", "fallen_leaves", "tall_grass", "root_floor", "stream", "stepping_stone",
                 # 지역 3(고블린 동굴): 바닥·벽 앞면·벽 윗면·웅덩이·레일과 벽 앞면 변형(횃불·벽화·바위 틈)
                 "cave_floor", "cave_wall", "cave_wall_top", "torch_frozen", "cave_pool", "mural_wall", "cave_crack",
-                "minecart_rail"}
+                "minecart_rail",
+                # 지역 4(무너진 대도서관): 마루·카펫·떠 있는 페이지, 벽 앞면·윗면, 칸을 채우는 책장과 빈 책장 칸
+                "lib_floor", "lib_carpet", "floating_pages", "lib_wall", "lib_wall_top", "bookshelf", "shelf_gap"}
 
 # 지역 2 명세(docs/phase3/region02-spec.md §6): 타일셋 끝에 이 순서로 붙고, 이 중 일부는 막힌다
 R02_TILES = ["forest_floor", "fallen_leaves", "tall_grass", "stump", "log", "mushroom_patch", "stream",
@@ -45,6 +47,13 @@ R03_BLOCKING = {"cave_wall", "cave_wall_top", "torch_frozen", "crystal", "rubble
                 "mural_wall", "bone_pile"}
 R03_SPRITES = {"monster_index_goblin", "monster_slice_bat", "monster_stack_crab", "monster_mirror_slime",
                "monster_grid_golem", "boss_goblin_chief", "npc_goblin"}
+# 지역 4 명세(docs/phase3/region04-spec.md §7): 지역 3 타일 뒤에 이 순서로 붙는다. shelf_gap 등은 지나갈 수 있다
+R04_TILES = ["lib_floor", "lib_carpet", "lib_wall", "lib_wall_top", "bookshelf", "bookshelf_fallen", "book_pile",
+             "reading_desk", "candle_frozen", "broken_pillar", "floating_pages", "shelf_gap"]
+R04_BLOCKING = {"lib_wall", "lib_wall_top", "bookshelf", "bookshelf_fallen", "book_pile", "reading_desk",
+                "candle_frozen", "broken_pillar"}
+R04_SPRITES = {"monster_letter_moth", "monster_ink_slime", "monster_quill_sprite", "monster_scroll_snake",
+               "monster_cipher_owl", "boss_librarian_golem", "npc_ghost_librarian"}
 # 지역 1 타일 24종의 인덱스는 바뀌면 안 된다(지역 1 맵이 gid로 참조)
 R01_TILE_COUNT = 24
 
@@ -125,6 +134,14 @@ def main():
             errors.append(f"overworld: tile {t} blocking should be {t in R03_BLOCKING}")
     for name in sorted(R03_SPRITES - set(manifest["sprites"])):
         errors.append(f"sprite {name}: missing from manifest (region-3 spec §6)")
+    r04_at = r03_at + len(R03_TILES)
+    if ow["tiles"][r04_at:r04_at + len(R04_TILES)] != R04_TILES:
+        errors.append("overworld: region-4 tiles must follow the region-3 tiles in spec order")
+    for t in R04_TILES:
+        if (t in ow["blocking"]) != (t in R04_BLOCKING):
+            errors.append(f"overworld: tile {t} blocking should be {t in R04_BLOCKING}")
+    for name in sorted(R04_SPRITES - set(manifest["sprites"])):
+        errors.append(f"sprite {name}: missing from manifest (region-4 spec §7)")
 
     for name, spr in manifest["sprites"].items():
         rule = frame_rule(name)

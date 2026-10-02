@@ -54,7 +54,8 @@ const SPEC: Record<string, { type: string; props: Record<string, string | number
   m_P0311: { type: "monster", props: { problem: "P0311" } },
   warp_east: {
     type: "warp",
-    props: { requires: "problem:P0311", lockedDialogue: "east_gate_locked", openDialogue: "to_be_continued" },
+    // 지역 4로 이어진다(region04-spec.md §4: openDialogue를 빼고 target·targetSpawn)
+    props: { requires: "problem:P0311", lockedDialogue: "east_gate_locked", target: "r04", targetSpawn: "spawn_west" },
   },
 };
 
@@ -143,7 +144,8 @@ describe("parseTiledMap on the region-3 map", () => {
     expect(tileIndex("dark_floor")).toBe(23);
     expect(tileIndex("root_floor")).toBe(35);
     CAVE_TILES.forEach((t, k) => expect(tileIndex(t), t).toBe(36 + k));
-    expect(ts.tiles).toHaveLength(48);
+    // 지역 4 도서관 타일 12종이 그 뒤에 붙는다
+    expect(ts.tiles).toHaveLength(60);
     const used = new Set([...map.ground, ...map.deco].filter((v) => v >= 0).map((v) => ts.tiles[v]));
     for (const t of CAVE_TILES) expect(used.has(t), t).toBe(true);
     // 동굴 맵은 동굴 타일만 쓴다

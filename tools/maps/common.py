@@ -328,6 +328,6 @@ def run(spec: RegionSpec, validate: Callable[[dict, bool], list[str]], script: s
         print("map.tmj OK")
         return 0
     spec.out.parent.mkdir(parents=True, exist_ok=True)
-    spec.out.write_text(text, encoding="utf-8")
+    spec.out.write_text(text, encoding="utf-8", newline="\n")  # Windows에서도 LF(.gitattributes와 같게)
     print(f"wrote {spec.out.relative_to(ROOT)} ({info['w']}x{info['h']}, {len(info['objects'])} objects)")
     return 0

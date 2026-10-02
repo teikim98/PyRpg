@@ -25,10 +25,10 @@
    "name": "overworld",
    "image": "../../../assets/tiles/overworld.png",
    "imagewidth": 128,
-   "imageheight": 96,
+   "imageheight": 128,
    "tilewidth": 16,
    "tileheight": 16,
-   "tilecount": 48,
+   "tilecount": 60,
    "columns": 8,
    "margin": 0,
    "spacing": 0,
@@ -558,6 +558,138 @@
        "name": "blocking",
        "type": "bool",
        "value": true
+      }
+     ]
+    },
+    {
+     "id": 48,
+     "type": "lib_floor",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 49,
+     "type": "lib_carpet",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 50,
+     "type": "lib_wall",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 51,
+     "type": "lib_wall_top",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 52,
+     "type": "bookshelf",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 53,
+     "type": "bookshelf_fallen",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 54,
+     "type": "book_pile",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 55,
+     "type": "reading_desk",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 56,
+     "type": "candle_frozen",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 57,
+     "type": "broken_pillar",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 58,
+     "type": "floating_pages",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 59,
+     "type": "shelf_gap",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
       }
      ]
     }
@@ -1158,9 +1290,14 @@
        "value": "east_gate_locked"
       },
       {
-       "name": "openDialogue",
+       "name": "target",
        "type": "string",
-       "value": "to_be_continued"
+       "value": "r04"
+      },
+      {
+       "name": "targetSpawn",
+       "type": "string",
+       "value": "spawn_west"
       }
      ]
     },

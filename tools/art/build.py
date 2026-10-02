@@ -5,11 +5,12 @@
 
 그림은 tools/art/의 tiles.py · characters.py · monsters.py · boss.py · portraits.py(지역 1)와
 forest_tiles.py · forest_npcs.py · forest_monsters.py · forest_boss.py(지역 2),
-cave_tiles.py · cave_npcs.py · cave_monsters.py · cave_boss.py(지역 3, 팔레트 cavepal.py)에
+cave_tiles.py · cave_npcs.py · cave_monsters.py · cave_boss.py(지역 3, 팔레트 cavepal.py),
+library_tiles.py · library_npcs.py · library_monsters.py · library_boss.py(지역 4, 팔레트 librarypal.py)에
 팔레트 문자 그리드(또는 도형으로 그리는 코드)로 정의되어 있다. 같은 코드면 언제나 같은 바이트가 나온다.
 
 미리보기: docs/phase2/art-preview.png(지역 1 에셋), docs/phase3/art-preview-r02.png(지역 2 에셋 + 숲 장면),
-docs/phase3/art-preview-r03.png(지역 3 에셋 + 동굴 장면)
+docs/phase3/art-preview-r03.png(지역 3 에셋 + 동굴 장면), docs/phase3/art-preview-r04.png(지역 4 에셋 + 도서관 장면)
 """
 import json
 import os
@@ -29,16 +30,21 @@ from forest_monsters import FOREST_MONSTERS  # noqa: E402
 from forest_npcs import FOREST_CHARACTERS  # noqa: E402
 from forest_tiles import FOREST_TILES  # noqa: E402
 from gridlib import Canvas, sheet  # noqa: E402
+from library_boss import LIBRARY_BOSSES  # noqa: E402
+from library_monsters import LIBRARY_MONSTERS  # noqa: E402
+from library_npcs import LIBRARY_CHARACTERS  # noqa: E402
+from library_tiles import LIBRARY_TILES  # noqa: E402
 from monsters import MONSTERS, OBJECTS  # noqa: E402
 from png import encode_png  # noqa: E402
 from portraits import PORTRAITS  # noqa: E402
 from tiles import TILES as R01_TILES  # noqa: E402
 from town_objects import TOWN_OBJECTS  # noqa: E402
 
-TILES = {**R01_TILES, **FOREST_TILES, **CAVE_TILES}
-# 지역 2·3에서 새로 생긴 에셋(미리보기를 지역별로 나눌 때 쓴다)
+TILES = {**R01_TILES, **FOREST_TILES, **CAVE_TILES, **LIBRARY_TILES}
+# 지역 2·3·4에서 새로 생긴 에셋(미리보기를 지역별로 나눌 때 쓴다)
 R02_NAMES = set(FOREST_TILES) | set(FOREST_CHARACTERS) | set(FOREST_MONSTERS) | set(FOREST_BOSSES)
 R03_NAMES = set(CAVE_TILES) | set(CAVE_CHARACTERS) | set(CAVE_MONSTERS) | set(CAVE_BOSSES)
+R04_NAMES = set(LIBRARY_TILES) | set(LIBRARY_CHARACTERS) | set(LIBRARY_MONSTERS) | set(LIBRARY_BOSSES)
 # 단위 3-1 마을 시설(그림자 게시판·상점). 지역별 미리보기에는 넣지 않는다
 TOWN_NAMES = set(TOWN_OBJECTS)
 
@@ -47,6 +53,7 @@ ASSETS = os.path.join(ROOT, "assets")
 PREVIEW = os.path.join(ROOT, "docs", "phase2", "art-preview.png")
 PREVIEW_R02 = os.path.join(ROOT, "docs", "phase3", "art-preview-r02.png")
 PREVIEW_R03 = os.path.join(ROOT, "docs", "phase3", "art-preview-r03.png")
+PREVIEW_R04 = os.path.join(ROOT, "docs", "phase3", "art-preview-r04.png")
 
 
 def load_manifest():
@@ -57,7 +64,7 @@ def load_manifest():
 def sprite_frames(name: str):
     """논리 이름 → 프레임 그리드 리스트."""
     for table in (CHARACTERS, MONSTERS, OBJECTS, BOSSES, FOREST_CHARACTERS, FOREST_MONSTERS, FOREST_BOSSES, TOWN_OBJECTS,
-                  CAVE_CHARACTERS, CAVE_MONSTERS, CAVE_BOSSES):
+                  CAVE_CHARACTERS, CAVE_MONSTERS, CAVE_BOSSES, LIBRARY_CHARACTERS, LIBRARY_MONSTERS, LIBRARY_BOSSES):
         if name in table:
             return table[name]
     raise KeyError(f"no art defined for sprite {name!r}")
@@ -189,6 +196,28 @@ SCENE_R03_ACTORS = [("player", 4, 6, 4), ("nuri", 4, 5, 4), ("npc_goblin", 0, 8,
                     ("monster_grid_golem", 0, 16, 2), ("obj_rune", 1, 3, 2), ("obj_campfire", 0, 6, 6),
                     ("obj_chest", 0, 9, 2), ("obj_sign", 0, 13, 3), ("obj_board", 0, 2, 2)]
 SCENE_R03 = (SCENE_R03_ROWS, SCENE_R03_KEY, SCENE_R03_ACTORS)
+
+# 무너진 대도서관: 책장 벽(빈 책장 칸 하나가 숨은 길), 카펫 통로, 열람 책상, 얼어붙은 촛대, 떠 있는 페이지
+SCENE_R04_ROWS = [
+    "TTTTTTTTTTTTTTTTTTTT",
+    "TWBBWBBBWBBgBBWBBWWT",
+    "T.c.......~~.....c.T",
+    "T...P..........d...T",
+    "T==================T",
+    "T....d......BBBB...T",
+    "T.F.........BBBB.b.T",
+    "T..b..~....P.....c.T",
+    "TTTTTTTTTTTTTTTTTTTT",
+]
+SCENE_R04_KEY = {".": "lib_floor", "=": "lib_carpet", "T": "lib_wall_top", "W": "lib_wall", "B": "bookshelf",
+                 "g": "shelf_gap", "F": "bookshelf_fallen", "b": "book_pile", "d": "reading_desk",
+                 "c": "candle_frozen", "P": "broken_pillar", "~": "floating_pages"}
+SCENE_R04_ACTORS = [("player", 4, 7, 4), ("nuri", 4, 6, 4), ("npc_ghost_librarian", 0, 9, 3),
+                    ("monster_letter_moth", 0, 3, 2), ("monster_ink_slime", 0, 14, 3),
+                    ("monster_quill_sprite", 0, 16, 6), ("monster_scroll_snake", 0, 9, 6),
+                    ("monster_cipher_owl", 0, 13, 2), ("obj_rune", 1, 6, 2), ("obj_campfire", 0, 4, 6),
+                    ("obj_chest", 0, 11, 2), ("obj_sign", 0, 1, 3), ("obj_board", 0, 18, 5)]
+SCENE_R04 = (SCENE_R04_ROWS, SCENE_R04_KEY, SCENE_R04_ACTORS)
 
 
 def subset(manifest, keep, tiles=None):
@@ -336,7 +365,8 @@ def build(write: bool = True):
     out = {}
     for rel, c in assets.items():
         out[os.path.join(ASSETS, rel)] = encode_png(c.width, c.height, c.rows())
-    r01 = subset(manifest, lambda n: n not in R02_NAMES and n not in R03_NAMES and n not in TOWN_NAMES)
+    r01 = subset(manifest, lambda n: n not in R02_NAMES and n not in R03_NAMES and n not in R04_NAMES
+                 and n not in TOWN_NAMES)
     prev = render_preview(r01, assets)
     out[PREVIEW] = encode_png(prev.width, prev.height, prev.rows())
     r02 = subset(manifest, lambda n: n in R02_NAMES or n in ("player", "nuri"), lambda n: n in R02_NAMES)
@@ -345,6 +375,9 @@ def build(write: bool = True):
     r03 = subset(manifest, lambda n: n in R03_NAMES or n in ("player", "nuri"), lambda n: n in R03_NAMES)
     prev = render_preview(r03, assets, SCENE_R03)
     out[PREVIEW_R03] = encode_png(prev.width, prev.height, prev.rows())
+    r04 = subset(manifest, lambda n: n in R04_NAMES or n in ("player", "nuri"), lambda n: n in R04_NAMES)
+    prev = render_preview(r04, assets, SCENE_R04)
+    out[PREVIEW_R04] = encode_png(prev.width, prev.height, prev.rows())
     if write:
         for path, data in out.items():
             os.makedirs(os.path.dirname(path), exist_ok=True)
