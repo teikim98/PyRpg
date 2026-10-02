@@ -3,7 +3,7 @@
 코딩 실력이 늘어야만 앞으로 나아갈 수 있는 탐험형 도트 RPG입니다. 전투, 잠긴 문, 보스를 모두 Python 코드로 돌파하면서 코딩테스트(백준·프로그래머스 실버~골드)를 준비합니다.
 
 - 기획서: [`docs/design.md`](docs/design.md) · 리서치: [`docs/research.md`](docs/research.md) · 진행 현황: [`docs/progress.md`](docs/progress.md)
-- 현재 단계: **Phase 2(버티컬 슬라이스)** — 지역 1 '에코 마을'을 처음부터 끝까지 플레이할 수 있습니다.
+- 현재 단계: **Phase 3(콘텐츠 확장)** — 지역 1 에코 마을부터 지역 3 고블린 동굴까지 플레이할 수 있습니다. 지역 4 무너진 대도서관 작업 중.
 
 ## 실행
 
@@ -44,6 +44,9 @@ npm test            # 단위 테스트(Vitest)
 npm run verify      # 콘텐츠 검증(모범답안·오답·비효율 답안 판정), 맵·아트 검사. Python 3.11+ 필요
 npm run test:e2e    # 브라우저 E2E(Playwright). 처음이면 npx playwright install chromium
 ```
+
+- `verify`와 CPython 비교 테스트는 `PYRPG_CPYTHON` → `python3` → `python` 순서로 Python 3.11 이상을 찾고 UTF-8 모드로 실행합니다. Windows의 `python3`가 Microsoft Store 안내 스텁이어도 python.org판 `python`을 씁니다. 방금 설치해서 PATH에 없으면 터미널을 새로 여세요.
+- 줄바꿈은 `.gitattributes`로 LF에 고정합니다(Windows에서도 테스트가 같은 바이트를 봄).
 
 ## 폴더
 
