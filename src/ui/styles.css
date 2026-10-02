@@ -1483,6 +1483,28 @@
   display: none;
 }
 
+/* 기록관의 안경: 해설 규칙의 레슨을 펼친 코덱스로 가는 바로가기(배운 레슨만) */
+.pyrpg-ui .battle-msg .err-codex {
+  margin-top: 4px;
+}
+
+.pyrpg-ui .battle-msg .codex-link {
+  padding: 0 6px;
+  border: 2px solid var(--gold);
+  background: var(--navy-950);
+  color: var(--gold);
+  font-family: Galmuri11, sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.pyrpg-ui .battle-msg .codex-link:hover,
+.pyrpg-ui .battle-msg .codex-link:focus-visible {
+  background: var(--gold);
+  color: var(--navy-950);
+}
+
 .pyrpg-ui .battle-msg .counter {
   margin-top: 4px;
   color: var(--bad);

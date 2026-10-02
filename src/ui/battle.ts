@@ -254,8 +254,13 @@ export function createBattleUI(env: UiEnv): BattleUI {
           ro.observe(msg);
           cleanups.push(() => ro.disconnect());
         }
-        // 일반 해설 접기/펼치기(진단이 있을 때 한 줄로 접어 둔 Traceback 해설)
+        // 일반 해설 접기/펼치기(진단이 있을 때 한 줄로 접어 둔 Traceback 해설), 기록관의 안경 코덱스 바로가기
         msg.addEventListener("click", (e) => {
+          const link = (e.target as HTMLElement).closest<HTMLButtonElement>(".codex-link");
+          if (link) {
+            void openCodexLink(link);
+            return;
+          }
           const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".err-more");
           if (!btn) return;
           const body = msg.querySelector<HTMLElement>(".err-explain");
@@ -338,6 +343,31 @@ export function createBattleUI(env: UiEnv): BattleUI {
         // ---------- 판정 해설 ----------
         // explain()은 'n번째 줄: '을 앞에 붙이는데, 여기서는 줄 번호를 따로 강조해 보여 주므로 본문만 쓴다
         const explainBody = (error: PyError) => ctx.explain({ ...error, line: undefined }, ctx.traceback);
+        // 기록관의 안경(docs/phase3/region04-spec.md §6): 해설 규칙의 레슨을 이미 배웠으면 코덱스 바로가기 버튼.
+        // 안경이 없거나(codexLink 없음) 레슨이 없거나 안 배웠으면 빈 문자열(지금과 똑같은 메시지)
+        const codexLinkHtml = (error: PyError): string => {
+          const link = ctx.perks?.codexLink?.lessonFor(error);
+          if (!link) return "";
+          return `<button type="button" class="codex-link" data-lesson="${escapeHtml(link.id)}" title="코덱스에서 이 레슨을 다시 보기(전투는 그대로)">📖 코덱스: ${escapeHtml(link.title)}</button>`;
+        };
+        let codexOpen = false;
+        const openCodexLink = async (btn: HTMLButtonElement) => {
+          const id = btn.dataset.lesson;
+          const link = ctx.perks?.codexLink;
+          if (!id || !link || codexOpen || closed) return;
+          codexOpen = true;
+          // 코덱스를 보는 동안 새로고침해도 작성 코드가 남게
+          flushDraft();
+          try {
+            await link.open(id);
+          } catch (e) {
+            console.error(e);
+          } finally {
+            codexOpen = false;
+          }
+          // 코덱스가 닫히면 포커스는 이 버튼으로 돌아온다. 그 사이 메시지가 바뀌어 버튼이 없으면 에디터로
+          if (!closed && !btn.isConnected) editor.focus();
+        };
         const explainResult = (res: JudgeResult): { emotion: Emotion; html: string } => {
           const first = firstFailed(res);
           if (res.fatal) {
@@ -352,11 +382,12 @@ export function createBattleUI(env: UiEnv): BattleUI {
           if (!first) return { emotion: "happy", html: "" };
           const diag = ctx.diagnose(p, res);
           const diagHtml = diag ? `<div class="diag">${renderInline(substituteNames(diag, names))}</div>` : "";
-          // 문제 전용 진단이 있으면 진단을 본문으로 보여 주고, 일반 Traceback 해설은 [자세히]로 접어 둔다(같은 말을 두 번 하지 않게)
-          const collapsed = (head: string, ex: string | undefined) =>
+          // 문제 전용 진단이 있으면 진단을 본문으로 보여 주고, 일반 Traceback 해설은 [자세히]로 접어 둔다(같은 말을 두 번 하지 않게).
+          // 코덱스 바로가기(link)는 접힌 해설 안이 아니라 머리 줄의 [자세히] 옆에 둔다(접혀 있어도 보이고, 에러 종류 칩과 한 줄)
+          const collapsed = (head: string, ex: string | undefined, link = "") =>
             `<div class="err-head">${head}${
               ex ? ` <button type="button" class="err-more" aria-expanded="false">자세히</button>` : ""
-            }</div>${ex ? `<div class="err-explain" hidden>${renderInline(substituteNames(ex, names))}</div>` : ""}`;
+            }${link ? ` ${link}` : ""}</div>${ex ? `<div class="err-explain" hidden>${renderInline(substituteNames(ex, names))}</div>` : ""}`;
           // TLE는 실행기가 KeyboardInterrupt로 멈춘 것이라 '폭발'(RE)처럼 말하지 않는다
           if (first.verdict === "TLE") {
             const line = first.error?.line;
@@ -372,12 +403,16 @@ export function createBattleUI(env: UiEnv): BattleUI {
             if (line) editor.highlightLine(line);
             const ex = explainBody(first.error);
             const type = `<code>${escapeHtml(first.error.type)}</code>`;
+            const link = codexLinkHtml(first.error);
             if (diag) {
               const chip = `<span class="err-chip">${line ? `<span class="err-line">${line}번째 줄</span> · ` : ""}${type}</span>`;
-              return { emotion: "surprised", html: `${collapsed(`주문이 폭발했어! ${chip}`, ex)}${diagHtml}` };
+              return { emotion: "surprised", html: `${collapsed(`주문이 폭발했어! ${chip}`, ex, link)}${diagHtml}` };
             }
             const where = line ? `<span class="err-line">${line}번째 줄</span>에서 ` : "";
-            return { emotion: "surprised", html: `주문이 폭발했어! ${where}${type}가 났어. ${renderInline(substituteNames(ex, names))}` };
+            return {
+              emotion: "surprised",
+              html: `주문이 폭발했어! ${where}${type}가 났어. ${renderInline(substituteNames(ex, names))}${link ? `<div class="err-codex">${link}</div>` : ""}`,
+            };
           }
           const text = diag ?? genericVerdictMessage(first.verdict);
           return { emotion: "worried", html: renderInline(substituteNames(text, names)) };
@@ -419,7 +454,8 @@ export function createBattleUI(env: UiEnv): BattleUI {
             if (out.error?.line) editor.highlightLine(out.error.line);
             const pre = h("pre", { class: "custom-out" }, formatRunOutput(out));
             if (out.error) {
-              say("surprised", renderInline(substituteNames(ctx.explain(out.error, ctx.traceback), names)), pre);
+              const link = codexLinkHtml(out.error);
+              say("surprised", `${renderInline(substituteNames(ctx.explain(out.error, ctx.traceback), names))}${link ? `<div class="err-codex">${link}</div>` : ""}`, pre);
             } else {
               say("neutral", "직접 실행한 결과야. (채점은 하지 않았어)", pre);
             }

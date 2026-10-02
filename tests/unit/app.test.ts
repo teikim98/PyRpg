@@ -2,7 +2,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App, COMPANION_FLAG } from "../../src/app/app";
 import { loadContent } from "../../src/content/loader";
-import type { DialogueLine, GameContent, Region } from "../../src/contracts/content";
+import type { DialogueLine, GameContent, Lesson, Region } from "../../src/contracts/content";
+import type { PythonRunner } from "../../src/contracts/runner";
 import type { BattleOutcome, Facing, SaveData } from "../../src/contracts/state";
 import type {
   BattleContext,
@@ -100,6 +101,7 @@ interface Harness {
     equipment?: (view: () => EquipmentView, actions: EquipmentActions) => Promise<void>;
     titles?: (view: () => TitlesView, select: (id: string | null) => Promise<void>) => Promise<void>;
     menu?: (actions: MenuActions) => Promise<void>;
+    codex?: (lessons: Lesson[], runner: PythonRunner, names: unknown, extra?: { purified?: unknown[]; lesson?: string }) => Promise<void>;
   };
 }
 
@@ -129,7 +131,7 @@ function harness(content: GameContent, store: MemoryStore): Harness {
   const ui = {
     dialogue: { play: async (lines: DialogueLine[]) => void said.push(idOf(lines)) },
     lesson: { open: async () => ({ completed: false }) },
-    codex: { open: async () => undefined },
+    codex: { open: async (...a: Parameters<NonNullable<Harness["sys"]["codex"]>>) => sys.codex?.(...a) },
     battle: { open: (ctx: BattleContext) => battle.open(ctx) },
     hud: { update: (s: HudState) => void hud.push(s), toast: (m: string) => void toasts.push(m) },
     menu: { open: async (a: MenuActions) => (sys.menu ? sys.menu(a) : void said.push("menu")) },
@@ -148,7 +150,7 @@ function harness(content: GameContent, store: MemoryStore): Harness {
   let callbacks!: WorldCallbacks;
   const app = new App({
     content,
-    runner: { init: async () => undefined, isReady: () => true } as never,
+    runner: { init: async () => undefined, isReady: () => true, run: async () => ({ stdout: "", stderr: "", timeMs: 1 }) } as never,
     ui,
     worldFactory: {
       create: async (_el, cb) => {
@@ -627,5 +629,130 @@ describe("시스템 화면(단위 3-1: 그림자 게시판·퀘스트·상점·�
     await idle(h.app);
     expect(store.data!.activeTitle).toBe("first-spell");
     expect(h.hud.at(-1)!.title).toBe("첫 주문");
+  });
+});
+
+describe("기록관의 안경과 상자 아이템(단위 3-4, region04-spec §4.1·§6)", () => {
+  /** 맵 오브젝트의 Tiled 속성을 바꾼다(테스트용 콘텐츠 사본) */
+  function setProp(content: GameContent, regionId: string, objectId: string, name: string, value: string): void {
+    const region = content.regions.find((r) => r.id === regionId)!;
+    for (const layer of (region.map.layers ?? []) as { objects?: { name?: string; properties?: { name: string; type?: string; value: unknown }[] }[] }[]) {
+      for (const o of layer.objects ?? []) {
+        if (o.name !== objectId) continue;
+        o.properties = [...(o.properties ?? []).filter((p) => p.name !== name), { name, type: "string", value }];
+      }
+    }
+  }
+
+  it("상자의 item: 열면 인벤토리에 넣고 토스트, 금화도 함께, 새로고침해도 남고, 이미 가진 장신구는 다시 주지 않는다", async () => {
+    const content = makeContent(false);
+    setProp(content, "r01", "chest_shop", "item", "archivist-glasses");
+    setProp(content, "r01", "chest_hidden", "item", "archivist-glasses");
+    const store = new MemoryStore();
+    store.data = r01Save(content, (s) => s.removedObjects.push("gate_well"));
+    const h = harness(content, store);
+    await h.app.start({} as HTMLElement);
+    await idle(h.app);
+    const gold0 = store.data!.player.gold;
+    const gold = Number(h.world.obj("chest_shop").props.gold);
+
+    h.callbacks.onInteract(h.world.obj("chest_shop"));
+    await idle(h.app);
+    let s = store.data!;
+    expect(s.inventory["archivist-glasses"]).toBe(1);
+    expect(s.player.gold).toBe(gold0 + gold);
+    expect(s.removedObjects).toContain("chest_shop");
+    expect(h.toasts).toContain("기록관의 안경을 얻었다!");
+    expect(h.toasts).toContain(`금화 ${gold}개를 얻었다!`);
+    expect(h.said).toContain("chest_shop");
+
+    // 새로고침: 인벤토리와 열린 상자가 남는다. 장비 화면에서 '준비 중'이 아니고 장착할 수 있다
+    const reload = harness(content, store);
+    await reload.app.start({} as HTMLElement);
+    await idle(reload.app);
+    expect(reload.app.save.inventory["archivist-glasses"]).toBe(1);
+    expect(reload.world.objects.some((o) => o.id === "chest_shop")).toBe(false);
+    const glasses = reload.app.equipmentView().accessories.find((a) => a.id === "archivist-glasses")!;
+    expect(glasses).toMatchObject({ owned: true, pending: false, equipped: false });
+
+    // 같은 장신구가 든 다른 상자: 금화만 받고 상자는 열린다
+    const toasts0 = reload.toasts.length;
+    const hiddenGold = Number(reload.world.obj("chest_hidden").props.gold);
+    reload.callbacks.onInteract(reload.world.obj("chest_hidden"));
+    await idle(reload.app);
+    s = store.data!;
+    expect(s.inventory["archivist-glasses"]).toBe(1);
+    expect(s.player.gold).toBe(gold0 + gold + hiddenGold);
+    expect(s.removedObjects).toContain("chest_hidden");
+    expect(reload.toasts.slice(toasts0)).toEqual([`금화 ${hiddenGold}개를 얻었다!`]);
+  });
+
+  it("안경을 끼면 전투에 코덱스 바로가기(배운 레슨만)를 넘기고, 누르면 그 레슨을 펼친 코덱스. 안경이 없으면 없음", async () => {
+    const base = makeContent(false);
+    const content = { ...base, quests: { ...base.quests, pool: base.quests.pool.filter((q) => q.id === "codex-run-1"), perDay: 1 } };
+    const store = new MemoryStore();
+    const today = studyDate(NOW);
+    store.data = r01Save(content, (s) => {
+      s.removedObjects.push("gate_well");
+      s.inventory["archivist-glasses"] = 1;
+      s.equipment = ["archivist-glasses"];
+      s.quests = { date: today, ids: ["codex-run-1"], progress: [0], claimed: [false], chest: false };
+    });
+    const h = harness(content, store);
+    await h.app.start({} as HTMLElement);
+    await idle(h.app);
+    const xp0 = store.data!.player.xp;
+
+    const concat = { type: "TypeError", message: 'can only concatenate str (not "int") to str', traceback: "" };
+    const listIndex = { type: "IndexError", message: "list index out of range", traceback: "" };
+    const codexCalls: { lessons: string[]; lesson?: string }[] = [];
+    h.sys.codex = async (lessons, runner, _names, extra) => {
+      codexCalls.push({ lessons: lessons.map((l) => l.id), lesson: extra?.lesson });
+      // 코덱스에서 예제를 하나 실행했다(일일 퀘스트)
+      await runner.run({ code: "print(1)" });
+    };
+    let seen: Awaited<ReturnType<NonNullable<NonNullable<BattleContext["perks"]>["codexLink"]>["lessonFor"]>>[] = [];
+    h.battle.open = async (ctx) => {
+      const link = ctx.perks?.codexLink;
+      expect(link).toBeDefined();
+      seen = [link!.lessonFor(concat), link!.lessonFor(listIndex)];
+      // 전투 중 진행(반격)을 임시 저장한 뒤 코덱스를 연다
+      ctx.onProgress?.({ attempts: 1, maxHintLevel: 0, solutionViewed: false, hp: 80 });
+      await link!.open("L1-2");
+      return { problemId: ctx.problem.id, result: "retreat", attempts: 1, maxHintLevel: 0, solutionViewed: false, finalCode: "x", hpLeft: 80, elapsedMs: 1 };
+    };
+    h.callbacks.onInteract(h.world.obj("m_P0101"));
+    await idle(h.app);
+    const l12 = content.regions[0].lessons.find((l) => l.id === "L1-2")!;
+    // L1-2(배움)는 바로가기, IndexError의 L3-1(안 배움)은 없음
+    expect(seen).toEqual([{ id: "L1-2", title: l12.title }, undefined]);
+    expect(codexCalls).toEqual([{ lessons: ["L1-1", "L1-2", "L1-3", "L1-4"], lesson: "L1-2" }]);
+    // 코덱스 예제 실행 → 퀘스트 완료(보상은 전투가 끝난 뒤 저장에 남는다)
+    const s = store.data!;
+    expect(s.quests!.claimed).toEqual([true]);
+    expect(s.player.xp).toBe(xp0 + content.quests.reward.xp);
+    expect(s.player.hp).toBe(80);
+    expect(h.toasts.some((t) => t.includes("퀘스트 완료: 코덱스"))).toBe(true);
+
+    // 메뉴의 코덱스는 펼칠 레슨 없이 연다
+    h.sys.menu = async (a) => a.openCodex();
+    h.callbacks.onMenu();
+    await idle(h.app);
+    expect(codexCalls.at(-1)!.lesson).toBeUndefined();
+
+    // 안경을 빼면 바로가기를 넘기지 않는다
+    h.sys.equipment = async (_v, actions) => void (await actions.toggleAccessory("archivist-glasses"));
+    h.sys.menu = async (a) => a.openEquipment!();
+    h.callbacks.onMenu();
+    await idle(h.app);
+    expect(store.data!.equipment).toEqual([]);
+    let perks: BattleContext["perks"] | null = null;
+    h.battle.open = async (ctx) => {
+      perks = ctx.perks ?? {};
+      return { problemId: ctx.problem.id, result: "retreat", attempts: 0, maxHintLevel: 0, solutionViewed: false, finalCode: "x", hpLeft: 80, elapsedMs: 1 };
+    };
+    h.callbacks.onInteract(h.world.obj("m_P0101"));
+    await idle(h.app);
+    expect(perks!.codexLink).toBeUndefined();
   });
 });

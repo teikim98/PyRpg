@@ -28,8 +28,11 @@ export interface PurifiedShadowView {
 }
 
 export interface CodexUI {
-  /** 획득한 주문서의 레슨을 다시 열람·실행. extra.purified는 '정화된 그림자' 목록(§7.6) */
-  open(lessons: Lesson[], runner: PythonRunner, names: NameContext, extra?: { purified?: PurifiedShadowView[] }): Promise<void>;
+  /**
+   * 획득한 주문서의 레슨을 다시 열람·실행. extra.purified는 '정화된 그림자' 목록(§7.6),
+   * extra.lesson은 처음에 펼칠 레슨 ID(기록관의 안경 바로가기. 없거나 목록에 없으면 첫 레슨)
+   */
+  open(lessons: Lesson[], runner: PythonRunner, names: NameContext, extra?: { purified?: PurifiedShadowView[]; lesson?: string }): Promise<void>;
 }
 
 export interface BattleContext {
@@ -78,6 +81,15 @@ export interface BattleContext {
     freeHint2?: boolean;
     /** 모래시계 부적: 시간 게이지에 보일 목표 복잡도 */
     targetComplexity?: string;
+    /**
+     * 기록관의 안경(docs/phase3/region04-spec.md §6). 앱이 안경을 낀 전투에만 넘긴다.
+     * lessonFor: 이 에러의 해설 규칙에 달린 레슨을 이미 배웠으면 그 레슨(아니면 undefined → 버튼 없음).
+     * open: 그 레슨을 펼친 코덱스를 열고, 닫으면 resolve(전투 창은 그대로 아래에 남아 있다)
+     */
+    codexLink?: {
+      lessonFor(error: PyError): { id: string; title: string } | undefined;
+      open(lessonId: string): Promise<void>;
+    };
   };
   /** 가진 회복약(§7.2). 없거나 0이면 버튼을 숨긴다 */
   potions?: { count: number; heal: number; name: string };

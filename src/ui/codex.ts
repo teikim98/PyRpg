@@ -9,7 +9,7 @@ import { mountMarkdown, type MountedMarkdown } from "./runnable";
 
 export function createCodexUI(env: UiEnv): CodexUI {
   return {
-    open(lessons: Lesson[], runner: PythonRunner, names: NameContext, extra?: { purified?: PurifiedShadowView[] }) {
+    open(lessons: Lesson[], runner: PythonRunner, names: NameContext, extra?: { purified?: PurifiedShadowView[]; lesson?: string }) {
       return new Promise<void>((resolve) => {
         let mounted: MountedMarkdown | null = null;
         const close = () => {
@@ -41,6 +41,9 @@ export function createCodexUI(env: UiEnv): CodexUI {
           detail.append(h("p", { class: "codex-empty" }, "아직 획득한 주문서가 없어. 마을의 비석을 찾아보자!"));
         }
         let firstBtn: HTMLButtonElement | null = null;
+        // 처음에 펼칠 레슨(기록관의 안경 바로가기). 없으면 첫 레슨
+        let startBtn: HTMLButtonElement | null = null;
+        let startLesson: Lesson | undefined;
         // 정화된 그림자(design.md §7.6)
         const purified = extra?.purified ?? [];
         const purifiedBox = h(
@@ -65,6 +68,10 @@ export function createCodexUI(env: UiEnv): CodexUI {
           btn.addEventListener("click", () => showLesson(lesson, btn));
           list.append(h("li", {}, btn));
           firstBtn ??= btn;
+          if (lesson.id === extra?.lesson) {
+            startBtn = btn;
+            startLesson = lesson;
+          }
         }
         modal.el.append(
           h(
@@ -74,8 +81,12 @@ export function createCodexUI(env: UiEnv): CodexUI {
             h("div", { class: "codex-main" }, h("nav", { class: "codex-nav", "aria-label": "주문서 목록" }, list, purifiedBox), detail),
           ),
         );
-        if (firstBtn) showLesson(lessons[0], firstBtn);
-        env.stack.focusInitial(modal, firstBtn ?? closeBtn);
+        if (startBtn && startLesson) {
+          showLesson(startLesson, startBtn);
+          // 목록이 길면 펼친 레슨이 보이도록
+          startBtn.scrollIntoView?.({ block: "nearest" });
+        } else if (firstBtn) showLesson(lessons[0], firstBtn);
+        env.stack.focusInitial(modal, startBtn ?? firstBtn ?? closeBtn);
       });
     },
   };

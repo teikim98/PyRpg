@@ -53,15 +53,26 @@ export function pickRule(error: PyError, rules: TracebackRule[]): TracebackRule 
   return rules.find((r) => r.exception === error.type && (!hasPattern(r) || safeTest(r.pattern, error.message)));
 }
 
-function bodyText(error: PyError, rules: TracebackRule[]): string {
+/**
+ * 해설에 실제로 쓰는 규칙. fatal(브라우저 스택 초과)은 일반 RecursionError 기본 규칙보다 전용 해설이 나아서,
+ * 메시지에 맞는 패턴 규칙만 쓴다(없으면 undefined → 전용 해설)
+ */
+export function explainRule(error: PyError, rules: TracebackRule[]): TracebackRule | undefined {
   if (error.message === FATAL_MESSAGE) {
-    // fatal(브라우저 스택 초과)은 일반 RecursionError 기본 규칙보다 전용 해설이 낫다.
-    // 메시지에 맞는 패턴 규칙이 있으면 그것을 쓴다
-    const specific = rules.find((r) => r.exception === error.type && hasPattern(r) && safeTest(r.pattern, error.message));
-    return specific ? specific.text : FATAL_TEXT;
+    return rules.find((r) => r.exception === error.type && hasPattern(r) && safeTest(r.pattern, error.message));
   }
-  const rule = pickRule(error, rules);
+  return pickRule(error, rules);
+}
+
+/** 이 에러의 해설 규칙에 달린 레슨 ID(기록관의 안경, docs/phase3/region04-spec.md §6). 없으면 undefined */
+export function lessonForError(error: PyError, rules: TracebackRule[]): string | undefined {
+  return explainRule(error, rules)?.lesson || undefined;
+}
+
+function bodyText(error: PyError, rules: TracebackRule[]): string {
+  const rule = explainRule(error, rules);
   if (rule) return rule.text;
+  if (error.message === FATAL_MESSAGE) return FATAL_TEXT;
   const builtin = BUILTIN[error.type];
   if (builtin) return builtin;
   return `${error.type} 에러가 났어. 메시지를 보고 그 줄을 다시 살펴봐.`;

@@ -216,6 +216,11 @@ export interface TracebackRule {
   /** 메시지 정규식. 없으면 예외 종류별 기본 해설 */
   pattern?: string;
   text: string;
+  /**
+   * 다시 보면 좋은 레슨 ID(예: "L1-2"). 기록관의 안경(design.md §7.3)을 끼고 그 레슨을 배웠으면
+   * 전투 메시지의 해설 아래에 코덱스 바로가기를 보여 준다(docs/phase3/region04-spec.md §6)
+   */
+  lesson?: string;
 }
 
 // ───────────── 장비·칭호·일일 퀘스트(design.md §7.2~§7.5, content/items.json·titles.json·quests.json) ─────────────
