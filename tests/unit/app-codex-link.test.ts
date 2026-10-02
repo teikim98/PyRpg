@@ -50,13 +50,13 @@ describe("traceback.json의 lesson", () => {
     ["AttributeError", "'str' object has no attribute 'length'", "L1-2"],
     ["AttributeError", "'int' object has no attribute 'strip'", "L1-2"],
     ["RecursionError", "maximum recursion depth exceeded", undefined],
-    // 지역 4 대비 새 규칙: lesson은 통합 때 L4-x로 단다(지금은 없음)
-    ["TypeError", "'str' object does not support item assignment", undefined],
-    ["TypeError", "sequence item 0: expected str instance, int found", undefined],
-    ["ValueError", "substring not found", undefined],
-    ["AttributeError", "'str' object has no attribute 'push'", undefined],
-    ["AttributeError", "'str' object has no attribute 'toUpperCase'", undefined],
-    ["IndexError", "string index out of range", undefined],
+    // 지역 4 문자열 규칙: L4 레슨으로 연결
+    ["TypeError", "'str' object does not support item assignment", "L4-1"],
+    ["TypeError", "sequence item 0: expected str instance, int found", "L4-3"],
+    ["ValueError", "substring not found", "L4-2"],
+    ["AttributeError", "'str' object has no attribute 'push'", "L4-3"],
+    ["AttributeError", "'str' object has no attribute 'toUpperCase'", "L4-2"],
+    ["IndexError", "string index out of range", "L4-1"],
   ];
   it.each(cases)("%s: %s → %s", (type, message, lesson) => {
     expect(lessonForError(err(type, message), rules)).toBe(lesson);
