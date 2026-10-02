@@ -25,6 +25,8 @@ const SLOW_PROBE_STDIN: Record<string, string> = {
   P0210: "1000000\n",
   // max(arr[:i+1])를 N번: 1 + 2 + … + 1414 ≈ 10^6
   P0311: `1414\n${Array.from({ length: 1414 }, (_, i) => (i * 37) % 1999 - 999).join(" ")}\n`,
+  // 길이 1000 문장에 SWAP 500번: 명령마다 문장을 두 번 새로 만들어 약 2 × 1000 × 500 = 10^6 글자를 옮긴다
+  P0411: `${"a".repeat(1000)}\n500\n${Array.from({ length: 500 }, (_, i) => `SWAP ${(i % 1000) + 1} ${((i * 7) % 1000) + 1}`).join("\n")}\n`,
 };
 
 /** 시간 결계 보정 기준(§9.6 2단계): 제한은 모범답안의 3배 이상, 비효율 답안은 제한의 3배 이상 */
@@ -345,6 +347,19 @@ for (const region of REGIONS) {
           }
           const med = (a: number[]) => [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)]!;
           const modelMs = Math.max(...samples.map(med));
+          // 정답으로 인정하는 다른 답안(accepted[], 예: 문자열 += 출력): 3번 재서 테스트마다 중앙값, 그중 가장 느린 것
+          const accepted: { file: string; ms: number; verdict: string }[] = [];
+          for (const a of W.__problemFiles[id]?.accepted ?? []) {
+            const code: string = W.__py[id][a.file] ?? "";
+            const acc: number[][] = barrier.map(() => []);
+            let verdict = "AC";
+            for (let k = 0; k < 3; k++) {
+              const r = await W.__runner.judge(p, code, { scope: "all", phase: 2 });
+              if (r.verdict !== "AC") verdict = r.verdict;
+              r.tests.forEach((t: any, j: number) => acc[j]!.push(t.timeMs));
+            }
+            accepted.push({ file: a.file, ms: Math.max(...acc.map(med)), verdict });
+          }
           // 비효율 답안: 시간 결계 판정 + 제한의 headroom배를 줘도 끝나지 않는지(실제 입력 그대로)
           const slowJudge = await W.__runner.judge(p, slowCode, { scope: "all", phase: 2 });
           const slowTle = slowJudge.tests.filter((t: any) => t.verdict === "TLE").map((t: any) => t.index);
@@ -367,6 +382,7 @@ for (const region of REGIONS) {
             limitMs,
             modelMs,
             modelUnits: modelMs / refMs,
+            accepted,
             slowVerdicts: slowJudge.tests.map((t: any) => `${t.index + 1}:${t.verdict}`),
             slowTimesMs: slowJudge.tests.map((t: any) => Math.round(t.timeMs)),
             generous,
@@ -378,6 +394,9 @@ for (const region of REGIONS) {
       console.log(
         `${m.id} 보정: ref=${m.refMs.toFixed(1)} ms, budgetUnits=${m.budgetUnits}, 제한=${m.limitMs} ms, ` +
           `모범답안=${m.modelMs.toFixed(3)} ms(${m.modelUnits.toFixed(5)} units, 제한/모범=${(m.limitMs / m.modelMs).toFixed(0)}배), ` +
+          m.accepted
+            .map((a) => `${a.file}=${a.ms.toFixed(1)} ms(${(a.ms / m.refMs).toFixed(2)} units, 제한/이 답안=${(m.limitMs / a.ms).toFixed(1)}배, ${a.verdict}), `)
+            .join("") +
           `비효율 판정=${m.slowVerdicts.join(" ")} 시간=${m.slowTimesMs.join("/")} ms, ` +
           `제한×${BUDGET_HEADROOM}에서도 미종료=${m.generous.map((g) => `#${g.index + 1}:${g.timedOut}`).join(" ")}, ` +
           `반복 1회≈${(m.perIterMs * 1e6).toFixed(0)} ns`,
@@ -385,6 +404,11 @@ for (const region of REGIONS) {
       expect(m.budgetUnits, "보스에 budgetUnits").toBeGreaterThan(0);
       // 모범답안 대비 3배 이상 여유
       expect(m.limitMs).toBeGreaterThanOrEqual(BUDGET_HEADROOM * m.modelMs);
+      // 정답으로 인정하는 다른 답안도 통과하고 3배 이상 여유(region03-spec.md §3, region04-spec.md §3)
+      for (const a of m.accepted) {
+        expect(a.verdict, `${a.file} 시간 결계 판정`).toBe("AC");
+        expect(m.limitMs, `${a.file} 여유`).toBeGreaterThanOrEqual(BUDGET_HEADROOM * a.ms);
+      }
       // 비효율 답안은 제한의 3배를 줘도 끝나지 않는다
       expect(m.generous.length).toBeGreaterThan(0);
       for (const g of m.generous) expect(g.timedOut, `slow.py #${g.index + 1} 제한×${BUDGET_HEADROOM}`).toBe(true);

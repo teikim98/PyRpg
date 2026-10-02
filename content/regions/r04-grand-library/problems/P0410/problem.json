@@ -1,0 +1,114 @@
+{
+  "id": "P0410",
+  "title": "뒤집힌 대소문자",
+  "kind": "stdin",
+  "enemy": {"name": "뒤집힌 부엉이", "sprite": "monster_cipher_owl", "attack": 20},
+  "requires": ["scroll.ascii"],
+  "concept": "scroll.ascii",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 6,
+  "tests": [
+    {"in": "tHE gREAT hALT, 1000 yEARS AGO.\n", "out": "The Great Halt, 1000 Years ago.\n", "public": true, "note": "기본 동작"},
+    {"in": "a\n", "out": "A\n", "note": "경계: 길이 1, 소문자"},
+    {"in": "Q\n", "out": "q\n", "note": "경계: 길이 1, 대문자"},
+    {"in": "2026-10-02\n", "out": "2026-10-02\n", "note": "경계: 글자가 하나도 없음"},
+    {"in": "ALL CAPS!\n", "out": "all caps!\n", "note": "모두 대문자"},
+    {"in": "who? me.\n", "out": "WHO? ME.\n", "note": "모두 소문자, 기호"},
+    {"in": "aB3 !?zZ aB3 !?zZ aB3 !?zZ aB3 !?zZ aB3 !?zZ aB3 !?zZ aB3 !?zZ aB3 !?zZ aB3 !?zZ aB3 !?zZ aB3 !?zZ aB3 !?zZ aB3 !?zZ aB3 !?zZ aB3 !?zZ aB3 !?zZ aB3 !?zZ aB3 !?zZ aB3 !?zZ aB3 !?zZ aB3 !?zZ aB3 !?zZ aB\n", "out": "Ab3 !?Zz Ab3 !?Zz Ab3 !?Zz Ab3 !?Zz Ab3 !?Zz Ab3 !?Zz Ab3 !?Zz Ab3 !?Zz Ab3 !?Zz Ab3 !?Zz Ab3 !?Zz Ab3 !?Zz Ab3 !?Zz Ab3 !?Zz Ab3 !?Zz Ab3 !?Zz Ab3 !?Zz Ab3 !?Zz Ab3 !?Zz Ab3 !?Zz Ab3 !?Zz Ab3 !?Zz Ab\n", "note": "경계: 길이 200 가까이"}
+  ],
+  "accepted": [
+    {
+      "file": "alt_swapcase.py",
+      "title": "s.swapcase()로 한 번에"
+    }
+  ],
+  "variants": [
+    {
+      "id": "P0410-v1",
+      "title": "거울 잉크 기록",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"in": "sEALED rOOM 7\n", "out": "Sealed Room 7\n", "public": true, "note": "기본 동작"},
+        {"in": "Z\n", "out": "z\n", "note": "경계: 길이 1"},
+        {"in": "42!\n", "out": "42!\n", "note": "경계: 글자 없음"},
+        {"in": "aBcD eFgH\n", "out": "AbCd EfGh\n", "note": "번갈아 섞임"}
+      ]
+    },
+    {
+      "id": "P0410-v2",
+      "title": "뒤집힌 표제어",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"in": "pYTHON-3\n", "out": "Python-3\n", "public": true, "note": "기본 동작"},
+        {"in": "x\n", "out": "X\n", "note": "경계: 길이 1"},
+        {"in": "WHY, oh WHY?\n", "out": "why, OH why?\n", "note": "기호와 공백"},
+        {"in": "RUNE 1, rune 2.\n", "out": "rune 1, RUNE 2.\n", "note": "숫자와 기호"}
+      ]
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_b.py",
+      "title": "JS식 toUpperCase",
+      "expectFail": {
+        "1": "RE",
+        "2": "RE",
+        "3": "RE",
+        "4": "RE",
+        "5": "RE",
+        "6": "RE",
+        "7": "RE"
+      },
+      "diagnosis": {
+        "when": {
+          "exception": "AttributeError",
+          "messageMatches": "toUpperCase|toLowerCase"
+        },
+        "text": "`toUpperCase()`, `toLowerCase()`는 JS 메서드 이름이야. Python에서는 `upper()`, `lower()`야."
+      }
+    },
+    {
+      "file": "wrong_c.py",
+      "title": "숫자·기호까지 32를 빼고 더함",
+      "expectFail": {
+        "1": "WA",
+        "4": "WA",
+        "5": "WA",
+        "6": "WA",
+        "7": "WA"
+      },
+      "diagnosis": {
+        "when": {
+          "verdict": "WA",
+          "outputMatches": "[\\x00-\\x09\\x0b-\\x1f]"
+        },
+        "text": "숫자와 기호, 공백이 이상한 글자로 깨졌어. 대문자가 아니라고 무조건 32를 빼면 숫자·기호·공백까지 바뀌어. `c.islower()`로 소문자일 때만 바꾸고, 나머지는 그대로 붙여."
+      }
+    },
+    {
+      "file": "wrong_a.py",
+      "title": "c.upper()를 쓰고 결과를 버림",
+      "expectFail": {
+        "1": "WA",
+        "2": "WA",
+        "3": "WA",
+        "5": "WA",
+        "6": "WA",
+        "7": "WA"
+      },
+      "diagnosis": {
+        "when": {
+          "verdict": "WA"
+        },
+        "text": "기록이 하나도 안 바뀌었어! `c.upper()`는 새 문자열을 돌려줄 뿐 `c`를 바꾸지 않아. `answer += c.upper()`처럼 돌려받은 값을 붙여야 해."
+      }
+    }
+  ],
+  "hints": [
+    "한 글자씩 보면서 대문자인지, 소문자인지, 둘 다 아닌지 나눠 봐. 묻는 메서드가 있었지?",
+    "`c.isupper()`이면 `c.lower()`, `c.islower()`이면 `c.upper()`, 나머지는 `c` 그대로. 메서드는 새 문자열을 돌려주니까 `answer += c.lower()`처럼 그 값을 써. (사실 `s.swapcase()`라는 메서드도 있어!)",
+    "```python\nimport sys\ninput = sys.stdin.readline\n\ns = input().rstrip()\nanswer = \"\"\nfor c in s:\n    if c.isupper():\n        answer += c.lower()\n    elif c.islower():\n        answer += ____\n    else:\n        answer += c\nprint(answer)\n```"
+  ],
+  "reward": {"xp": 100, "gold": 50}
+}

@@ -1,0 +1,116 @@
+{
+  "id": "P0402",
+  "title": "거울 제목",
+  "kind": "function",
+  "entry": "solution",
+  "enemy": {"name": "거울 잉크 슬라임", "sprite": "monster_ink_slime", "attack": 20},
+  "requires": ["scroll.string"],
+  "concept": "scroll.string",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 5,
+  "tests": [
+    {"args": "('level',)", "expect": "True", "public": true, "note": "기본 동작: 거울 제목"},
+    {"args": "('book',)", "expect": "False", "public": true, "note": "기본 동작: 아님"},
+    {"args": "('a',)", "expect": "True", "note": "경계: 길이 1"},
+    {"args": "('Level',)", "expect": "False", "note": "대소문자가 다르면 아님"},
+    {"args": "('abBA',)", "expect": "False", "note": "대소문자를 섞으면 아님"},
+    {"args": "('ab',)", "expect": "False", "note": "경계: 길이 2, 다른 글자"},
+    {"args": "('RaceCaR',)", "expect": "False", "note": "대소문자 그대로 대칭"},
+    {"args": "('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXXWVUTSRQPONMLKJIHGFEDCBAzyxwvutsrqponmlkjihgfedcba',)", "expect": "True", "note": "경계: 길이 100 거울 제목"},
+    {"args": "('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYWVUTSRQPONMLKJIHGFEDCBAzyxwvutsrqponmlkjihgfedcba',)", "expect": "False", "note": "경계: 길이 100, 한가운데 한 글자만 다름"}
+  ],
+  "variants": [
+    {
+      "id": "P0402-v1",
+      "title": "거울 주문어",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"args": "('noon',)", "expect": "True", "public": true, "note": "기본 동작"},
+        {"args": "('Z',)", "expect": "True", "note": "경계: 길이 1"},
+        {"args": "('Noon',)", "expect": "False", "note": "대소문자가 다르면 아님"},
+        {"args": "('abcba',)", "expect": "True", "note": "홀수 길이"},
+        {"args": "('abca',)", "expect": "False", "note": "아님"}
+      ]
+    },
+    {
+      "id": "P0402-v2",
+      "title": "유리에 비친 낱말",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"args": "('scroll',)", "expect": "False", "public": true, "note": "기본 동작"},
+        {"args": "('xX',)", "expect": "False", "note": "경계: 길이 2, 대소문자만 다름"},
+        {"args": "('MadaM',)", "expect": "True", "note": "대소문자 그대로 대칭"},
+        {"args": "('kayak',)", "expect": "True", "note": "거울 낱말"}
+      ]
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_a.py",
+      "title": "소문자로 바꿔서 비교",
+      "expectFail": {
+        "4": "WA",
+        "5": "WA",
+        "7": "WA"
+      },
+      "diagnosis": {
+        "when": {
+          "verdict": "WA",
+          "outputMatches": "^True$"
+        },
+        "text": "`False`여야 하는데 `True`가 나왔어. 혹시 `lower()`로 바꿔서 비교했어? 이 슬라임은 대문자와 소문자를 다른 글자로 봐. `Level`을 거꾸로 읽으면 `leveL`이니까 거울 제목이 아니야. 제목을 바꾸지 말고 `title == title[::-1]`로 그대로 비교해."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "문자열에 reverse()",
+      "expectFail": {
+        "1": "RE",
+        "2": "RE",
+        "3": "RE",
+        "4": "RE",
+        "5": "RE",
+        "6": "RE",
+        "7": "RE",
+        "8": "RE",
+        "9": "RE"
+      },
+      "diagnosis": {
+        "when": {
+          "exception": "AttributeError",
+          "messageMatches": "reverse"
+        },
+        "text": "문자열에는 `reverse()`가 없어! 그건 리스트를 제자리에서 뒤집는 메서드야. 문자열은 고칠 수 없어서, 뒤집은 새 문자열을 슬라이스 `title[::-1]`로 만들어."
+      }
+    },
+    {
+      "file": "wrong_c.py",
+      "title": "뒤집은 문자열을 그대로 반환",
+      "expectFail": {
+        "1": "WA",
+        "2": "WA",
+        "3": "WA",
+        "4": "WA",
+        "5": "WA",
+        "6": "WA",
+        "7": "WA",
+        "8": "WA",
+        "9": "WA"
+      },
+      "diagnosis": {
+        "when": {
+          "verdict": "WA",
+          "outputMatches": "^'"
+        },
+        "text": "문자열이 반환됐어. 문제는 거울 제목인지 `True`/`False`로 물었어. 뒤집은 `title[::-1]`을 원래 `title`과 `==`로 비교한 결과를 돌려줘."
+      }
+    }
+  ],
+  "hints": [
+    "거꾸로 읽은 제목을 만들 수 있다면, 원래 제목과 비교하기만 하면 돼. 리스트를 거꾸로 자르던 슬라이스가 문자열에도 통할까?",
+    "`title[::-1]`이 거꾸로 읽은 제목이야. `title == title[::-1]`은 그 자체로 `True`나 `False`니까 바로 반환하면 돼. 대소문자는 바꾸지 마!",
+    "```python\ndef solution(title):\n    return title == ____\n```"
+  ],
+  "reward": {"xp": 100, "gold": 50}
+}

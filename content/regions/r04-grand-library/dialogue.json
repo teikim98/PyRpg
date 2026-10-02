@@ -1,0 +1,105 @@
+{
+  "region_intro": [
+    { "speaker": "system", "text": "동굴 동쪽 끝의 좁은 굴을 빠져나오자 서늘한 바람과 함께 오래된 종이 냄새가 밀려든다." },
+    { "speaker": "system", "text": "천장이 반쯤 무너져 내린 거대한 도서관. 쏟아지던 책장과 흩날리던 낱장들이 공중에서 그대로 멈춰 있고, 촛불마다 청록색 서리가 앉아 있다." }
+  ],
+  "library_intro": [
+    { "speaker": "companion", "emotion": "surprised", "text": "우와… 책이 공중에 떠 있어! 넘어가던 페이지가 반쯤 접힌 채로 멈췄네. 여기도 시간이 멈췄구나." },
+    { "speaker": "companion", "emotion": "neutral", "text": "여긴 '무너진 대도서관'이야. 동굴 벽화가 가리키던 '기록'이 있다면 분명 여기일 거야. 끝나지 않을 주문이 어쩌고 하던 그 글귀 말이야." },
+    { "speaker": "companion", "emotion": "worried", "text": "그런데 조심해. 글자 벌레들이 책 속 문장을 갉아 먹고 있대. 글자가 빠지고, 뒤집히고, 대소문자가 뒤죽박죽이 된 책이 한가득이야." },
+    { "speaker": "companion", "emotion": "serious", "text": "…이상하다. 내 지도엔 이 도서관이 처음부터 그려져 있었어. 한 번도 와 본 적 없는 곳인데." },
+    { "speaker": "companion", "emotion": "happy", "text": "에이, 지도 제작자의 감이겠지! 이번엔 글자를 다루는 주문, 문자열이야. 저기 빛나는 비석부터 가 보자, {player}!" }
+  ],
+  "lesson_L4-1_intro": [
+    { "speaker": "companion", "emotion": "happy", "text": "정문 홀의 비석이야! 여긴 '글자 읽기의 주문'. 문자열에서 글자를 하나씩 꺼내 읽는 주문이래." },
+    { "speaker": "companion", "emotion": "neutral", "text": "동굴에서 배운 리스트랑 꼭 닮았어. 번호도 0부터, 음수 번호도 되고, 자르기도 똑같아. 딱 하나, 글자를 그 자리에서 바꿀 수는 없대. 왜 그런지 같이 보자!" }
+  ],
+  "lesson_L4-1_done": [
+    { "speaker": "system", "text": "글자 읽기의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`s[0]`, `s[-1]`, `len(s)`, `s[::-1]`! 책등에 붙은 나방이 무슨 글자를 물어봐도 이제 읽어 줄 수 있어." }
+  ],
+  "lesson_L4-2_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "열람실의 비석이야. 여긴 '글자 다듬기의 주문'. 공백을 떼고, 대소문자를 바꾸고, 글자를 찾고 바꾸는 문자열 메서드들이래." },
+    { "speaker": "companion", "emotion": "worried", "text": "비석 아래에 낙서가 있어. '`title.upper()`라고만 외치고 왜 안 바뀌냐고 울지 말 것.' …무슨 사연이 있었나 봐." }
+  ],
+  "lesson_L4-2_done": [
+    { "speaker": "system", "text": "글자 다듬기의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`strip`, `lower`, `replace`, `find`, `count`! 메서드는 새 문자열을 돌려주니까 꼭 다시 담아 두기. 이제 번진 잉크도 닦아 낼 수 있겠다!" }
+  ],
+  "npc_ghost_librarian": [
+    { "speaker": "유령 사서", "text": "쉿… 도서관에서는 조용히. 어머, 산 사람이네요. 몇백 년 만의 열람객인지. 저는 이 도서관의 사서였답니다. 지금은 보시다시피 조금 투명하지만요." },
+    { "speaker": "companion", "emotion": "surprised", "text": "유, 유령이다! …근데 하나도 안 무섭네. 안경이 너무 동그래서 그런가?" },
+    { "speaker": "유령 사서", "text": "대정지가 오던 날, 저는 서고 깊은 곳의 기록을 정리하고 있었어요. 정신을 차려 보니 몸은 없고 책임감만 남았더군요. 그래서 아직도 반납 기한을 세고 있답니다." },
+    { "speaker": "유령 사서", "text": "서고 미로를 지나실 거라면 하나 알려 드리죠. 책장 벽 가운데 책이 군데군데 빠진 칸이 하나 있어요. 얼어붙은 촛불 두 개가 양옆을 지키는 칸이에요. 겉보기엔 다른 책장과 똑같지만, 그 칸은 지나갈 수 있답니다." },
+    { "speaker": "유령 사서", "text": "그리고 필사실의 기록관이 쓰던 안경이 아직 상자 속에 있을 거예요. 에러 메시지를 읽다 막히면 어느 책을 다시 펴 봐야 할지 알려 주던 신기한 안경이죠." },
+    { "speaker": "companion", "emotion": "happy", "text": "빈 책장 칸이랑 기록관의 안경! 고마워요, 사서님. 지도에 꼼꼼히 적어 둘게!" }
+  ],
+  "lesson_L4-3_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "서고 미로의 비석이야. 여긴 '엮고 푸는 주문'. 문장을 단어로 풀고, 단어를 다시 문장으로 엮는 `split`과 `join`이래." },
+    { "speaker": "companion", "emotion": "surprised", "text": "글자를 예쁘게 줄 세우는 f-string 서식도 같이 있대. 장부 정리하는 깃펜 정령이 좋아하겠다!" }
+  ],
+  "lesson_L4-3_done": [
+    { "speaker": "system", "text": "엮고 푸는 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`\" \".join(words)`, 주어가 구분자라는 거 잊지 말기! 그리고 글자를 고치고 싶으면 `list(s)`로 풀고, 고친 다음 `\"\".join`으로 엮기. 이거 꼭 다시 쓸 일이 있을 것 같아." }
+  ],
+  "sign_stacks": [
+    { "speaker": "system", "text": "『서고 미로. 길을 잃은 열람객은 책 제목을 거꾸로 읽어 볼 것. 대출한 책은 제자리에.』" },
+    { "speaker": "system", "text": "아래에 희미한 글씨가 덧붙어 있다. 『책장은 모두 꽉 차 있다. 얼어붙은 촛불 두 개 사이, 책이 빠진 한 칸만 빼고.』" },
+    { "speaker": "companion", "emotion": "neutral", "text": "사서님이 말한 거랑 똑같아. 촛불 두 개 사이의 빈 책장 칸! 책장을 하나하나 잘 살펴보자." }
+  ],
+  "chest_hidden_stacks": [
+    { "speaker": "system", "text": "빈 책장 칸 너머의 상자를 열었다. 70골드를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "진짜 지나갈 수 있었어! 빠진 책 자리가 문이었다니. 연체료로 모아 둔 금화인가 봐." },
+    { "speaker": "companion", "emotion": "neutral", "text": "겉으로는 똑같아 보여도 한 칸씩 꼼꼼히 보면 다르다는 거. 문자열 문제도 그래. 한 글자씩 보면 길이 보여!" }
+  ],
+  "lesson_L4-4_intro": [
+    { "speaker": "companion", "emotion": "surprised", "text": "필사실의 비석이야. 여긴 '글자 번호의 주문'. 모든 글자에 번호가 붙어 있대! `a`는 97번이래." },
+    { "speaker": "companion", "emotion": "neutral", "text": "번호로 바꾸면 글자를 세거나 몇 칸씩 밀 수 있어. 암호 부엉이를 상대하려면 꼭 필요한 주문이야." }
+  ],
+  "lesson_L4-4_done": [
+    { "speaker": "system", "text": "글자 번호의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`ord`로 번호, `chr`로 글자, `% 26`으로 z 다음은 다시 a! 이제 시저의 봉인도 풀 수 있겠어." }
+  ],
+  "chest_archivist": [
+    { "speaker": "system", "text": "필사실 길목 옆의 상자를 열었다. 안에는 동그란 렌즈의 낡은 안경이 곱게 접혀 있다." },
+    { "speaker": "companion", "emotion": "surprised", "text": "이게 사서님이 말한 기록관의 안경이야! 렌즈 너머로 보면 에러 메시지 옆에 작은 책갈피가 보인대." },
+    { "speaker": "companion", "emotion": "happy", "text": "주문이 폭발해서 내가 Traceback을 풀어 줄 때, 그 옆에 어느 레슨을 다시 보면 좋을지 알려 준대! 버튼을 누르면 코덱스가 그 레슨을 펼친 채로 열리고, 닫으면 하던 전투로 돌아온대." },
+    { "speaker": "companion", "emotion": "neutral", "text": "장신구라서 껴야 효과가 나. Esc를 눌러서 '장비' 메뉴에서 껴 봐! 이미 배운 레슨만 알려 준다니까, 비석은 꼬박꼬박 읽고 다니자." }
+  ],
+  "sign_sealed_record": [
+    { "speaker": "system", "text": "쇠사슬로 묶인 서가 한가운데, 두꺼운 기록 한 권이 펼쳐진 채 멈춰 있다. 표지에는 '봉인 기록'이라고 새겨져 있다." },
+    { "speaker": "system", "text": "『대정지는 사고가 아니었다. 모든 주문이 제시간에 끝나도록 지키던 자가, 끝나지 않을 주문이 세계를 삼킬까 두려워 스스로 시간을 멈추었다.』" },
+    { "speaker": "system", "text": "『그 이름은 …』 이름이 적혀 있어야 할 자리는 잉크가 번져 읽을 수 없다." },
+    { "speaker": "companion", "emotion": "surprised", "text": "일부러… 멈췄다고? 동굴 벽화에서 손을 뻗던 그 형체가 진짜였어. 대정지는 누군가 일부러 일으킨 거야!" },
+    { "speaker": "companion", "emotion": "serious", "text": "'모든 주문이 제시간에 끝나도록 지키던 자'… 시간 결계를 치는 보스들이랑 뭔가 닮았어. 느린 주문을 그렇게 싫어하는 것도." },
+    { "speaker": "companion", "emotion": "worried", "text": "이름이 지워진 게 아쉽다. 그래도 단서는 생겼어. 지도 여백에 크게 적어 둘게. '누군가 세계를 멈췄다.'" }
+  ],
+  "boss_intro": [
+    { "speaker": "companion", "emotion": "serious", "text": "저기, 열람대 앞에… 책장으로 만들어진 거대한 골렘이야. 손에 든 깃펜이 내 키만 해." },
+    { "speaker": "companion", "emotion": "surprised", "text": "가슴에 시계 룬이 박혀 있어! 이 도서관의 시간을 붙잡고 있는 게 바로 저 사서 골렘이야!" },
+    { "speaker": "사서 골렘", "text": "열람객. 망가진 책을 고쳐라. 한 글자를 고치라 하면 고치고, 두 글자를 맞바꾸라 하면 맞바꾸고, 크게 쓰라 하면 크게 써라. 다 고친 문장과 큰 글자의 수를 보여라." },
+    { "speaker": "companion", "emotion": "worried", "text": "소문에 저 골렘은 글자 하나 고칠 때마다 책 한 권을 통째로 새로 베껴 쓴대. 그러다 시간 결계에 갇혀 버린 거래. 우리도 그렇게 하면 결계에 끊길 거야." },
+    { "speaker": "companion", "emotion": "neutral", "text": "글자 읽기, 다듬기, 엮고 풀기, 글자 번호. 도서관에서 배운 주문 네 개를 다 쓸 때야. 문자열은 그 자리에서 못 바꾼다는 거, 기억하지? 가자, {player}!" }
+  ],
+  "boss_defeated": [
+    { "speaker": "system", "text": "사서 골렘이 깃펜을 내려놓고 천천히 무릎을 꿇는다. 가슴의 시계 룬이 '딸깍' 하고 한 칸 움직인다." },
+    { "speaker": "system", "text": "공중에 멈춰 있던 페이지들이 사르르 내려앉고, 서리 덮인 촛불에 다시 불꽃이 일렁인다." },
+    { "speaker": "사서 골렘", "text": "…고친 글자만 고치면 되는 것이었군. 나는 매번 책 전체를 다시 썼다. 그래서 언제나 시간이 모자랐다." },
+    { "speaker": "companion", "emotion": "happy", "text": "해냈다! 책들이 제자리로 날아가고 있어! 유령 사서님도 저쪽에서 손 흔들고 있네!" },
+    { "speaker": "companion", "emotion": "surprised", "text": "지도 봐! 도서관에 색이 번지고, 동쪽으로 바다까지 이어지는 길이 그려지고 있어!" }
+  ],
+  "region_clear": [
+    { "speaker": "companion", "emotion": "happy", "text": "무너진 대도서관 지도 완성! 글자 읽기, 다듬기, 엮고 풀기, 글자 번호까지. 이걸로 주문의 기초는 다 되찾았어. 에코 마을에서 여기까지, 정말 먼 길이었다!" },
+    { "speaker": "companion", "emotion": "neutral", "text": "바깥 시련장 목록도 새로 채워 뒀어. '시저 암호', '신규 아이디 추천', '문자열 압축'은 이 도서관에서 연습한 주문 그대로야. 한번 도전해 봐!" },
+    { "speaker": "companion", "emotion": "serious", "text": "그리고 봉인 기록. 누군가 일부러 세계를 멈췄어. 모든 주문을 제시간에 끝내도록 지키던 누군가가. 우리가 시계 룬을 하나씩 되살리는 걸, 그 누군가도 보고 있을까?" },
+    { "speaker": "companion", "emotion": "neutral", "text": "…지도를 펼칠 때마다 아직 하얗게 빈 곳이 많아. 하나씩 채워 가다 보면 그 이름도 알게 되겠지. 같이 가자, {player}." }
+  ],
+  "east_gate_locked": [
+    { "speaker": "system", "text": "동쪽 출구를 무너진 책장들이 천장까지 겹겹이 막고 있다. 책등마다 '열람 금지'라고 적혀 있다." },
+    { "speaker": "companion", "emotion": "worried", "text": "사서 골렘이 쌓아 둔 책장 벽이야. 골렘이 시계 룬을 놓아줘야 이 책들도 제자리로 돌아갈 거야." }
+  ],
+  "to_be_continued": [
+    { "speaker": "companion", "emotion": "happy", "text": "책장 벽이 열렸다! 동쪽에서 짭짤한 바람이 불어와. 갈매기 소리도 들려. 이 너머에 큰 항구가 있대!" },
+    { "speaker": "system", "text": "무너진 대도서관 이야기는 여기까지입니다. 다음 지역은 준비 중이에요. 플레이해 주셔서 고맙습니다!" }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "id": "P0403",
+  "title": "모음 갉아먹는 벌레",
+  "kind": "stdin",
+  "enemy": {"name": "모음 갉는 나방", "sprite": "monster_letter_moth", "attack": 20},
+  "requires": ["scroll.string"],
+  "concept": "scroll.string",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 5,
+  "tests": [
+    {"in": "the clock stopped\n", "out": "4\n", "public": true, "note": "기본 동작"},
+    {"in": "a\n", "out": "1\n", "note": "경계: 길이 1, 모음 하나"},
+    {"in": "rhythm\n", "out": "0\n", "note": "경계: 모음이 없음(y는 모음 아님)"},
+    {"in": "aeiou aeiou\n", "out": "10\n", "note": "모음만, 덩어리 aeiou 포함"},
+    {"in": "queue is a quiet idea\n", "out": "12\n", "note": "모음이 몰려 있음"},
+    {"in": "aeiou sky rhythm queue aeiou sky rhythm queue aeiou sky rhythm queue aeiou sky rhythm queue aeiou sky rhythm queue aeiou sky rhythm queue aeiou sky rhythm queue aeiou sky rhythm queue aeiou sky rhythm\n", "out": "77\n", "note": "경계: 길이 200 가까이"}
+  ],
+  "variants": [
+    {
+      "id": "P0403-v1",
+      "title": "주문서의 한 줄",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"in": "open the book\n", "out": "5\n", "public": true, "note": "기본 동작"},
+        {"in": "z\n", "out": "0\n", "note": "경계: 길이 1, 모음 없음"},
+        {"in": "u u u\n", "out": "3\n", "note": "모음과 공백"},
+        {"in": "frozen candle light\n", "out": "5\n", "note": "기본 동작"}
+      ]
+    },
+    {
+      "id": "P0403-v2",
+      "title": "낱장의 문장",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"in": "silent library\n", "out": "4\n", "public": true, "note": "기본 동작"},
+        {"in": "o\n", "out": "1\n", "note": "경계: 길이 1"},
+        {"in": "crypt myth\n", "out": "0\n", "note": "경계: 모음 없음"},
+        {"in": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n", "out": "200\n", "note": "경계: 길이 200, 모두 모음"}
+      ]
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_a.py",
+      "title": "s.count(\"aeiou\")로 셈",
+      "expectFail": {
+        "1": "WA",
+        "2": "WA",
+        "4": "WA",
+        "5": "WA",
+        "6": "WA"
+      },
+      "diagnosis": {
+        "when": {
+          "verdict": "WA",
+          "outputMatches": "^[0-2]\\n?$"
+        },
+        "text": "개수가 너무 적게 나왔어. `s.count(\"aeiou\")`는 모음 하나하나가 아니라 `aeiou`라는 다섯 글자 **덩어리**가 몇 번 나오는지 세. `for c in s`로 한 글자씩 꺼내서 `c in \"aeiou\"`인지 물어봐."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "c == \"a\" or \"e\" or ...",
+      "expectFail": {
+        "1": "WA",
+        "3": "WA",
+        "4": "WA",
+        "5": "WA",
+        "6": "WA"
+      },
+      "diagnosis": {
+        "when": {
+          "verdict": "WA"
+        },
+        "text": "개수가 글자 수만큼 나왔지? `c == \"a\" or \"e\"`는 `(c == \"a\") or \"e\"`로 읽혀서, 비어 있지 않은 문자열 `\"e\"` 때문에 언제나 참이야. 공백까지 다 세게 돼. 여러 글자 중 하나인지는 `c in \"aeiou\"`로 물어봐."
+      }
+    }
+  ],
+  "hints": [
+    "문장을 한 글자씩 꺼내 볼 수 있을까? 꺼낸 글자가 모음 다섯 개 중 하나인지는 어떻게 물어볼까?",
+    "`for c in s:`로 한 글자씩 돌면서, `if c in \"aeiou\":`이면 개수를 1 늘려. `c == \"a\" or \"e\"`처럼 쓰면 언제나 참이 되니 조심!",
+    "```python\nimport sys\ninput = sys.stdin.readline\n\ns = input().rstrip()\ncount = 0\nfor c in s:\n    if c in ____:\n        count += 1\nprint(count)\n```"
+  ],
+  "reward": {"xp": 100, "gold": 50}
+}

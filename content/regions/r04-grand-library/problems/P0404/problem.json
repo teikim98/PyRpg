@@ -1,0 +1,110 @@
+{
+  "id": "P0404",
+  "title": "낡은 제목 정리",
+  "kind": "function",
+  "entry": "solution",
+  "enemy": {"name": "번진 잉크 슬라임", "sprite": "monster_ink_slime", "attack": 20},
+  "requires": ["scroll.strmethods"],
+  "concept": "scroll.strmethods",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 6,
+  "tests": [
+    {"args": "('  The_Lost_Book ',)", "expect": "'the lost book'", "public": true, "note": "기본 동작"},
+    {"args": "('MAP',)", "expect": "'map'", "public": true, "note": "공백·밑줄 없음"},
+    {"args": "('x',)", "expect": "'x'", "note": "경계: 길이 1, 이미 깨끗함"},
+    {"args": "('   A   ',)", "expect": "'a'", "note": "경계: 공백 사이 글자 하나"},
+    {"args": "('a_b_c_d',)", "expect": "'a b c d'", "note": "밑줄 여러 개"},
+    {"args": "(' Ancient Rune_Tome',)", "expect": "'ancient rune tome'", "note": "공백과 밑줄이 섞임"},
+    {"args": "('clean title',)", "expect": "'clean title'", "note": "이미 깨끗한 제목"},
+    {"args": "('  Time_Stop_Rune_Time_Stop_Rune_Time_Stop_Rune_Time_Stop_Rune_Time_Stop_Rune_Time_Stop_Rune_Time_Stop_Rune_Time_Stop_Rune  ',)", "expect": "'time stop rune time stop rune time stop rune time stop rune time stop rune time stop rune time stop rune time stop rune'", "note": "경계: 길이 100 가까이"}
+  ],
+  "variants": [
+    {
+      "id": "P0404-v1",
+      "title": "저자 이름 정리",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"args": "(' Old_Sage ',)", "expect": "'old sage'", "public": true, "note": "기본 동작"},
+        {"args": "('Q',)", "expect": "'q'", "note": "경계: 길이 1"},
+        {"args": "('the_Grey_Owl',)", "expect": "'the grey owl'", "note": "밑줄 두 개"},
+        {"args": "('  NURI  ',)", "expect": "'nuri'", "note": "앞뒤 공백만"}
+      ]
+    },
+    {
+      "id": "P0404-v2",
+      "title": "분류 팻말",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"args": "('RUNE_MAGIC',)", "expect": "'rune magic'", "public": true, "note": "기본 동작"},
+        {"args": "(' z ',)", "expect": "'z'", "note": "경계: 글자 하나"},
+        {"args": "('History Of_TIME ',)", "expect": "'history of time'", "note": "공백과 밑줄"},
+        {"args": "('a_a',)", "expect": "'a a'", "note": "경계: 짧은 밑줄 제목"}
+      ]
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_a.py",
+      "title": "메서드 결과를 담지 않음",
+      "expectFail": {
+        "1": "WA",
+        "2": "WA",
+        "4": "WA",
+        "5": "WA",
+        "6": "WA",
+        "8": "WA"
+      },
+      "diagnosis": {
+        "when": {
+          "verdict": "WA",
+          "outputMatches": "[A-Z_]|^' |  '$"
+        },
+        "text": "제목이 하나도 안 바뀌었어! 문자열 메서드는 원래 문자열을 고치지 않고 **새 문자열을 돌려줘**. `title.strip()`이라고만 쓰면 결과가 버려져. `title = title.strip()`처럼 다시 담거나, `title.strip().lower().replace(\"_\", \" \")`처럼 이어서 불러."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "밑줄을 지워 버림",
+      "expectFail": {
+        "1": "WA",
+        "5": "WA",
+        "6": "WA",
+        "8": "WA"
+      },
+      "diagnosis": {
+        "when": {
+          "verdict": "WA"
+        },
+        "text": "단어가 서로 붙어 버렸어. `replace(\"_\", \"\")`는 밑줄을 **지워**. 규칙은 밑줄을 공백 한 칸으로 바꾸는 거니까 `replace(\"_\", \" \")`로 써."
+      }
+    },
+    {
+      "file": "wrong_c.py",
+      "title": "JS식 trim/toLowerCase",
+      "expectFail": {
+        "1": "RE",
+        "2": "RE",
+        "3": "RE",
+        "4": "RE",
+        "5": "RE",
+        "6": "RE",
+        "7": "RE",
+        "8": "RE"
+      },
+      "diagnosis": {
+        "when": {
+          "exception": "AttributeError",
+          "messageMatches": "trim|toLowerCase|replaceAll"
+        },
+        "text": "`trim()`, `toLowerCase()`는 JS 메서드 이름이야. Python에서는 `strip()`, `lower()`, 그리고 전부 바꾸기는 `replace()`야."
+      }
+    }
+  ],
+  "hints": [
+    "규칙이 세 단계야. 공백 떼기, 소문자로 바꾸기, 밑줄 바꾸기. 각각 어떤 메서드가 해 줄까? 그리고 메서드가 돌려준 결과는 어디에 남아 있을까?",
+    "`strip()`, `lower()`, `replace(\"_\", \" \")`. 메서드는 새 문자열을 돌려주니까 `title = title.strip()`처럼 다시 담거나, 점을 찍어 이어서 불러.",
+    "```python\ndef solution(title):\n    return title.strip().____().replace(\"_\", \" \")\n```"
+  ],
+  "reward": {"xp": 100, "gold": 50}
+}

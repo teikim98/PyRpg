@@ -1,0 +1,16 @@
+{
+  "id": "L4-4",
+  "title": "글자 번호의 주문: 아스키 코드",
+  "scroll": {
+    "id": "scroll.ascii",
+    "name": "글자 번호의 주문서",
+    "summary": "`ord(c)`는 글자 → 번호(`a` 97, `A` 65), `chr(n)`은 번호 → 글자. `ord(c) - ord(\"a\")`로 0~25 칸 번호, `[0] * 26`으로 알파벳 세기. k칸 밀기는 `(ord(c) - ord(\"a\") + k) % 26`, 대문자는 `ord(\"A\")` 기준. `isupper`/`islower`로 판별."
+  },
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 숫자를 넣어서 `a`에서 세 칸 뒤의 글자 `d`가 출력되게 해 봐.",
+    "code": "print(chr(ord(\"a\") + ___))\n",
+    "expectedOutput": "d\n",
+    "answer": "3"
+  }
+}
