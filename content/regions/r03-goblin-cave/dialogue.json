@@ -104,7 +104,6 @@
     { "speaker": "companion", "emotion": "worried", "text": "족장의 보물 벽이야. 족장이 시계 룬을 놓아줘야 이 줄도 풀릴 거야." }
   ],
   "to_be_continued": [
-    { "speaker": "companion", "emotion": "happy", "text": "보물 벽이 무너졌다! 동쪽 굴 끝에서 바람이 불어와. 오래된 종이 냄새가 나… 이 너머에 커다란 도서관이 있대!" },
-    { "speaker": "system", "text": "고블린 동굴 이야기는 여기까지입니다. 다음 지역은 준비 중이에요. 플레이해 주셔서 고맙습니다!" }
+    { "speaker": "companion", "emotion": "happy", "text": "보물 벽이 무너졌다! 동쪽 굴 끝에서 바람이 불어와. 오래된 종이 냄새가 나… 이 너머에 커다란 도서관이 있대!" }
   ]
 }

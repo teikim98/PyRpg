@@ -1290,6 +1290,11 @@
        "value": "east_gate_locked"
       },
       {
+       "name": "openDialogue",
+       "type": "string",
+       "value": "to_be_continued"
+      },
+      {
        "name": "target",
        "type": "string",
        "value": "r04"

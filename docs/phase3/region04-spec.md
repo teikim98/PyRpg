@@ -39,7 +39,7 @@
 | P0408 | 글자 수 세기 | stdin | `ord(c) - ord("a")`, `[0] * 26`, `print(*cnt)`(백준 10808 유형의 오리지널) | scroll.ascii | 필사실 | 필수 |
 | P0409 | 시저의 봉인 | function | 알파벳 밀기: 대소문자 유지, 공백은 그대로, `% 26`로 z 다음 a(프로그래머스 12926 유형의 오리지널) | scroll.ascii | 필사실 | 필수 |
 | P0410 | 뒤집힌 대소문자 | stdin | `isupper`/`upper`/`lower`로 대소문자 바꾸기 + 숫자·기호는 그대로(`swapcase` 써도 통과) | scroll.ascii | 봉인 서고 | 선택 |
-| P0411 | [보스] 사서 골렘 | stdin | 기초 종합 구현(아래). 1페이즈 정확성(N, Q ≤ 1000), 2페이즈 N, Q ≤ 100,000 시간 결계 | 지역 4 주문서 4개 | 골렘의 열람대 | 필수 |
+| P0411 | [보스] 사서 골렘 | stdin | 기초 종합 구현(아래). 1페이즈 정확성(N, Q ≤ 1000), 2페이즈 N ≤ 150,000, Q ≤ 800,000 시간 결계 | 지역 4 주문서 4개 | 골렘의 열람대 | 필수 |
 
 - 모든 문제는 지역 1~3의 품질 기준을 따르고(공개 1 + 숨김 3 이상, 경계값, 오답 2개와 진단, 힌트 3단계, 변형 2개), 지역 1~4 개념만 씁니다. 함수 구현형은 `def solution` 틀을 미리 줍니다. 문자열 입력은 끝의 줄바꿈을 신경 써야 하므로 stdin형 starter는 `input()` 또는 `sys.stdin.readline().rstrip()`을 씁니다(공백이 있는 줄을 `strip()`하면 안 되는 문제는 `rstrip("\n")`).
 - 진단에 넣을 흔한 실수: `s[0] = "x"` TypeError('str' object does not support item assignment), `s.upper()`만 쓰고 대입하지 않음(출력이 그대로), `"".join(정수 리스트)` TypeError(expected str instance, int found), `readline()`의 `\n`이 남아 길이·비교가 틀림, `find`와 `index`의 차이(없을 때 ValueError), JS식 `s.length`·`s.toUpperCase()`(AttributeError), `ord(c) - 97`을 대문자에 써서 음수 칸, `chr(ord(c) + k)`에서 `% 26`을 빠뜨려 z 다음이 `{`.
@@ -52,7 +52,7 @@
 
 ## 4. 맵 구역과 오브젝트
 
-고블린 동굴의 `warp_east`(지금은 `to_be_continued`)에 `target=r04`, `targetSpawn=spawn_west`를 더하고 `openDialogue`를 뺍니다. 도서관은 서 → 동으로 이어지고, 각 구역 출구는 필수 몬스터가 한 칸짜리 길목을 막습니다. 크기는 지역 3과 비슷하게(가로 100 안팎 × 세로 24~30).
+고블린 동굴의 `warp_east`(지금은 `to_be_continued`)에 `target=r04`, `targetSpawn=spawn_west`를 더합니다. `openDialogue=to_be_continued`는 지역 1·2의 문처럼 남기되 동굴 `to_be_continued` 대사에서 "준비 중" 문구를 빼서, 처음 건널 때 누리의 연결 대사(종이 냄새·도서관)가 한 번 나오게 합니다(검증 단계에서 바꿈: 빼면 이 대사가 쓰이지 않는 채로 "준비 중" 문구만 남았음). 도서관은 서 → 동으로 이어지고, 각 구역 출구는 필수 몬스터가 한 칸짜리 길목을 막습니다. 크기는 지역 3과 비슷하게(가로 100 안팎 × 세로 24~30).
 
 | 구역 | 오브젝트 ID | 종류 | props |
 |---|---|---|---|

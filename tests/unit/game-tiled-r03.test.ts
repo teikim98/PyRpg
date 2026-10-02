@@ -54,8 +54,8 @@ const SPEC: Record<string, { type: string; props: Record<string, string | number
   m_P0311: { type: "monster", props: { problem: "P0311" } },
   warp_east: {
     type: "warp",
-    // 지역 4로 이어진다(region04-spec.md §4: openDialogue를 빼고 target·targetSpawn)
-    props: { requires: "problem:P0311", lockedDialogue: "east_gate_locked", target: "r04", targetSpawn: "spawn_west" },
+    // 지역 4로 이어진다(region04-spec.md §4: target·targetSpawn, 처음 건널 때 누리의 연결 대사)
+    props: { requires: "problem:P0311", lockedDialogue: "east_gate_locked", openDialogue: "to_be_continued", target: "r04", targetSpawn: "spawn_west" },
   },
 };
 

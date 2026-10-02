@@ -256,7 +256,9 @@ OBJECTS = {
         {
             "requires": "problem:P0311",
             "lockedDialogue": "east_gate_locked",
-            # 지역 간 이동(docs/phase3/region04-spec.md §4): 무너진 대도서관 서쪽 입구로. '준비 중' 대사는 뺀다
+            # 지역 간 이동(docs/phase3/region04-spec.md §4): 무너진 대도서관 서쪽 입구로.
+            # 처음 건널 때 누리의 연결 대사(to_be_continued, '준비 중' 문구는 뺐다)를 한 번 보여 준다(지역 1·2 문과 같은 방식)
+            "openDialogue": "to_be_continued",
             "target": "r04",
             "targetSpawn": "spawn_west",
         },
