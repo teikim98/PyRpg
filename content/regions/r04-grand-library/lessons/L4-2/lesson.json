@@ -1,0 +1,16 @@
+{
+  "id": "L4-2",
+  "title": "글자 다듬기의 주문: 문자열 메서드",
+  "scroll": {
+    "id": "scroll.strmethods",
+    "name": "글자 다듬기의 주문서",
+    "summary": "메서드는 새 문자열을 돌려주니 다시 담는다(`s = s.strip()`). `upper`/`lower`/`strip`, `replace(a, b)`는 전부 바꿈, `find(x)`는 처음 위치(없으면 -1, `index`는 ValueError), `count(x)`는 겹치지 않게 셈. `startswith`/`endswith`, `isdigit`/`isalpha`/`isupper`는 True/False."
+  },
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 메서드 이름을 넣어서 앞뒤 공백을 떼어 봐. 출력은 `[ancient tome]`!",
+    "code": "title = \"  ancient tome  \"\ntitle = title.___()\nprint(\"[\" + title + \"]\")\n",
+    "expectedOutput": "[ancient tome]\n",
+    "answer": "strip"
+  }
+}

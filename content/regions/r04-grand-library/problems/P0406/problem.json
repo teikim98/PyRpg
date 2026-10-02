@@ -1,0 +1,101 @@
+{
+  "id": "P0406",
+  "title": "거꾸로 꽂힌 단어들",
+  "kind": "stdin",
+  "enemy": {"name": "거꾸로 두루마리 뱀", "sprite": "monster_scroll_snake", "attack": 20},
+  "requires": ["scroll.splitjoin"],
+  "concept": "scroll.splitjoin",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 6,
+  "tests": [
+    {"in": "here stops time\n", "out": "time stops here\n", "public": true, "note": "기본 동작"},
+    {"in": "book\n", "out": "book\n", "note": "경계: 단어 하나"},
+    {"in": "a  b   c\n", "out": "c b a\n", "note": "단어 사이 공백 여러 칸"},
+    {"in": "level 42 noon\n", "out": "noon 42 level\n", "note": "숫자 단어, 거꾸로 읽어도 같은 단어"},
+    {"in": "x y\n", "out": "y x\n", "note": "경계: 한 글자 단어 두 개"},
+    {"in": "w1 w2 w3 w4 w5 w6 w7 w8 w9 w10 w11 w12 w13 w14 w15 w16 w17 w18 w19 w20 w21 w22 w23 w24 w25 w26 w27 w28 w29 w30 w31 w32 w33 w34 w35 w36 w37 w38 w39 w40 w41 w42 w43 w44 w45 w46 w47 w48 w49 w50 w51 w52 w53 w54 w55 w56 w57 w58 w59 w60 w61 w62 w63 w64 w65 w66 w67 w68 w69 w70 w71 w72 w73 w74 w75 w76 w77 w78 w79 w80 w81 w82 w83 w84 w85 w86 w87 w88 w89 w90 w91 w92 w93 w94 w95 w96 w97 w98 w99 w100\n", "out": "w100 w99 w98 w97 w96 w95 w94 w93 w92 w91 w90 w89 w88 w87 w86 w85 w84 w83 w82 w81 w80 w79 w78 w77 w76 w75 w74 w73 w72 w71 w70 w69 w68 w67 w66 w65 w64 w63 w62 w61 w60 w59 w58 w57 w56 w55 w54 w53 w52 w51 w50 w49 w48 w47 w46 w45 w44 w43 w42 w41 w40 w39 w38 w37 w36 w35 w34 w33 w32 w31 w30 w29 w28 w27 w26 w25 w24 w23 w22 w21 w20 w19 w18 w17 w16 w15 w14 w13 w12 w11 w10 w9 w8 w7 w6 w5 w4 w3 w2 w1\n", "note": "경계: 단어 100개"}
+  ],
+  "variants": [
+    {
+      "id": "P0406-v1",
+      "title": "거꾸로 주문 구절",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"in": "open  slowly door\n", "out": "door slowly open\n", "public": true, "note": "기본 동작, 공백 두 칸"},
+        {"in": "z\n", "out": "z\n", "note": "경계: 한 글자 하나"},
+        {"in": "ab cd\n", "out": "cd ab\n", "note": "경계: 단어 두 개"},
+        {"in": "one two three four five\n", "out": "five four three two one\n", "note": "단어 다섯 개"}
+      ]
+    },
+    {
+      "id": "P0406-v2",
+      "title": "뒤집힌 팻말",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"in": "3 floor east\n", "out": "east floor 3\n", "public": true, "note": "기본 동작"},
+        {"in": "rune\n", "out": "rune\n", "note": "경계: 단어 하나"},
+        {"in": "a    b\n", "out": "b a\n", "note": "경계: 공백 네 칸"},
+        {"in": "tome of the old sage\n", "out": "sage old the of tome\n", "note": "단어 다섯 개"}
+      ]
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_a.py",
+      "title": "split(\" \")로 한 칸씩 자름",
+      "expectFail": {
+        "3": "WA"
+      },
+      "diagnosis": {
+        "when": {
+          "verdict": "WA",
+          "onlyHiddenFail": true
+        },
+        "text": "예제는 통과했는데 단어 사이 공백이 여러 칸인 문장에서 틀렸어. `split(\" \")`은 한 칸씩 잘라서 빈 문자열 조각이 생기고, 엮으면 공백이 여러 칸 남아. 인자 없이 `split()`을 쓰면 공백이 몇 칸이든 단어만 남겨 줘."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "print(words.reverse())",
+      "expectFail": {
+        "1": "WA",
+        "2": "WA",
+        "3": "WA",
+        "4": "WA",
+        "5": "WA",
+        "6": "WA"
+      },
+      "diagnosis": {
+        "when": {
+          "verdict": "WA",
+          "outputMatches": "^None"
+        },
+        "text": "`None`이 찍혔어. `words.reverse()`는 리스트를 제자리에서 뒤집고 `None`을 돌려줘. 뒤집은 다음 `\" \".join(words)`로 엮어서 출력하거나, `\" \".join(words[::-1])`처럼 써."
+      }
+    },
+    {
+      "file": "wrong_c.py",
+      "title": "글자 순서를 뒤집음",
+      "expectFail": {
+        "1": "WA",
+        "2": "WA",
+        "3": "WA",
+        "4": "WA",
+        "6": "WA"
+      },
+      "diagnosis": {
+        "when": {
+          "verdict": "WA"
+        },
+        "text": "단어 순서가 아니라 글자 순서가 뒤집혔어! `line[::-1]`은 글자를 거꾸로 읽어. 단어 순서만 바꾸려면 `split()`으로 단어 리스트를 만들고, 그 리스트를 `[::-1]`로 뒤집은 다음 `\" \".join`으로 엮어."
+      }
+    }
+  ],
+  "hints": [
+    "문장을 단어 단위로 다룰 수 있게 나눌 수 있을까? 나눈 단어들의 순서를 뒤집고, 다시 하나의 문장으로 이어 붙이면 돼.",
+    "`input().split()`으로 단어 리스트를 만들고(공백이 여러 칸이어도 괜찮아), `words[::-1]`로 뒤집고, `\" \".join(...)`으로 엮어.",
+    "```python\nimport sys\ninput = sys.stdin.readline\n\nwords = input().split()\nprint(\" \".join(____))\n```"
+  ],
+  "reward": {"xp": 100, "gold": 50}
+}

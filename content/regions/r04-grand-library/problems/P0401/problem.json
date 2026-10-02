@@ -1,0 +1,103 @@
+{
+  "id": "P0401",
+  "title": "책등의 첫 글자와 끝 글자",
+  "kind": "stdin",
+  "enemy": {"name": "책등 나방", "sprite": "monster_letter_moth", "attack": 20},
+  "requires": ["scroll.string"],
+  "concept": "scroll.string",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 5,
+  "tests": [
+    {"in": "library\n", "out": "l y 7\n", "public": true, "note": "기본 동작"},
+    {"in": "a\n", "out": "a a 1\n", "note": "경계: 길이 1(첫 글자가 곧 끝 글자)"},
+    {"in": "zz\n", "out": "z z 2\n", "note": "길이 2, 같은 글자"},
+    {"in": "spellbook\n", "out": "s k 9\n", "note": "기본 동작"},
+    {"in": "dkryfmtahovcjqxelszgnubipwdkryfmtahovcjqxelszgnubipwdkryfmtahovcjqxelszgnubipwdkryfmtahovcjqxelszgnu\n", "out": "d u 100\n", "note": "경계: 길이 100"}
+  ],
+  "variants": [
+    {
+      "id": "P0401-v1",
+      "title": "두루마리 주문어",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"in": "serpent\n", "out": "s t 7\n", "public": true, "note": "기본 동작"},
+        {"in": "q\n", "out": "q q 1\n", "note": "경계: 길이 1"},
+        {"in": "rune\n", "out": "r e 4\n", "note": "기본 동작"},
+        {"in": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n", "out": "x x 100\n", "note": "경계: 길이 100, 같은 글자"}
+      ]
+    },
+    {
+      "id": "P0401-v2",
+      "title": "떠 있는 낱장",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"in": "page\n", "out": "p e 4\n", "public": true, "note": "기본 동작"},
+        {"in": "ab\n", "out": "a b 2\n", "note": "경계: 길이 2"},
+        {"in": "o\n", "out": "o o 1\n", "note": "경계: 길이 1"},
+        {"in": "candlelight\n", "out": "c t 11\n", "note": "기본 동작"}
+      ]
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_a.py",
+      "title": "readline의 줄바꿈을 떼지 않음",
+      "expectFail": {
+        "1": "WA",
+        "2": "WA",
+        "3": "WA",
+        "4": "WA",
+        "5": "WA"
+      },
+      "diagnosis": {
+        "when": {
+          "verdict": "WA",
+          "outputMatches": " \\n"
+        },
+        "text": "끝 글자 자리에 줄바꿈이 찍혔어! `sys.stdin.readline()`으로 읽은 줄은 끝에 `\\n`이 붙어 있어서 `s[-1]`이 `\\n`이 되고 길이도 하나 커져. `input().rstrip()`으로 끝의 줄바꿈을 떼고 써."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "s[len(s)]로 끝 글자 읽기",
+      "expectFail": {
+        "1": "RE",
+        "2": "RE",
+        "3": "RE",
+        "4": "RE",
+        "5": "RE"
+      },
+      "diagnosis": {
+        "when": {
+          "exception": "IndexError"
+        },
+        "text": "문자열 바깥을 읽었어! 길이가 n이면 칸 번호는 `0`부터 `n - 1`까지라서 `s[len(s)]`는 끝 다음 칸이야. 끝 글자는 `s[-1]`로 읽어."
+      }
+    },
+    {
+      "file": "wrong_c.py",
+      "title": "JS식 s.length",
+      "expectFail": {
+        "1": "RE",
+        "2": "RE",
+        "3": "RE",
+        "4": "RE",
+        "5": "RE"
+      },
+      "diagnosis": {
+        "when": {
+          "exception": "AttributeError",
+          "messageMatches": "length"
+        },
+        "text": "`s.length`는 JS 말투야. Python 문자열의 길이는 `len(s)`로 구해. 끝 글자는 길이를 몰라도 `s[-1]`로 바로 읽을 수 있어!"
+      }
+    }
+  ],
+  "hints": [
+    "문자열도 리스트처럼 칸 번호가 0부터야. 맨 끝 칸을 길이를 몰라도 가리키는 번호가 있었지? 그리고 readline으로 읽은 줄 끝에 무엇이 붙어 있을까?",
+    "첫 글자는 `s[0]`, 끝 글자는 `s[-1]`, 글자 수는 `len(s)`. 읽을 때는 `input().rstrip()`으로 끝의 줄바꿈을 떼야 끝 글자와 길이가 맞아.",
+    "```python\nimport sys\ninput = sys.stdin.readline\n\ns = input().rstrip()\nprint(s[0], s[____], len(s))\n```"
+  ],
+  "reward": {"xp": 100, "gold": 50}
+}

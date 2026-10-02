@@ -1,0 +1,107 @@
+{
+  "id": "P0408",
+  "title": "글자 수 세기",
+  "kind": "stdin",
+  "enemy": {"name": "셈하는 깃펜 정령", "sprite": "monster_quill_sprite", "attack": 20},
+  "requires": ["scroll.ascii"],
+  "concept": "scroll.ascii",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 6,
+  "tests": [
+    {"in": "scroll\n", "out": "0 0 1 0 0 0 0 0 0 0 0 2 0 0 1 0 0 1 1 0 0 0 0 0 0 0\n", "public": true, "note": "기본 동작"},
+    {"in": "a\n", "out": "1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n", "note": "경계: 길이 1, 첫 알파벳"},
+    {"in": "z\n", "out": "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1\n", "note": "경계: 마지막 알파벳"},
+    {"in": "abcdefghijklmnopqrstuvwxyz\n", "out": "1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1\n", "note": "모든 알파벳 한 번씩"},
+    {"in": "mississippi\n", "out": "0 0 0 0 0 0 0 0 4 0 0 0 1 0 0 2 0 0 4 0 0 0 0 0 0 0\n", "note": "반복되는 글자"},
+    {"in": "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuv\n", "out": "4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 3 3 3 3\n", "note": "경계: 길이 100"}
+  ],
+  "variants": [
+    {
+      "id": "P0408-v1",
+      "title": "주문어 세기",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"in": "abba\n", "out": "2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n", "public": true, "note": "기본 동작"},
+        {"in": "y\n", "out": "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0\n", "note": "경계: 길이 1"},
+        {"in": "zzzz\n", "out": "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 4\n", "note": "경계: z만"},
+        {"in": "library\n", "out": "1 1 0 0 0 0 0 0 1 0 0 1 0 0 0 0 0 2 0 0 0 0 0 0 1 0\n", "note": "기본 동작"}
+      ]
+    },
+    {
+      "id": "P0408-v2",
+      "title": "필경사의 낱말",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"in": "quiz\n", "out": "0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 1\n", "public": true, "note": "z 포함"},
+        {"in": "e\n", "out": "0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n", "note": "경계: 길이 1"},
+        {"in": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n", "out": "100 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n", "note": "경계: 길이 100, 한 글자만"},
+        {"in": "bookkeeper\n", "out": "0 1 0 0 3 0 0 0 0 0 2 0 0 0 2 1 0 1 0 0 0 0 0 0 0 0\n", "note": "반복되는 글자"}
+      ]
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_a.py",
+      "title": "\" \".join(정수 리스트)",
+      "expectFail": {
+        "1": "RE",
+        "2": "RE",
+        "3": "RE",
+        "4": "RE",
+        "5": "RE",
+        "6": "RE"
+      },
+      "diagnosis": {
+        "when": {
+          "exception": "TypeError",
+          "messageMatches": "expected str instance"
+        },
+        "text": "join이 정수를 엮지 못하고 폭발했어. `join`은 **문자열 리스트**만 엮어. `\" \".join(map(str, cnt))`처럼 문자열로 바꾸거나, 출력만 할 거면 `print(*cnt)`가 가장 간단해."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "print(cnt)로 리스트 모양 출력",
+      "expectFail": {
+        "1": "WA",
+        "2": "WA",
+        "3": "WA",
+        "4": "WA",
+        "5": "WA",
+        "6": "WA"
+      },
+      "diagnosis": {
+        "when": {
+          "verdict": "WA",
+          "outputMatches": "^\\["
+        },
+        "text": "대괄호와 쉼표까지 찍혔어. `print(cnt)`는 리스트 모양 그대로 출력해. 공백으로 구분해 출력하려면 `print(*cnt)`라고 써."
+      }
+    },
+    {
+      "file": "wrong_c.py",
+      "title": "ord(c) - 96으로 한 칸 밀림",
+      "expectFail": {
+        "1": "WA",
+        "2": "WA",
+        "3": "RE",
+        "4": "RE",
+        "5": "WA",
+        "6": "RE"
+      },
+      "diagnosis": {
+        "when": {
+          "verdict": "WA"
+        },
+        "text": "개수가 한 칸씩 밀렸어. `ord(\"a\")`는 97이라서 칸 번호는 `ord(c) - 97`, 더 읽기 쉽게는 `ord(c) - ord(\"a\")`야. 96을 빼면 `a`가 1번 칸에 들어가고, `z`는 26번 칸이라 리스트 밖으로 나가."
+      }
+    }
+  ],
+  "hints": [
+    "알파벳 26개마다 개수를 담을 칸이 필요해. 글자를 칸 번호로 바꾸는 방법이 있었지?",
+    "`cnt = [0] * 26`을 만들고, `for c in s:`로 돌면서 `cnt[ord(c) - ord(\"a\")] += 1`. 출력은 `print(*cnt)`.",
+    "```python\nimport sys\ninput = sys.stdin.readline\n\ns = input().rstrip()\ncnt = [0] * 26\nfor c in s:\n    cnt[____] += 1\nprint(*cnt)\n```"
+  ],
+  "reward": {"xp": 100, "gold": 50}
+}

@@ -1,0 +1,15 @@
+{
+  "id": "r04",
+  "order": 4,
+  "name": "무너진 대도서관",
+  "introDialogue": "region_intro",
+  "clearDialogue": "region_clear",
+  "recommended": [
+    { "site": "programmers", "id": 12926, "title": "시저 암호", "level": "Lv.1" },
+    { "site": "programmers", "id": 72410, "title": "신규 아이디 추천", "level": "Lv.1" },
+    { "site": "programmers", "id": 60057, "title": "문자열 압축", "level": "Lv.2" },
+    { "site": "boj", "id": 10808, "title": "알파벳 개수", "level": "B4" },
+    { "site": "boj", "id": 1316, "title": "그룹 단어 체커", "level": "S5" },
+    { "site": "boj", "id": 17413, "title": "단어 뒤집기 2", "level": "S3" }
+  ]
+}

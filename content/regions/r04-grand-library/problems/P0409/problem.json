@@ -1,0 +1,106 @@
+{
+  "id": "P0409",
+  "title": "시저의 봉인",
+  "kind": "function",
+  "entry": "solution",
+  "enemy": {"name": "시저 부엉이", "sprite": "monster_cipher_owl", "attack": 20},
+  "requires": ["scroll.ascii"],
+  "concept": "scroll.ascii",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 8,
+  "tests": [
+    {"args": "('ab z', 1)", "expect": "'bc a'", "public": true, "note": "기본 동작, z 다음은 a, 공백 유지"},
+    {"args": "('time', 3)", "expect": "'wlph'", "public": true, "note": "기본 동작"},
+    {"args": "('a', 25)", "expect": "'z'", "note": "경계: 길이 1, n = 25"},
+    {"args": "('Z', 1)", "expect": "'A'", "note": "경계: 대문자 Z 다음은 A"},
+    {"args": "('AbC xYz', 4)", "expect": "'EfG bCd'", "note": "대소문자 섞임"},
+    {"args": "('   ', 7)", "expect": "'   '", "note": "경계: 공백만"},
+    {"args": "('Hello World', 13)", "expect": "'Uryyb Jbeyq'", "note": "대문자와 공백"},
+    {"args": "('The Quick Brown Fox Jumps Over The Lazy Dog The Quick Brown Fox Jumps Over The Lazy Dog The Quick Br', 10)", "expect": "'Dro Aesmu Lbygx Pyh Tewzc Yfob Dro Vkji Nyq Dro Aesmu Lbygx Pyh Tewzc Yfob Dro Vkji Nyq Dro Aesmu Lb'", "note": "경계: 길이 100 가까이"}
+  ],
+  "variants": [
+    {
+      "id": "P0409-v1",
+      "title": "다른 봉인",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"args": "('zoo', 2)", "expect": "'bqq'", "public": true, "note": "기본 동작"},
+        {"args": "('Y', 2)", "expect": "'A'", "note": "경계: 대문자 끝 넘어가기"},
+        {"args": "('x y', 1)", "expect": "'y z'", "note": "공백 유지"},
+        {"args": "('Rune Gate', 20)", "expect": "'Lohy Auny'", "note": "대문자와 공백"}
+      ]
+    },
+    {
+      "id": "P0409-v2",
+      "title": "날개깃 암호문",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"args": "('owl eye', 25)", "expect": "'nvk dxd'", "public": true, "note": "기본 동작, n = 25"},
+        {"args": "('b', 1)", "expect": "'c'", "note": "경계: 길이 1"},
+        {"args": "('ZzZ', 1)", "expect": "'AaA'", "note": "경계: Z와 z"},
+        {"args": "('Night Watch', 5)", "expect": "'Snlmy Bfyhm'", "note": "대문자와 공백"}
+      ]
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_a.py",
+      "title": "% 26을 빠뜨림",
+      "expectFail": {
+        "1": "WA",
+        "4": "WA",
+        "5": "WA",
+        "7": "WA",
+        "8": "WA"
+      },
+      "diagnosis": {
+        "when": {
+          "verdict": "WA",
+          "outputMatches": "[^A-Za-z ']"
+        },
+        "text": "알파벳이 아닌 기호가 섞였어! `chr(ord(c) + n)`만 하면 `z` 다음이 `{`가 돼. 글자를 0~25 칸 번호로 바꾸고(`ord(c) - ord(\"a\")`), n을 더한 뒤 `% 26`으로 한 바퀴 돌리고, 다시 `ord(\"a\")`를 더해서 `chr`로 바꿔."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "대문자도 a 기준으로 계산",
+      "expectFail": {
+        "4": "WA",
+        "5": "WA",
+        "7": "WA",
+        "8": "WA"
+      },
+      "diagnosis": {
+        "when": {
+          "verdict": "WA",
+          "onlyHiddenFail": true
+        },
+        "text": "예제는 통과했는데 대문자가 들어간 봉인에서 틀렸어. 대문자에 `ord(c) - ord(\"a\")`를 쓰면 음수 칸이 나오고, 결과가 소문자로 바뀌어. `c.isupper()`이면 `ord(\"A\")`를 기준으로 계산해."
+      }
+    },
+    {
+      "file": "wrong_c.py",
+      "title": "공백까지 밀어 버림",
+      "expectFail": {
+        "1": "WA",
+        "5": "WA",
+        "6": "WA",
+        "7": "WA",
+        "8": "WA"
+      },
+      "diagnosis": {
+        "when": {
+          "verdict": "WA"
+        },
+        "text": "공백 자리에 글자가 생겼어. 공백은 밀지 말고 그대로 두라고 했지? `if c == \" \":`로 먼저 걸러서 그대로 붙이고, 알파벳만 밀어."
+      }
+    }
+  ],
+  "hints": [
+    "글자를 번호로 바꾸면 '몇 칸 뒤'를 계산할 수 있어. 그런데 `z`를 넘어가면 어떻게 다시 `a`로 돌아오게 할까? 대문자와 공백은?",
+    "소문자는 `(ord(c) - ord(\"a\") + n) % 26`이 새 칸 번호야. 여기에 `ord(\"a\")`를 더해서 `chr`로 바꿔. 대문자는 `ord(\"A\")` 기준, 공백은 그대로.",
+    "```python\ndef solution(s, n):\n    answer = \"\"\n    for c in s:\n        if c == \" \":\n            answer += c\n        elif c.isupper():\n            answer += chr((ord(c) - ord(\"A\") + n) % 26 + ord(\"A\"))\n        else:\n            answer += chr((ord(c) - ord(\"a\") + n) ____ + ord(\"a\"))\n    return answer\n```"
+  ],
+  "reward": {"xp": 100, "gold": 50}
+}

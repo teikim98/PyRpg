@@ -8,7 +8,7 @@ content/ 아래 데이터를 읽어서 아래를 확인한다. 하나라도 실�
 - 변형 문제(plan.md §5.1): 필드·statement 파일, 공개 1+/숨김 3+, 변형 ID 중복, 테스트 형식·4300자리,
   원래 모범답안 전부 AC, wrong_*.py는 변형마다 하나 이상 실패, 보스 slow.py는 전부 AC(시간 결계 없음)
 - 레슨: 주문서 ID, 빈칸 연습 정답 실행 결과, ```python run 블록이 에러 없이 실행되는지
-- 대사: region1-spec.md §5, region02-spec.md §5, region03-spec.md §5의 ID, 대사 줄 형식
+- 대사: region1-spec.md §5, region02-spec.md §5, region03-spec.md §5, region04-spec.md §5의 ID, 대사 줄 형식
 - 지역: recommended 필드(번호·제목·사이트·레벨만), map.tmj가 있으면 맵 오브젝트 참조(상자의 item은 items.json의 ID)
 - 보조 캐릭터: profile.json, traceback.json(실제 CPython 에러 메시지로 규칙 매칭 확인, 규칙의 lesson은 실제 레슨 ID)
 
@@ -58,6 +58,12 @@ REQUIRED_REGION_DIALOGUES = {
         "region_intro", "cave_intro", "sign_tunnels", "npc_goblin_clerk", "chest_storeroom", "chest_hidden_pool",
         "sign_mural", "boss_intro", "boss_defeated", "east_gate_locked", "to_be_continued", "region_clear",
     ],
+    # docs/phase3/region04-spec.md §5
+    "r04": [
+        "region_intro", "library_intro", "npc_ghost_librarian", "sign_stacks", "chest_hidden_stacks",
+        "chest_archivist", "sign_sealed_record", "boss_intro", "boss_defeated", "east_gate_locked",
+        "to_be_continued", "region_clear",
+    ],
 }
 REQUIRED_COMMON_DIALOGUES = [
     "need_scroll", "campfire_rest", "knockout", "solution_unlocked", "retreat",
@@ -83,6 +89,14 @@ REQUIRED_REGION_CONTENT = {
         "problems": ["P0301", "P0302", "P0303", "P0304", "P0305", "P0306", "P0307", "P0308", "P0309", "P0310",
                      "P0311"],
         "boss": "P0311",
+    },
+    # region04-spec.md §2, §3
+    "r04": {
+        "lessons": {"L4-1": "scroll.string", "L4-2": "scroll.strmethods", "L4-3": "scroll.splitjoin",
+                    "L4-4": "scroll.ascii"},
+        "problems": ["P0401", "P0402", "P0403", "P0404", "P0405", "P0406", "P0407", "P0408", "P0409", "P0410",
+                     "P0411"],
+        "boss": "P0411",
     },
 }
 # 명세의 아트 표(region02-spec.md §6 등)에 있어서 아트 담당이 만들 스프라이트.
@@ -531,9 +545,11 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
                 elif not same or len({t.get("gen") for t in same}) != 1 or same[0].get("gen") is None:
                     rep.error(pw, "그 페이즈의 테스트가 모두 같은 생성기(gen)여야 함")
                 else:
-                    sizes = {t.get("in", "").split("\n", 1)[0] for t in same}
+                    # 크기 = (입력 줄 수, 첫 줄 길이). 첫 줄이 N인 입력(P0311)도, 첫 줄이 길이 N의 문자열이고
+                    # Q줄 명령이 이어지는 입력(P0411)도 같은 규칙으로 본다
+                    sizes = {(t.get("in", "").count("\n"), len(t.get("in", "").split("\n", 1)[0])) for t in same}
                     if len(sizes) != 1:
-                        rep.error(pw, f"그 페이즈의 테스트 크기(첫 줄)가 모두 같아야 함: {sorted(sizes)}")
+                        rep.error(pw, f"그 페이즈의 테스트 크기(줄 수, 첫 줄 길이)가 모두 같아야 함: {sorted(sizes)}")
         if "slow.py" not in files:
             rep.error(where, "보스에 slow.py(비효율 답안)가 없음")
     elif p.get("phases"):
