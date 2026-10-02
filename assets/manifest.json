@@ -52,7 +52,19 @@
         "mural_wall",
         "cave_crack",
         "minecart_rail",
-        "bone_pile"
+        "bone_pile",
+        "lib_floor",
+        "lib_carpet",
+        "lib_wall",
+        "lib_wall_top",
+        "bookshelf",
+        "bookshelf_fallen",
+        "book_pile",
+        "reading_desk",
+        "candle_frozen",
+        "broken_pillar",
+        "floating_pages",
+        "shelf_gap"
       ],
       "blocking": [
         "water",
@@ -83,7 +95,15 @@
         "treasure_pile",
         "cave_pool",
         "mural_wall",
-        "bone_pile"
+        "bone_pile",
+        "lib_wall",
+        "lib_wall_top",
+        "bookshelf",
+        "bookshelf_fallen",
+        "book_pile",
+        "reading_desk",
+        "candle_frozen",
+        "broken_pillar"
       ]
     }
   },
@@ -260,6 +280,41 @@
     },
     "boss_goblin_chief": {
       "file": "sprites/boss_goblin_chief.png",
+      "frameWidth": 32,
+      "frameHeight": 32
+    },
+    "npc_ghost_librarian": {
+      "file": "sprites/npc_ghost_librarian.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_letter_moth": {
+      "file": "sprites/monster_letter_moth.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_ink_slime": {
+      "file": "sprites/monster_ink_slime.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_quill_sprite": {
+      "file": "sprites/monster_quill_sprite.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_scroll_snake": {
+      "file": "sprites/monster_scroll_snake.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_cipher_owl": {
+      "file": "sprites/monster_cipher_owl.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "boss_librarian_golem": {
+      "file": "sprites/boss_librarian_golem.png",
       "frameWidth": 32,
       "frameHeight": 32
     }
