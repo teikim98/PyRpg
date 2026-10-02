@@ -3,12 +3,13 @@
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { CPYTHON, CPYTHON_ENV } from "../cpython";
 import { buildContent, collectSources, loadContent } from "../../src/content/loader";
 import type { StdinTest } from "../../src/contracts/content";
 
 const ROOT = resolve(__dirname, "../..");
-const PY = process.env.PYRPG_CPYTHON ?? "python3";
-const hasPython = spawnSync(PY, ["--version"]).status === 0;
+const PY = CPYTHON ?? "python3";
+const hasPython = CPYTHON !== undefined;
 
 const content = loadContent();
 const r03 = content.regions.find((r) => r.id === "r03")!;
@@ -115,7 +116,7 @@ print(json.dumps(out))
 
 describe.skipIf(!hasPython)("gen parity (CPython)", () => {
   it("judge.py and verify_content.py produce identical generated tests", () => {
-    const r = spawnSync(PY, ["-c", PARITY, ROOT], { encoding: "utf-8", maxBuffer: 64 << 20 });
+    const r = spawnSync(PY, ["-c", PARITY, ROOT], { encoding: "utf-8", env: CPYTHON_ENV, maxBuffer: 64 << 20 });
     expect(r.status, r.stderr).toBe(0);
     const rows = JSON.parse(r.stdout) as { arg: string; same: boolean; n: string; outLen: number }[];
     expect(rows).toHaveLength(4);

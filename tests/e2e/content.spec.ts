@@ -5,10 +5,11 @@
 //   PW_PORT=4179 npx playwright test tests/e2e/content.spec.ts
 //   PW_REGIONS=r02 PW_PORT=4179 npx playwright test tests/e2e/content.spec.ts   (지역 일부만)
 import { spawnSync } from "node:child_process";
-import { existsSync, readdirSync } from "node:fs";
+import { readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import type { Verdict } from "../../src/contracts/content";
+import { CPYTHON, CPYTHON_ENV } from "../cpython";
 
 /** content/regions/의 지역 전부. PW_REGIONS=r02처럼 쉼표로 골라 일부만 돌릴 수 있다 */
 const ONLY = process.env.PW_REGIONS?.split(",").map((s) => s.trim()).filter(Boolean);
@@ -180,10 +181,10 @@ interface ExerciseRun {
   noneMatches: boolean;
 }
 
-/** CPython으로 같은 코드를 실행한 stdout(python3가 없거나 실패하면 undefined). Pyodide 출력과 맞춰 본다 */
-const CPYTHON = process.env.PYRPG_CPYTHON ?? (existsSync("/root/.local/bin/python3.14") ? "/root/.local/bin/python3.14" : "python3");
+/** CPython으로 같은 코드를 실행한 stdout(CPython이 없거나 실패하면 undefined). Pyodide 출력과 맞춰 본다 */
 function cpython(code: string, stdin: string): string | undefined {
-  const r = spawnSync(CPYTHON, ["-c", code], { input: stdin, encoding: "utf-8", env: { ...process.env, PYTHONIOENCODING: "utf-8" } });
+  if (!CPYTHON) return undefined;
+  const r = spawnSync(CPYTHON, ["-c", code], { input: stdin, encoding: "utf-8", env: CPYTHON_ENV });
   if (r.error || r.status !== 0) return undefined;
   return r.stdout;
 }

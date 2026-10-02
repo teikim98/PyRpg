@@ -4,10 +4,11 @@
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { CPYTHON, CPYTHON_ENV } from "../cpython";
 
 const ROOT = resolve(__dirname, "../..");
-const PY = process.env.PYRPG_CPYTHON ?? "python3";
-const hasPython = spawnSync(PY, ["--version"]).status === 0;
+const PY = CPYTHON ?? "python3";
+const hasPython = CPYTHON !== undefined;
 
 // judge.py를 가짜 pyrpg_io와 함께 불러온다. 사용자 print는 sys.__stdout__ 자리의 StringIO로 모은다
 const PY_SCRIPT = String.raw`
@@ -56,7 +57,7 @@ function judge(cases: Case[]): { verdict: string; actual: string; stdout: string
   const r = spawnSync(PY, ["-c", PY_SCRIPT, ROOT], {
     input: JSON.stringify(cases),
     encoding: "utf-8",
-    env: { ...process.env, PYTHONIOENCODING: "utf-8" },
+    env: CPYTHON_ENV,
   });
   if (r.status !== 0) throw new Error(`python 실패: ${r.stderr}`);
   return JSON.parse(r.stdout);

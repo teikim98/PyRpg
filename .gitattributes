@@ -1,0 +1,5 @@
+# 클라우드(Linux)와 Windows에서 같은 바이트로 체크아웃한다. 테스트·검증기가 LF를 전제로 한다
+* text=auto eol=lf
+*.png binary
+*.wasm binary
+*.zip binary

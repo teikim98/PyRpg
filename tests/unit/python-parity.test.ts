@@ -6,12 +6,13 @@ import { spawnSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { CPYTHON, CPYTHON_ENV } from "../cpython";
 import type { DiagnosisRule, TracebackRule } from "../../src/contracts/content";
 import { normalizeOutput } from "../../src/python/compare";
 
 const ROOT = resolve(__dirname, "../..");
-const PY = process.env.PYRPG_CPYTHON ?? "python3";
-const hasPython = spawnSync(PY, ["--version"]).status === 0;
+const PY = CPYTHON ?? "python3";
+const hasPython = CPYTHON !== undefined;
 
 const PY_SCRIPT = String.raw`
 import json, sys, types
@@ -34,7 +35,7 @@ function python(req: { norm: string[]; regex: [string, string][] }): { judge: st
   const r = spawnSync(PY, ["-c", PY_SCRIPT, ROOT], {
     input: JSON.stringify(req),
     encoding: "utf-8",
-    env: { ...process.env, PYTHONIOENCODING: "utf-8" },
+    env: CPYTHON_ENV,
     maxBuffer: 64 << 20,
   });
   if (r.status !== 0) throw new Error(`python 실패: ${r.stderr}`);
