@@ -2,7 +2,8 @@
 
 화풍: 공통 코지 팔레트(cozypal)의 램프만 쓴다. 재질마다 3단(그늘·기본·밝음) + 강조(spec) 몇 픽셀,
 그라데이션·구 음영 없이 평평한 덩어리로 칠하고, 바깥 외곽선은 닿은 재질의 ol(가장 어두운 것)이다.
-빛은 왼쪽 위. 얼굴은 단순하게: 눈은 짙은 위쪽 + 초록 아래쪽 + 반사광, 입은 작은 선, 볼터치 한 줄.
+빛은 왼쪽 위. 얼굴은 단순하게: 눈은 잉크 속눈썹 2줄 + 초록 홍채(위 1줄 그늘, 가운데 2×2 동공, 아래 밝음) + 반사광 2px,
+입은 작은 선, 볼터치 한 줄. 홍채는 eye_green 낱색에 cloth_green 램프의 그늘·밝음을 빌려 3단을 만든다.
 
 몸통·머리카락·고글·망토는 한 번 그려 모든 표정이 공유하고, 표정마다 눈썹·눈·입·볼터치·효과만
 바꿔 얹는다(design.md §3 공통).
@@ -510,6 +511,7 @@ def _props(col):
 
 # ── 3) 표정 ──────────────────────────────────────────────────────────────────
 # 눈 8×8(왼눈 x=19~26, 오른눈은 좌우 반전해서 x=37~44). 왼눈 그리드의 왼쪽이 바깥(눈꼬리) 쪽이다.
+# 눈동자의 잉크는 2×2 동공뿐이고 나머지는 초록이라 3배·2배에서도 초록 눈으로 읽힌다. 놀람은 흰자 안의 작은 홍채.
 # 반사광은 반전하지 않고 두 눈 모두 왼쪽 위(빛 방향)에 둔다(catch 좌표는 왼눈 기준, 오른눈은 같은 좌표).
 EYE_X, EYE_Y = 19, 31
 BROW_X, BROW_Y = 19, 27
@@ -517,7 +519,8 @@ BLUSH_X, BLUSH_Y = 17, 40
 MOUTH_Y = 45
 FEAT = {
     "L": "eye",                 # 속눈썹·윗눈꺼풀(잉크)
-    "D": "eye",                 # 눈동자 위쪽(짙음)
+    "D": "eye",                 # 동공(잉크 2×2)
+    "d": "cloth_green.shade",   # 홍채 위쪽(눈꺼풀 그늘)
     "G": "eye_green",           # 초록 홍채
     "g": "cloth_green.hi",      # 홍채 아래 밝은 초록
     "w": "cloth_white.hi",      # 흰자(놀람)
@@ -534,9 +537,9 @@ FEAT = {
 EYE_OPEN = """
 ..LLLLL.
 LLLLLLLL
-.DDDDDD.
-.DDDDDD.
-.GGGGGG.
+.dddddd.
+.dGDDGd.
+.GGDDGG.
 .GGGGGG.
 .GgggGG.
 ..GGGG..
@@ -602,14 +605,14 @@ EXPR = {
             bBB...Bb
         """, brow_dy=-3,
         eye="""
-            ..LLLLL.
-            LLLLLLLL
-            .wwwwwwk
-            kwwDDwwk
-            kwwDDwwk
-            kwwGGwwk
-            .kwwwwk.
-            ..kkkk..
+            ..LLLL..
+            .LLLLLLL
+            Lwwddwww
+            .wdGGdw.
+            .wGDDGw.
+            .wGGGGw.
+            ..wggw..
+            ...ww...
         """, eye_dy=-1, catch=((3, 3),),
         mouth="""
             .AA.
@@ -639,8 +642,8 @@ EXPR = {
             ........
             .....LL.
             LLLLLLLL
-            .DDDDDD.
-            .GGGGGG.
+            .dddddd.
+            .GGDDGG.
             .GGGGGG.
             .GgggGG.
             ..GGGG..
@@ -670,10 +673,10 @@ EXPR = {
         eye="""
             ........
             ........
-            LLLL....
+            ....LLLL
             LLLLLLLL
-            .DDDDDD.
-            .GGGGGG.
+            .dddddd.
+            .GGDDGG.
             .GgggGG.
             ..GGGG..
         """, catch=((2, 4),),
