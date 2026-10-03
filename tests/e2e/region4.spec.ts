@@ -742,16 +742,19 @@ test.describe.serial("지역 4 무너진 대도서관 전체 플레이", () => {
     expect(await said(page)).toEqual([]);
     expect((await save(page)).location.regionId).toBe("r04");
 
-    // 보스가 있던 칸을 지나 동쪽 끝 문: 지역 5가 아직 없으므로 to_be_continued만 보여 주고 머문다(매번)
+    // 보스가 있던 칸을 지나 동쪽 끝 문: 지역 5 교역항의 spawn_west로 이어진다
+    // (처음 건널 때 누리의 연결 대사 → 지역 첫 대사 → spawn 옆 트리거. '준비 중'이라고 말하지 않는다)
     await walkTo(page, boss.x, boss.y);
-    for (let k = 0; k < 2; k++) {
-      const n = (await said(page)).length;
-      await interact(page, "warp_east");
-      await settle(page);
-      expect((await said(page)).slice(n)).toEqual(["to_be_continued"]);
-      expect((await save(page)).location.regionId).toBe("r04");
-      await expect(page.locator(".hud-region")).toHaveText("무너진 대도서관");
-    }
+    await interact(page, "warp_east");
+    const crossTexts = await readAll(page);
+    expect(await said(page)).toEqual(["to_be_continued", "region_intro", "port_intro"]);
+    for (const t of crossTexts) expect(t).not.toMatch(/준비 중|여기까지입니다/);
+    expect(crossTexts[0]).toContain("짭짤한 바람");
+    await expect(page.locator(".hud-region")).toHaveText("교역항");
+    const st = await page.evaluate(() => (window as any).__pyrpg.state());
+    expect(st.save.location.regionId).toBe("r05");
+    const spawn = await obj(page, "spawn_west");
+    expect(Math.abs(st.pos.x - spawn.x) + Math.abs(st.pos.y - spawn.y)).toBeLessThanOrEqual(1);
   });
 });
 

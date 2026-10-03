@@ -401,7 +401,7 @@ for (const region of REGIONS) {
             .map((a) => `${a.file}=${a.ms.toFixed(1)} ms(${(a.ms / m.refMs).toFixed(2)} units, 제한/이 답안=${(m.limitMs / a.ms).toFixed(1)}배, ${a.verdict}), `)
             .join("") +
           `비효율 판정=${m.slowVerdicts.join(" ")} 시간=${m.slowTimesMs.join("/")} ms, ` +
-          `제한×${BUDGET_HEADROOM}에서도 미종료=${m.generous.map((g) => `#${g.index + 1}:${g.timedOut}`).join(" ")}, ` +
+          `제한×${BUDGET_HEADROOM}에서도 미종료=${m.generous.map((g) => `#${g.index + 1}:${g.timedOut}(${Math.round(g.ms)} ms)`).join(" ")}, ` +
           `반복 1회≈${(m.perIterMs * 1e6).toFixed(0)} ns`,
       );
       expect(m.budgetUnits, "보스에 budgetUnits").toBeGreaterThan(0);
