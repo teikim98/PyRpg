@@ -144,18 +144,91 @@ def _safe_repr(value):
         return "<" + type(value).__name__ + ": repr 실패>"
 
 
-def _exec_user(code, extra=None, module_name="__main__"):
+LINE_COUNTER_NAME = "pyrpg-echo-ring"
+
+
+class _LineCounter:
+    """메아리 고리(design.md §7.3, docs/phase3/region06-spec.md §7.2): 사용자 코드(<주문>) 줄마다 실행 횟수를 센다.
+    sys.monitoring(Python 3.12+)의 LINE 이벤트를 쓰며, 채점기·표준 라이브러리 줄은 처음 한 번 뒤로 꺼 둔다(DISABLE).
+    [예제 실행]에서만 쓰고 [시전]·채점에는 쓰지 않는다(약 3.5배 느려짐, design.md §9.6)."""
+
+    def __init__(self):
+        self.counts = {}
+        self.tool = None
+        # 실제로 세기 시작했는지(sys.monitoring이 없거나 도구 자리가 없으면 False → 횟수 없이 지금처럼)
+        self.started = False
+
+    def start(self):
+        mon = getattr(sys, "monitoring", None)
+        if mon is None:
+            return False
+        # 지난 실행이 정리되지 못하고 남긴 도구(같은 이름)는 먼저 치운다
+        for tid in range(6):
+            if mon.get_tool(tid) == LINE_COUNTER_NAME:
+                self._release(mon, tid)
+        tool = next((t for t in (mon.COVERAGE_ID, 3, 4, mon.PROFILER_ID) if mon.get_tool(t) is None), None)
+        if tool is None:
+            return False
+        counts = self.counts
+        disable = mon.DISABLE
+        user_file = USER_FILE
+
+        def on_line(code, line):
+            if code.co_filename != user_file:
+                return disable
+            counts[line] = counts.get(line, 0) + 1
+
+        try:
+            mon.use_tool_id(tool, LINE_COUNTER_NAME)
+            mon.register_callback(tool, mon.events.LINE, on_line)
+            mon.set_events(tool, mon.events.LINE)
+        except BaseException:
+            self._release(mon, tool)
+            return False
+        self.tool = tool
+        self.started = True
+        return True
+
+    def stop(self):
+        if self.tool is None:
+            return
+        tool, self.tool = self.tool, None
+        self._release(sys.monitoring, tool)
+
+    @staticmethod
+    def _release(mon, tool):
+        for fn in (
+            lambda: mon.set_events(tool, 0),
+            lambda: mon.register_callback(tool, mon.events.LINE, None),
+            lambda: mon.free_tool_id(tool),
+        ):
+            try:
+                fn()
+            except BaseException:
+                pass
+
+    def result(self):
+        # JSON 키는 문자열(줄 번호)
+        return {str(k): v for k, v in sorted(self.counts.items())}
+
+
+def _exec_user(code, extra=None, module_name="__main__", counter=None):
     """새 globals에서 사용자 코드를 실행한다. (status, error, globals, elapsed_ms)
 
     status: "ok" | "error" | "timeout"
+    counter(_LineCounter)가 있으면 사용자 코드 줄마다 실행 횟수를 센다(메아리 고리).
     """
     _reset_interpreter()
     _register_source(code)
     g = {"__name__": module_name, "__builtins__": builtins}
-    start = time.perf_counter()
     status, error = "ok", None
+    counting = False
+    start = time.perf_counter()
     try:
         compiled = compile(code, USER_FILE, "exec", dont_inherit=True)
+        if counter is not None:
+            counting = counter.start()
+            start = time.perf_counter()
         exec(compiled, g)
         if extra is not None:
             extra(g)
@@ -167,9 +240,19 @@ def _exec_user(code, extra=None, module_name="__main__"):
             status, error = "error", _error_info(e)
     except BaseException as e:
         status, error = "error", _error_info(e)
+    finally:
+        if counting:
+            counter.stop()
     elapsed = (time.perf_counter() - start) * 1000.0
     _flush()
     return status, error, g, elapsed
+
+
+def _with_line_counts(payload, counter, status):
+    # 시간 초과(무한루프 등)면 세다 만 횟수는 보이지 않는다(지금처럼 판정만)
+    if counter is not None and counter.started and status != "timeout":
+        payload["lineCounts"] = counter.result()
+    return payload
 
 
 # 줄 끝에서 무시하는 공백(ASCII). str.rstrip()의 기본값은 유니코드 공백·\x1c~\x1f까지 지워서 JS와 달라지므로 명시한다
@@ -191,8 +274,9 @@ def run_program(code):
     return json.dumps({"status": status, "error": error, "timeMs": elapsed}, ensure_ascii=False)
 
 
-def run_stdin_test(code, expected):
-    status, error, _g, elapsed = _exec_user(code)
+def run_stdin_test(code, expected, line_counts=False):
+    counter = _LineCounter() if line_counts else None
+    status, error, _g, elapsed = _exec_user(code, counter=counter)
     actual = pyrpg_io.take_stdout()
     if status == "timeout":
         verdict = "TLE"
@@ -200,9 +284,8 @@ def run_stdin_test(code, expected):
         verdict = "RE"
     else:
         verdict = "AC" if normalize_output(actual) == normalize_output(expected) else "WA"
-    return json.dumps(
-        {"verdict": verdict, "actual": actual, "error": error, "timeMs": elapsed}, ensure_ascii=False
-    )
+    payload = {"verdict": verdict, "actual": actual, "error": error, "timeMs": elapsed}
+    return json.dumps(_with_line_counts(payload, counter, status), ensure_ascii=False)
 
 
 def sequences_as_lists(v):
@@ -219,7 +302,7 @@ def results_equal(expected, result, compare=None):
     return bool(expected == result)
 
 
-def run_function_test(code, entry, args_src, expect_src, compare_json=""):
+def run_function_test(code, entry, args_src, expect_src, compare_json="", line_counts=False):
     try:
         compare = json.loads(compare_json) if compare_json else None
         args = ast.literal_eval(args_src)
@@ -237,7 +320,8 @@ def run_function_test(code, entry, args_src, expect_src, compare_json=""):
             raise NameError(f"name '{entry}' is not defined")
         box["result"] = fn(*args)
 
-    status, error, _g, elapsed = _exec_user(code, call, FUNCTION_MODULE_NAME)
+    counter = _LineCounter() if line_counts else None
+    status, error, _g, elapsed = _exec_user(code, call, FUNCTION_MODULE_NAME, counter)
     # 사용자 print 출력은 채점에 쓰지 않고 [예제 실행] 결과에 보여 준다
     stdout = _clip(pyrpg_io.take_stdout() or "", REPR_LIMIT)
     actual = ""
@@ -257,10 +341,8 @@ def run_function_test(code, entry, args_src, expect_src, compare_json=""):
             same = False
             error = _error_info(e)
         verdict = "AC" if same else "WA"
-    return json.dumps(
-        {"verdict": verdict, "actual": actual, "error": error, "timeMs": elapsed, "stdout": stdout},
-        ensure_ascii=False,
-    )
+    payload = {"verdict": verdict, "actual": actual, "error": error, "timeMs": elapsed, "stdout": stdout}
+    return json.dumps(_with_line_counts(payload, counter, status), ensure_ascii=False)
 
 
 def _reference_body():

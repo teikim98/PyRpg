@@ -756,3 +756,160 @@ describe("기록관의 안경과 상자 아이템(단위 3-4, region04-spec §4.
     expect(perks!.codexLink).toBeUndefined();
   });
 });
+
+describe("메아리 고리(region06-spec §7.2)", () => {
+  it("지역 5 이하 상점에는 없고, 지역 6 상점에서는 산다. 끼면 전투에 lineCounts를 넘긴다", async () => {
+    const base = makeContent(false);
+    const content = { ...base, quests: { ...base.quests, pool: [] } };
+    const store = new MemoryStore();
+    store.data = r01Save(content, (s) => {
+      s.removedObjects.push("gate_well");
+      s.player.gold = 500;
+    });
+    const h = harness(content, store);
+    await h.app.start({} as HTMLElement);
+    await idle(h.app);
+    // 지역 1 상점: 실루엣도 없다
+    let ids: string[] = [];
+    h.sys.shop = async (view, buy) => {
+      expect(view().regionOrder).toBe(1);
+      ids = view().entries.map((e) => e.id);
+      await expect(buy("echo-ring")).rejects.toThrow("파는 물건이 아니야");
+    };
+    h.callbacks.onInteract(h.world.obj("shop_echo"));
+    await idle(h.app);
+    expect(ids).toContain("sturdy-cloak");
+    expect(ids).not.toContain("echo-ring");
+    expect(store.data!.inventory["echo-ring"]).toBeUndefined();
+
+    // 같은 상점이 지역 6에 있다고 치면(지역 순서만 바꿈) 목록에 나오고 살 수 있다
+    h.app.region.order = 6;
+    h.sys.shop = async (view, buy) => {
+      const e = view().entries.find((x) => x.id === "echo-ring")!;
+      expect(e).toMatchObject({ price: 200, state: "available" });
+      expect(e.pending).toBeUndefined();
+      expect(await buy("echo-ring")).toContain("메아리 고리");
+    };
+    h.callbacks.onInteract(h.world.obj("shop_echo"));
+    await idle(h.app);
+    expect(store.data!.inventory["echo-ring"]).toBe(1);
+    expect(store.data!.player.gold).toBe(300);
+
+    // 장착 → 전투에 lineCounts
+    h.sys.menu = async (a) => a.openEquipment!();
+    h.sys.equipment = async (view, actions) => {
+      expect(view().accessories.find((a) => a.id === "echo-ring")).toMatchObject({ owned: true, pending: false });
+      await actions.toggleAccessory("echo-ring");
+    };
+    h.callbacks.onMenu();
+    await idle(h.app);
+    let perks: BattleContext["perks"] | null = null;
+    h.battle.open = async (ctx) => {
+      perks = ctx.perks ?? {};
+      return { problemId: ctx.problem.id, result: "retreat", attempts: 0, maxHintLevel: 0, solutionViewed: false, finalCode: "x", hpLeft: 100, elapsedMs: 1 };
+    };
+    h.callbacks.onInteract(h.world.obj("m_P0101"));
+    await idle(h.app);
+    expect(perks!.lineCounts).toBe(true);
+  });
+});
+
+describe("중간 보스(midBoss, region06-spec §7.1)", () => {
+  /** r01의 P0101을 중간 보스로 바꾸고, 지역 대사 midboss_defeated를 넣은 콘텐츠 사본 */
+  function midBossContent(withDialogue = true): GameContent {
+    const base = makeContent(false);
+    const content = { ...base, quests: { ...base.quests, pool: [] } };
+    const r01 = content.regions[0];
+    const p = r01.problems.find((q) => q.id === "P0101")!;
+    p.boss = true;
+    p.midBoss = true;
+    p.reward = { xp: 400, gold: 200 };
+    if (withDialogue) r01.dialogues.midboss_defeated = [{ speaker: "companion", text: "다리 너머로 길이 열렸어!" }];
+    return content;
+  }
+
+  const win = (ctx: BattleContext, over: Partial<BattleOutcome> = {}): BattleOutcome => ({
+    problemId: ctx.problem.id, result: "victory", attempts: 1, maxHintLevel: 0, solutionViewed: false, finalCode: "x", hpLeft: ctx.player.hp, elapsedMs: 1, ...over,
+  });
+
+  async function start(content: GameContent, mutate: (s: SaveData) => void = () => undefined) {
+    const store = new MemoryStore();
+    store.data = r01Save(content, (s) => {
+      s.removedObjects.push("gate_well");
+      mutate(s);
+    });
+    const h = harness(content, store);
+    await h.app.start({} as HTMLElement);
+    await idle(h.app);
+    return { h, store };
+  }
+
+  it("처음 이기면 보상 뒤 midboss_defeated, 지역 클리어·클리어 연출은 없다. 시간 결계 첫 통과면 '시간을 돌린 자'", async () => {
+    const content = midBossContent();
+    const { h, store } = await start(content);
+    let ctxSeen!: BattleContext;
+    h.battle.open = async (ctx) => {
+      ctxSeen = ctx;
+      return win(ctx, { timeBarrierFirstTry: true });
+    };
+    const xp0 = store.data!.player.xp;
+    h.callbacks.onInteract(h.world.obj("m_P0101"));
+    await idle(h.app);
+    expect(ctxSeen.problem.midBoss).toBe(true);
+    expect(h.said).toContain("midboss_defeated");
+    expect(h.said).not.toContain("boss_defeated");
+    expect(h.recommended).toEqual([]);
+    const s = store.data!;
+    expect(s.flags["region.r01.clear"]).toBeUndefined();
+    expect(s.titles).not.toContain("liberator-r01");
+    expect(s.player.xp).toBe(xp0 + 400);
+    expect(s.removedObjects).toContain("m_P0101");
+    expect(s.titles).toContain("time-turner");
+
+    // 새로고침해도 지역 클리어 연출을 이어 보이지 않는다(중간 보스는 클리어가 아님)
+    const reload = harness(content, store);
+    await reload.app.start({} as HTMLElement);
+    await idle(reload.app);
+    expect(reload.said).toEqual([]);
+    expect(reload.recommended).toEqual([]);
+    expect(store.data!.flags["region.r01.clear"]).toBeUndefined();
+  });
+
+  it("midboss_defeated 대사가 없는 지역이면 대사 없이 넘어간다(경고 없이)", async () => {
+    const content = midBossContent(false);
+    const { h, store } = await start(content);
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    h.battle.open = async (ctx) => win(ctx);
+    h.callbacks.onInteract(h.world.obj("m_P0101"));
+    await idle(h.app);
+    expect(h.said).not.toContain("midboss_defeated");
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+    expect(store.data!.flags["region.r01.clear"]).toBeUndefined();
+  });
+
+  it("최종 보스 승리를 저장한 뒤 클리어 연출 전에 닫혔으면 다시 열 때 이어 보인다(중간 보스와 상관없이 최종 보스 기준)", async () => {
+    const content = midBossContent();
+    const { h, store } = await start(content, (s) => {
+      s.problems.P0101 = { ...emptyRec(), solved: true };
+      s.removedObjects.push("m_P0101");
+      s.problems.P0105 = { ...emptyRec(), solved: true };
+      s.removedObjects.push("m_P0105");
+    });
+    expect(h.said).toContain("boss_defeated");
+    expect(h.said).not.toContain("midboss_defeated");
+    expect(h.recommended).toEqual(["에코 마을"]);
+    expect(store.data!.flags["region.r01.clear"]).toBe(true);
+  });
+
+  it("중간 보스만 이긴 저장으로 시작하면 클리어 연출이 나오지 않는다", async () => {
+    const content = midBossContent();
+    const { h, store } = await start(content, (s) => {
+      s.problems.P0101 = { ...emptyRec(), solved: true };
+      s.removedObjects.push("m_P0101");
+    });
+    expect(h.said).toEqual([]);
+    expect(h.recommended).toEqual([]);
+    expect(store.data!.flags["region.r01.clear"]).toBeUndefined();
+  });
+});

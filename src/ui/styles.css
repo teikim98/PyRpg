@@ -707,6 +707,24 @@
   box-shadow: inset 4px 0 0 var(--hp);
 }
 
+/* 메아리 고리: 줄 번호 옆 실행 횟수(region06-spec.md §7.2). 표시가 없으면 폭 0 */
+.pyrpg-ui .code-editor .cm-echo-gutter .cm-gutterElement {
+  padding: 0 4px 0 2px;
+  text-align: right;
+}
+
+.pyrpg-ui .code-editor .cm-echo-count {
+  color: #6a3fa0;
+  font-family: Galmuri11, monospace;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.pyrpg-ui .battle-msg .echo-note {
+  margin-top: 4px;
+  color: #c9b2ff;
+}
+
 .pyrpg-ui .md-run-editor {
   border: 0;
   border-bottom: 2px solid var(--border-dim);

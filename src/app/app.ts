@@ -28,6 +28,7 @@ import {
   equipmentEffects,
   grantItem,
   hudState,
+  isFinalBoss,
   itemsRewardedBy,
   lastStreakRepair,
   levelFromXp,
@@ -196,8 +197,8 @@ export class App {
     // 지역 첫 대사는 기다리지 않는다(start는 화면 준비가 끝나면 바로 돌아온다)
     const intro = !this.save.flags[`region.${this.region.id}.intro`] ? this.guard(() => this.playRegionIntro()) : Promise.resolve();
     void intro.then(() => {
-      // 보스를 쓰러뜨린 순간 저장했지만 클리어 연출 전에 페이지를 닫았으면 이어서 보여 준다
-      const boss = this.region.problems.find((q) => q.boss);
+      // 최종 보스를 쓰러뜨린 순간 저장했지만 클리어 연출 전에 페이지를 닫았으면 이어서 보여 준다(중간 보스는 지역 클리어가 아니다)
+      const boss = this.region.problems.find(isFinalBoss);
       if (boss && this.save.problems[boss.id]?.solved && !this.save.flags[`region.${this.region.id}.clear`]) {
         return this.guard(() => this.clearRegion());
       }
@@ -489,6 +490,8 @@ export class App {
       perks: {
         freeHint2: fx.guideFeather,
         targetComplexity: fx.targetComplexity ? problem.targetComplexity : undefined,
+        // 메아리 고리: [예제 실행]에서 줄별 실행 횟수(docs/phase3/region06-spec.md §7.2)
+        ...(fx.lineCounts ? { lineCounts: true } : {}),
         // 기록관의 안경: 해설 아래 코덱스 바로가기. 코덱스는 전투 창 위에 열리고, 닫으면 전투로 돌아간다
         codexLink: fx.codexLinks
           ? {
@@ -599,7 +602,12 @@ export class App {
           break;
       }
     }
-    if (!shadow && problem.boss && events.some((e) => e.type === "victory")) await this.clearRegion();
+    if (shadow) return;
+    // 지역 클리어는 최종 보스로만. 중간 보스는 처음 이겼을 때 지역 대사 midboss_defeated(있으면, region06-spec.md §7.1)
+    if (isFinalBoss(problem) && events.some((e) => e.type === "victory")) await this.clearRegion();
+    else if (problem.midBoss && events.some((e) => e.type === "victory" && e.firstClear)) {
+      if (this.region.dialogues.midboss_defeated) await this.say("midboss_defeated");
+    }
   }
 
   private async clearRegion(): Promise<void> {
@@ -782,7 +790,7 @@ export class App {
       async (id) => {
         const item = this.item(id);
         if (!item) throw new Error("없는 물건이야");
-        this.save = buyItem(this.save, item);
+        this.save = buyItem(this.save, item, this.region.order);
         await this.persist();
         this.refreshHud();
         if (item.kind === "accessory") return `${item.name}${objectParticle(item.name)} 샀어! 메뉴의 장비에서 장착해 봐.`;
@@ -796,8 +804,10 @@ export class App {
 
   shopView(): ShopView {
     const entries: ShopView["entries"] = [];
+    // 지역 순서가 모자란 상점에는 그 품목이 아예 나오지 않는다(예: 메아리 고리는 지역 6 상점부터)
+    const regionOrder = this.region.order;
     for (const item of this.deps.content.items) {
-      const state = shopState(this.save, item);
+      const state = shopState(this.save, item, regionOrder);
       if (!state) continue;
       entries.push({
         id: item.id,
@@ -812,7 +822,7 @@ export class App {
         tint: item.tint,
       });
     }
-    return { gold: this.save.player.gold, level: levelFromXp(this.save.player.xp), entries };
+    return { gold: this.save.player.gold, level: levelFromXp(this.save.player.xp), regionOrder, entries };
   }
 
   private async openEquipment(): Promise<void> {

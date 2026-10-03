@@ -126,7 +126,7 @@ describe("codexLinkFor(버튼을 보일 조건)", () => {
     expect(item("archivist-glasses").pending).toBeUndefined();
     const s = newSave();
     s.equipment = ["archivist-glasses"];
-    expect(equipmentEffects(s, items)).toEqual({ maxHpBonus: 0, guideFeather: false, targetComplexity: false, codexLinks: true });
+    expect(equipmentEffects(s, items)).toEqual({ maxHpBonus: 0, guideFeather: false, targetComplexity: false, codexLinks: true, lineCounts: false });
   });
 });
 

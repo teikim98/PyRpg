@@ -19,6 +19,11 @@ export const GENERAL_SLOWDOWN = 2;
 /** 시간 결계 제한 = budgetUnits × ref × 1.5 + 50 ms */
 export const BUDGET_MARGIN = 1.5;
 export const BUDGET_OVERHEAD_MS = 50;
+/**
+ * 메아리 고리로 줄별 실행 횟수를 셀 때 느려지는 만큼 늘리는 시간 상한 배수.
+ * sys.monitoring LINE 이벤트는 실행을 약 3.5배 느리게 한다(design.md §9.6). 여유를 두어 4배
+ */
+export const LINE_COUNT_SLOWDOWN = 4;
 /** 소프트 중단 뒤 이 시간 안에 응답이 없으면 워커를 강제 종료(§9.5 2단계) */
 export const HARD_STOP_GRACE_MS = 1000;
 

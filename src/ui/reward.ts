@@ -3,6 +3,7 @@ import type { Problem, RecommendedProblem } from "../contracts/content";
 import type { RewardSummary } from "../contracts/state";
 import type { RewardUI } from "../contracts/ui";
 import { h } from "./dom";
+import { bossKind } from "./battleLogic";
 import type { UiEnv } from "./env";
 
 export const PROGRAMMERS_URL = "https://school.programmers.co.kr/learn/courses/30/lessons/";
@@ -43,7 +44,7 @@ export function createRewardUI(env: UiEnv): RewardUI {
         if (summary.penalty >= 1) rows.push(row("대가", "해설서를 열어서 이번 보상은 없어", "reward-penalty"));
         else if (summary.penalty > 0) rows.push(row("힌트 대가", `보상 −${Math.round(summary.penalty * 100)}%`, "reward-penalty"));
         const els: HTMLElement[] = [
-          h("div", { class: "reward-caption" }, problem.boss ? "보스 격파!" : "승리!"),
+          h("div", { class: "reward-caption" }, problem.boss ? `${bossKind(problem)} 격파!` : "승리!"),
           h("h2", { class: "reward-title" }, `${problem.enemy.name} 정화`),
           h("p", { class: "reward-sub" }, problem.title),
           h("div", { class: "reward-rows" }, ...rows),

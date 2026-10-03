@@ -1,9 +1,18 @@
 // 전투 밖의 진행 규칙: 레슨 완료, 캠프파이어, 불러온 직후 정산, HUD 값.
+import type { Problem } from "../contracts/content";
 import type { SaveData } from "../contracts/state";
 import type { HudState } from "../contracts/ui";
 import { levelFromXp, levelProgress, maxHp } from "./level";
 import { settleStreak, weekDays } from "./streak";
 import { studyDate } from "./time";
+
+/**
+ * 지역 클리어를 일으키는 최종 보스인지(docs/phase3/region06-spec.md §7.1).
+ * 중간 보스(midBoss)도 boss라서 시간 결계·판정 공개 방식은 같지만, 지역 클리어·클리어 연출은 최종 보스로만
+ */
+export function isFinalBoss(problem: Pick<Problem, "boss" | "midBoss">): boolean {
+  return problem.boss && problem.midBoss !== true;
+}
 
 /** 레슨 완료 XP(§7.1) */
 export const LESSON_XP = 30;
