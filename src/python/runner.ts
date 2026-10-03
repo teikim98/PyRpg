@@ -3,6 +3,7 @@ import type { FunctionTest, Problem, ProblemTest, StdinTest, Verdict } from "../
 import type {
   JudgeOptions,
   JudgeResult,
+  JudgeStage,
   PyError,
   PythonRunner,
   RunOutput,
@@ -372,10 +373,17 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
     timeMs: number;
   }
 
-  async function runOneTest(problem: Problem, code: string, t: ProblemTest, limit: number): Promise<OneTest> {
+  /** 진행 알림. 입력을 새로 만들기 직전(beforeGenerate)과 워커에 테스트를 보내기 직전(beforeRun) */
+  interface TestHooks {
+    beforeGenerate?: () => void;
+    beforeRun?: () => void;
+  }
+
+  async function runOneTest(problem: Problem, code: string, t: ProblemTest, limit: number, hooks: TestHooks = {}): Promise<OneTest> {
     let data: { in: string; out: string } | undefined;
     if (isStdinTest(t)) {
       try {
+        if (t.gen && !generated.has(t)) hooks.beforeGenerate?.();
         data = await stdinData(t);
       } catch (e) {
         return { exceeded: false, fatal: false, internalError: String(e), timeMs: 0 };
@@ -391,6 +399,7 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
           expect: (t as FunctionTest).expect,
           compare: problem.compare ? JSON.stringify(problem.compare) : "",
         };
+    hooks.beforeRun?.();
     const ex = await execute<TestReply>(body, limit, (res) => (res.ok && res.type === "test" ? res.result : undefined));
     const r = ex.reply;
     const exceeded =
@@ -427,8 +436,18 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
     let barrierTleConfirmed = false;
     /** stopOnTle 페이즈에서 TLE가 확정되면 그 페이즈의 남은 테스트는 실행하지 않고 TLE */
     const skipTlePhases = new Set<number>();
+    // 진행 표시(시전 중 메시지 칸): 새로 만들 큰 입력 수(캐시된 것은 빼고)와 지금까지 만든 수
+    const emitStage = (stage: JudgeStage) => {
+      try {
+        opts.onStage?.(stage);
+      } catch {
+        /* 연출 콜백 오류는 채점에 영향 주지 않는다 */
+      }
+    };
+    const genTotal = selected.filter(({ t }) => isStdinTest(t) && t.gen && !generated.has(t)).length;
+    let genIndex = 0;
 
-    for (const { t, index } of selected) {
+    for (const [order, { t, index }] of selected.entries()) {
       const base = {
         index,
         public: t.public === true,
@@ -445,11 +464,15 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
       } else {
         const budget = usesBudget(problem, t);
         const limit = testLimitMs(problem, t, refMs);
-        let one = await runOneTest(problem, code, t, limit);
+        const testStage = (retry: boolean): JudgeStage => ({ kind: "test", index: order + 1, total: selected.length, phase: base.phase, retry });
+        let one = await runOneTest(problem, code, t, limit, {
+          beforeGenerate: () => emitStage({ kind: "generate", index: Math.min(++genIndex, genTotal), total: genTotal }),
+          beforeRun: () => emitStage(testStage(false)),
+        });
         // 시간 결계 경계에서는 한 번 더 실행해서 두 번 다 넘을 때만 TLE(§9.6 4단계).
         // 같은 채점에서 이미 시간 결계 TLE가 확정됐으면 다시 확인하지 않는다
         if (one.exceeded && !one.fatal && needsTleConfirmation(problem, t, barrierTleConfirmed)) {
-          const again = await runOneTest(problem, code, t, limit);
+          const again = await runOneTest(problem, code, t, limit, { beforeRun: () => emitStage(testStage(true)) });
           if (!again.exceeded || again.fatal) one = again;
         }
         if (one.fatal) {

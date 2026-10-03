@@ -544,7 +544,7 @@ export class App {
         for (const item of itemsRewardedBy(this.deps.content.items, problem.id)) {
           if (owned(this.save, item.id) > 0) continue;
           this.save.inventory[item.id] = 1;
-          this.notices.push(`${item.name}을(를) 얻었다! 메뉴 > 장비에서 장착할 수 있어.`);
+          this.notices.push(`${item.name}${objectParticle(item.name)} 얻었다! 메뉴 > 장비에서 장착할 수 있어.`);
         }
       }
     }
@@ -785,10 +785,10 @@ export class App {
         this.save = buyItem(this.save, item);
         await this.persist();
         this.refreshHud();
-        if (item.kind === "accessory") return `${item.name}을(를) 샀어! 메뉴의 장비에서 장착해 봐.`;
-        if (item.kind === "cosmetic") return `${item.name}을(를) 샀어! 메뉴의 장비 → 꾸미기에서 적용할 수 있어.`;
+        if (item.kind === "accessory") return `${item.name}${objectParticle(item.name)} 샀어! 메뉴의 장비에서 장착해 봐.`;
+        if (item.kind === "cosmetic") return `${item.name}${objectParticle(item.name)} 샀어! 메뉴의 장비 → 꾸미기에서 적용할 수 있어.`;
         if (item.kind === "iceRune") return `얼음 룬을 샀어! 빠진 날이 생기면 스트릭을 지켜 줄 거야.`;
-        return `${item.name}을(를) 샀어! (보유 ${owned(this.save, item.id)})`;
+        return `${item.name}${objectParticle(item.name)} 샀어! (보유 ${owned(this.save, item.id)})`;
       },
       this.names,
     );
@@ -826,7 +826,7 @@ export class App {
         this.save.player.hp = Math.min(this.save.player.hp, maxHp(levelFromXp(this.save.player.xp), this.hpBonus()));
         await this.persist();
         this.refreshHud();
-        return r.equipped ? `${item.name} 장착!` : `${item.name}을(를) 뺐어.`;
+        return r.equipped ? `${item.name} 장착!` : `${item.name}${objectParticle(item.name)} 뺐어.`;
       },
       toggleCosmetic: async (id) => {
         const item = this.item(id);
@@ -931,7 +931,7 @@ export class App {
     const r = awardTitles(this.save, this.deps.content.titles, this.deps.content.regions);
     if (!r.earned.length) return;
     this.save = r.save;
-    for (const t of r.earned) this.notices.push(`칭호 「${t.name}」를 얻었다! 메뉴의 칭호에서 달 수 있어.`);
+    for (const t of r.earned) this.notices.push(`칭호 「${t.name}」${objectParticle(t.name)} 얻었다! 메뉴의 칭호에서 달 수 있어.`);
   }
 
   /** 모아 둔 알림을 토스트로 보이고, 퀘스트로 오른 레벨이 있으면 레벨업 대사 */

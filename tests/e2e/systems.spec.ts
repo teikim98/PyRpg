@@ -1,6 +1,6 @@
 // 시스템 화면 E2E(단위 3-1, design.md §7.2~§7.6): 실제 게임(/?e2e)에서 실제 키·클릭으로
 // 그림자 게시판 → 그림자전, 일일 퀘스트와 상자, 상점, 장비(망토·깃털), 칭호를 확인한다.
-// 단위 3-4: 기록관의 안경(Traceback 해설 아래 코덱스 바로가기, region04-spec.md §6)
+// 단위 3-4: 기록관의 안경(Traceback 해설의 코덱스 바로가기, region04-spec.md §6. 단위 3-5부터 해설 위)
 // PW_PORT=4194 npx playwright test tests/e2e/systems.spec.ts
 import { mkdirSync, readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
@@ -369,7 +369,7 @@ test.describe.serial("기록관의 안경(단위 3-4)", () => {
     await closeAll(page);
     expect((await save(page)).equipment).toEqual(["archivist-glasses"]);
 
-    // 진단이 없는 RE: 해설 본문 아래에 바로가기(L1-2 변환의 주문)
+    // 진단이 없는 RE: 해설 위(첫 줄)에 바로가기(L1-2 변환의 주문)
     await bump(page, "m_P0101");
     await settle(page, ".battle-modal");
     const concat = "a, b = input().split()\nprint(a + 1)";
@@ -377,7 +377,8 @@ test.describe.serial("기록관의 안경(단위 3-4)", () => {
     await cast(page);
     await expect(msgText(page)).toContainText("TypeError");
     await expect(codexLink(page)).toHaveText("📖 코덱스: 변환의 주문: 문자열과 숫자");
-    await expect(page.locator(".battle-msg-text .err-codex .codex-link")).toBeVisible();
+    // 바로가기는 해설 위(첫 줄 끝)에 있다(해설이 길어도 스크롤 없이 보이게, 단위 3-5)
+    await expect(page.locator(".battle-msg-text .err-lead .codex-link")).toBeVisible();
     await shot(page, "systems-glasses-link.png");
     await roundTrip(page, "L1-2", "변환의 주문: 문자열과 숫자", concat);
 

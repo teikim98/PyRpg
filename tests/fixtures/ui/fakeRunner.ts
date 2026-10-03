@@ -124,7 +124,8 @@ export class FakeRunner implements PythonRunner {
     const failSet = new Set(spec.verdict === "AC" ? [] : spec.fail ?? inScope.map((x) => x.index));
     const limitMs = problem.timeLimitMs;
     const tests: TestResult[] = [];
-    for (const { t, index } of inScope) {
+    for (const [order, { t, index }] of inScope.entries()) {
+      opts.onStage?.({ kind: "test", index: order + 1, total: inScope.length, phase: t.phase ?? 1, retry: false });
       await new Promise((r) => setTimeout(r, this.stepMs));
       const failed = failSet.has(index);
       const verdict: Verdict = failed ? spec.verdict : "AC";

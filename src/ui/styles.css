@@ -1485,7 +1485,25 @@
 
 /* 기록관의 안경: 해설 규칙의 레슨을 펼친 코덱스로 가는 바로가기(배운 레슨만) */
 .pyrpg-ui .battle-msg .err-codex {
-  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+/* 진단 없는 RE에서 바로가기가 있을 때의 첫 줄: '주문이 폭발했어! 3번째 줄에서 TypeError가 났어. [📖 코덱스]' */
+.pyrpg-ui .battle-msg .err-lead {
+  margin-bottom: 2px;
+}
+
+/* 시전 중 진행 표시: '큰 입력 준비 중… (1/4)', '2페이즈 · 시험 3/4' */
+.pyrpg-ui .battle-msg .cast-progress {
+  margin-top: 2px;
+  color: var(--muted);
+  font-family: Galmuri11, sans-serif;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pyrpg-ui .battle-msg .cast-progress[hidden] {
+  display: none;
 }
 
 .pyrpg-ui .battle-msg .codex-link {

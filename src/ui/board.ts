@@ -1,5 +1,6 @@
 // 그림자 게시판(design.md §7.6) + 일일 퀘스트·스트릭(§7.5). 마을 게시판과 메뉴의 '퀘스트'에서 연다.
 import type { BoardUI, BoardView, NameContext, QuestPanelView, StreakView } from "../contracts/ui";
+import { withJosa } from "../app/josa";
 import { h } from "./dom";
 import type { UiEnv } from "./env";
 
@@ -67,7 +68,7 @@ export function streakPanel(s: StreakView): HTMLElement {
       h(
         "p",
         { class: "streak-repair", role: "status" },
-        `끊긴 ${s.repair.previousStreak}일 스트릭을 되살릴 수 있어! 오늘 전투 ${s.repair.battlesLeft}개만 더 끝내면 ${s.repair.missedDays.join(", ")}이(가) 메워져.`,
+        `끊긴 ${s.repair.previousStreak}일 스트릭을 되살릴 수 있어! 오늘 전투 ${s.repair.battlesLeft}개만 더 끝내면 ${withJosa(s.repair.missedDays.join(", "), "이/가")} 메워져.`,
       ),
     );
   }
