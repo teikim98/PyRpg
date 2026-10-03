@@ -4,5 +4,13 @@
   "name": "거울 호수",
   "introDialogue": "region_intro",
   "clearDialogue": "region_clear",
-  "recommended": []
+  "recommended": [
+    { "site": "programmers", "id": 12915, "title": "문자열 내 마음대로 정렬하기", "level": "Lv.1" },
+    { "site": "programmers", "id": 68936, "title": "쿼드압축 후 개수 세기", "level": "Lv.2" },
+    { "site": "programmers", "id": 12946, "title": "하노이의 탑", "level": "Lv.2" },
+    { "site": "programmers", "id": 12945, "title": "피보나치 수", "level": "Lv.2" },
+    { "site": "boj", "id": 10870, "title": "피보나치 수 5", "level": "B2" },
+    { "site": "boj", "id": 1181, "title": "단어 정렬", "level": "S5" },
+    { "site": "boj", "id": 10825, "title": "국영수", "level": "미확인" }
+  ]
 }
