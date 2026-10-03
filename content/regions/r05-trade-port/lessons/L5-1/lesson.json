@@ -1,0 +1,16 @@
+{
+  "id": "L5-1",
+  "title": "묶음의 주문: 튜플",
+  "scroll": {
+    "id": "scroll.tuple",
+    "name": "묶음의 주문서",
+    "summary": "`(a, b)`로 묶고(하나면 `(a,)`), 칸 번호로 읽지만 바꿀 수는 없다(`t[0] = x`는 TypeError). `x, y = t`로 풀고, `a, b = b, a`로 맞바꾸고, `return lo, hi`로 여러 값을 돌려준다. `for name, price in pairs:`로 꺼내며 풀기. 튜플끼리는 앞 칸부터 차례로 비교한다."
+  },
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸을 채워서 `a`와 `b`를 맞바꿔 봐. `2 1`이 출력돼야 해.",
+    "code": "a, b = 1, 2\na, b = ___\nprint(a, b)\n",
+    "expectedOutput": "2 1\n",
+    "answer": "b, a"
+  }
+}

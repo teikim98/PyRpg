@@ -1,0 +1,16 @@
+{
+  "id": "L5-5",
+  "title": "부두 줄의 주문: deque",
+  "scroll": {
+    "id": "scroll.deque",
+    "name": "부두 줄의 주문서",
+    "summary": "`from collections import deque`. `append`/`pop`은 오른쪽 끝, `appendleft`/`popleft`는 왼쪽 끝. `q[0]`, `q[-1]`, `len(q)`. 빈 deque에서 빼면 IndexError라 `if q:`로 먼저 확인. `rotate(k)`는 오른쪽으로 k칸(음수면 왼쪽). `list.pop(0)`도 되지만 긴 줄에서는 느리다."
+  },
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 메서드 이름을 채워서 줄 맨 앞의 `1`을 빼서 출력해 봐.",
+    "code": "from collections import deque\nq = deque([1, 2, 3])\nprint(q.___())\n",
+    "expectedOutput": "1\n",
+    "answer": "popleft"
+  }
+}

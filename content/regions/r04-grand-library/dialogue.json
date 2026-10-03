@@ -99,7 +99,7 @@
     { "speaker": "companion", "emotion": "worried", "text": "사서 골렘이 쌓아 둔 책장 벽이야. 골렘이 시계 룬을 놓아줘야 이 책들도 제자리로 돌아갈 거야." }
   ],
   "to_be_continued": [
-    { "speaker": "companion", "emotion": "happy", "text": "책장 벽이 열렸다! 동쪽에서 짭짤한 바람이 불어와. 갈매기 소리도 들려. 이 너머에 큰 항구가 있대!" },
-    { "speaker": "system", "text": "무너진 대도서관 이야기는 여기까지입니다. 다음 지역은 준비 중이에요. 플레이해 주셔서 고맙습니다!" }
+    { "speaker": "companion", "emotion": "happy", "text": "책장 벽이 열렸다! 동쪽에서 짭짤한 바람이 불어와. 갈매기 소리도 들려. 이 문 너머로 해안 길이 이어져 있어!" },
+    { "speaker": "companion", "emotion": "neutral", "text": "해안 길을 따라 내려가면 큰 항구가 있대. 온 세상의 배가 드나들던 교역항! 기초 주문은 다 되찾았으니까, 이제 도구를 모으러 가 보자." }
   ]
 }
