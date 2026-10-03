@@ -196,8 +196,8 @@ export interface ParticleSpec {
 
 export const PARTICLE_SPECS: Record<Exclude<ParticleKind, "none">, ParticleSpec> = {
   sparkle: {
-    density: 16,
-    max: 26,
+    density: 20,
+    max: 30,
     colors: [0xffd23f, 0xffe066, 0xfff09a],
     shapes: ["dot"],
     vx: [-1.2, 1.2],

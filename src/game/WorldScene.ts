@@ -158,7 +158,7 @@ export class WorldScene extends Phaser.Scene {
       }
     }
     for (const name of Object.keys(manifest.sprites)) this.ensureSprite(name);
-    for (const name of this.options.testSheets ?? []) this.ensureSprite(name);
+    for (const name of this.options.testSheets ?? []) if (!manifest.sprites[name]) this.ensureSprite(name);
 
     this.player = this.add.sprite(0, 0, "player", 0).setOrigin(0.5, 1).setVisible(false);
     this.nuri = this.add.sprite(0, 0, "nuri", 0).setOrigin(0.5, 1).setVisible(false);

@@ -309,3 +309,226 @@ test.describe("world (dev/world.html?map=r03)", () => {
     await pressAndStay(page, "ArrowUp");
   });
 });
+
+// ── 그래픽 개편(docs/art-overhaul/plan.md §3): 걷기·제자리 애니메이션, 타일 애니메이션, 화면 연출 ──
+const ART_SCREENS = "docs/art-overhaul/screens";
+
+interface Sample {
+  t: number;
+  p: { frame: number; bob: number; mode: string; facing: string };
+  n: { frame: number; bob: number; mode: string };
+}
+type SamplerWindow = { __samples: Sample[]; __sampling: boolean };
+
+/** 매 화면 프레임마다 플레이어·누리의 그려진 프레임을 기록한다 */
+async function startSampling(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const w = window as unknown as SamplerWindow;
+    w.__samples = [];
+    w.__sampling = true;
+    const tick = () => {
+      if (!w.__sampling) return;
+      const s = window.__world!.inspect!();
+      w.__samples.push({ t: performance.now(), p: s.player, n: s.nuri });
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+}
+
+async function stopSampling(page: Page): Promise<Sample[]> {
+  return page.evaluate(() => {
+    const w = window as unknown as SamplerWindow;
+    w.__sampling = false;
+    return w.__samples;
+  });
+}
+
+/** 연속으로 같은 값은 하나로 */
+const runs = <T>(xs: T[]): T[] => xs.filter((x, i) => i === 0 || x !== xs[i - 1]);
+
+const inspect = (page: Page) => page.evaluate(() => window.__world!.inspect!());
+
+async function bootWith(page: Page, query: string): Promise<void> {
+  await page.goto(`/dev/world.html${query}`);
+  await page.waitForFunction(() => window.__worldReady === true, null, { timeout: 30_000 });
+}
+
+test.describe("world animation and ambience (art overhaul)", () => {
+  test("new 16×24 sheet: holding a key walks 1→2→3→0 without restarting between steps, bobbing on the foot frames", async ({ page }) => {
+    await bootWith(page, "?sheet=new&fx=off");
+    expect((await inspect(page)).player.layout).toBe("grid6x4");
+    await teleport(page, 5, 25, "right");
+    await startSampling(page);
+    await page.keyboard.down("ArrowRight");
+    await page.waitForTimeout(900);
+    await page.keyboard.up("ArrowRight");
+    await page.waitForTimeout(400);
+    const samples = await stopSampling(page);
+    const walking = samples.filter((s) => s.p.mode === "walk");
+    expect(walking.length).toBeGreaterThan(20);
+    // 오른쪽 행(2) × 6 + 열
+    const cols = walking.map((s) => s.p.frame - 2 * 6);
+    for (const c of cols) expect(c).toBeGreaterThanOrEqual(0);
+    for (const c of cols) expect(c).toBeLessThanOrEqual(3);
+    const seq = runs(cols);
+    // 걸음 경계에서 처음(왼발)으로 돌아가지 않고 이어진다: 다음 열은 늘 주기의 다음 칸
+    const next: Record<number, number> = { 1: 2, 2: 3, 3: 0, 0: 1 };
+    for (let i = 1; i < seq.length; i++) expect(seq[i], `walk sequence ${seq.join(",")}`).toBe(next[seq[i - 1]]);
+    expect(seq.length).toBeGreaterThanOrEqual(10);
+    // 발 딛는 프레임(1, 3)에서만 1px 올라간다
+    for (const s of walking) expect(s.p.bob).toBe([1, 3].includes(s.p.frame - 12) ? 1 : 0);
+    // 누리는 반 박자 어긋나서 같은 순간에 같은 열이 아니다
+    const both = walking.filter((s) => s.n.mode === "walk");
+    expect(both.length).toBeGreaterThan(10);
+    const sameCol = both.filter((s) => s.n.frame % 6 === s.p.frame % 6).length;
+    expect(sameCol / both.length).toBeLessThan(0.2);
+    // 멈추면 서기
+    const end = await inspect(page);
+    expect(end.player.mode).toBe("idle");
+    expect([0, 5]).toContain(end.player.frame - 12);
+    expect(end.player.bob).toBe(0);
+  });
+
+  test("old 16×16 sheet keeps working and no longer freezes between steps", async ({ page }) => {
+    await bootWith(page, "?fx=off");
+    expect((await inspect(page)).player.layout).toBe("legacy8");
+    await teleport(page, 5, 25, "right");
+    await startSampling(page);
+    await page.keyboard.down("ArrowRight");
+    await page.waitForTimeout(800);
+    await page.keyboard.up("ArrowRight");
+    await page.waitForTimeout(300);
+    const walking = (await stopSampling(page)).filter((s) => s.p.mode === "walk");
+    const seq = runs(walking.map((s) => s.p.frame));
+    // 오른쪽 = [서기 4, 걸음 5]가 걸음마다 번갈아(한 걸음에 한 번씩 걸음 프레임)
+    expect(new Set(seq)).toEqual(new Set([4, 5]));
+    expect(seq.length).toBeGreaterThanOrEqual(8);
+    expect((await pos(page)).x).toBeGreaterThanOrEqual(9);
+  });
+
+  test("standing still breathes and blinks; bumping a wall walks in place", async ({ page }) => {
+    await bootWith(page, "?sheet=new&fx=off");
+    await teleport(page, 5, 25, "down");
+    await startSampling(page);
+    await page.waitForTimeout(5200);
+    const idle = await stopSampling(page);
+    const frames = new Set(idle.map((s) => s.p.frame));
+    expect(frames).toContain(4); // 숨쉬기(아래 행)
+    expect(frames).toContain(5); // 눈 깜빡임
+    // 처음 1초 남짓은 숨쉬지 않는다
+    expect(idle.filter((s) => s.t - idle[0].t < 1200).every((s) => s.p.frame !== 4)).toBe(true);
+
+    // 시작 칸 왼쪽은 화단: 왼쪽 키를 누르고 있으면 제자리걸음, 떼면 서기
+    const start = await page.evaluate(() => window.__world!.getObjects().find((o) => o.type === "spawn")!);
+    await teleport(page, start.x, start.y, "down");
+    await page.keyboard.down("ArrowLeft");
+    await page.waitForTimeout(500);
+    const bump = await inspect(page);
+    expect(bump.player.mode).toBe("bump");
+    expect(bump.player.facing).toBe("left");
+    expect(bump.player.bob).toBe(0);
+    await page.keyboard.up("ArrowLeft");
+    await expect.poll(async () => (await inspect(page)).player.mode).toBe("idle");
+    expect((await pos(page)).x).toBe(start.x);
+  });
+
+  test("NPCs idle on the new sheet and turn to face the player when spoken to", async ({ page }) => {
+    await bootWith(page, "?sheet=new&fx=off");
+    const npc = (await page.evaluate(() => window.__world!.getObjects())).find((o) => o.id === "npc_frozen_merchant")!;
+    const before = (await inspect(page)).npcs.npc_frozen_merchant;
+    expect(before.layout).toBe("grid6x4");
+    expect(before.facing).toBe("down");
+    await teleport(page, npc.x - 1, npc.y, "right");
+    await page.keyboard.press("Space");
+    await expect.poll(async () => (await inspect(page)).npcs.npc_frozen_merchant.facing).toBe("left");
+    expect(Math.floor((await inspect(page)).npcs.npc_frozen_merchant.frame / 6)).toBe(1);
+    // 플레이어가 한 칸 움직이면 원래 방향으로
+    await step(page, "ArrowDown");
+    await expect.poll(async () => (await inspect(page)).npcs.npc_frozen_merchant.facing).toBe("down");
+  });
+
+  test("monsters loop 4 frames on 4-frame sheets and 2 frames on old sheets; chests stay closed", async ({ page }) => {
+    const seen = async () => {
+      const frames: Record<string, Set<number>> = {};
+      for (let i = 0; i < 16; i++) {
+        const objs = (await inspect(page)).objects;
+        for (const [id, o] of Object.entries(objs)) (frames[id] ??= new Set()).add(o.frame);
+        await page.waitForTimeout(90);
+      }
+      return frames;
+    };
+    await bootWith(page, "?sheet=new&fx=off");
+    let frames = await seen();
+    let objs = (await inspect(page)).objects;
+    expect(objs.m_P0101.frames).toBe(4);
+    expect(frames.m_P0101).toEqual(new Set([0, 1, 2, 3]));
+    expect(objs.m_P0105.key).toBe("boss_stair_mimic");
+    expect(frames.m_P0105.size).toBe(4);
+    expect(frames.chest_shop).toEqual(new Set([0]));
+
+    await bootWith(page, "?fx=off");
+    frames = await seen();
+    objs = (await inspect(page)).objects;
+    expect(objs.m_P0101.frames).toBe(2);
+    expect(frames.m_P0101).toEqual(new Set([0, 1]));
+  });
+
+  test("tileAnimations swap the painted tile over time without touching map data", async ({ page }) => {
+    await bootWith(page, "?fx=off");
+    // 지금 manifest에는 tileAnimations가 없다(아트 담당이 추가)
+    expect((await inspect(page)).tileAnimations).toEqual([]);
+    await bootWith(page, "?tileanim=test&fx=off");
+    const water = (await inspect(page)).tileAnimations[0];
+    expect(water.name).toBe("water");
+    expect(water.cells).toBeGreaterThan(0);
+    const current = new Set<number>();
+    for (let i = 0; i < 12; i++) {
+      current.add((await inspect(page)).tileAnimations[0].current);
+      await page.waitForTimeout(70);
+    }
+    expect(current).toEqual(new Set(water.frames));
+  });
+
+  test("region ambience: grade + vignette filters and floating particles, switchable", async ({ page }) => {
+    await bootWith(page, "");
+    const a = (await inspect(page)).ambience;
+    expect(a).toMatchObject({ grade: "dusty_teal", particles: "sparkle", filters: true, enabled: true });
+    expect(a.particleCount).toBeGreaterThan(5);
+    await page.evaluate(() => window.__world!.setAmbienceEnabled!(false));
+    expect((await inspect(page)).ambience.enabled).toBe(false);
+
+    await bootWith(page, "?map=r03");
+    expect((await inspect(page)).ambience).toMatchObject({ grade: "cave", particles: "dust", filters: true });
+    await bootWith(page, "?map=r02&fx=off");
+    expect((await inspect(page)).ambience).toMatchObject({ grade: "forest", particles: "leaves", enabled: false });
+  });
+
+  test("screens: Echo Village walking with ambience (new test sheet and current art), doorway under the eave", async ({ page }) => {
+    // 첫 화면(시작 칸 근처): 연출 끈 것 / 켠 것
+    await bootWith(page, "?sheet=new&fx=off");
+    await page.waitForTimeout(400);
+    await page.locator("#world").screenshot({ path: `${ART_SCREENS}/engine-village-nofx.png` });
+    await bootWith(page, "?sheet=new");
+    await page.waitForTimeout(400);
+    await page.locator("#world").screenshot({ path: `${ART_SCREENS}/engine-village-fx.png` });
+    // 길 위를 걷는 도중(발 딛는 프레임)
+    await teleport(page, 12, 25, "right");
+    await page.keyboard.down("ArrowRight");
+    await page.waitForFunction(() => {
+      const p = window.__world!.inspect!().player;
+      return p.mode === "walk" && p.bob === 1;
+    });
+    await page.locator("#world").screenshot({ path: `${ART_SCREENS}/engine-walk-fx.png` });
+    await page.keyboard.up("ArrowRight");
+    // 문간: 머리가 지붕 처마 밑으로
+    await teleport(page, 4, 23, "down");
+    await page.waitForTimeout(300);
+    await page.locator("#world").screenshot({ path: `${ART_SCREENS}/engine-doorway.png` });
+    // 지금 그림(옛 16×16 시트) 그대로도 연출과 함께 동작
+    await bootWith(page, "");
+    await teleport(page, 12, 25, "right");
+    await page.waitForTimeout(400);
+    await page.locator("#world").screenshot({ path: `${ART_SCREENS}/engine-village-current-art.png` });
+  });
+});
