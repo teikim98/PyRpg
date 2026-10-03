@@ -1,0 +1,86 @@
+{
+  "id": "P0504",
+  "title": "단어 장부",
+  "kind": "function",
+  "entry": "solution",
+  "enemy": {"name": "장부 갈매기", "sprite": "monster_ledger_gull", "attack": 20},
+  "requires": ["scroll.dict"],
+  "concept": "scroll.dict",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "compare": {"sequenceAsList": true},
+  "estimatedMinutes": 7,
+  "tests": [
+    {"args": "(['salt', 'rope', 'salt', 'tea', 'rope', 'salt'],)", "expect": "[('salt', 3), ('rope', 2), ('tea', 1)]", "public": true, "note": "기본 동작"},
+    {"args": "(['fish'],)", "expect": "[('fish', 1)]", "note": "경계: 이름 하나"},
+    {"args": "(['a', 'a', 'a', 'a', 'a'],)", "expect": "[('a', 5)]", "note": "모두 같은 이름"},
+    {"args": "(['d', 'c', 'b', 'a'],)", "expect": "[('d', 1), ('c', 1), ('b', 1), ('a', 1)]", "note": "모두 다른 이름(사전 역순으로 나옴)"},
+    {"args": "(['ab', 'a', 'b', 'ab', 'ba', 'a'],)", "expect": "[('ab', 2), ('a', 2), ('b', 1), ('ba', 1)]", "note": "비슷한 이름은 다른 이름"},
+    {"args": "(['tane', 'nene', 'riri', 'neku', 'kuta', 'kuta', 'ripo', 'riku', 'rine', 'pori', 'tane', 'pota', 'tane', 'nene', 'neri', 'rine', 'kupo', 'poku', 'rine', 'neri', 'tapo', 'tapo', 'riri', 'rita', 'poku', 'neta', 'taku', 'kuri', 'taku', 'popo', 'tari', 'tane', 'tane', 'taku', 'tari', 'neta', 'kupo', 'nepo', 'pota', 'kuta', 'tapo', 'riri', 'kupo', 'popo', 'rine', 'neri', 'tapo', 'nene', 'ripo', 'kune', 'pota', 'neta', 'kupo', 'nepo', 'poku', 'taku', 'tane', 'ripo', 'riku', 'tari', 'pota', 'rita', 'pone', 'kuri', 'pone', 'pori', 'pori', 'neri', 'rita', 'kuku', 'kupo', 'tata', 'tari', 'tata', 'kuta', 'tari', 'nepo', 'tari', 'tane', 'riri', 'pori', 'tane', 'popo', 'neri', 'kune', 'neku', 'popo', 'rita', 'pone', 'pori', 'pone', 'tari', 'popo', 'taku', 'neri', 'tapo', 'pone', 'kuri', 'popo', 'kune', 'tapo', 'poku', 'kuri', 'kuri', 'poku', 'taku', 'rita', 'neta', 'nene', 'tata', 'kuta', 'rita', 'popo', 'kupo', 'pori', 'pone', 'rita', 'kuku', 'pori', 'nepo', 'nene', 'pori', 'pota', 'rine', 'riku', 'kuku', 'tari', 'tapo', 'kuta', 'rine', 'neku', 'rita', 'neri', 'poku', 'riku', 'kupo', 'kupo', 'kupo', 'tane', 'kupo', 'nene', 'rine', 'pone', 'kupo', 'pone', 'nepo', 'tapo', 'tata', 'kune', 'pone', 'kupo', 'neku', 'kuta', 'poku', 'kuta', 'nene', 'tari', 'tane', 'neta', 'pone', 'neri', 'tapo', 'kupo', 'pone', 'tane', 'neri', 'tapo', 'nene', 'kuta', 'riku', 'tari', 'neku', 'poku', 'kuri', 'neri', 'popo', 'popo', 'riku', 'riku', 'kuku', 'kupo', 'kuri', 'kuku', 'nepo', 'ripo', 'pori', 'popo', 'taku', 'tane', 'neri', 'kuku', 'kuku', 'neri', 'neta', 'kuta', 'tane', 'neri', 'riri', 'rine', 'nene', 'neri', 'rita', 'rita', 'neku', 'pone', 'popo', 'ripo', 'neku', 'poku', 'tapo', 'neri', 'popo', 'nepo', 'pota', 'ripo', 'nene', 'nepo', 'tapo', 'pota', 'kuku', 'rita', 'ripo', 'riku', 'poku', 'tane', 'riku', 'neta', 'neku', 'rita', 'rine', 'tapo', 'tapo', 'poku', 'nepo', 'pori', 'nene', 'kuta', 'neku', 'tapo', 'neku', 'rita', 'kuta', 'riku', 'nene', 'nene', 'pori', 'kune', 'tane', 'kuri', 'tane', 'kuri', 'poku', 'tane', 'kuta', 'neri', 'kune', 'riku', 'riri', 'popo', 'kupo', 'pori', 'neku', 'popo', 'kuku', 'rine', 'tane', 'pota', 'pota', 'kuta', 'neta', 'tane', 'kuri', 'ripo', 'tapo', 'rine', 'neku', 'pota', 'tapo', 'popo', 'kuta', 'neta', 'kuku', 'tapo', 'kune', 'popo', 'poku', 'rita', 'riku', 'tane', 'tari', 'tari', 'nene', 'tane', 'pone', 'kune', 'taku', 'rita', 'tapo', 'rine', 'kuku', 'kupo', 'taku', 'popo', 'kuta', 'tata', 'popo', 'tata', 'tapo', 'kune', 'kuri', 'neku', 'ripo', 'neku', 'neri', 'taku', 'riku', 'pota', 'pota', 'neku', 'popo', 'pori', 'tane', 'tane', 'neku', 'pota', 'kuku', 'kuku', 'kuri', 'tata', 'popo', 'neku', 'tapo', 'nene', 'pori', 'neku', 'tane', 'ripo', 'taku', 'riku', 'neku', 'kupo', 'tane', 'tane', 'poku', 'ripo', 'kupo', 'pota', 'rine', 'popo', 'taku', 'ripo', 'pone', 'tata', 'popo', 'neri', 'pone', 'neri', 'taku', 'popo', 'nepo', 'kuri', 'rine', 'taku', 'poku', 'kuri', 'poku', 'pota', 'tane', 'pone', 'poku', 'kupo', 'neri', 'taku', 'popo', 'tapo', 'kune', 'ripo', 'nepo', 'nene', 'tane', 'tari', 'neta', 'nene', 'tapo', 'neku', 'nepo', 'neku', 'riku', 'tapo', 'kuku', 'kuta', 'tapo', 'kune', 'kuta', 'kupo', 'neri', 'pota', 'riku', 'rita', 'neku', 'neku', 'neri', 'neku', 'rine', 'kuta', 'kuri', 'kuta', 'neta', 'ripo', 'ripo', 'rine', 'rine', 'nepo', 'nepo', 'tane', 'rita', 'riku', 'tane', 'popo', 'pota', 'nene', 'kune', 'kune', 'nepo', 'tari', 'nepo', 'kuri', 'tane', 'tane', 'popo', 'pori', 'taku', 'tata', 'tapo', 'pone', 'neku', 'poku', 'neku', 'kune', 'popo', 'nene', 'tapo', 'tapo', 'tari', 'rine', 'neku', 'riri', 'neku', 'riku', 'neku', 'tata', 'rine', 'nepo', 'kune', 'pota', 'pota', 'neta', 'poku', 'pota', 'kune', 'kuri', 'rine', 'neta', 'taku', 'neta', 'kune', 'tapo', 'tari', 'riku', 'tari', 'nepo', 'ripo', 'neku', 'kune', 'riku', 'tane', 'poku', 'riri', 'tane', 'kune', 'ripo', 'pone', 'poku', 'ripo', 'neta', 'riri', 'pone', 'pota', 'riri', 'poku', 'nene', 'kune', 'pota', 'neta', 'pori', 'pori', 'pota', 'tane', 'riri', 'neri', 'tata', 'popo', 'ripo', 'rita', 'tapo', 'pota', 'kuta', 'popo', 'taku', 'pori', 'pone', 'neri', 'tata', 'kuku', 'poku', 'popo', 'tapo', 'neta', 'ripo', 'poku', 'nene', 'nepo', 'tane', 'kuku', 'pori', 'poku', 'tari', 'rita', 'rita', 'kune', 'rita', 'rine', 'popo', 'neku', 'nene', 'nene', 'nene', 'poku', 'rine', 'ripo', 'neku', 'tari', 'kuta', 'pota', 'neta', 'taku', 'neta', 'pota', 'rita', 'popo', 'kuri', 'riku', 'ripo', 'popo', 'ripo', 'tari', 'kupo', 'riri', 'kuta', 'pota', 'poku', 'rita', 'nepo', 'tari', 'popo', 'poku', 'pota', 'nepo', 'neri', 'pota', 'kupo', 'pori', 'neri', 'riku', 'rita', 'poku', 'popo', 'neta', 'riku', 'popo', 'rine', 'poku', 'nepo', 'popo', 'kuta', 'kupo', 'tane', 'riku', 'poku', 'tari', 'ripo', 'nepo', 'neku', 'tane', 'tapo', 'tata', 'kune', 'riku', 'tata', 'riku', 'kuku', 'pori', 'pori', 'rita', 'neri', 'pota', 'neta', 'rita', 'taku', 'tapo', 'pota', 'kuta', 'rita', 'rita', 'pori', 'neta', 'tane', 'poku', 'popo', 'kuku', 'nene', 'pota', 'pori', 'tapo', 'kuri', 'nene', 'rine', 'ripo', 'kuta', 'kupo', 'neta', 'popo', 'pota', 'pone', 'riku', 'neta', 'taku', 'riri', 'tata', 'taku', 'kuta', 'kuku', 'pori', 'kuri', 'kuri', 'riku', 'rita', 'pota', 'pota', 'neri', 'tane', 'pota', 'riri', 'riri', 'kuta', 'tari', 'kupo', 'neku', 'tapo', 'rine', 'rita', 'pota', 'nepo', 'nene', 'rita', 'taku', 'pori', 'taku', 'kune', 'nene', 'rita', 'rine', 'rine', 'kuri', 'kuri', 'tata', 'pota', 'tapo', 'kune', 'riku', 'ripo', 'kupo', 'pota', 'poku', 'ripo', 'neta', 'kuta', 'rita', 'tari', 'rine', 'tane', 'rita', 'kuri', 'popo', 'nepo', 'neta', 'nepo', 'riku', 'pone', 'riri', 'pota', 'tapo', 'poku', 'riku', 'nepo', 'ripo', 'tapo', 'pota', 'popo', 'riri', 'kupo', 'riri', 'taku', 'pota', 'pori', 'popo', 'rine', 'tata', 'riri', 'tata', 'tane', 'tari', 'neta', 'kuta', 'tata', 'riri', 'neri', 'tari', 'nepo', 'neri', 'kune', 'kuri', 'tapo', 'tata', 'popo', 'pone', 'tata', 'neta', 'taku', 'rine', 'rita', 'tari', 'kuta', 'poku', 'tari', 'popo', 'pota', 'kune', 'pota', 'neri', 'kuta', 'tata', 'poku', 'taku', 'kuku', 'kuta', 'tata', 'taku', 'ripo', 'riri', 'rine', 'neri', 'tari', 'pone', 'popo', 'tata', 'kuku', 'neta', 'taku', 'neri', 'taku', 'popo', 'kuta', 'kupo', 'tane', 'pori', 'kune', 'tari', 'rine', 'poku', 'poku', 'nepo', 'tane', 'pone', 'kune', 'poku', 'popo', 'tapo', 'neri', 'nene', 'kuku', 'neku', 'tari', 'poku', 'tane', 'rine', 'neta', 'riri', 'pone', 'riri', 'kuku', 'pone', 'riri', 'neri', 'nene', 'neku', 'rine', 'rine', 'tane', 'pori', 'kuku', 'pori', 'neta', 'neri', 'rine', 'nene', 'kuta', 'kupo', 'pota', 'tapo', 'nepo', 'pone', 'tane', 'taku', 'popo', 'pori', 'rita', 'taku', 'rita', 'popo', 'kuri', 'pota', 'tapo', 'ripo', 'pori', 'pone', 'pori', 'neri', 'kuri', 'poku', 'kuri', 'ripo', 'taku', 'neri', 'pota', 'riri', 'nepo', 'kune', 'pori', 'kune', 'kune', 'tata', 'kupo', 'kuri', 'popo', 'tane', 'taku', 'kuku', 'pori', 'neta', 'tata', 'kupo', 'kuku', 'popo', 'neri', 'kuri', 'ripo', 'pone', 'rita', 'tapo', 'rita', 'pota', 'kupo', 'nepo', 'riku', 'kupo', 'ripo', 'neta', 'neri', 'ripo', 'riri', 'kupo', 'tari', 'kuta', 'tapo', 'poku', 'pota', 'nene', 'kuta', 'popo', 'kune', 'tari', 'rine', 'kuku', 'rine', 'kuta', 'pone', 'popo', 'ripo', 'neku', 'tari', 'neku', 'kupo', 'tapo', 'riri', 'kuri', 'neta', 'ripo', 'ripo', 'pori', 'rita', 'tari', 'kune', 'riri', 'poku', 'neku', 'tari', 'neta', 'nene', 'tane', 'pori', 'tane', 'neri', 'tane', 'tapo', 'kupo', 'neta', 'nepo', 'tata', 'kuri', 'nene', 'ripo', 'neta', 'tata', 'tane', 'tane', 'taku', 'pota', 'pori', 'riri', 'tane', 'rine', 'tari', 'tane', 'ripo', 'popo', 'kune', 'neku', 'neta', 'pota', 'neku', 'riku', 'nene', 'popo', 'riri', 'nene', 'riku', 'tari', 'kuri', 'taku', 'ripo', 'taku', 'kupo', 'riri', 'tari', 'tata', 'kuri', 'riku', 'tata', 'neta', 'rine', 'popo', 'riku', 'riri', 'pone', 'popo', 'rita', 'nene', 'pota', 'kuri', 'nepo', 'pota', 'ripo', 'rine', 'tapo', 'popo', 'neta', 'rine', 'nene', 'kune', 'popo', 'neta', 'neku', 'tapo', 'kune', 'kupo', 'neku', 'nene', 'poku', 'tane'],)", "expect": "[('tane', 56), ('nene', 39), ('riri', 32), ('neku', 43), ('kuta', 38), ('ripo', 41), ('riku', 36), ('rine', 42), ('pori', 38), ('pota', 53), ('neri', 41), ('kupo', 38), ('poku', 44), ('tapo', 48), ('rita', 41), ('neta', 41), ('taku', 37), ('kuri', 35), ('popo', 59), ('tari', 39), ('nepo', 34), ('kune', 36), ('pone', 32), ('kuku', 27), ('tata', 30)]", "note": "경계: 이름 1000개, 25종류"}
+  ],
+  "variants": [
+    {
+      "id": "P0504-v1",
+      "title": "어부의 쪽지",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"args": "(['eel', 'cod', 'eel'],)", "expect": "[('eel', 2), ('cod', 1)]", "public": true, "note": "기본 동작"},
+        {"args": "(['tuna'],)", "expect": "[('tuna', 1)]", "note": "경계: 이름 하나"},
+        {"args": "(['squid', 'clam', 'clam', 'kelp', 'squid', 'clam'],)", "expect": "[('squid', 2), ('clam', 3), ('kelp', 1)]", "note": "세 종류"},
+        {"args": "(['z', 'y', 'z', 'x'],)", "expect": "[('z', 2), ('y', 1), ('x', 1)]", "note": "사전 역순으로 처음 나옴"}
+      ]
+    },
+    {
+      "id": "P0504-v2",
+      "title": "돛 가게 주문서",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"args": "(['rope', 'sail', 'pin', 'sail'],)", "expect": "[('rope', 1), ('sail', 2), ('pin', 1)]", "public": true, "note": "기본 동작"},
+        {"args": "(['mast', 'mast'],)", "expect": "[('mast', 2)]", "note": "경계: 한 종류 두 번"},
+        {"args": "(['tar', 'hook', 'bell', 'hook', 'tar', 'tar'],)", "expect": "[('tar', 3), ('hook', 2), ('bell', 1)]", "note": "여러 번 나오는 이름"},
+        {"args": "(['flag', 'anchor', 'net'],)", "expect": "[('flag', 1), ('anchor', 1), ('net', 1)]", "note": "모두 다른 이름"}
+      ]
+    }
+  ],
+  "extraDiagnoses": [
+    {
+      "when": {"verdict": "WA", "outputMatches": "^\\[\\]$"},
+      "text": "아직 빈 리스트 그대로야. dict에 이름마다 횟수를 세고, `count.items()`로 `(이름, 횟수)`를 꺼내서 `answer`에 담아 봐."
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_a.py",
+      "title": "count[w] += 1로 바로 셈",
+      "expectFail": {"1": "RE", "2": "RE", "3": "RE", "4": "RE", "5": "RE", "6": "RE"},
+      "diagnosis": {
+        "when": {"exception": "KeyError"},
+        "text": "처음 보는 이름에서 `KeyError`가 났어! `count[w] += 1`은 `count[w] = count[w] + 1`이라서, 아직 없는 키 `count[w]`를 먼저 읽으려다 폭발해. `count[w] = count.get(w, 0) + 1`처럼 없으면 0에서 시작하게 해."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "dict를 그대로 반환",
+      "expectFail": {"1": "WA", "2": "WA", "3": "WA", "4": "WA", "5": "WA", "6": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA", "outputMatches": "^\\{"},
+        "text": "dict가 그대로 돌아갔어. 세는 건 맞았는데, 문제는 `(이름, 횟수)` 튜플의 **리스트**를 원해. `for w, n in count.items():`로 꺼내서 리스트에 담거나 `list(count.items())`로 바꿔서 돌려줘."
+      }
+    },
+    {
+      "file": "wrong_c.py",
+      "title": "이름의 사전순으로 정렬",
+      "expectFail": {"1": "WA", "4": "WA", "5": "WA", "6": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA"},
+        "text": "횟수는 맞는데 순서가 달라. 이 장부는 **이름이 처음 나온 순서**대로야. `sorted`로 줄 세우지 말고, dict가 기억하는 넣은 순서 그대로 `count.items()`를 꺼내 써."
+      }
+    }
+  ],
+  "hints": [
+    "이름마다 칸을 하나씩 두고 횟수를 세면 돼. 이름표로 칸을 찾는 자료형이 있었지? 그 자료형은 넣은 순서도 기억해.",
+    "`count = {}`에 `count[w] = count.get(w, 0) + 1`로 세. 다 세면 `for w, n in count.items():`가 처음 나온 순서대로 `(이름, 횟수)`를 줘.",
+    "```python\ndef solution(words):\n    count = {}\n    for w in words:\n        count[w] = count.get(w, ____) + 1\n    answer = []\n    for w, n in count.items():\n        answer.append(____)\n    return answer\n```"
+  ],
+  "reward": {"xp": 100, "gold": 50}
+}
