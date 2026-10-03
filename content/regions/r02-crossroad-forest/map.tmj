@@ -25,10 +25,10 @@
    "name": "overworld",
    "image": "../../../assets/tiles/overworld.png",
    "imagewidth": 128,
-   "imageheight": 128,
+   "imageheight": 160,
    "tilewidth": 16,
    "tileheight": 16,
-   "tilecount": 60,
+   "tilecount": 74,
    "columns": 8,
    "margin": 0,
    "spacing": 0,
@@ -690,6 +690,160 @@
        "name": "blocking",
        "type": "bool",
        "value": false
+      }
+     ]
+    },
+    {
+     "id": 60,
+     "type": "port_cobble",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 61,
+     "type": "dock_plank",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 62,
+     "type": "harbor_water",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 63,
+     "type": "frozen_wave",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 64,
+     "type": "pier_post",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 65,
+     "type": "port_crate",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 66,
+     "type": "crate_gap",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 67,
+     "type": "barrel",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 68,
+     "type": "rope_coil",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 69,
+     "type": "fishing_net",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 70,
+     "type": "ship_deck",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 71,
+     "type": "ship_rail",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 72,
+     "type": "port_stall",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 73,
+     "type": "lighthouse_wall",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
       }
      ]
     }

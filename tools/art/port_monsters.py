@@ -240,7 +240,7 @@ def _tally_parrot(open_beak: bool):
 
 
 # ── 줄 게(deque): 옆모습(왼쪽을 봄)의 소라게. 크림색 나선 껍데기를 지고 산호빛 집게와 눈자루를 내밀었고,
-# 껍데기 위에 작은 빨간 게 셋이 한 줄로 서 있다. 프레임 B는 맨 앞 게가 큰 게의 집게 위로 내려서고(popleft),
+# 껍데기 위에 작은 빨간 게 셋이 한 줄로 서 있다. 프레임 B는 맨 앞 게가 껍데기 앞으로 뛰어내리고(popleft),
 # 뒤의 게들이 한 칸씩 앞으로 다가선다 ──────────────────────────────────────────────
 CRAB_KEY = {"5": "o5", "4": "o4", "3": "o3", "2": "o2", "1": "o1", "e": "eye", "w": "white",
             "A": "a5", "a": "a4", "b": "a3", "B": "a2", "c": "a1", "s": "o3", "S": "o2"}
@@ -252,41 +252,36 @@ _HERMIT = paint("""
     ................
     ................
     ................
-    ......baaaab....
-    .....babbbbaab..
-    .e.e.aaSsssbbab.
-    .3.3baSAaabSbab.
-    .434aaSAbBsSbab.
-    3443.bSaSSsbbaB.
-    4433.baabbbbaBc.
-    .3443.BbbbbbBBc.
+    .......aAAAa....
+    ......aAaaaabb..
+    .e.e.aSSSSSSab..
+    .3.3baSAaaaSabb.
+    .434aaSaSSaSabb.
+    3443.bSaSaaSabB.
+    4433.bSaSSSSbBc.
+    .3443.SbbbbbBBc.
     ..2.2..2.2.2cc..
     .2..2.2..2......
 """, CRAB_KEY, 16, 16)
 
-TINY_KEY = {"R": "r3", "r": "r2", "e": "eye"}
-_TINY = paint("""
-    e.e
-    RRr
-    r.r
-""", TINY_KEY, 3, 3)
-
+TINY_KEY = {"R": "r4", "r": "r3", "x": "r2"}
 
 def _queue_crab(pop: bool):
     g = shade_right(_HERMIT, 11)
     g = color_outline(g)
+    # 작은 게: 치켜든 두 집게, 둥근 등딱지, 다리
     tiny = color_outline(paint("""
         .....
-        .e.e.
-        .RRr.
-        .r.r.
+        .R.R.
+        .rRr.
+        .x.x.
         .....
     """, TINY_KEY, 5, 5))
     if pop:
-        # 맨 앞 게가 집게 위로 내려섰고, 나머지 둘이 앞으로 당겨 섰다
-        spots = [(-1, 6), (3, 2), (7, 2)]
+        # 맨 앞 게가 껍데기 앞으로 뛰어내렸고, 나머지 둘이 한 칸씩 앞으로 당겨 섰다
+        spots = [(0, 3), (5, 2), (9, 1)]
     else:
-        spots = [(4, 2), (7, 1), (10, 2)]
+        spots = [(3, 2), (7, 1), (11, 2)]
     for x, y in spots:
         g = overlay(g, tiny, x, y)
     return g

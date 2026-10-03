@@ -32,7 +32,9 @@ GROUND_TILES = {"grass", "grass_flower", "path", "plaza_stone", "water", "house_
                 "cave_floor", "cave_wall", "cave_wall_top", "torch_frozen", "cave_pool", "mural_wall", "cave_crack",
                 "minecart_rail",
                 # 지역 4(무너진 대도서관): 마루·카펫·떠 있는 페이지, 벽 앞면·윗면, 칸을 채우는 책장과 빈 책장 칸
-                "lib_floor", "lib_carpet", "floating_pages", "lib_wall", "lib_wall_top", "bookshelf", "shelf_gap"}
+                "lib_floor", "lib_carpet", "floating_pages", "lib_wall", "lib_wall_top", "bookshelf", "shelf_gap",
+                # 지역 5(교역항): 자갈길·부두 널·갑판·바다·굳은 파도, 칸을 채우는 등대 벽
+                "port_cobble", "dock_plank", "ship_deck", "harbor_water", "frozen_wave", "lighthouse_wall"}
 
 # 지역 2 명세(docs/phase3/region02-spec.md §6): 타일셋 끝에 이 순서로 붙고, 이 중 일부는 막힌다
 R02_TILES = ["forest_floor", "fallen_leaves", "tall_grass", "stump", "log", "mushroom_patch", "stream",
@@ -54,6 +56,14 @@ R04_BLOCKING = {"lib_wall", "lib_wall_top", "bookshelf", "bookshelf_fallen", "bo
                 "candle_frozen", "broken_pillar"}
 R04_SPRITES = {"monster_letter_moth", "monster_ink_slime", "monster_quill_sprite", "monster_scroll_snake",
                "monster_cipher_owl", "boss_librarian_golem", "npc_ghost_librarian"}
+# 지역 5 명세(docs/phase3/region05-spec.md §6): 지역 4 타일 뒤에 이 순서로 붙는다. crate_gap·rope_coil 등은 지나갈 수 있다.
+# 명세의 crate·market_stall은 지역 1 타일과 이름이 겹쳐 port_crate·port_stall로 붙였다
+R05_TILES = ["port_cobble", "dock_plank", "harbor_water", "frozen_wave", "pier_post", "port_crate", "crate_gap", "barrel",
+             "rope_coil", "fishing_net", "ship_deck", "ship_rail", "port_stall", "lighthouse_wall"]
+R05_BLOCKING = {"harbor_water", "frozen_wave", "pier_post", "port_crate", "barrel", "fishing_net", "ship_rail",
+                "port_stall", "lighthouse_wall"}
+R05_SPRITES = {"monster_twin_fish", "monster_ledger_gull", "monster_bubble_jelly", "monster_tally_parrot",
+               "monster_queue_crab", "boss_smuggler_captain", "npc_guild_master"}
 # 지역 1 타일 24종의 인덱스는 바뀌면 안 된다(지역 1 맵이 gid로 참조)
 R01_TILE_COUNT = 24
 
@@ -142,6 +152,14 @@ def main():
             errors.append(f"overworld: tile {t} blocking should be {t in R04_BLOCKING}")
     for name in sorted(R04_SPRITES - set(manifest["sprites"])):
         errors.append(f"sprite {name}: missing from manifest (region-4 spec §7)")
+    r05_at = r04_at + len(R04_TILES)
+    if ow["tiles"][r05_at:r05_at + len(R05_TILES)] != R05_TILES:
+        errors.append("overworld: region-5 tiles must follow the region-4 tiles in spec order")
+    for t in R05_TILES:
+        if (t in ow["blocking"]) != (t in R05_BLOCKING):
+            errors.append(f"overworld: tile {t} blocking should be {t in R05_BLOCKING}")
+    for name in sorted(R05_SPRITES - set(manifest["sprites"])):
+        errors.append(f"sprite {name}: missing from manifest (region-5 spec §6)")
 
     for name, spr in manifest["sprites"].items():
         rule = frame_rule(name)
