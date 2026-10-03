@@ -86,6 +86,41 @@ def sprite_frames(name: str):
     raise KeyError(f"no art defined for sprite {name!r}")
 
 
+def is_character(name: str) -> bool:
+    return name in ("player", "nuri") or name.startswith("npc_")
+
+
+def sheet_columns(name: str, spr, count: int) -> int:
+    """시트 가로 칸 수. 새 형식 캐릭터(16×24)는 6열 × 4행, 나머지는 프레임을 가로 한 줄로 잇는다."""
+    if is_character(name) and spr["frameHeight"] == 24:
+        return 6
+    return count
+
+
+def sprite_sheet(name: str, spr) -> Canvas:
+    frames = sprite_frames(name)
+    fw, fh = spr["frameWidth"], spr["frameHeight"]
+    cols = sheet_columns(name, spr, len(frames))
+    if cols == len(frames):
+        return sheet(frames, fw, fh)
+    rows_n = -(-len(frames) // cols)
+    c = Canvas(cols * fw, rows_n * fh)
+    for i, f in enumerate(frames):
+        if len(f) != fh or len(f[0]) != fw:
+            raise ValueError(f"{name}: frame {i} is {len(f[0])}x{len(f)}, expected {fw}x{fh}")
+        c.draw(f, (i % cols) * fw, (i // cols) * fh)
+    return c
+
+
+def scene_frame(name: str, old_index: int):
+    """장면 미리보기용: 옛 8프레임 번호(방향×2 + 걸음)를 그 캐릭터 시트의 프레임으로 바꾼다.
+    새 형식(24프레임)은 방향×6 + (0 서기 | 1 왼발)."""
+    frames = sprite_frames(name)
+    if is_character(name) and len(frames) == 24:
+        return frames[(old_index // 2) * 6 + (old_index % 2)]
+    return frames[old_index]
+
+
 def portrait_grid(name: str):
     key = name.removeprefix("portrait_")
     if key not in PORTRAITS:
@@ -108,8 +143,7 @@ def render_assets(manifest):
             c.draw(TILES[n], (i % cols) * ts, (i // cols) * ts)
         out[tset["file"]] = c
     for name, spr in manifest["sprites"].items():
-        frames = sprite_frames(name)
-        out[spr["file"]] = sheet(frames, spr["frameWidth"], spr["frameHeight"])
+        out[spr["file"]] = sprite_sheet(name, spr)
     for name, por in manifest["portraits"].items():
         g = portrait_grid(name)
         size = por["size"]
@@ -324,59 +358,82 @@ def render_preview(manifest, assets, scene_def=SCENE_R01):
 
     # 2) 캐릭터: 시트 그대로(아래·왼쪽·오른쪽·위 × 2)
     chars = [n for n in manifest["sprites"] if not n.startswith(("monster_", "obj_", "boss_"))]
-    section("characters  (down x2, left x2, right x2, up x2)")
+    section("characters  (old 16x16: down/left/right/up x2 | new 16x24: down 0 1 3, left, right 0 1, up, blink)")
+    # 새 형식(24프레임)에서 고르는 8프레임: 아래 서기·왼발·오른발, 왼쪽, 오른쪽 서기·왼발, 위, 아래 깜빡임
+    NEW_PICK = (0, 1, 3, 6, 12, 13, 18, 5)
+
+    def char_h(n):
+        return manifest["sprites"][n]["frameHeight"] * S + 8
 
     def draw_chars(c, y):
-        for j, n in enumerate(chars):
+        yy = y
+        for n in chars:
             spr = manifest["sprites"][n]
-            yy = y + j * (spr["frameHeight"] * S + 8)
+            frames = sprite_frames(n)
+            if len(frames) == 24:
+                frames = [frames[i] for i in NEW_PICK]
             text(c, n, pad, yy + 28, 2)
-            for i, f in enumerate(sprite_frames(n)):
+            for i, f in enumerate(frames):
                 fr = Canvas(spr["frameWidth"], spr["frameHeight"]).draw(f)
                 x = pad + 170 + i * (spr["frameWidth"] * S + 10)
                 c.fill_rect(x - 2, yy - 2, spr["frameWidth"] * S + 4, spr["frameHeight"] * S + 4, PANEL)
                 c.paste(fr, x, yy, S)
             # 실제 크기(1x)도 함께
-            c.paste(assets[spr["file"]], pad + 170 + 8 * (spr["frameWidth"] * S + 10) + 10, yy + 24, 1)
-    blocks.append((len(chars) * (ts * S + 8) + 4, draw_chars))
+            c.paste(assets[spr["file"]], pad + 170 + 8 * (spr["frameWidth"] * S + 10) + 10, yy + 8, 1)
+            yy += char_h(n)
+    blocks.append((sum(char_h(n) for n in chars) + 4, draw_chars))
 
-    # 3) 몬스터·오브젝트: 2프레임씩
+    # 3) 몬스터·오브젝트: 2 또는 4프레임
     small = [n for n in manifest["sprites"] if n.startswith(("monster_", "obj_"))]
-    section("monsters / objects  (2 frames)")
-    col_w = (W - 2 * pad) // 4
+    most = max((len(sprite_frames(n)) for n in small), default=2)
+    per_line = 4 if most <= 2 else 2
+    section(f"monsters / objects  ({'2' if most <= 2 else '2 or 4'} frames)")
+    col_w = (W - 2 * pad) // per_line
     row_h = ts * S + 24
 
     def draw_small(c, y):
         for k, n in enumerate(small):
             spr = manifest["sprites"][n]
-            x = pad + (k % 4) * col_w
-            yy = y + (k // 4) * row_h
-            for i, f in enumerate(sprite_frames(n)):
+            x = pad + (k % per_line) * col_w
+            yy = y + (k // per_line) * row_h
+            frames = sprite_frames(n)
+            for i, f in enumerate(frames):
                 fr = Canvas(spr["frameWidth"], spr["frameHeight"]).draw(f)
                 fx = x + i * (spr["frameWidth"] * S + 10)
                 c.fill_rect(fx - 2, yy - 2, spr["frameWidth"] * S + 4, spr["frameHeight"] * S + 4, PANEL)
                 c.paste(fr, fx, yy, S)
-            c.paste(assets[spr["file"]], x + 2 * (spr["frameWidth"] * S + 10) + 4, yy + 24, 1)
+            c.paste(assets[spr["file"]], x + len(frames) * (spr["frameWidth"] * S + 10) + 4, yy + 24, 1)
             text(c, n, x, yy + spr["frameHeight"] * S + 6, 1)
-    blocks.append((-(-len(small) // 4) * row_h + 4, draw_small))
+    blocks.append((-(-len(small) // per_line) * row_h + 4, draw_small))
 
-    # 4) 보스와 초상화
+    # 4) 보스와 초상화(보스가 한 줄을 넘으면 다음 줄로)
     bosses = [n for n in manifest["sprites"] if n.startswith("boss_")]
     portraits = list(manifest["portraits"])
-    section("boss (32x32 x2)")
+    boss_frames = max((len(sprite_frames(n)) for n in bosses), default=2)
+    section(f"boss (32x32 x{boss_frames})")
+    boss_step = 32 * S + 10
+    boss_lines = []
+    x = pad
+    for n in bosses:
+        need = len(sprite_frames(n)) * boss_step
+        if x + need > W - pad and x > pad:
+            x = pad
+        boss_lines.append((n, x, 0 if not boss_lines else (boss_lines[-1][2] + (1 if x == pad else 0))))
+        x += need
+    boss_line_count = (boss_lines[-1][2] + 1) if boss_lines else 1
 
     def draw_big(c, y):
-        x = pad
-        for n in bosses:
+        for n, x0, line in boss_lines:
             spr = manifest["sprites"][n]
-            x0 = x  # 보스가 여럿이면 이름을 각자 그림 아래에 쓴다
+            yy = y + line * (32 * S + 20)
+            x = x0
             for f in sprite_frames(n):
                 fr = Canvas(spr["frameWidth"], spr["frameHeight"]).draw(f)
-                c.fill_rect(x - 2, y - 2, spr["frameWidth"] * S + 4, spr["frameHeight"] * S + 4, PANEL)
-                c.paste(fr, x, y, S)
+                c.fill_rect(x - 2, yy - 2, spr["frameWidth"] * S + 4, spr["frameHeight"] * S + 4, PANEL)
+                c.paste(fr, x, yy, S)
                 x += spr["frameWidth"] * S + 10
-            text(c, n, x0, y + spr["frameHeight"] * S + 6, 1)
-    blocks.append((32 * S + 20, draw_big))
+            text(c, n, x0, yy + spr["frameHeight"] * S + 6, 1)
+    blocks.append((boss_line_count * (32 * S + 20), draw_big))
 
     psize = max((p["size"] for p in manifest["portraits"].values()), default=0)
     PS = 3  # 대화창과 같은 배율
@@ -409,8 +466,11 @@ def render_preview(manifest, assets, scene_def=SCENE_R01):
         for j, row in enumerate(scene):
             for i, ch in enumerate(row):
                 sc.draw(TILES[key[ch]], i * ts, j * ts)
-        for name, frame, tx, ty in actors:
-            sc.draw(sprite_frames(name)[frame], tx * ts, ty * ts)
+        # 키 큰 스프라이트(16×24 캐릭터)는 발이 칸 바닥에 오게 위로 올리고, 아래 줄부터 그려 겹침을 맞춘다
+        for name, frame, tx, ty in sorted(actors, key=lambda a: a[3]):
+            g = scene_frame(name, frame)
+            dy = len(g) - ts if len(g[0]) == ts and len(g) > ts else 0
+            sc.draw(g, tx * ts, ty * ts - dy)
         c.paste(sc, pad, y, 2)
     blocks.append((len(scene) * ts * 2 + 8, draw_scene))
 
