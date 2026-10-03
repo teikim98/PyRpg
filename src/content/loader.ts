@@ -15,6 +15,7 @@ import type {
   RecommendedProblem,
   StdinTest,
   Region,
+  RegionAmbience,
   Scroll,
   BlankExercise,
   ItemDef,
@@ -74,6 +75,7 @@ export interface RegionFile {
   introDialogue?: string;
   clearDialogue?: string;
   recommended?: RecommendedProblem[];
+  ambience?: RegionAmbience;
 }
 
 export interface LessonFile {
@@ -260,6 +262,15 @@ export function buildContent(src: ContentSources): GameContent {
     };
     if (r.introDialogue) region.introDialogue = r.introDialogue;
     if (r.clearDialogue) region.clearDialogue = r.clearDialogue;
+    if (r.ambience !== undefined) {
+      if (typeof r.ambience !== "object" || r.ambience === null || Array.isArray(r.ambience)) {
+        throw new ContentError(`${base}region.json`, "ambience는 객체({ grade, particles })");
+      }
+      const { grade, particles } = r.ambience;
+      region.ambience = {};
+      if (grade !== undefined) region.ambience.grade = grade;
+      if (particles !== undefined) region.ambience.particles = particles;
+    }
     regions.push(region);
   }
   regions.sort((a, b) => a.order - b.order);

@@ -10,7 +10,7 @@ content/ 아래 데이터를 읽어서 아래를 확인한다. 하나라도 실�
 - 레슨: 주문서 ID, 빈칸 연습 정답 실행 결과, ```python run 블록이 에러 없이 실행되는지
 - 대사: region1-spec.md §5, region02-spec.md §5, region03-spec.md §5, region04-spec.md §5, region05-spec.md §5의 ID,
   대사 줄 형식
-- 지역: recommended 필드(번호·제목·사이트·레벨만), map.tmj가 있으면 맵 오브젝트 참조(상자의 item은 items.json의 ID)
+- 지역: recommended 필드(번호·제목·사이트·레벨만), ambience(색 보정·입자 이름), map.tmj가 있으면 맵 오브젝트 참조(상자의 item은 items.json의 ID)
 - 보조 캐릭터: profile.json, traceback.json(실제 CPython 에러 메시지로 규칙 매칭 확인, 규칙의 lesson은 실제 레슨 ID)
 
 채점 규칙은 게임(src/python)과 같다.
@@ -37,6 +37,9 @@ VERDICTS = {"AC", "WA", "RE", "TLE"}
 EMOTIONS = {"neutral", "happy", "worried", "surprised", "serious"}
 WHEN_KEYS = {"outputMatches", "exception", "messageMatches", "verdict", "onlyHiddenFail"}
 RECOMMENDED_KEYS = {"site", "id", "title", "level"}
+# region.json의 ambience(docs/art-overhaul/plan.md §3). src/game/ambience.ts의 GRADE_NAMES·PARTICLE_KINDS와 같아야 한다
+AMBIENCE_GRADES = ["dusty_teal", "forest", "cave", "library", "harbor", "lake"]
+AMBIENCE_PARTICLES = ["none", "sparkle", "dust", "leaves", "spray", "mist"]
 MAX_DIGITS = 4300
 # 정답으로 인정하는 답안(accepted[])을 보스 시간 결계 테스트에서 돌릴 때 timeLimitMs에 곱하는 배수(judge() 참고)
 ACCEPTED_BARRIER_SCALE = 10
@@ -1204,6 +1207,15 @@ def check_region(rep, runner, pool, folder, sprites, common_dialogues, items):
             seen_boj = True
         elif seen_boj:
             rep.error(rid, "recommended에서 프로그래머스 문제가 백준 문제보다 앞에 와야 함(§7.7)")
+    if "ambience" in data:
+        amb = data["ambience"]
+        if not isinstance(amb, dict) or not set(amb) <= {"grade", "particles"}:
+            rep.error(rid, f"ambience는 grade·particles만 있는 객체: {amb!r}")
+        else:
+            if "grade" in amb and amb["grade"] not in AMBIENCE_GRADES:
+                rep.error(rid, f"ambience.grade {amb['grade']!r}는 {AMBIENCE_GRADES} 중 하나")
+            if "particles" in amb and amb["particles"] not in AMBIENCE_PARTICLES:
+                rep.error(rid, f"ambience.particles {amb['particles']!r}는 {AMBIENCE_PARTICLES} 중 하나")
 
     # 레슨
     lessons = {}

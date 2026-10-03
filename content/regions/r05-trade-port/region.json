@@ -4,6 +4,7 @@
   "name": "교역항",
   "introDialogue": "region_intro",
   "clearDialogue": "region_clear",
+  "ambience": { "grade": "harbor", "particles": "spray" },
   "recommended": [
     { "site": "programmers", "id": 42576, "title": "완주하지 못한 선수", "level": "Lv.1" },
     { "site": "programmers", "id": 1845, "title": "폰켓몬", "level": "Lv.1" },

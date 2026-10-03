@@ -10,7 +10,7 @@ export const DIRS: Record<Facing, readonly [number, number]> = {
   right: [1, 0],
 };
 
-/** 캐릭터 시트의 방향 순서(assets.ts 규칙): 아래·왼쪽·오른쪽·위 × 2프레임 */
+/** 캐릭터 시트의 방향 순서(assets.ts 규칙): 아래·왼쪽·오른쪽·위(새 시트는 행, 옛 시트는 2프레임씩) */
 export const FACING_ROW: Record<Facing, number> = { down: 0, left: 1, right: 2, up: 3 };
 
 export const OPPOSITE: Record<Facing, Facing> = { up: "down", down: "up", left: "right", right: "left" };
@@ -39,6 +39,19 @@ export function buildCollisionGrid(map: ParsedMap, tileset: { tiles: string[]; b
   const isBlocking = (idx: number) => idx >= 0 && blocking.has(tileset.tiles[idx] ?? "");
   for (let i = 0; i < size; i++) grid[i] = isBlocking(map.ground[i]) || isBlocking(map.deco[i]) ? 1 : 0;
   return grid;
+}
+
+/**
+ * 캐릭터보다 위에 그릴 타일의 타일셋 인덱스. manifest의 overhead가 있으면 그것, 없으면 이름이 _roof로 끝나는 타일.
+ * 지붕 칸은 막혀 있어서 지붕과 겹치는 캐릭터는 늘 그 남쪽(문간)에 있다 → 머리가 처마 밑으로 들어가 보여야 맞다
+ */
+export function overheadTileIndices(tileset: { tiles: string[]; overhead?: string[] }): Set<number> {
+  const names = tileset.overhead ? new Set(tileset.overhead) : null;
+  const out = new Set<number>();
+  tileset.tiles.forEach((t, i) => {
+    if (names ? names.has(t) : t.endsWith("_roof")) out.add(i);
+  });
+  return out;
 }
 
 /** 오브젝트 위치 색인. 제거된 오브젝트는 빼고 넣는다 */

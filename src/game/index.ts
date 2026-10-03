@@ -1,6 +1,6 @@
 // 월드 진입점: WorldFactory 구현(src/contracts/world.ts).
 import * as Phaser from "phaser";
-import type { WorldCallbacks, WorldController, WorldFactory } from "../contracts/world";
+import type { WorldCallbacks, WorldController, WorldFactory, WorldOptions } from "../contracts/world";
 import { WorldScene } from "./WorldScene";
 import { computeViewport, manifestImageFiles, probeImages } from "./viewport";
 
@@ -9,12 +9,12 @@ export type { ParsedMap } from "./tiled";
 export { BASE_HEIGHT, BASE_WIDTH, computeViewport } from "./viewport";
 
 export const createWorld: WorldFactory = {
-  async create(parent: HTMLElement, callbacks: WorldCallbacks): Promise<WorldController> {
+  async create(parent: HTMLElement, callbacks: WorldCallbacks, options: WorldOptions = {}): Promise<WorldController> {
     const vp = computeViewport(parent.clientWidth, parent.clientHeight);
     const available = await probeImages(import.meta.env.BASE_URL ?? "/", manifestImageFiles());
     let scene!: WorldScene;
     const ready = new Promise<void>((resolve) => {
-      scene = new WorldScene(callbacks, resolve, available);
+      scene = new WorldScene(callbacks, resolve, available, options);
     });
     const game = new Phaser.Game({
       type: Phaser.AUTO,
@@ -59,6 +59,8 @@ export const createWorld: WorldFactory = {
       setCompanionVisible: (visible) => scene.setCompanionVisible(visible),
       getObjects: () => scene.getObjects(),
       setTint: (target, color) => scene.setTint(target, color),
+      setAmbienceEnabled: (on) => scene.setAmbienceEnabled(on),
+      inspect: () => scene.inspect(),
     };
   },
 };
