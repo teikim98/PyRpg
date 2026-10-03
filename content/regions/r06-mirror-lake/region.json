@@ -1,0 +1,8 @@
+{
+  "id": "r06",
+  "order": 6,
+  "name": "거울 호수",
+  "introDialogue": "region_intro",
+  "clearDialogue": "region_clear",
+  "recommended": []
+}

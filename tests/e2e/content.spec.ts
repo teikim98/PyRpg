@@ -39,12 +39,6 @@ const BUDGET_HEADROOM = 3;
  * 게임 판정과 같은 '제한 × 2'(TLE 재확인 기준, design.md §9.6 4단계)로 본다.
  */
 const SLOW_HEADROOM: Record<string, number> = { P0411: 2 };
-/**
- * 비효율 답안 쪽 기준을 문제별로 낮춘 것(사용자 결정 12, 2026-10-03).
- * P0411은 함수 밖 문자열 `+=`까지 인정하느라 slow.py와의 간격이 좁아서(이 PC에서 1.1~1.4배),
- * 게임 판정과 같은 '제한 × 2'(TLE 재확인 기준, design.md §9.6 4단계)로 본다.
- */
-const SLOW_HEADROOM: Record<string, number> = { P0411: 2 };
 
 let page: Page;
 

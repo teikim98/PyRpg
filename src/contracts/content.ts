@@ -110,6 +110,8 @@ export interface Problem {
   /** 이 전투를 시작하려면 가지고 있어야 할 주문서 ID */
   requires: string[];
   boss: boolean;
+  /** 지역 중간의 중간 보스(boss와 함께 true). 지역 클리어는 중간 보스가 아닌 최종 보스로만(region06-spec.md §7.1) */
+  midBoss?: boolean;
   /** 보스만. 페이즈 순서대로 */
   phases?: BossPhase[];
   /** 같은 개념 연습 전투(시간 기반 우회, §7.1) */

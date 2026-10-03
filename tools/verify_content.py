@@ -71,12 +71,23 @@ REQUIRED_REGION_DIALOGUES = {
         "chest_hidden_crates", "sign_lighthouse", "boss_intro", "boss_defeated", "east_gate_locked",
         "to_be_continued", "region_clear",
     ],
+    # docs/phase3/region06-spec.md §5
+    "r06": [
+        "region_intro", "lake_intro", "npc_lake_merchant", "npc_lake_keeper", "sign_mirror_bridge", "midboss_intro",
+        "midboss_defeated", "sign_reeds", "chest_hidden_reeds", "sign_echo_shoal", "boss_intro", "boss_defeated",
+        "east_gate_locked", "to_be_continued", "region_clear",
+    ],
 }
 # 명세가 문구를 고정한 대사(맵과 대사가 어긋나지 않도록). region05-spec.md §4: 숨겨진 길의 표지
 REQUIRED_DIALOGUE_PHRASES = {
     "r05": {
         "npc_guild_master": "밧줄 더미 바로 북쪽의 빈 상자",
         "sign_warehouses": "밧줄 더미 바로 북쪽의 빈 상자",
+    },
+    # region06-spec.md §4
+    "r06": {
+        "npc_lake_keeper": "조약돌 더미 바로 북쪽의 갈대",
+        "sign_reeds": "조약돌 더미 바로 북쪽의 갈대",
     },
 }
 REQUIRED_COMMON_DIALOGUES = [
@@ -120,6 +131,15 @@ REQUIRED_REGION_CONTENT = {
                      "P0511", "P0512", "P0513"],
         "boss": "P0513",
     },
+    # region06-spec.md §2, §3(보스 2: 중간 P0608, 최종 P0614)
+    "r06": {
+        "lessons": {"L6-1": "scroll.function", "L6-2": "scroll.unpack", "L6-3": "scroll.sort",
+                    "L6-4": "scroll.recursion", "L6-5": "scroll.memo"},
+        "problems": ["P0601", "P0602", "P0603", "P0604", "P0605", "P0606", "P0607", "P0608", "P0609", "P0610",
+                     "P0611", "P0612", "P0613", "P0614"],
+        "boss": "P0614",
+        "midBoss": "P0608",
+    },
 }
 # 명세의 아트 표(region02-spec.md §6 등)에 있어서 아트 담당이 만들 스프라이트.
 # 아직 assets/manifest.json에 없으면 오류 대신 경고로 둔다(콘텐츠와 아트를 따로 작업하므로)
@@ -137,6 +157,11 @@ PENDING_SPRITES = {
     "r05": {
         "monster_twin_fish", "monster_ledger_gull", "monster_bubble_jelly", "monster_tally_parrot",
         "monster_queue_crab", "boss_smuggler_captain", "npc_guild_master",
+    },
+    # region06-spec.md §6
+    "r06": {
+        "monster_call_frog", "monster_zip_eel", "monster_lambda_heron", "monster_nesting_lily", "monster_memo_moth",
+        "boss_mirror_twins", "boss_lake_echo", "npc_lake_keeper",
     },
 }
 # 맵 오브젝트 종류별 필수 props(src/contracts/world.ts)
@@ -486,7 +511,13 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
         if isinstance(h, str) and inline_code_lines(h) >= 2:
             rep.error(where, f"힌트 {i + 1}: 코드 줄마다 `...`로 감싸면 Markdown 문단으로 합쳐져 한 줄로 보임. "
                              "여러 줄 코드는 ```python 펜스 블록으로 쓸 것")
-    want_reward = {"xp": 1000, "gold": 500} if p["boss"] else {"xp": 100, "gold": 50}
+    mid = p.get("midBoss", False)
+    if not isinstance(mid, bool) or (mid and not p["boss"]):
+        rep.error(where, "midBoss는 boss와 함께 쓰는 true/false(region06-spec.md §7.1)")
+        mid = False
+    p["midBoss"] = mid
+    # design.md §7.1~7.2: 일반 100/50, 중간 보스 400/200, 최종 보스 1000/500
+    want_reward = ({"xp": 400, "gold": 200} if mid else {"xp": 1000, "gold": 500}) if p["boss"] else {"xp": 100, "gold": 50}
     if p["reward"] != want_reward:
         rep.error(where, f"reward {p['reward']} != {want_reward}(design.md §7.1~7.2)")
     if p["timeLimitMs"] <= 0 or p["estimatedMinutes"] <= 0:
@@ -1196,11 +1227,18 @@ def check_region(rep, runner, pool, folder, sprites, common_dialogues, items):
         p = check_problem(rep, runner, pool, rid, os.path.join(pdir, pid), scrolls, sprites, order)
         if p is not None:
             problems[pid] = p
-    bosses = [pid for pid, p in problems.items() if p["boss"]]
+    # 최종 보스는 지역마다 하나, 중간 보스(midBoss)는 0~1개(region06-spec.md §7.1)
+    bosses = [pid for pid, p in problems.items() if p["boss"] and not p.get("midBoss")]
+    mids = [pid for pid, p in problems.items() if p["boss"] and p.get("midBoss")]
     if len(bosses) != 1:
-        rep.error(rid, f"보스 문제는 지역마다 하나: {bosses}")
+        rep.error(rid, f"최종 보스 문제는 지역마다 하나: {bosses}")
     elif set(problems[bosses[0]]["requires"]) != set(scrolls):
         rep.error(rid, f"보스 {bosses[0]}의 requires가 지역 주문서 전부가 아님")
+    if len(mids) > 1:
+        rep.error(rid, f"중간 보스는 지역마다 하나까지: {mids}")
+    for m in mids:
+        if not set(problems[m]["requires"]) < set(scrolls):
+            rep.error(rid, f"중간 보스 {m}의 requires는 지역 주문서의 일부여야 함")
 
     # 명세(region1-spec.md)와 대조
     spec = REQUIRED_REGION_CONTENT.get(rid)
@@ -1213,6 +1251,10 @@ def check_region(rep, runner, pool, folder, sprites, common_dialogues, items):
                 rep.error(rid, f"명세: 문제 {pid}가 없음")
         if spec["boss"] not in bosses:
             rep.error(rid, f"명세: 보스는 {spec['boss']}")
+        if spec.get("midBoss") and spec["midBoss"] not in mids:
+            rep.error(rid, f"명세: 중간 보스는 {spec['midBoss']}")
+        if not spec.get("midBoss") and mids:
+            rep.error(rid, f"명세에 없는 중간 보스: {mids}")
 
     # 맵(월드 담당이 만든다. 없으면 건너뜀)
     map_path = os.path.join(folder, "map.tmj")

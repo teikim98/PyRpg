@@ -1,0 +1,160 @@
+{
+  "region_intro": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 region_intro: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "lake_intro": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 lake_intro: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "npc_lake_merchant": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 npc_lake_merchant: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "npc_lake_keeper": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 npc_lake_keeper: 콘텐츠 담당이 채움)"
+    },
+    {
+      "speaker": "system",
+      "text": "조약돌 더미 바로 북쪽의 갈대"
+    }
+  ],
+  "sign_mirror_bridge": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 sign_mirror_bridge: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "midboss_intro": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 midboss_intro: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "midboss_defeated": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 midboss_defeated: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "sign_reeds": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 sign_reeds: 콘텐츠 담당이 채움)"
+    },
+    {
+      "speaker": "system",
+      "text": "조약돌 더미 바로 북쪽의 갈대"
+    }
+  ],
+  "chest_hidden_reeds": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 chest_hidden_reeds: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "sign_echo_shoal": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 sign_echo_shoal: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "boss_intro": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 boss_intro: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "boss_defeated": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 boss_defeated: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "east_gate_locked": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 east_gate_locked: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "to_be_continued": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 to_be_continued: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "region_clear": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 region_clear: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "lesson_L6-1_intro": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 L6-1)"
+    }
+  ],
+  "lesson_L6-1_done": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 L6-1)"
+    }
+  ],
+  "lesson_L6-2_intro": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 L6-2)"
+    }
+  ],
+  "lesson_L6-2_done": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 L6-2)"
+    }
+  ],
+  "lesson_L6-3_intro": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 L6-3)"
+    }
+  ],
+  "lesson_L6-3_done": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 L6-3)"
+    }
+  ],
+  "lesson_L6-4_intro": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 L6-4)"
+    }
+  ],
+  "lesson_L6-4_done": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 L6-4)"
+    }
+  ],
+  "lesson_L6-5_intro": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 L6-5)"
+    }
+  ],
+  "lesson_L6-5_done": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 L6-5)"
+    }
+  ]
+}

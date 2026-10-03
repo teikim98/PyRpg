@@ -3,7 +3,7 @@
 // - 진단·해설 정규식: 브라우저의 new RegExp(p).test(t) ↔ verify_content.py js_regex(p).search(t)
 // CPython(python3)이 없으면 건너뛴다.
 import { spawnSync } from "node:child_process";
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { CPYTHON, CPYTHON_ENV } from "../cpython";
@@ -48,6 +48,8 @@ function contentPatterns(): string[] {
   const regions = resolve(ROOT, "content/regions");
   for (const region of readdirSync(regions)) {
     const pdir = resolve(regions, region, "problems");
+    // 작업 중인 지역은 아직 문제 폴더가 없을 수 있다
+    if (!existsSync(pdir)) continue;
     for (const pid of readdirSync(pdir)) {
       const p = JSON.parse(readFileSync(resolve(pdir, pid, "problem.json"), "utf-8")) as {
         wrong: { diagnosis: DiagnosisRule }[];
