@@ -64,7 +64,21 @@
         "candle_frozen",
         "broken_pillar",
         "floating_pages",
-        "shelf_gap"
+        "shelf_gap",
+        "port_cobble",
+        "dock_plank",
+        "harbor_water",
+        "frozen_wave",
+        "pier_post",
+        "port_crate",
+        "crate_gap",
+        "barrel",
+        "rope_coil",
+        "fishing_net",
+        "ship_deck",
+        "ship_rail",
+        "port_stall",
+        "lighthouse_wall"
       ],
       "blocking": [
         "water",
@@ -103,7 +117,16 @@
         "book_pile",
         "reading_desk",
         "candle_frozen",
-        "broken_pillar"
+        "broken_pillar",
+        "harbor_water",
+        "frozen_wave",
+        "pier_post",
+        "port_crate",
+        "barrel",
+        "fishing_net",
+        "ship_rail",
+        "port_stall",
+        "lighthouse_wall"
       ]
     }
   },
@@ -315,6 +338,41 @@
     },
     "boss_librarian_golem": {
       "file": "sprites/boss_librarian_golem.png",
+      "frameWidth": 32,
+      "frameHeight": 32
+    },
+    "npc_guild_master": {
+      "file": "sprites/npc_guild_master.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_twin_fish": {
+      "file": "sprites/monster_twin_fish.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_ledger_gull": {
+      "file": "sprites/monster_ledger_gull.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_bubble_jelly": {
+      "file": "sprites/monster_bubble_jelly.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_tally_parrot": {
+      "file": "sprites/monster_tally_parrot.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_queue_crab": {
+      "file": "sprites/monster_queue_crab.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "boss_smuggler_captain": {
+      "file": "sprites/boss_smuggler_captain.png",
       "frameWidth": 32,
       "frameHeight": 32
     }

@@ -25,7 +25,7 @@
                  동쪽 필사실(필사 책상 줄, 보스 전 마지막 쉼터 campfire_scriptorium) → 출구 m_P0409
   5 봉인 서고    봉인된 책장 앞 sign_sealed_record, 남서쪽 1칸 벽감 끝에 선택 m_P0410.
                  동쪽 1칸 통로: t_boss_intro → 빈칸 → (6구역) 보스(트리거는 보스 두 칸 앞, 피할 수 없음)
-  6 골렘의 열람대 1칸 통로를 막은 보스 m_P0411 뒤로 카펫 깔린 열람대 방, 동쪽 끝에 warp_east
+  6 골렘의 열람대 1칸 통로를 막은 보스 m_P0411 뒤로 카펫 깔린 열람대 방, 동쪽 끝에 warp_east(교역항으로)
 """
 from __future__ import annotations
 
@@ -266,7 +266,15 @@ OBJECTS = {
     ">": (
         "warp_east",
         "warp",
-        {"requires": "problem:P0411", "lockedDialogue": "east_gate_locked", "openDialogue": "to_be_continued"},
+        {
+            "requires": "problem:P0411",
+            "lockedDialogue": "east_gate_locked",
+            # 지역 간 이동(docs/phase3/region05-spec.md §4): 해안 길을 따라 교역항 서쪽 입구로.
+            # 처음 건널 때 누리의 연결 대사(to_be_continued)를 한 번 보여 주고 넘어간다(지역 3 문과 같은 방식)
+            "openDialogue": "to_be_continued",
+            "target": "r05",
+            "targetSpawn": "spawn_west",
+        },
         "lib_floor",
     ),
 }
