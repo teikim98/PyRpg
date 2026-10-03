@@ -79,7 +79,7 @@ def ellipse(cx, cy, rx, ry, size=16):
 
 
 # ── 타입 슬라임: 'str' 꼬리표를 단 말랑한 젤리. 기본 → 눌림 → 기본 → 늘어남 ─────────────
-SLIME_RAMP = "grass"
+SLIME_RAMP = "moss"
 
 
 def _slime(w, h):
@@ -96,10 +96,10 @@ def _slime(w, h):
         for x in range(16):
             if abs(x + 0.5 - cx) <= hw:
                 body.add((x, y))
-    p.mass(body, SLIME_RAMP, shade_below=13)
-    # 젤리 광택: 왼쪽 위 강조 2px
+    p.mass(body, SLIME_RAMP, shade_below=13, lift=1)
+    # 젤리 광택: 왼쪽 위에 흰 점 1px + 강조 2px(풀 위에서도 말랑한 젤리로 읽히게 이끼빛 램프를 한 단계 밝혀 칠함)
     lx = min(x for x, y in body if y == top + 2) + 1
-    p.put(lx, top + 2, f"{SLIME_RAMP}.spec")
+    p.put(lx, top + 2, "white")
     p.put(lx, top + 3, f"{SLIME_RAMP}.spec")
     p.put(lx + 1, top + 1, f"{SLIME_RAMP}.spec")
     # 얼굴: 점 눈 1×2, 볼터치, 작은 입
@@ -237,36 +237,38 @@ def _mole(dy, paws_up):
 
 # ── 메아리 유령: 하늘빛 유령이 동그란 입으로 외치면 메아리 고리가 퍼져 나간다 ──────────
 _RINGS = ("teal.spec", "teal.hi", "teal.base", "teal.shade")
+# 물방울 모양 몸(머리는 둥글고 아래로 좁아져 꼬리가 된다). 행마다 (x0, x1)
+_GHOST_ROWS = [(3, 6), (1, 8), (0, 9), (0, 9), (0, 9), (0, 9), (0, 9), (1, 9), (1, 8)]
+# 꼬리 끝 세 줄: 프레임마다 가운데 → 오른쪽 → 가운데 → 왼쪽으로 흔들린다
+_GHOST_TAIL = (((2, 7), (3, 6), (4, 5)), ((2, 7), (4, 8), (7, 9)), ((2, 7), (3, 6), (4, 5)), ((2, 7), (1, 4), (0, 1)))
 
 
 def _ghost(dy, phase):
+    """메아리 유령(P0104 메아리 주문 = 문자열 곱셈): 외친 소리가 ')) '로 거듭 퍼진다."""
     p = Px()
-    head = ellipse(7.0, 6.5 + dy, 5.0, 4.6)
-    body = set(head)
-    bottom = 13 + dy
-    for y in range(int(6 + dy), bottom + 1):
-        for x in range(2, 12):
-            body.add((x, y))
-    # 꼬리 물결: 프레임마다 한 칸씩 흘러간다
-    for x in range(2, 12):
-        if (x + phase) % 4 in (0, 1):
-            body.discard((x, bottom))
+    ox, oy = 1, 3 + dy
+    body = set()
+    for j, (x0, x1) in enumerate(_GHOST_ROWS):
+        body |= {(ox + x, oy + j) for x in range(x0, x1 + 1)}
+    for j, (x0, x1) in enumerate(_GHOST_TAIL[phase]):
+        body |= {(ox + x, oy + len(_GHOST_ROWS) + j) for x in range(x0, x1 + 1)}
     p.mass(body, "sky", lift=1)
-    p.put(4, 3 + dy, "white")
-    p.put(3, 4 + dy, "white")
-    for ex in (6, 9):
-        p.put(ex, 6 + dy, "eye")
-        p.put(ex, 7 + dy, "eye")
-    p.put(5, 8 + dy, "blush")
-    p.put(10, 8 + dy, "blush")
+    p.put(ox + 2, oy + 1, "white")
+    p.put(ox + 1, oy + 2, "white")
+    for ex in (3, 6):
+        p.put(ox + ex, oy + 4, "eye")
+        p.put(ox + ex, oy + 5, "eye")
+    p.put(ox + 2, oy + 6, "blush")
+    p.put(ox + 7, oy + 6, "blush")
     # 동그랗게 벌린 입
-    for x, y in ((7, 9), (8, 9), (7, 10), (8, 10)):
-        p.put(x, y + dy, "sky.ol")
-    # 메아리 고리 ')': 프레임마다 바깥으로 1px, 멀수록 옅어진다
-    rx, my = 12 + phase, 9 + dy
-    for x, y in ((rx, my - 2), (rx + 1, my - 1), (rx + 1, my), (rx + 1, my + 1), (rx, my + 2)):
-        if x < 16:
-            p.put(x, y, _RINGS[phase])
+    for x, y in ((4, 6), (5, 6), (4, 7), (5, 7)):
+        p.put(ox + x, oy + y, "sky.ol")
+    # 메아리 고리 '))' 두 겹: 프레임마다 바깥으로 1px, 바깥 고리일수록 옅다. 가장자리에선 납작해진다
+    my = oy + 6
+    for k, rx in enumerate((13 + phase % 2, 15 + phase % 2)):
+        col = _RINGS[k * 2 + phase % 2]
+        for x, y in ((rx - 1, my - 2), (rx, my - 1), (rx, my), (rx, my + 1), (rx - 1, my + 2)):
+            p.put(min(x, 15), y, col)
     return p.grid(skip=_RINGS)
 
 
