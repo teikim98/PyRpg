@@ -10,7 +10,7 @@
 | Phase 0 리서치 | 완료 | [`research.md`](./research.md) |
 | Phase 1 기획서 | 승인됨(2026-10-01), `main`에 머지 | [`design.md`](./design.md) |
 | Phase 2 버티컬 슬라이스 | 완료(2026-10-01), 피드백 1차 반영, `main`에 머지 | 지역 1 '에코 마을' 전체 플레이 가능. 실행 방법은 [`README.md`](../README.md) |
-| Phase 3 콘텐츠 확장 | **진행 중**: 3-0·3-1, 지역 2·3·4 완료(`main`에 머지, push 대기). 지역 5 교역항 완료(로컬 `phase3-region5` 브랜치, `main`에 머지 전). 다음은 지역 6 거울 호수 | 계획: [`phase3/plan.md`](./phase3/plan.md) |
+| Phase 3 콘텐츠 확장 | **진행 중**: 3-0·3-1, 지역 2·3·4 완료(`main`에 머지, push 대기). 지역 5 교역항 완료(`main`에 머지, push 대기). 다음은 지역 6 거울 호수 | 계획: [`phase3/plan.md`](./phase3/plan.md) |
 
 - Git: origin = https://github.com/teikim98/PyRpg. 클라우드 세션에서는 `claude/admiring-pasteur-98frg7` 브랜치에 커밋하고 push합니다. `main`에는 사용자가 요청할 때 머지합니다.
 - 로컬 PC(Windows 11) 세션에서는 작업 브랜치(`phase3-region4` 등)에 커밋만 하고 push하지 않습니다. 이 PC에는 git 사용자 정보가 없어서 커밋마다 `git -c user.name=Claude -c user.email=noreply@anthropic.com`을 씁니다(기존 커밋과 같은 작성자).
@@ -192,7 +192,7 @@ Phase 3 계획은 [`phase3/plan.md`](./phase3/plan.md)에 있습니다. 지역 �
 | 10 | 보스 P0411 2페이즈 크기(N 15만, Q 80만, 입력 약 12MB)와 출력 `+=` 풀이 인정 | region04-spec.md §3 | **① 크기 유지 + 시전 중 진행 표시 추가**(2026-10-02, 추천안). 지역 3의 `+=` 허용 결정과 일관. 진행 표시는 단위 3-5에서 |
 | 11 | 지역 4(`phase3-region4`)를 `main`에 머지·push | | **머지함**(2026-10-02, `main` = `d199db4`, 머지 후 E2E 160개 통과). push는 이 PC의 권한 설정이 막아서 사용자가 직접 `git push origin main` |
 | 12 | P0411 시간 보정 테스트 기준 | content.spec.ts | **결정 필요**. 추천: P0411만 E2E 기준을 게임 판정과 같은 '제한 × 2'로(입력·budgetUnits는 결정 10대로 유지) |
-| 13 | 지역 5(`phase3-region5`)를 `main`에 머지 | | **결정 필요** |
+| 13 | 지역 5(`phase3-region5`)를 `main`에 머지 | | **머지함**(2026-10-03). push는 사용자가 직접 `git push origin main` |
 
 ## 5. 남은 미확인 항목(Phase 2 이후에 확인)
 
