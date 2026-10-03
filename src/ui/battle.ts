@@ -1,15 +1,18 @@
 // 전투 화면(design.md §5.3, §7.1, §9.7)
 import type { DialogueLine, Emotion } from "../contracts/content";
-import type { JudgeResult, PyError, TestResult } from "../contracts/runner";
+import type { JudgeResult, JudgeStage, PyError, TestResult } from "../contracts/runner";
 import type { BattleOutcome, HintLevel } from "../contracts/state";
 import type { BattleContext, BattleUI } from "../contracts/ui";
+import { josa, withJosa } from "../app/josa";
 import { createPortrait, createSprite } from "./assets";
 import {
+  CAST_PROGRESS_DELAY_MS,
   HINT_COSTS,
   VERDICT_LABEL,
   bossPhases,
   buildCastFeedback,
   buildPublicFeedback,
+  castStageText,
   computeDamage,
   disclosureMode,
   firstFailed,
@@ -409,10 +412,15 @@ export function createBattleUI(env: UiEnv): BattleUI {
               return { emotion: "surprised", html: `${collapsed(`주문이 폭발했어! ${chip}`, ex, link)}${diagHtml}` };
             }
             const where = line ? `<span class="err-line">${line}번째 줄</span>에서 ` : "";
-            return {
-              emotion: "surprised",
-              html: `주문이 폭발했어! ${where}${type}가 났어. ${renderInline(substituteNames(ex, names))}${link ? `<div class="err-codex">${link}</div>` : ""}`,
-            };
+            const lead = `주문이 폭발했어! ${where}${type}가 났어.`;
+            // 코덱스 바로가기는 해설 위(첫 줄 끝)에 둔다. 해설이 길어도 메시지 칸을 내리지 않고 보이게(region05-spec.md §7)
+            if (link) {
+              return {
+                emotion: "surprised",
+                html: `<div class="err-lead">${lead} ${link}</div>${renderInline(substituteNames(ex, names))}`,
+              };
+            }
+            return { emotion: "surprised", html: `${lead} ${renderInline(substituteNames(ex, names))}` };
           }
           const text = diag ?? genericVerdictMessage(first.verdict);
           return { emotion: "worried", html: renderInline(substituteNames(text, names)) };
@@ -455,7 +463,8 @@ export function createBattleUI(env: UiEnv): BattleUI {
             const pre = h("pre", { class: "custom-out" }, formatRunOutput(out));
             if (out.error) {
               const link = codexLinkHtml(out.error);
-              say("surprised", `${renderInline(substituteNames(ctx.explain(out.error, ctx.traceback), names))}${link ? `<div class="err-codex">${link}</div>` : ""}`, pre);
+              // 바로가기는 해설 위에(해설이 길어도 스크롤 없이 보이게)
+              say("surprised", `${link ? `<div class="err-codex">${link}</div>` : ""}${renderInline(substituteNames(ctx.explain(out.error, ctx.traceback), names))}`, pre);
             } else {
               say("neutral", "직접 실행한 결과야. (채점은 하지 않았어)", pre);
             }
@@ -485,13 +494,35 @@ export function createBattleUI(env: UiEnv): BattleUI {
           refillEnemy();
           say("neutral", runnerWaitText());
           let hits = 0;
+          // 진행 표시(큰 입력 준비·몇 번째 시험인지). 시전이 CAST_PROGRESS_DELAY_MS보다 오래 걸릴 때만 보인다(짧은 시전에서 깜빡이지 않게)
+          let progressTimer: number | undefined;
           try {
             await ensureRunner(ctx.runner);
             say("neutral", "시전!");
+            const progress = h("div", { class: "cast-progress", "aria-live": "off", hidden: true });
+            msg.append(progress);
+            let progressDue = false;
+            const revealProgress = () => {
+              if (closed || !progressDue || !progress.isConnected || !progress.textContent) return;
+              if (progress.hidden) {
+                progress.hidden = false;
+                updateMsgMore();
+              }
+            };
+            progressTimer = window.setTimeout(() => {
+              progressDue = true;
+              revealProgress();
+            }, CAST_PROGRESS_DELAY_MS);
             restartAnim(root, "is-casting");
             const res = await ctx.runner.judge(p, editor.getCode(), {
               scope: "all",
               phase: currentPhase(),
+              onStage: (stage: JudgeStage) => {
+                if (closed || !progress.isConnected) return;
+                progress.textContent = castStageText(stage, phases.length > 0);
+                progress.dataset.stage = stage.kind;
+                revealProgress();
+              },
               onProgress: (t: TestResult) => {
                 if (closed) return;
                 if (t.verdict === "AC") {
@@ -533,6 +564,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
           } catch (e) {
             say("worried", `시전하지 못했어: ${escapeHtml((e as Error).message)}`);
           } finally {
+            if (progressTimer !== undefined) window.clearTimeout(progressTimer);
             if (!closed) setBusy(false);
           }
         };
@@ -567,9 +599,9 @@ export function createBattleUI(env: UiEnv): BattleUI {
             console.error(e);
           }
           restartAnim(sprite, "is-defeated");
-          say("happy", `해냈어! ${escapeHtml(p.enemy.name)}을(를) 정화했어!`);
+          say("happy", `해냈어! ${escapeHtml(withJosa(p.enemy.name, "을/를"))} 정화했어!`);
           setBusy(true);
-          showBanner("정화 완료!", `${p.enemy.name}이(가) 빛이 되어 흩어졌다.`, "계속", "is-victory", () => finish("victory"));
+          showBanner("정화 완료!", `${withJosa(p.enemy.name, "이/가")} 빛이 되어 흩어졌다.`, "계속", "is-victory", () => finish("victory"));
         };
 
         const knockout = () => {
@@ -640,7 +672,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
           }
           reportProgress();
           updateButtons();
-          say("happy", `${escapeHtml(ctx.potions?.name ?? "회복약")}을 마셨어! HP가 ${hp - before} 돌아왔어.`);
+          say("happy", `${escapeHtml(withJosa(ctx.potions?.name ?? "회복약", "을/를"))} 마셨어! HP가 ${hp - before} 돌아왔어.`);
         };
 
         const finish = (result: BattleOutcome["result"]) => {
@@ -688,8 +720,8 @@ export function createBattleUI(env: UiEnv): BattleUI {
           ctx.shadow
             ? `<strong>${escapeHtml(p.enemy.name)}의 그림자</strong>가 나타났어! 예전에 막혔던 개념이야. 이야기와 값은 달라도 같은 주문으로 이길 수 있어.`
             : p.boss
-            ? `보스 <strong>${escapeHtml(p.enemy.name)}</strong>이(가) 나타났어! 페이즈마다 한 번에 모든 테스트를 통과해야 해.`
-            : `<strong>${escapeHtml(p.enemy.name)}</strong>이(가) 길을 막고 있어! 한 번의 시전에서 모든 테스트를 통과해야 쓰러뜨릴 수 있어.`,
+            ? `보스 <strong>${escapeHtml(p.enemy.name)}</strong>${josa(p.enemy.name, "이/가")} 나타났어! 페이즈마다 한 번에 모든 테스트를 통과해야 해.`
+            : `<strong>${escapeHtml(p.enemy.name)}</strong>${josa(p.enemy.name, "이/가")} 길을 막고 있어! 한 번의 시전에서 모든 테스트를 통과해야 쓰러뜨릴 수 있어.`,
         );
         env.stack.focusInitial(modal, editor.view.contentDOM);
       });

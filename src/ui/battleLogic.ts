@@ -1,6 +1,6 @@
 // 전투 화면의 순수 계산(DOM 없음). 단위 테스트 대상.
 import type { FunctionTest, Problem, ProblemTest, StdinTest, Verdict } from "../contracts/content";
-import type { JudgeResult, RunOutput, TestResult } from "../contracts/runner";
+import type { JudgeResult, JudgeStage, RunOutput, TestResult } from "../contracts/runner";
 import type { HintLevel } from "../contracts/state";
 
 /** 피해 = 공격력 × (1 − 통과율), 반올림(design.md §5.3) */
@@ -166,4 +166,17 @@ export function genericVerdictMessage(verdict: Verdict): string {
     default:
       return "";
   }
+}
+
+/** 시전 중 진행 표시가 나타나기까지 기다리는 시간(ms). 이보다 빨리 끝나는 일반 전투에서는 아예 보이지 않아 깜빡이지 않는다 */
+export const CAST_PROGRESS_DELAY_MS = 400;
+
+/**
+ * 시전 중 메시지 칸의 진행 문구(docs/phase3/region05-spec.md §7).
+ * 예: "큰 입력 준비 중… (1/4)", "시험 3/7", 보스는 "2페이즈 · 시험 3/4", 시간 결계 재확인은 "… · 한 번 더 재는 중"
+ */
+export function castStageText(stage: JudgeStage, showPhase: boolean): string {
+  if (stage.kind === "generate") return `큰 입력 준비 중… (${stage.index}/${stage.total})`;
+  const head = showPhase ? `${stage.phase}페이즈 · ` : "";
+  return `${head}시험 ${stage.index}/${stage.total}${stage.retry ? " · 한 번 더 재는 중" : ""}`;
 }

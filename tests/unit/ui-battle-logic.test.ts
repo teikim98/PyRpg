@@ -4,6 +4,7 @@ import {
   bossPhases,
   buildCastFeedback,
   buildPublicFeedback,
+  castStageText,
   computeDamage,
   disclosureMode,
   hintShortCost,
@@ -137,5 +138,14 @@ describe("대화 넘기기 키(plan §1 7)", () => {
     expect(isAdvanceKey({ code: "Enter", key: "Enter" })).toBe(true);
     expect(isAdvanceKey({ code: "KeyX", key: "x" })).toBe(false);
     expect(isAdvanceKey({ code: "KeyA", key: "z" })).toBe(false);
+  });
+});
+
+describe("castStageText", () => {
+  it("큰 입력 준비와 시험 순서, 보스는 페이즈, 재확인은 꼬리말", () => {
+    expect(castStageText({ kind: "generate", index: 2, total: 4 }, true)).toBe("큰 입력 준비 중… (2/4)");
+    expect(castStageText({ kind: "test", index: 3, total: 7, phase: 1, retry: false }, false)).toBe("시험 3/7");
+    expect(castStageText({ kind: "test", index: 1, total: 4, phase: 2, retry: false }, true)).toBe("2페이즈 · 시험 1/4");
+    expect(castStageText({ kind: "test", index: 1, total: 4, phase: 2, retry: true }, true)).toBe("2페이즈 · 시험 1/4 · 한 번 더 재는 중");
   });
 });

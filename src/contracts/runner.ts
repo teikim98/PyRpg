@@ -45,6 +45,19 @@ export interface TestResult {
   error?: PyError;
 }
 
+/**
+ * 채점이 지금 하는 일(시전 중 진행 표시용, docs/phase3/region05-spec.md §7).
+ * 채점 순서는 메인 스레드의 실행기가 테스트마다 워커에 요청하며 정하므로, 워커 메시지 없이 실행기가 알린다.
+ */
+export type JudgeStage =
+  /** 큰 입력 생성기(gen) 실행 중. index는 이번 채점에서 새로 만드는 입력 중 몇 번째(1부터), total은 새로 만들 입력 수(캐시된 것 제외) */
+  | { kind: "generate"; index: number; total: number }
+  /**
+   * 테스트 실행 중. index는 이번 채점의 몇 번째 테스트(1부터), total은 이번 채점의 테스트 수, phase는 그 테스트의 페이즈.
+   * retry면 시간 결계 경계에서 한 번 더 재는 중(§9.6 4단계)
+   */
+  | { kind: "test"; index: number; total: number; phase: number; retry: boolean };
+
 export interface JudgeOptions {
   /** "public"은 [예제 실행], "all"은 [시전(제출)] */
   scope: "public" | "all";
@@ -52,6 +65,8 @@ export interface JudgeOptions {
   phase?: number;
   /** 테스트 하나가 끝날 때마다 호출(타격 연출용) */
   onProgress?: (result: TestResult) => void;
+  /** 입력 생성·테스트 실행을 시작할 때마다 호출(진행 표시용). 건너뛴 테스트(TLE·RE 뒤)는 부르지 않는다 */
+  onStage?: (stage: JudgeStage) => void;
 }
 
 export interface JudgeResult {
