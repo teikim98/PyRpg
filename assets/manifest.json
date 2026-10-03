@@ -78,7 +78,21 @@
         "ship_deck",
         "ship_rail",
         "port_stall",
-        "lighthouse_wall"
+        "lighthouse_wall",
+        "lake_shore",
+        "lake_water",
+        "mirror_water",
+        "lake_reed",
+        "reed_gap",
+        "pebble_cairn",
+        "lake_stepping_stone",
+        "lake_bridge",
+        "bridge_rail",
+        "willow_tree",
+        "lily_pad",
+        "mist_grass",
+        "echo_rock",
+        "island_grass"
       ],
       "blocking": [
         "water",
@@ -126,7 +140,14 @@
         "fishing_net",
         "ship_rail",
         "port_stall",
-        "lighthouse_wall"
+        "lighthouse_wall",
+        "lake_water",
+        "mirror_water",
+        "lake_reed",
+        "bridge_rail",
+        "willow_tree",
+        "lily_pad",
+        "echo_rock"
       ]
     }
   },
@@ -375,6 +396,46 @@
       "file": "sprites/boss_smuggler_captain.png",
       "frameWidth": 32,
       "frameHeight": 32
+    },
+    "monster_call_frog": {
+      "file": "sprites/monster_call_frog.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_zip_eel": {
+      "file": "sprites/monster_zip_eel.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_lambda_heron": {
+      "file": "sprites/monster_lambda_heron.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_nesting_lily": {
+      "file": "sprites/monster_nesting_lily.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_memo_moth": {
+      "file": "sprites/monster_memo_moth.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "boss_mirror_twins": {
+      "file": "sprites/boss_mirror_twins.png",
+      "frameWidth": 32,
+      "frameHeight": 32
+    },
+    "boss_lake_echo": {
+      "file": "sprites/boss_lake_echo.png",
+      "frameWidth": 32,
+      "frameHeight": 32
+    },
+    "npc_lake_keeper": {
+      "file": "sprites/npc_lake_keeper.png",
+      "frameWidth": 16,
+      "frameHeight": 16
     }
   },
   "portraits": {

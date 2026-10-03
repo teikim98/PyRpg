@@ -7,12 +7,13 @@
 forest_tiles.py · forest_npcs.py · forest_monsters.py · forest_boss.py(지역 2),
 cave_tiles.py · cave_npcs.py · cave_monsters.py · cave_boss.py(지역 3, 팔레트 cavepal.py),
 library_tiles.py · library_npcs.py · library_monsters.py · library_boss.py(지역 4, 팔레트 librarypal.py),
-port_tiles.py · port_npcs.py · port_monsters.py · port_boss.py(지역 5, 팔레트 portpal.py)에
+port_tiles.py · port_npcs.py · port_monsters.py · port_boss.py(지역 5, 팔레트 portpal.py),
+lake_tiles.py · lake_npcs.py · lake_monsters.py · lake_boss.py(지역 6, 팔레트 lakepal.py)에
 팔레트 문자 그리드(또는 도형으로 그리는 코드)로 정의되어 있다. 같은 코드면 언제나 같은 바이트가 나온다.
 
 미리보기: docs/phase2/art-preview.png(지역 1 에셋), docs/phase3/art-preview-r02.png(지역 2 에셋 + 숲 장면),
 docs/phase3/art-preview-r03.png(지역 3 에셋 + 동굴 장면), docs/phase3/art-preview-r04.png(지역 4 에셋 + 도서관 장면),
-docs/phase3/art-preview-r05.png(지역 5 에셋 + 항구 장면)
+docs/phase3/art-preview-r05.png(지역 5 에셋 + 항구 장면), docs/phase3/art-preview-r06.png(지역 6 에셋 + 호수 장면)
 """
 import json
 import os
@@ -32,6 +33,10 @@ from forest_monsters import FOREST_MONSTERS  # noqa: E402
 from forest_npcs import FOREST_CHARACTERS  # noqa: E402
 from forest_tiles import FOREST_TILES  # noqa: E402
 from gridlib import Canvas, sheet  # noqa: E402
+from lake_boss import LAKE_BOSSES  # noqa: E402
+from lake_monsters import LAKE_MONSTERS  # noqa: E402
+from lake_npcs import LAKE_CHARACTERS  # noqa: E402
+from lake_tiles import LAKE_TILES  # noqa: E402
 from library_boss import LIBRARY_BOSSES  # noqa: E402
 from library_monsters import LIBRARY_MONSTERS  # noqa: E402
 from library_npcs import LIBRARY_CHARACTERS  # noqa: E402
@@ -46,12 +51,13 @@ from portraits import PORTRAITS  # noqa: E402
 from tiles import TILES as R01_TILES  # noqa: E402
 from town_objects import TOWN_OBJECTS  # noqa: E402
 
-TILES = {**R01_TILES, **FOREST_TILES, **CAVE_TILES, **LIBRARY_TILES, **PORT_TILES}
-# 지역 2·3·4·5에서 새로 생긴 에셋(미리보기를 지역별로 나눌 때 쓴다)
+TILES = {**R01_TILES, **FOREST_TILES, **CAVE_TILES, **LIBRARY_TILES, **PORT_TILES, **LAKE_TILES}
+# 지역 2·3·4·5·6에서 새로 생긴 에셋(미리보기를 지역별로 나눌 때 쓴다)
 R02_NAMES = set(FOREST_TILES) | set(FOREST_CHARACTERS) | set(FOREST_MONSTERS) | set(FOREST_BOSSES)
 R03_NAMES = set(CAVE_TILES) | set(CAVE_CHARACTERS) | set(CAVE_MONSTERS) | set(CAVE_BOSSES)
 R04_NAMES = set(LIBRARY_TILES) | set(LIBRARY_CHARACTERS) | set(LIBRARY_MONSTERS) | set(LIBRARY_BOSSES)
 R05_NAMES = set(PORT_TILES) | set(PORT_CHARACTERS) | set(PORT_MONSTERS) | set(PORT_BOSSES)
+R06_NAMES = set(LAKE_TILES) | set(LAKE_CHARACTERS) | set(LAKE_MONSTERS) | set(LAKE_BOSSES)
 # 단위 3-1 마을 시설(그림자 게시판·상점). 지역별 미리보기에는 넣지 않는다
 TOWN_NAMES = set(TOWN_OBJECTS)
 
@@ -62,6 +68,7 @@ PREVIEW_R02 = os.path.join(ROOT, "docs", "phase3", "art-preview-r02.png")
 PREVIEW_R03 = os.path.join(ROOT, "docs", "phase3", "art-preview-r03.png")
 PREVIEW_R04 = os.path.join(ROOT, "docs", "phase3", "art-preview-r04.png")
 PREVIEW_R05 = os.path.join(ROOT, "docs", "phase3", "art-preview-r05.png")
+PREVIEW_R06 = os.path.join(ROOT, "docs", "phase3", "art-preview-r06.png")
 
 
 def load_manifest():
@@ -73,7 +80,7 @@ def sprite_frames(name: str):
     """논리 이름 → 프레임 그리드 리스트."""
     for table in (CHARACTERS, MONSTERS, OBJECTS, BOSSES, FOREST_CHARACTERS, FOREST_MONSTERS, FOREST_BOSSES, TOWN_OBJECTS,
                   CAVE_CHARACTERS, CAVE_MONSTERS, CAVE_BOSSES, LIBRARY_CHARACTERS, LIBRARY_MONSTERS, LIBRARY_BOSSES,
-                  PORT_CHARACTERS, PORT_MONSTERS, PORT_BOSSES):
+                  PORT_CHARACTERS, PORT_MONSTERS, PORT_BOSSES, LAKE_CHARACTERS, LAKE_MONSTERS, LAKE_BOSSES):
         if name in table:
             return table[name]
     raise KeyError(f"no art defined for sprite {name!r}")
@@ -252,6 +259,30 @@ SCENE_R05_ACTORS = [("player", 4, 6, 2), ("nuri", 4, 5, 2), ("npc_guild_master",
                     ("boss_smuggler_captain", 0, 16, 6)]
 SCENE_R05 = (SCENE_R05_ROWS, SCENE_R05_KEY, SCENE_R05_ACTORS)
 
+# 거울 호수: 모래 호숫가와 버드나무, 흐르는 호수 물(연잎)과 굳은 거울 수면, 난간 두른 거울 다리,
+# 안개 풀밭의 갈대 벽(조약돌 더미 바로 북쪽의 갈대 빈틈이 숨은 길), 징검돌, 메아리 바위, 섬 풀
+SCENE_R06_ROWS = [
+    "WWWW;;WWRRRRRgRRRRRR",
+    "W;;;;;W.R:::::p::::R",
+    ";;....;.R::::::::::R",
+    "........::::::::::::",
+    "..E....-----mmmmmmmm",
+    ".......=====mmmmmmmm",
+    "~~~~...-----mmmm;;;;",
+    "~l~~o~~mmmmmmm;;;;;W",
+    "~~~~~o~~lmmmm;;;;;;;",
+]
+SCENE_R06_KEY = {".": "lake_shore", ";": "island_grass", ":": "mist_grass", "~": "lake_water", "m": "mirror_water",
+                 "W": "willow_tree", "R": "lake_reed", "g": "reed_gap", "p": "pebble_cairn", "o": "lake_stepping_stone",
+                 "=": "lake_bridge", "-": "bridge_rail", "l": "lily_pad", "E": "echo_rock"}
+SCENE_R06_ACTORS = [("player", 4, 5, 3), ("nuri", 4, 4, 3), ("npc_lake_keeper", 0, 2, 2),
+                    ("npc_merchant", 0, 1, 1), ("monster_call_frog", 0, 6, 2), ("monster_zip_eel", 0, 2, 7),
+                    ("monster_lambda_heron", 0, 10, 5), ("monster_nesting_lily", 0, 16, 2),
+                    ("monster_memo_moth", 0, 11, 3), ("obj_rune", 1, 3, 3), ("obj_campfire", 0, 0, 3),
+                    ("obj_chest", 0, 13, 0), ("obj_sign", 0, 7, 3), ("obj_board", 0, 4, 1),
+                    ("boss_mirror_twins", 0, 12, 4), ("boss_lake_echo", 0, 16, 6)]
+SCENE_R06 = (SCENE_R06_ROWS, SCENE_R06_KEY, SCENE_R06_ACTORS)
+
 
 def subset(manifest, keep, tiles=None):
     """미리보기용 매니페스트 사본: keep(이름)이 참인 스프라이트·초상화와 tiles(없으면 keep)로 고른 타일만."""
@@ -338,12 +369,13 @@ def render_preview(manifest, assets, scene_def=SCENE_R01):
         x = pad
         for n in bosses:
             spr = manifest["sprites"][n]
+            x0 = x  # 보스가 여럿이면 이름을 각자 그림 아래에 쓴다
             for f in sprite_frames(n):
                 fr = Canvas(spr["frameWidth"], spr["frameHeight"]).draw(f)
                 c.fill_rect(x - 2, y - 2, spr["frameWidth"] * S + 4, spr["frameHeight"] * S + 4, PANEL)
                 c.paste(fr, x, y, S)
                 x += spr["frameWidth"] * S + 10
-            text(c, n, pad, y + spr["frameHeight"] * S + 6, 1)
+            text(c, n, x0, y + spr["frameHeight"] * S + 6, 1)
     blocks.append((32 * S + 20, draw_big))
 
     psize = max((p["size"] for p in manifest["portraits"].values()), default=0)
@@ -399,7 +431,7 @@ def build(write: bool = True):
     for rel, c in assets.items():
         out[os.path.join(ASSETS, rel)] = encode_png(c.width, c.height, c.rows())
     r01 = subset(manifest, lambda n: n not in R02_NAMES and n not in R03_NAMES and n not in R04_NAMES
-                 and n not in R05_NAMES and n not in TOWN_NAMES)
+                 and n not in R05_NAMES and n not in R06_NAMES and n not in TOWN_NAMES)
     prev = render_preview(r01, assets)
     out[PREVIEW] = encode_png(prev.width, prev.height, prev.rows())
     r02 = subset(manifest, lambda n: n in R02_NAMES or n in ("player", "nuri"), lambda n: n in R02_NAMES)
@@ -414,6 +446,9 @@ def build(write: bool = True):
     r05 = subset(manifest, lambda n: n in R05_NAMES or n in ("player", "nuri"), lambda n: n in R05_NAMES)
     prev = render_preview(r05, assets, SCENE_R05)
     out[PREVIEW_R05] = encode_png(prev.width, prev.height, prev.rows())
+    r06 = subset(manifest, lambda n: n in R06_NAMES or n in ("player", "nuri"), lambda n: n in R06_NAMES)
+    prev = render_preview(r06, assets, SCENE_R06)
+    out[PREVIEW_R06] = encode_png(prev.width, prev.height, prev.rows())
     if write:
         for path, data in out.items():
             os.makedirs(os.path.dirname(path), exist_ok=True)
