@@ -155,27 +155,27 @@
     "player": {
       "file": "sprites/player.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     },
     "nuri": {
       "file": "sprites/nuri.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     },
     "npc_merchant": {
       "file": "sprites/npc_merchant.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     },
     "npc_villager": {
       "file": "sprites/npc_villager.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     },
     "npc_child": {
       "file": "sprites/npc_child.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     },
     "monster_type_slime": {
       "file": "sprites/monster_type_slime.png",
