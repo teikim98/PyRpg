@@ -25,10 +25,10 @@
    "name": "overworld",
    "image": "../../../assets/tiles/overworld.png",
    "imagewidth": 128,
-   "imageheight": 176,
+   "imageheight": 192,
    "tilewidth": 16,
    "tileheight": 16,
-   "tilecount": 88,
+   "tilecount": 93,
    "columns": 8,
    "margin": 0,
    "spacing": 0,
@@ -998,6 +998,61 @@
        "name": "blocking",
        "type": "bool",
        "value": false
+      }
+     ]
+    },
+    {
+     "id": 88,
+     "type": "water_a1",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 89,
+     "type": "water_a2",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 90,
+     "type": "grass_flower_a1",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 91,
+     "type": "flower_bed_a1",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 92,
+     "type": "lamp_post_a1",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
       }
      ]
     }

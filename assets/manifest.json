@@ -92,7 +92,12 @@
         "lily_pad",
         "mist_grass",
         "echo_rock",
-        "island_grass"
+        "island_grass",
+        "water_a1",
+        "water_a2",
+        "grass_flower_a1",
+        "flower_bed_a1",
+        "lamp_post_a1"
       ],
       "blocking": [
         "water",
@@ -147,8 +152,43 @@
         "bridge_rail",
         "willow_tree",
         "lily_pad",
-        "echo_rock"
+        "echo_rock",
+        "water_a1",
+        "water_a2",
+        "lamp_post_a1",
+        "flower_bed_a1"
       ]
+    }
+  },
+  "tileAnimations": {
+    "water": {
+      "frames": [
+        "water",
+        "water_a1",
+        "water_a2"
+      ],
+      "fps": 3
+    },
+    "grass_flower": {
+      "frames": [
+        "grass_flower",
+        "grass_flower_a1"
+      ],
+      "fps": 1.5
+    },
+    "flower_bed": {
+      "frames": [
+        "flower_bed",
+        "flower_bed_a1"
+      ],
+      "fps": 1.5
+    },
+    "lamp_post": {
+      "frames": [
+        "lamp_post",
+        "lamp_post_a1"
+      ],
+      "fps": 2
     }
   },
   "sprites": {

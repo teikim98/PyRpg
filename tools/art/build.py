@@ -48,7 +48,7 @@ from port_monsters import PORT_MONSTERS  # noqa: E402
 from port_npcs import PORT_CHARACTERS  # noqa: E402
 from port_tiles import PORT_TILES  # noqa: E402
 from portraits import PORTRAITS  # noqa: E402
-from tiles import TILES as R01_TILES  # noqa: E402
+from tiles import DECO_UNDER, TILE_ANIMATIONS, TILES as R01_TILES  # noqa: E402
 from town_objects import TOWN_OBJECTS  # noqa: E402
 
 TILES = {**R01_TILES, **FOREST_TILES, **CAVE_TILES, **LIBRARY_TILES, **PORT_TILES, **LAKE_TILES}
@@ -59,7 +59,7 @@ R04_NAMES = set(LIBRARY_TILES) | set(LIBRARY_CHARACTERS) | set(LIBRARY_MONSTERS)
 R05_NAMES = set(PORT_TILES) | set(PORT_CHARACTERS) | set(PORT_MONSTERS) | set(PORT_BOSSES)
 R06_NAMES = set(LAKE_TILES) | set(LAKE_CHARACTERS) | set(LAKE_MONSTERS) | set(LAKE_BOSSES)
 # 단위 3-1 마을 시설(그림자 게시판·상점). 지역별 미리보기에는 넣지 않는다
-TOWN_NAMES = set(TOWN_OBJECTS)
+TOWN_NAMES = {"obj_board", "obj_shop"}
 
 ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
 ASSETS = os.path.join(ROOT, "assets")
@@ -78,7 +78,8 @@ def load_manifest():
 
 def sprite_frames(name: str):
     """논리 이름 → 프레임 그리드 리스트."""
-    for table in (CHARACTERS, MONSTERS, OBJECTS, BOSSES, FOREST_CHARACTERS, FOREST_MONSTERS, FOREST_BOSSES, TOWN_OBJECTS,
+    # TOWN_OBJECTS(코지 화풍으로 다시 그린 마을 오브젝트)가 monsters.OBJECTS의 옛 그림보다 먼저다
+    for table in (TOWN_OBJECTS, CHARACTERS, MONSTERS, OBJECTS, BOSSES, FOREST_CHARACTERS, FOREST_MONSTERS, FOREST_BOSSES,
                   CAVE_CHARACTERS, CAVE_MONSTERS, CAVE_BOSSES, LIBRARY_CHARACTERS, LIBRARY_MONSTERS, LIBRARY_BOSSES,
                   PORT_CHARACTERS, PORT_MONSTERS, PORT_BOSSES, LAKE_CHARACTERS, LAKE_MONSTERS, LAKE_BOSSES):
         if name in table:
@@ -128,8 +129,17 @@ def portrait_grid(name: str):
     return PORTRAITS[key][0]
 
 
+def check_tile_animations(manifest):
+    """지역 1 타일 애니메이션(tiles.TILE_ANIMATIONS)이 manifest `tileAnimations`와 같은지."""
+    anims = manifest.get("tileAnimations", {})
+    for key, anim in TILE_ANIMATIONS.items():
+        if anims.get(key) != anim:
+            raise ValueError(f"manifest tileAnimations.{key} must be {anim!r} (tools/art/tiles.py), got {anims.get(key)!r}")
+
+
 def render_assets(manifest):
     """{assets 기준 상대 경로: Canvas}"""
+    check_tile_animations(manifest)
     out = {}
     ts = manifest["tileSize"]
     for tname, tset in manifest["tilesets"].items():
@@ -351,7 +361,10 @@ def render_preview(manifest, assets, scene_def=SCENE_R01):
         for i, n in enumerate(names):
             x = pad + (i % per_row) * cell_w
             yy = y + (i // per_row) * cell_h
-            t = Canvas(ts, ts).draw(TILES[n])
+            t = Canvas(ts, ts)
+            if n in DECO_UNDER:  # 투명 물체 타일은 게임처럼 바닥 위에 올려 보여 준다
+                t.draw(TILES[DECO_UNDER[n]])
+            t.draw(TILES[n])
             c.paste(t, x, yy, S)
             text(c, n, x, yy + ts * S + 3, 1)
     blocks.append((-(-len(names) // per_row) * cell_h + 4, draw_tiles))
@@ -465,7 +478,10 @@ def render_preview(manifest, assets, scene_def=SCENE_R01):
         sc = Canvas(len(scene[0]) * ts, len(scene) * ts)
         for j, row in enumerate(scene):
             for i, ch in enumerate(row):
-                sc.draw(TILES[key[ch]], i * ts, j * ts)
+                n = key[ch]
+                if n in DECO_UNDER:  # 투명 물체 타일 밑에는 장면의 바닥('.')이나 기본 바닥을 깐다
+                    sc.draw(TILES[key.get(".", DECO_UNDER[n])], i * ts, j * ts)
+                sc.draw(TILES[n], i * ts, j * ts)
         # 키 큰 스프라이트(16×24 캐릭터)는 발이 칸 바닥에 오게 위로 올리고, 아래 줄부터 그려 겹침을 맞춘다
         for name, frame, tx, ty in sorted(actors, key=lambda a: a[3]):
             g = scene_frame(name, frame)
