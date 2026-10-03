@@ -5,4 +5,4 @@
 - `diffs = [a - b for a, b in zip(real, shadow)]`: 쌍을 `a`, `b`로 풀어서 바로 빼(언패킹).
 - `zip(...)`은 한 번 돌면 비는 꾸러미야. `pairs = zip(...)`에 담아 두고 두 번 돌면 두 번째는 아무것도 안 나와. 다시 쓸 거면 `list(zip(...))`로 담거나, 이미 만든 `diffs`를 써.
 - `print(*diffs)`: 리스트를 펼쳐서 공백으로 구분해 출력. `print(diffs)`는 `[0, -1, 2, 0]` 모양 그대로 찍혀.
-- `sum(1 for d in diffs if d != 0)`은 조건에 맞는 칸마다 1을 더해서 개수를 세는 방법이야. `len([d for d in diffs if d != 0])`도 같아.
+- `len([d for d in diffs if d != 0])`은 조건에 맞는 칸만 리스트로 모은 다음 그 길이로 개수를 세는 방법이야.

@@ -487,7 +487,7 @@ test.describe.serial("메아리 고리(단위 3-6, region06-spec.md §7.2)", () 
     await expect(page.locator('.shop-item[data-item="echo-ring"]')).toHaveCount(0);
     await closeAll(page);
 
-    // 이 worktree에는 지역 6이 없으므로, 지금 지역의 순서만 6으로 바꿔 '지역 6 상점'을 흉내 낸다
+    // 실제 지역 6 상점(shop_lake) 흐름은 region06.spec.ts가 확인한다. 여기서는 지역 순서만 6으로 바꿔 정확한 횟수를 빠르게 확인
     await page.evaluate(() => ((window as any).__pyrpg.app.region.order = 6));
     await interact(page, "shop_echo");
     await settle(page, ".shop-modal");

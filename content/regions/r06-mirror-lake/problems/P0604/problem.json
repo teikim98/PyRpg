@@ -83,7 +83,7 @@
   "hints": [
     "두 줄을 각각 정수 리스트로 읽고, 같은 자리끼리 짝지어 빼면 돼. 개수가 다를 때는 둘 다 있는 칸까지만! 이걸 알아서 해 주는 내장 함수가 있었지?",
     "`zip(real, shadow)`는 `(실물, 그림자)` 쌍을 짧은 쪽 길이만큼만 만들어 줘. `diffs = [a - b for a, b in zip(real, shadow)]`로 차이를 모으고, `print(*diffs)`로 펼쳐서 출력. 0이 아닌 칸의 수는 `diffs`에서 세.",
-    "```python\nimport sys\ninput = sys.stdin.readline\n\nreal = list(map(int, input().split()))\nshadow = list(map(int, input().split()))\n\ndiffs = [a - b for a, b in ____]\nprint(____)\nprint(sum(1 for d in diffs if d != 0))\n```"
+    "```python\nimport sys\ninput = sys.stdin.readline\n\nreal = list(map(int, input().split()))\nshadow = list(map(int, input().split()))\n\ndiffs = [a - b for a, b in ____]\nprint(____)\nprint(len([d for d in diffs if d != 0]))\n```"
   ],
   "reward": {"xp": 100, "gold": 50}
 }

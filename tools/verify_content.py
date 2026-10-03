@@ -242,6 +242,7 @@ TRACEBACK_SAMPLES = [
     ("x = [3, 1].sort()\nx.append(1)", "AttributeError", True),
     ("lru_cache", "NameError", True),
     ("c = 0\ndef f():\n    c += 1\nf()", "UnboundLocalError", False),
+    ("def f(a):\n    for x in a:\n        ans = x\n    return ans\nf([])", "UnboundLocalError", False),
     ("[0] * (10 ** 19)", "OverflowError", True),
     ("let x = 1", "SyntaxError", False),
     ("x++", "SyntaxError", False),

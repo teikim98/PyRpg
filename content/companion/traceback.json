@@ -31,7 +31,7 @@
   {
     "exception": "NameError",
     "pattern": "name '(lru_cache|cache|functools|cmp_to_key)' is not defined",
-    "text": "`lru_cache`·`cache`는 `functools`라는 도구 상자에 들어 있어서 먼저 불러와야 써. 맨 위에 `from functools import lru_cache`(또는 `cache`)를 적어 줘. `@functools.lru_cache(maxsize=None)`처럼 쓰려면 `import functools`가 필요해.",
+    "text": "`lru_cache`·`cache`·`cmp_to_key`는 `functools`라는 도구 상자에 들어 있어서 먼저 불러와야 써. 맨 위에 `from functools import lru_cache`(또는 `cache`, `cmp_to_key`)를 적어 줘. `@functools.lru_cache(maxsize=None)`처럼 쓰려면 `import functools`가 필요해. 혹시 `cache`가 메모용으로 직접 만들려던 dict 이름이라면, 함수 밖에 `cache = {}`를 먼저 만들어 둬.",
     "lesson": "L6-5"
   },
   {
@@ -40,7 +40,7 @@
   },
   {
     "exception": "UnboundLocalError",
-    "text": "함수 안에서 바깥 변수의 값을 바꾸려고 했어! Python은 함수 안에서 `=`나 `+=`로 값을 넣는 이름을 그 함수만의 지역 변수로 보는데, 그 지역 변수에 아직 값이 없어서 에러가 난 거야. 값을 인자로 받아서 `return`으로 돌려주는 게 가장 깔끔하고, 꼭 바깥 변수를 바꿔야 한다면 함수 첫 줄에 `global 이름`을 적어 줘.",
+    "text": "함수 안에서 값을 넣는 이름을, 값이 들어가기 전에 먼저 읽었어! Python은 함수 안에서 `=`나 `+=`로 값을 넣는 이름을 그 함수만의 지역 변수로 봐. 두 경우가 흔해. ① `if`나 `for` 안에서만 값을 넣었다면, 그 분기나 반복이 한 번도 실행되지 않을 수 있어. 함수 앞쪽에서 먼저 초기값(예: `ans = 0`)을 넣어 줘. ② 바깥 변수를 바꾸려 했다면, 값을 인자로 받아 `return`으로 돌려주는 게 가장 깔끔하고, 꼭 바깥 변수를 바꿔야 할 때만 함수 첫 줄에 `global 이름`을 적어.",
     "lesson": "L6-1"
   },
   {

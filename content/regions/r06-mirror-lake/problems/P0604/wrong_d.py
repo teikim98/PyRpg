@@ -6,4 +6,4 @@ shadow = input().split()
 
 diffs = [a - b for a, b in zip(real, shadow)]
 print(*diffs)
-print(sum(1 for d in diffs if d != 0))
+print(len([d for d in diffs if d != 0]))

@@ -19,7 +19,7 @@ def before(p, q):
     return p[0] < q[0]
 
 
-# 선택 정렬: 남은 사람 중 맨 앞에 설 사람을 골라 앞으로 보낸다(N × N)
+# 선택 정렬: 남은 사람 중 맨 앞에 설 사람을 골라 앞으로 보낸다(약 N × N ÷ 2번 비교)
 for i in range(n):
     best = i
     for j in range(i + 1, n):

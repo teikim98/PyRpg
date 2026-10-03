@@ -25,4 +25,4 @@ def compare(p, q):
 
 
 people.sort(key=cmp_to_key(compare))
-print("\n".join(p[0] for p in people))
+print("\n".join([p[0] for p in people]))

@@ -1,6 +1,7 @@
 # PyRpg 채점기(design.md §5.5, §9.4). 워커가 Pyodide FS에 pyrpg_judge.py로 써 두고 import한다.
 # 모든 함수는 JSON 문자열만 돌려준다. 큰 정수가 JS를 거치지 않게 비교는 여기서 하고 repr만 넘긴다.
 import ast
+import bisect
 import builtins
 import io
 import json
@@ -153,7 +154,8 @@ class _LineCounter:
     """메아리 고리(design.md §7.3, docs/phase3/region06-spec.md §7.2): 사용자 코드(<주문>) 줄마다 실행 횟수를 센다.
     sys.monitoring(Python 3.12+)의 지역 이벤트(set_local_events)를 사용자 코드 객체에만 켠다. 채점기·표준 라이브러리에는
     이벤트가 아예 생기지 않으므로 콜백에서 파일을 거를 필요가 없다(빠름).
-    - 여러 줄 코드(모듈, 보통 함수): LINE 이벤트로 줄마다 센다.
+    - 여러 줄 코드(모듈, 보통 함수): LINE 이벤트로 줄마다 센다. LINE은 같은 줄 안에서 뒤로 점프할 때는 생기지 않으므로
+      (한 줄짜리 반복문 `for i in r: s += i`, 리스트·dict·set 컴프리헨션) JUMP 이벤트에서 '같은 줄로 뒤로 점프'를 한 번 더 센다.
     - 한 줄짜리 함수(lambda, def f(x): return x): 몸통이 첫 줄과 같아 LINE 이벤트가 버전마다 다르다(3.12는 생기고 3.14는 없음).
       그래서 LINE은 끄고 호출(PY_START)마다 그 줄을 한 번 센다(sorted의 key=lambda가 몇 번 불렸는지 보이게).
       한 줄짜리 제너레이터(sum(x for x in arr))는 다시 이어질 때(PY_RESUME)도 센다(값을 하나 꺼낼 때마다).
@@ -198,6 +200,23 @@ class _LineCounter:
         def on_line(_code, line):
             counts[line] = counts.get(line, 0) + 1
 
+        # 코드 객체마다 (시작 오프셋 목록, 줄 목록): 오프셋 → 줄
+        line_tables = {}
+
+        def line_at(code, offset):
+            table = line_tables.get(code)
+            if table is None:
+                return None
+            starts, lines = table
+            i = bisect.bisect_right(starts, offset) - 1
+            return lines[i] if i >= 0 else None
+
+        def on_jump(code, src, dest):
+            if dest < src:
+                line = line_at(code, dest)
+                if line is not None and line == line_at(code, src):
+                    counts[line] = counts.get(line, 0) + 1
+
         def on_start(code, _offset):
             first = code.co_firstlineno
             counts[first] = counts.get(first, 0) + 1
@@ -208,10 +227,16 @@ class _LineCounter:
             mon.register_callback(tool, mon.events.LINE, on_line)
             mon.register_callback(tool, mon.events.PY_START, on_start)
             mon.register_callback(tool, mon.events.PY_RESUME, on_start)
+            mon.register_callback(tool, mon.events.JUMP, on_jump)
             ev = mon.events
             for c in self._code_objects(module_code):
                 if not self._one_line(c):
-                    events = ev.LINE
+                    events = ev.LINE | ev.JUMP
+                    starts, lines = [], []
+                    for s0, _e, ln in c.co_lines():
+                        starts.append(s0)
+                        lines.append(ln)
+                    line_tables[c] = (starts, lines)
                 elif c.co_flags & CO_GENERATOR_FLAGS:
                     events = ev.PY_START | ev.PY_RESUME
                 else:
@@ -239,6 +264,7 @@ class _LineCounter:
             lambda: mon.register_callback(tool, mon.events.LINE, None),
             lambda: mon.register_callback(tool, mon.events.PY_START, None),
             lambda: mon.register_callback(tool, mon.events.PY_RESUME, None),
+            lambda: mon.register_callback(tool, mon.events.JUMP, None),
             lambda: mon.free_tool_id(tool),
         ]
         for fn in steps:

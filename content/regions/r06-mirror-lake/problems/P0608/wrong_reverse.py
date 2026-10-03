@@ -8,4 +8,4 @@ for _ in range(n):
     people.append((name, int(row), int(swim), int(dive)))
 
 people.sort(key=lambda p: (p[1], -p[2], p[3], p[0]), reverse=True)
-print("\n".join(p[0] for p in people))
+print("\n".join([p[0] for p in people]))

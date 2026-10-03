@@ -8,4 +8,4 @@ diffs = []
 for i in range(len(real)):
     diffs.append(real[i] - shadow[i])
 print(*diffs)
-print(sum(1 for d in diffs if d != 0))
+print(len([d for d in diffs if d != 0]))

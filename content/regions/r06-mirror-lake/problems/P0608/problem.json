@@ -17,7 +17,7 @@
       "phase": 2,
       "name": "시간 결계",
       "stopOnTle": true,
-      "intro": "으악, 시간 결계야! 줄 설 사람이 10만 명으로 늘었어. 남은 사람을 전부 훑어서 맨 앞 사람을 한 명씩 고르면 10만 × 10만, 50억 번 비교야. 기준을 키 튜플로 만들어 `sort`에 맡기면 N log N으로 한 번에 줄 세워 줘!"
+      "intro": "으악, 시간 결계야! 줄 설 사람이 10만 명으로 늘었어. 남은 사람을 전부 훑어서 맨 앞 사람을 한 명씩 고르면 10만 × 10만 ÷ 2, 약 50억 번 비교야. 기준을 키 튜플로 만들어 `sort`에 맡기면 N log N으로 한 번에 줄 세워 줘!"
     }
   ],
   "timeLimitMs": 2000,
@@ -72,7 +72,7 @@
       "expectFail": {"8": "TLE", "9": "TLE", "10": "TLE"},
       "diagnosis": {
         "when": {"verdict": "TLE"},
-        "text": "답은 맞았지만 너무 느려! 남은 사람 중 맨 앞에 설 사람을 매번 처음부터 찾는 선택 정렬은 N × N번 비교해. 10만 명이면 50억 번이야. 비교 규칙을 **키 튜플**로 바꿔서 `people.sort(key=lambda p: (-p[1], p[2], -p[3], p[0]))`처럼 한 번에 정렬해. 파이썬 정렬은 N log N이라 10만 명도 금방이야."
+        "text": "답은 맞았지만 너무 느려! 남은 사람 중 맨 앞에 설 사람을 매번 처음부터 찾는 선택 정렬은 약 N × N ÷ 2번 비교해. 10만 명이면 50억 번이야. 비교 규칙을 **키 튜플**로 바꿔서 `people.sort(key=lambda p: (-p[1], p[2], -p[3], p[0]))`처럼 한 번에 정렬해. 파이썬 정렬은 N log N이라 10만 명도 금방이야."
       }
     },
     {
@@ -124,7 +124,7 @@
   "hints": [
     "줄 세우는 기준이 넷이야: 노 젓기(큰 것부터) → 헤엄(작은 것부터) → 잠수(큰 것부터) → 이름(사전순). 한 사람을 튜플 하나로 바꿔서, 그 튜플을 작은 것부터 세우기만 하면 규칙대로 서게 만들 수 있을까?",
     "`sort`의 `key`에 기준 튜플을 주면 앞 칸부터 차례로 비교해. 큰 것부터 설 숫자에는 `-`를 붙여: `key=lambda p: (-p[1], p[2], -p[3], p[0])`. 이름은 문자열이라 `-`가 안 되니 그대로 두고, `reverse=True`는 쓰지 마. 10만 명을 출력할 때는 `\"\\n\".join(...)`으로 한 번에.",
-    "```python\nimport sys\ninput = sys.stdin.readline\n\nn = int(input())\npeople = []\nfor _ in range(n):\n    name, row, swim, dive = input().split()\n    people.append((name, int(row), int(swim), int(dive)))\npeople.sort(key=lambda p: (____, p[2], ____, p[0]))\nprint(\"\\n\".join(p[0] for p in people))\n```"
+    "```python\nimport sys\ninput = sys.stdin.readline\n\nn = int(input())\npeople = []\nfor _ in range(n):\n    name, row, swim, dive = input().split()\n    people.append((name, int(row), int(swim), int(dive)))\npeople.sort(key=lambda p: (____, p[2], ____, p[0]))\nprint(\"\\n\".join([p[0] for p in people]))\n```"
   ],
   "reward": {"xp": 400, "gold": 200}
 }

@@ -126,6 +126,23 @@ describe.skipIf(!hasMonitoring())("메아리 고리: judge.py 줄별 실행 횟�
     expect(r.lineCounts!["3"]).toBe(1);
   });
 
+  it("한 줄짜리 반복문과 컴프리헨션도 반복마다 센다(같은 줄로 뒤로 점프하는 JUMP 이벤트)", () => {
+    const code = [
+      "n = int(input())",
+      "arr = [int(input()) for _ in range(n)]",
+      "s = 0",
+      "for x in arr: s += x",
+      "d = {x: 1 for x in arr}",
+      "print(s)",
+    ].join("\n");
+    const [r] = run([{ kind: "stdin", code, in: "3\n1\n2\n3\n", out: "6\n", lineCounts: true }]);
+    expect(r.verdict).toBe("AC");
+    // 컴프리헨션·한 줄 for: 처음 1번 + 반복 3번(여러 줄 for의 머리 줄과 같은 수). 여러 줄 반복문은 그대로
+    expect(r.lineCounts).toEqual({ "1": 1, "2": 4, "3": 1, "4": 4, "5": 4, "6": 1 });
+    const [multi] = run([{ kind: "stdin", code: "s = 0\nfor x in range(3):\n    s += x\nprint(s)", out: "3\n", lineCounts: true }]);
+    expect(multi.lineCounts).toEqual({ "1": 1, "2": 4, "3": 3, "4": 1 });
+  });
+
   it("lineCounts를 켜지 않으면 횟수가 없다(시전·채점)", () => {
     const [r] = run([{ kind: "stdin", code: "print(1)", out: "1\n" }]);
     expect(r.verdict).toBe("AC");
