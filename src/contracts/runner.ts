@@ -67,6 +67,11 @@ export interface JudgeOptions {
   onProgress?: (result: TestResult) => void;
   /** 입력 생성·테스트 실행을 시작할 때마다 호출(진행 표시용). 건너뛴 테스트(TLE·RE 뒤)는 부르지 않는다 */
   onStage?: (stage: JudgeStage) => void;
+  /**
+   * 메아리 고리(docs/phase3/region06-spec.md §7.2): 사용자 코드 줄마다 실행 횟수를 센다. scope "public"([예제 실행])에서만 쓴다.
+   * 세는 동안 실행이 느려지므로(Pyodide에서 약 5~7배) 시간 상한을 LINE_COUNT_SLOWDOWN배로 늘린다. 판정은 바뀌지 않는다
+   */
+  lineCounts?: boolean;
 }
 
 export interface JudgeResult {
@@ -78,6 +83,11 @@ export interface JudgeResult {
   fatal: boolean;
   /** 이번 채점에 적용한 시간 제한(ms) */
   limitMs: number;
+  /**
+   * 메아리 고리: 줄 번호(1부터) → 이번 채점의 모든 테스트에서 그 줄이 실행된 횟수 합계.
+   * lineCounts를 요청했고 모든 테스트에서 셌을 때만(시간 초과·런타임 사망·건너뛴 테스트가 있으면 없음)
+   */
+  lineCounts?: Record<number, number>;
 }
 
 export interface PythonRunner {

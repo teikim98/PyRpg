@@ -82,6 +82,11 @@ export interface BattleContext {
     /** 모래시계 부적: 시간 게이지에 보일 목표 복잡도 */
     targetComplexity?: string;
     /**
+     * 메아리 고리(docs/phase3/region06-spec.md §7.2): [예제 실행]에서 줄마다 실행 횟수(공개 예제 합계)를 에디터 거터에 보인다.
+     * 코드를 고치면 지운다. [시전]·채점에는 영향 없음
+     */
+    lineCounts?: boolean;
+    /**
      * 기록관의 안경(docs/phase3/region04-spec.md §6). 앱이 안경을 낀 전투에만 넘긴다.
      * lessonFor: 이 에러의 해설 규칙에 달린 레슨을 이미 배웠으면 그 레슨(아니면 undefined → 버튼 없음).
      * open: 그 레슨을 펼친 코덱스를 열고, 닫으면 resolve(전투 창은 그대로 아래에 남아 있다)
@@ -238,6 +243,8 @@ export interface ShopEntry {
 export interface ShopView {
   gold: number;
   level: number;
+  /** 상점이 있는 지역의 순서(Region.order). 품목은 이미 이 순서로 걸러져 있다(ItemDef.shopFromRegion) */
+  regionOrder: number;
   entries: ShopEntry[];
 }
 

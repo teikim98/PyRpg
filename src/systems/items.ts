@@ -12,9 +12,13 @@ export function owned(save: SaveData, id: string): number {
   return save.inventory[id] ?? 0;
 }
 
-/** 상점 품목의 지금 상태. 가격이 없는 아이템은 상점에 나오지 않는다(null) */
-export function shopState(save: SaveData, item: ItemDef): ShopState | null {
+/**
+ * 상점 품목의 지금 상태. 가격이 없는 아이템은 상점에 나오지 않는다(null).
+ * regionOrder는 상점이 있는 지역의 순서(Region.order). shopFromRegion보다 앞 지역의 상점에도 나오지 않는다(null)
+ */
+export function shopState(save: SaveData, item: ItemDef, regionOrder = Number.POSITIVE_INFINITY): ShopState | null {
   if (item.price === undefined) return null;
+  if (item.shopFromRegion !== undefined && regionOrder < item.shopFromRegion) return null;
   const level = levelFromXp(save.player.xp);
   if (level < (item.minLevel ?? 1)) return "locked";
   if ((item.kind === "accessory" || item.kind === "cosmetic") && owned(save, item.id) > 0) return "owned";
@@ -33,9 +37,9 @@ const STATE_MESSAGE: Record<Exclude<ShopState, "available">, string> = {
   poor: "골드가 모자라",
 };
 
-/** 구매. 살 수 없으면 ShopError(입력은 바꾸지 않음) */
-export function buyItem(save: SaveData, item: ItemDef): SaveData {
-  const st = shopState(save, item);
+/** 구매. 살 수 없으면 ShopError(입력은 바꾸지 않음). regionOrder는 shopState와 같음 */
+export function buyItem(save: SaveData, item: ItemDef, regionOrder = Number.POSITIVE_INFINITY): SaveData {
+  const st = shopState(save, item, regionOrder);
   if (st === null) throw new ShopError("파는 물건이 아니야");
   if (st !== "available") throw new ShopError(STATE_MESSAGE[st]);
   const s: SaveData = structuredClone(save);
@@ -57,10 +61,12 @@ export interface EquipmentEffects {
   targetComplexity: boolean;
   /** 기록관의 안경: 에러 해설 아래 코덱스 바로가기 */
   codexLinks: boolean;
+  /** 메아리 고리: [예제 실행]에서 줄별 실행 횟수 */
+  lineCounts: boolean;
 }
 
 export function equipmentEffects(save: Pick<SaveData, "equipment">, items: ItemDef[]): EquipmentEffects {
-  const out: EquipmentEffects = { maxHpBonus: 0, guideFeather: false, targetComplexity: false, codexLinks: false };
+  const out: EquipmentEffects = { maxHpBonus: 0, guideFeather: false, targetComplexity: false, codexLinks: false, lineCounts: false };
   for (const id of save.equipment) {
     const it = items.find((i) => i.id === id);
     // 길잡이 깃털은 아이템 데이터가 없어도 ID로 알아본다(rewards.ts와 같은 규칙)
@@ -70,6 +76,7 @@ export function equipmentEffects(save: Pick<SaveData, "equipment">, items: ItemD
     if (it.effect.type === "guideFeather") out.guideFeather = true;
     if (it.effect.type === "targetComplexity") out.targetComplexity = true;
     if (it.effect.type === "codexLinks") out.codexLinks = true;
+    if (it.effect.type === "lineCounts") out.lineCounts = true;
   }
   return out;
 }
