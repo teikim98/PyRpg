@@ -1,0 +1,91 @@
+{
+  "id": "P0612",
+  "title": "징검돌 건너기",
+  "kind": "function",
+  "entry": "solution",
+  "enemy": {"name": "쪽지 나방", "sprite": "monster_memo_moth", "attack": 20},
+  "requires": ["scroll.memo"],
+  "concept": "scroll.memo",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 10,
+  "tests": [
+    {"args": "(4,)", "expect": "7", "public": true, "note": "기본 동작"},
+    {"args": "(1,)", "expect": "1", "note": "경계: 징검돌 하나"},
+    {"args": "(2,)", "expect": "2", "note": "징검돌 둘"},
+    {"args": "(3,)", "expect": "4", "note": "세 칸을 한 번에 뛰는 방법 포함"},
+    {"args": "(10,)", "expect": "274", "note": "징검돌 열 개"},
+    {"args": "(18,)", "expect": "35890", "note": "징검돌 열여덟 개"},
+    {"args": "(77,)", "expect": "147669437360234672073", "note": "징검돌 77개(같은 계산을 반복하면 끝나지 않음)"},
+    {"args": "(200,)", "expect": "52622583840983769603765180599790256716084480555530641", "note": "경계: 가장 긴 여울(큰 정수)"}
+  ],
+  "accepted": [
+    {"file": "alt_lru.py", "title": "@lru_cache(maxsize=None)로 메모(깊이 200)"},
+    {"file": "alt_loop.py", "title": "반복문 DP로 작은 칸부터 채우기"}
+  ],
+  "variants": [
+    {
+      "id": "P0612-v1",
+      "title": "거울 다리 계단",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"args": "(5,)", "expect": "13", "public": true, "note": "기본 동작"},
+        {"args": "(1,)", "expect": "1", "note": "경계: 계단 하나"},
+        {"args": "(12,)", "expect": "927", "note": "계단 열두 개"},
+        {"args": "(150,)", "expect": "3081058855986474528462647721608166932600", "note": "계단 150개(큰 정수)"}
+      ]
+    },
+    {
+      "id": "P0612-v2",
+      "title": "연잎 건너기",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"args": "(6,)", "expect": "24", "public": true, "note": "기본 동작"},
+        {"args": "(2,)", "expect": "2", "note": "경계: 연잎 둘"},
+        {"args": "(20,)", "expect": "121415", "note": "연잎 스무 장"},
+        {"args": "(200,)", "expect": "52622583840983769603765180599790256716084480555530641", "note": "경계: 연잎 200장(큰 정수)"}
+      ]
+    }
+  ],
+  "extraDiagnoses": [
+    {
+      "when": {"verdict": "WA", "outputMatches": "^0$"},
+      "text": "아직 `0` 그대로야. `n`번째 돌 바로 전에는 어디에 있었을지 생각해 봐. `n - 1`, `n - 2`, `n - 3`번째 돌 중 하나지?"
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_naive.py",
+      "title": "메모 없이 재귀(같은 계산을 반복)",
+      "expectFail": {"7": "TLE", "8": "TLE"},
+      "diagnosis": {
+        "when": {"verdict": "TLE"},
+        "text": "식은 맞는데 시간 결계에 걸렸어! 메모 없이 재귀하면 `ways(n - 1)` 안에서도, `ways(n - 2)` 안에서도 **같은 계산을 반복**해. 호출 수가 한 칸마다 약 1.8배씩 불어나서 77칸만 돼도 끝나지 않아. 계산한 값을 `memo = {}`에 적어 두고 다시 오면 꺼내 쓰거나, 함수 위에 `@lru_cache(maxsize=None)`를 붙여 봐. 메아리 고리를 끼고 예제를 실행하면 줄마다 몇 번 불렸는지 보여."
+      }
+    },
+    {
+      "file": "wrong_base.py",
+      "title": "기저 조건을 if k <= 2: return k로 둠",
+      "expectFail": {"1": "WA", "4": "WA", "5": "WA", "6": "WA", "7": "WA", "8": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA"},
+        "text": "점화식은 맞는데 기저 조건이 어긋났어. `if k <= 2: return k`면 `ways(0)`이 `0`이 돼서 `ways(3)`이 `2 + 1 + 0 = 3`이 나와. 하지만 3칸은 `1+1+1`, `1+2`, `2+1`, `3`의 4가지야. '0칸 남음 = 방법 1가지'(`ways(0) = 1`), '음수 칸 = 0가지'로 기저 조건을 다시 세워 봐."
+      }
+    },
+    {
+      "file": "wrong_negative.py",
+      "title": "음수 칸을 처리하지 않음",
+      "expectFail": {"1": "RE", "2": "RE", "3": "RE", "4": "RE", "5": "RE", "6": "RE", "7": "RE", "8": "RE"},
+      "diagnosis": {
+        "when": {"exception": "RecursionError"},
+        "text": "`RecursionError`야! `ways(1)`이 `ways(-1)`, `ways(-2)`를 부르는데, 음수에서 멈추는 조건이 없어서 `-3`, `-4`, … 로 끝없이 내려가. 맨 앞에 `if k < 0: return 0`을 넣자. 지나쳐 버린 칸에 내려서는 방법은 0가지야."
+      }
+    }
+  ],
+  "hints": [
+    "`n`번째 돌에 내려서기 바로 전에는 `n - 1`, `n - 2`, `n - 3`번째 돌 중 하나에 있었어. 그럼 `n`까지 가는 방법 수는 세 곳까지 가는 방법 수의 합이야. 0칸(출발점)과 음수 칸은 어떻게 셀까?",
+    "`ways(k) = ways(k - 1) + ways(k - 2) + ways(k - 3)`, `ways(0) = 1`, 음수면 `0`. 이대로만 재귀하면 같은 `k`를 수없이 다시 계산하니까, `memo = {}`에 `memo[k]`를 적어 두고 있으면 바로 꺼내 써.",
+    "```python\ndef solution(n):\n    memo = {0: 1}\n\n    def ways(k):\n        if k < 0:\n            return ____\n        if k in memo:\n            return memo[k]\n        memo[k] = ____\n        return memo[k]\n\n    return ways(n)\n```"
+  ],
+  "reward": {"xp": 100, "gold": 50}
+}

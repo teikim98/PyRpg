@@ -1,0 +1,90 @@
+{
+  "id": "P0609",
+  "title": "갈대 마디",
+  "kind": "function",
+  "entry": "solution",
+  "enemy": {"name": "겹연꽃 정령", "sprite": "monster_nesting_lily", "attack": 20},
+  "requires": ["scroll.recursion"],
+  "concept": "scroll.recursion",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 8,
+  "tests": [
+    {"args": "(9875,)", "expect": "3", "public": true, "note": "기본 동작(세 번 접음)"},
+    {"args": "(0,)", "expect": "0", "note": "경계: 0"},
+    {"args": "(9,)", "expect": "0", "note": "경계: 가장 큰 한 자리 수"},
+    {"args": "(10,)", "expect": "1", "note": "경계: 가장 작은 두 자리 수"},
+    {"args": "(123,)", "expect": "1", "note": "한 번 접으면 한 자리"},
+    {"args": "(199,)", "expect": "3", "note": "세 번 접는 가장 작은 수(199 → 19 → 10 → 1)"},
+    {"args": "(19999999999999999999999,)", "expect": "4", "note": "네 번 접는 가장 작은 수"},
+    {"args": "(9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999,)", "expect": "2", "note": "경계: 가장 큰 수(9가 100개)"},
+    {"args": "(1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,)", "expect": "1", "note": "경계: 100자리 1000…0"}
+  ],
+  "variants": [
+    {
+      "id": "P0609-v1",
+      "title": "버드나무 나이테",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"args": "(68,)", "expect": "2", "public": true, "note": "기본 동작"},
+        {"args": "(5,)", "expect": "0", "note": "경계: 한 자리 수"},
+        {"args": "(1000000,)", "expect": "1", "note": "한 번 접으면 한 자리"},
+        {"args": "(99,)", "expect": "2", "note": "99 → 18 → 9"},
+        {"args": "(88888888888888888888888888888888888888888888888888,)", "expect": "2", "note": "경계: 50자리 큰 수"}
+      ]
+    },
+    {
+      "id": "P0609-v2",
+      "title": "물수제비 숫자",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"args": "(777,)", "expect": "2", "public": true, "note": "기본 동작"},
+        {"args": "(0,)", "expect": "0", "note": "경계: 0"},
+        {"args": "(11,)", "expect": "1", "note": "경계: 접으면 바로 한 자리"},
+        {"args": "(9999999999,)", "expect": "2", "note": "9999999999 → 90 → 9"},
+        {"args": "(1999999999999999999999,)", "expect": "3", "note": "세 번 접는 큰 수"}
+      ]
+    }
+  ],
+  "extraDiagnoses": [
+    {
+      "when": {"verdict": "WA", "outputMatches": "^0$"},
+      "text": "아직 `0` 그대로야. 먼저 `digit_sum(n)`이 자릿수 합을 돌려주게 채우고, `solution`에서는 한 자리가 될 때까지 몇 번 접는지 세어 봐."
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_nobase.py",
+      "title": "digit_sum에 기저 조건이 없음",
+      "expectFail": {"1": "RE", "4": "RE", "5": "RE", "6": "RE", "7": "RE", "8": "RE", "9": "RE"},
+      "diagnosis": {
+        "when": {"exception": "RecursionError"},
+        "text": "`digit_sum`이 끝없이 자기 자신을 불러서 `RecursionError`가 났어! `n // 10`을 계속하면 `n`이 `0`이 되는데, 거기서 멈추라는 말이 없으니 `digit_sum(0)`, `digit_sum(0)`, … 을 영원히 불러. 맨 앞에 기저 조건을 넣자: `if n < 10: return n`."
+      }
+    },
+    {
+      "file": "wrong_once.py",
+      "title": "if로 한 번만 접음",
+      "expectFail": {"1": "WA", "6": "WA", "7": "WA", "8": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA", "outputMatches": "^1$"},
+        "text": "한 번만 접고 멈췄어! `9875`를 한 번 접으면 `29`라서 아직 두 자리야. '한 자리가 될 때까지'는 `if`가 아니라 되풀이야. `return 1 + solution(digit_sum(n))`처럼 접은 수로 같은 질문을 다시 하거나 `while n >= 10:`으로 돌려 봐."
+      }
+    },
+    {
+      "file": "wrong_count1.py",
+      "title": "한 자리 수에서 1을 돌려줌",
+      "expectFail": {"1": "WA", "2": "WA", "3": "WA", "4": "WA", "5": "WA", "6": "WA", "7": "WA", "8": "WA", "9": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA"},
+        "text": "답이 하나씩 커. 처음부터 한 자리인 수는 한 번도 접지 않으니까 기저 조건에서는 `0`을 돌려줘야 해. 재귀의 답은 기저 조건 값에서부터 쌓이니까, 거기가 틀리면 모든 답이 함께 틀려."
+      }
+    }
+  ],
+  "hints": [
+    "자릿수 합도 재귀로 생각할 수 있어. `9875`의 자릿수 합은 '맨 끝 자리 `5`' 더하기 '`987`의 자릿수 합'이야. 그럼 언제 멈추면 될까?",
+    "`digit_sum(n)`: 한 자리면 `n`을 그대로 돌려주고(기저 조건), 아니면 `n % 10 + digit_sum(n // 10)`. `solution(n)`도 같은 모양이야: 한 자리면 `0`, 아니면 한 번 접고 `1 + solution(접은 수)`.",
+    "```python\ndef digit_sum(n):\n    if n < 10:\n        return n\n    return n % 10 + digit_sum(____)\n\n\ndef solution(n):\n    if n < 10:\n        return ____\n    return 1 + solution(digit_sum(n))\n```"
+  ],
+  "reward": {"xp": 100, "gold": 50}
+}
