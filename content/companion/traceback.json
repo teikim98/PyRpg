@@ -175,6 +175,12 @@
   },
   {
     "exception": "TypeError",
+    "pattern": "'float' object cannot be interpreted as an integer|indices must be integers or slices, not float",
+    "text": "`/`로 나눈 값은 나누어떨어져도 실수(`2.0`)야. `range()`나 리스트 칸 번호에는 정수만 쓸 수 있으니 `//`로 나누거나 `int()`로 바꿔 줘. JS의 `Math.floor(a / b)` 자리가 Python에서는 `a // b`야!",
+    "lesson": "L1-3"
+  },
+  {
+    "exception": "TypeError",
     "text": "자료형이 맞지 않는 곳에 값을 넣었대. 강조된 줄에서 각 값이 문자열인지 숫자인지 확인해 봐. `print(type(x))`로 찍어 보면 바로 알 수 있어. Python은 JS처럼 자료형을 알아서 바꿔 주지 않아."
   },
   {
@@ -204,7 +210,7 @@
   {
     "exception": "ValueError",
     "pattern": "(max|min)\\(\\) (arg is an empty sequence|iterable argument is empty)",
-    "text": "빈 리스트에서 `max`나 `min`을 구하려고 했어. 비어 있으면 가장 큰 값도 없거든. 슬라이스 `arr[:i]`는 i번째를 포함하지 않아서, i가 0이면 빈 리스트가 돼. 범위를 다시 확인해 봐.",
+    "text": "빈 리스트에서 `max`나 `min`을 구하려고 했어. 비어 있으면 가장 큰 값도 없거든. 슬라이스 `arr[:i]`는 i번째를 포함하지 않아서, i가 0이면 빈 리스트가 돼. 범위를 다시 확인해 봐. 아니면 `map(...)`·`zip(...)`을 두 번 쓴 건 아닌지 봐! 한 번 꺼내면 비는 꾸러미라서 `sum`에 넘긴 뒤 `max`에 또 넘기면 비어 있어. `list(map(...))`로 담아 두면 몇 번이고 쓸 수 있어.",
     "lesson": "L3-2"
   },
   {
@@ -348,6 +354,17 @@
   {
     "exception": "AttributeError",
     "text": "그 값에는 그런 기능(속성)이 없대. 메시지 앞쪽의 자료형 이름을 보고, 그 자료형이 맞는지 확인해 봐."
+  },
+  {
+    "exception": "OverflowError",
+    "pattern": "cannot fit 'int' into an index-sized integer",
+    "text": "숫자가 너무 커서 리스트 크기나 칸 번호로 못 써! `[0] * (n + 1)`에서 n이 10^18처럼 크면 그 칸을 다 만들 수 없어. 필요한 값만 dict에 적어 두는 메모(`memo = {}`)로 바꿔 봐.",
+    "lesson": "L6-5"
+  },
+  {
+    "exception": "MemoryError",
+    "text": "메모리가 모자라! 아주 큰 리스트나 문자열을 한 번에 만들려고 한 것 같아. 크기 n짜리 리스트 대신 필요한 값만 dict에 적어 둘 수 있는지 봐.",
+    "lesson": "L6-5"
   },
   {
     "exception": "RecursionError",

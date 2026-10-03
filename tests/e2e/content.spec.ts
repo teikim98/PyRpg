@@ -332,17 +332,19 @@ for (const region of REGIONS) {
   });
 
   test(`콘텐츠 스모크 ${region.id}: 보스 시간 결계 budgetUnits 보정(§9.6 2단계)`, async () => {
-    test.setTimeout(240_000);
     const bosses = await page.evaluate(
       (rid: string) =>
         (window as any).__content.regions
           .find((r: any) => r.id === rid)
           .problems.filter((p: any) => p.boss)
-          .map((p: any) => p.id) as string[],
+          .map((p: any) => ({ id: p.id, mid: p.midBoss === true })) as { id: string; mid: boolean }[],
       region.id,
     );
-    expect(bosses.length).toBe(1);
-    for (const pid of bosses) {
+    // 최종 보스는 하나, 중간 보스는 0~1개(region06-spec.md §7.1). 둘 다 시간 결계를 잰다
+    expect(bosses.filter((b) => !b.mid).length).toBe(1);
+    expect(bosses.filter((b) => b.mid).length).toBeLessThanOrEqual(1);
+    test.setTimeout(240_000 * bosses.length);
+    for (const pid of bosses.map((b) => b.id)) {
       const m = await page.evaluate(
         async ([id, headroom, probeStdin]: [string, number, string]) => {
           const W = window as any;
