@@ -1,0 +1,93 @@
+{
+  "id": "P0601",
+  "title": "나루의 뱃삯",
+  "kind": "function",
+  "entry": "solution",
+  "enemy": {"name": "부름 개구리", "sprite": "monster_call_frog", "attack": 20},
+  "requires": ["scroll.function"],
+  "concept": "scroll.function",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 7,
+  "tests": [
+    {"args": "(30, 15)", "expect": "1700", "public": true, "note": "기본 동작(어른, 10리를 넘음)"},
+    {"args": "(7, 50)", "expect": "0", "note": "경계: 7살은 무료(먼저 return)"},
+    {"args": "(8, 10)", "expect": "900", "note": "경계: 8살부터 청소년 할인, 거리 10리"},
+    {"args": "(19, 11)", "expect": "1000", "note": "경계: 19살은 청소년, 거리 11리"},
+    {"args": "(20, 1)", "expect": "1200", "note": "경계: 20살은 어른, 거리 1리"},
+    {"args": "(64, 100)", "expect": "10200", "note": "경계: 64살은 어른, 거리 100리"},
+    {"args": "(65, 10)", "expect": "600", "note": "경계: 65살부터 절반, 거리 10리"},
+    {"args": "(65, 11)", "expect": "650", "note": "65살, 10리를 넘음"},
+    {"args": "(40, 10)", "expect": "1200", "note": "어른, 거리 10리(더하지 않음)"},
+    {"args": "(0, 1)", "expect": "0", "note": "경계: 0살"},
+    {"args": "(120, 100)", "expect": "5100", "note": "경계: 가장 많은 나이, 가장 먼 거리"},
+    {"args": "(15, 3)", "expect": "900", "note": "청소년, 가까운 거리"}
+  ],
+  "variants": [
+    {
+      "id": "P0601-v1",
+      "title": "뗏목 나루의 뱃삯",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"args": "(45, 13)", "expect": "1500", "public": true, "note": "기본 동작"},
+        {"args": "(3, 2)", "expect": "0", "note": "경계: 8살 미만은 무료"},
+        {"args": "(17, 9)", "expect": "900", "note": "청소년, 10리 이하"},
+        {"args": "(65, 30)", "expect": "1600", "note": "경계: 65살은 절반"},
+        {"args": "(66, 5)", "expect": "600", "note": "65살 이상, 10리 이하"}
+      ]
+    },
+    {
+      "id": "P0601-v2",
+      "title": "첫배의 뱃삯",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"args": "(12, 20)", "expect": "1900", "public": true, "note": "기본 동작"},
+        {"args": "(80, 10)", "expect": "600", "note": "경계: 거리 10리, 65살 이상"},
+        {"args": "(65, 1)", "expect": "600", "note": "경계: 65살, 거리 1리"},
+        {"args": "(25, 10)", "expect": "1200", "note": "어른, 거리 10리"},
+        {"args": "(7, 100)", "expect": "0", "note": "경계: 7살은 무료"}
+      ]
+    }
+  ],
+  "extraDiagnoses": [
+    {
+      "when": {"verdict": "WA", "outputMatches": "^0$", "onlyHiddenFail": false},
+      "text": "아직 모든 손님에게 0을 돌려주고 있어. 먼저 `base_fare(distance)`가 거리로 기본 뱃삯을 계산해 `return`하게 만들고, `solution`에서 나이 규칙에 따라 그 값을 고쳐서 `return`해 봐."
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_a.py",
+      "title": "도우미 함수의 한 갈래에서 return을 빠뜨림",
+      "expectFail": {"3": "RE", "5": "WA", "7": "RE", "9": "WA", "12": "RE"},
+      "diagnosis": {
+        "when": {"exception": "TypeError", "messageMatches": "NoneType"},
+        "text": "`NoneType`이 계산에 끼어들었어! 거리가 10리 이하일 때 `base_fare`가 값을 계산만 하고 `return`을 안 해서 `None`이 돌아왔어. 함수가 `return` 없이 끝나면 언제나 `None`을 돌려줘(JS의 `undefined`처럼). 도우미 함수의 **모든 갈래**에 `return`이 있는지 확인해."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "65살 경계를 > 로 비교",
+      "expectFail": {"7": "WA", "8": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA", "onlyHiddenFail": true},
+        "text": "예제는 맞았는데 나이 경계에서 틀렸어. '65살 **이상**'은 65살도 포함이라 `age >= 65`야. `age > 65`면 딱 65살인 손님이 절반 할인을 못 받아. 8살·19살·65살처럼 규칙이 바뀌는 나이를 하나씩 넣어 확인해 봐."
+      }
+    },
+    {
+      "file": "wrong_c.py",
+      "title": "return 대신 print",
+      "expectFail": {"1": "WA", "2": "WA", "3": "WA", "4": "WA", "5": "WA", "6": "WA", "7": "WA", "8": "WA", "9": "WA", "10": "WA", "11": "WA", "12": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA", "outputMatches": "^None$"},
+        "text": "함수가 `None`을 돌려줬어! `print`는 화면에 보여 줄 뿐 값을 **돌려주지** 않아. 그래서 `return`이 없는 함수는 `None`을 돌려줘. 채점기는 돌려준 값을 보니까 `print(...)` 대신 `return ...`으로 바꿔."
+      }
+    }
+  ],
+  "hints": [
+    "거리로 기본 뱃삯을 정하는 일과 나이로 할인하는 일을 나눠 봐. 거리 계산은 `base_fare(distance)` 도우미 함수가 맡고, `solution`은 나이만 보면 돼. 8살 미만은 계산할 것도 없으니 맨 먼저 `return 0`으로 끝내자.",
+    "`base_fare`는 `if distance <= 10: return 1200`, 아니면 `return 1200 + (distance - 10) * 100`. `solution`은 `if age < 8: return 0` → `base = base_fare(distance)` → `age >= 65`면 `base // 2`, `age <= 19`면 `base - 300`, 아니면 `base`를 `return`.",
+    "```python\ndef base_fare(distance):\n    if distance <= 10:\n        return 1200\n    return 1200 + (distance - 10) * 100\n\n\ndef solution(age, distance):\n    if age < 8:\n        return ____\n    base = base_fare(distance)\n    if age >= 65:\n        return ____\n    if age <= 19:\n        return base - 300\n    return base\n```"
+  ],
+  "reward": {"xp": 100, "gold": 50}
+}
