@@ -6,7 +6,7 @@
 - 물체(well, tree, bush, fence, lamp_post, crate, market_stall, flower_bed)는 deco 레이어에 바닥 위로 겹쳐
   그려지므로 배경이 투명하다. 바깥 외곽선은 auto_outline(재질 ol), 발치에 반투명 그림자 1~2px.
 - 빛은 왼쪽 위에서. 덩어리마다 3단(hi·base·shade) + spec 1~3px, 질감 점은 speckle(결정적).
-- 애니메이션 프레임(water_a1·water_a2, grass_flower_a1, flower_bed_a1)은 타일셋 끝에 붙고
+- 애니메이션 프레임(water_a1·water_a2, grass_flower_a1, flower_bed_a1, lamp_post_a1)은 타일셋 끝에 붙고
   manifest `tileAnimations`가 묶는다. 멈춘 세계 설정상 우물의 솟은 물기둥은 움직이지 않는다.
 """
 from cozypal import auto_outline, c, noise, paint, speckle
@@ -140,10 +140,11 @@ GRASS_FLOWER_A1 = grass_flower(1)
 
 # ── 바닥: 흙길·광장 ──────────────────────────────────────────────────────────────
 def path(seed=21):
-    """흙길: 모래 기본색 + 닳은 자국 7% + 모래알 4% + 조약돌 2개 + 길 틈에 돋은 풀 한 포기."""
+    """흙길: 모래 기본색 + 닳은 자국 5.5% + 모래알 3% + 조약돌 2개 + 길 틈에 돋은 풀 한 포기.
+    (가이드 §3.3은 7% + 4%인데, 넓은 길이 게임 화면에서 자글자글해 보여서 조금 줄였다)"""
     g = _grid(lambda x, y: c("sand.base"))
-    g = speckle(g, "sand.base", "sand.shade", 0.07, seed)
-    g = speckle(g, "sand.base", "sand.hi", 0.04, seed + 1)
+    g = speckle(g, "sand.base", "sand.shade", 0.055, seed)
+    g = speckle(g, "sand.base", "sand.hi", 0.03, seed + 1)
     for x, y in ((3, 5), (11, 12)):
         _set(g, x, y, c("sand.hi"))
         _set(g, x + 1, y, c("sand.spec"))
@@ -580,32 +581,17 @@ STAIRS = stairs()
 
 
 def clocktower_wall(seed=121):
-    """시계탑 벽: 크림 마름돌(8×4) + 칸마다 아치 창(멈춘 시간의 청록 빛)과 황동 창턱.
-    여러 칸이 모이면 창이 줄지어 선 탑의 앞면이 된다."""
-    g = bricks(8, 4, 4, "cream", seed)
-    g = speckle(g, "cream.base", "cream.shade", 0.06, seed)
-    # 좁은 화살 창(어두운 유리에 청록 빛 한 점) + 크림 창턱. 탑 앞면에 줄지어 서도 조용하게
-    win = paint("""
-        ................
-        ................
-        ................
-        .......oo.......
-        ......otko......
-        ......okko......
-        ......okko......
-        ......okko......
-        ......hhhh......
-        ................
-        ................
-        ................
-        ................
-        ................
-        ................
-        ................
-    """, {"o": "cream.shade", "t": "teal.base", "k": "teal.ol", "h": "cream.hi"}, T, T)
-    g = overlay(g, win)
-    _set(g, 7, 9, c("rust.hi"))                         # 창턱 아래 녹 물때
-    _set(g, 7, 11, c("cream.shade"))
+    """시계탑 벽: 광장 판석(밝은 크림)보다 한 단계 어두운 크림 마름돌(8×4)이라 벽과 바닥이 갈린다.
+    칸마다 창을 넣으면 넓은 탑 앞면이 물방울 무늬처럼 반복돼서, 창은 문(clocktower_door)에만 두고
+    벽에는 돌마다 다른 얼룩·녹 물때·이끼만 드물게 앉힌다."""
+    g = bricks(8, 4, 4, "cream", seed, fill="shade")
+    g = speckle(g, "cream.shade", "plank.shade", 0.06, seed)
+    g = speckle(g, "cream.shade", "moss.shade", 0.012, seed + 1)
+    # 녹 물때: 줄눈 바로 아래 녹 밝음 1px, 아래로 건너뛰며 옅게
+    for x, y in ((5, 1), (13, 9)):
+        _set(g, x, y, c("rust.base"))
+        _set(g, x, y + 2, c("plank.shade"))
+    _set(g, 10, 5, c("cream.hi"))                        # 바랜 돌 조각
     return g
 
 
@@ -652,8 +638,34 @@ _LAMP = paint("""
     ................
 """, {"o": "brass.shade", "Y": "brass.hi", "y": "brass.base", "L": "lamp.hi", "l": "lamp.base", "S": "lamp.spec",
       "h": "plank.base", "d": "plank.shade", "p": "plank.shade"}, T, T)
-LAMP_POST = _shadow(auto_outline(_LAMP), 14, 4, 10)
-LAMP_POST = _shadow(LAMP_POST, 15, 5, 9)
+def lamp_post(frame=0):
+    """가로등: 황동 갓 아래 등불. 애니메이션 프레임은 불빛이 살짝 일렁인다(가장 밝은 점이 옮겨 가고 한쪽이 어두워짐)."""
+    g = list(_LAMP)
+    if frame:
+        g = overlay(g, paint("""
+            ................
+            ................
+            ................
+            .....LLS........
+            .....lLL........
+            ................
+            ................
+            ................
+            ................
+            ................
+            ................
+            ................
+            ................
+            ................
+            ................
+            ................
+        """, {"L": "lamp.hi", "l": "lamp.base", "S": "lamp.spec"}, T, T))
+    g = _shadow(auto_outline(g), 14, 4, 10)
+    return _shadow(g, 15, 5, 9)
+
+
+LAMP_POST = lamp_post(0)
+LAMP_POST_A1 = lamp_post(1)
 
 _CRATE = paint("""
     ................
@@ -796,6 +808,7 @@ TILES = {
     "water_a2": WATER_A2,
     "grass_flower_a1": GRASS_FLOWER_A1,
     "flower_bed_a1": FLOWER_BED_A1,
+    "lamp_post_a1": LAMP_POST_A1,
 }
 
 # 타일셋 끝에 붙는 애니메이션 프레임과 manifest tileAnimations(build.py가 manifest와 맞는지 검사)
@@ -803,6 +816,7 @@ TILE_ANIMATIONS = {
     "water": {"frames": ["water", "water_a1", "water_a2"], "fps": 3},
     "grass_flower": {"frames": ["grass_flower", "grass_flower_a1"], "fps": 1.5},
     "flower_bed": {"frames": ["flower_bed", "flower_bed_a1"], "fps": 1.5},
+    "lamp_post": {"frames": ["lamp_post", "lamp_post_a1"], "fps": 2},
 }
 
 # 미리보기 장면에서 투명 물체 타일 밑에 깔 바닥(게임에서는 맵의 ground 레이어가 깔린다)

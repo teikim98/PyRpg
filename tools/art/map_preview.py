@@ -4,10 +4,11 @@
 
     python tools/art/map_preview.py
 
-- r01-tiles.png   : 지역 1 타일 24종 + 애니메이션 프레임(6배), 바닥 타일 3×3 이어 붙임(이음새 확인, 3배)
+- r01-tiles.png   : 지역 1 타일 24종 + 애니메이션 프레임(6배), 바닥 타일 3×3 이어 붙임(이음새 확인, 3배),
+                    마을 오브젝트(town_objects.py) 모든 프레임(6배)
 - r01-map.png     : 맵 전체(1배)와 구역별 확대(3배). 오브젝트·NPC·몬스터·주인공 일행을 맵 위치에 세운다
 - r01-view.png    : 게임 화면 크기(320×180)로 자른 장면 2개(4배)
-- r01-anim.gif    : 연못·꽃밭·화단 타일 애니메이션(3배)
+- r01-anim.gif    : 연못·꽃밭·화단·가로등 타일 애니메이션(2배)
 
 오브젝트 → 스프라이트는 src/game/WorldScene.ts와 같다(monster는 problem.json의 enemy.sprite, npc는 sprite 속성).
 타일 애니메이션은 manifest `tileAnimations`를 따른다.
@@ -24,6 +25,7 @@ from build import TILES, sprite_frames, text  # noqa: E402
 from gif import write_gif  # noqa: E402
 from gridlib import Canvas  # noqa: E402
 from png import encode_png  # noqa: E402
+from town_objects import TOWN_OBJECTS  # noqa: E402
 
 ROOT = build.ROOT
 OUT = os.path.join(ROOT, "docs", "art-overhaul")
@@ -136,8 +138,10 @@ def tiles_sheet(manifest):
     gcell = TS * 3 * 3 + 12
     gper = 7
     grows = -(-len(ground) // gper)
+    objs = [(n, i) for n, fr in TOWN_OBJECTS.items() for i in range(len(fr))]
+    orows = -(-len(objs) // per)
     W = 16 + per * cell + 16
-    H = 16 + 20 + rows * (cell + 10) + 24 + grows * (gcell + 14) + 16
+    H = 16 + 20 + rows * (cell + 10) + 24 + grows * (gcell + 14) + 24 + orows * (cell + 10) + 16
     cv = Canvas(W, H, BG)
     text(cv, "region 1 tiles (6x) + animation frames", 16, 16, 2, HEAD)
     y0 = 40
@@ -159,6 +163,15 @@ def tiles_sheet(manifest):
                 t.draw(TILES[n], k * TS, j * TS)
         cv.paste(t, x, y, 3)
         text(cv, n, x, y + TS * 9 + 3, 1)
+    y0 += grows * (gcell + 14) + 4
+    text(cv, "town objects (6x, on plaza_stone): every frame", 16, y0, 2, HEAD)
+    y0 += 22
+    for i, (n, f) in enumerate(objs):
+        x = 16 + (i % per) * cell
+        y = y0 + (i // per) * (cell + 10)
+        t = Canvas(TS, TS).draw(TILES["plaza_stone"]).draw(TOWN_OBJECTS[n][f])
+        cv.paste(t, x, y, S)
+        text(cv, f"{n[4:]} {f}", x, y + TS * S + 4, 1)
     return cv
 
 

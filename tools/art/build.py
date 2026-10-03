@@ -59,7 +59,7 @@ R04_NAMES = set(LIBRARY_TILES) | set(LIBRARY_CHARACTERS) | set(LIBRARY_MONSTERS)
 R05_NAMES = set(PORT_TILES) | set(PORT_CHARACTERS) | set(PORT_MONSTERS) | set(PORT_BOSSES)
 R06_NAMES = set(LAKE_TILES) | set(LAKE_CHARACTERS) | set(LAKE_MONSTERS) | set(LAKE_BOSSES)
 # 단위 3-1 마을 시설(그림자 게시판·상점). 지역별 미리보기에는 넣지 않는다
-TOWN_NAMES = set(TOWN_OBJECTS)
+TOWN_NAMES = {"obj_board", "obj_shop"}
 
 ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
 ASSETS = os.path.join(ROOT, "assets")
@@ -78,7 +78,8 @@ def load_manifest():
 
 def sprite_frames(name: str):
     """논리 이름 → 프레임 그리드 리스트."""
-    for table in (CHARACTERS, MONSTERS, OBJECTS, BOSSES, FOREST_CHARACTERS, FOREST_MONSTERS, FOREST_BOSSES, TOWN_OBJECTS,
+    # TOWN_OBJECTS(코지 화풍으로 다시 그린 마을 오브젝트)가 monsters.OBJECTS의 옛 그림보다 먼저다
+    for table in (TOWN_OBJECTS, CHARACTERS, MONSTERS, OBJECTS, BOSSES, FOREST_CHARACTERS, FOREST_MONSTERS, FOREST_BOSSES,
                   CAVE_CHARACTERS, CAVE_MONSTERS, CAVE_BOSSES, LIBRARY_CHARACTERS, LIBRARY_MONSTERS, LIBRARY_BOSSES,
                   PORT_CHARACTERS, PORT_MONSTERS, PORT_BOSSES, LAKE_CHARACTERS, LAKE_MONSTERS, LAKE_BOSSES):
         if name in table:
