@@ -145,47 +145,82 @@ def _safe_repr(value):
 
 
 LINE_COUNTER_NAME = "pyrpg-echo-ring"
+# inspect.CO_GENERATOR | CO_COROUTINE | CO_ASYNC_GENERATOR
+CO_GENERATOR_FLAGS = 0x20 | 0x80 | 0x200
 
 
 class _LineCounter:
     """메아리 고리(design.md §7.3, docs/phase3/region06-spec.md §7.2): 사용자 코드(<주문>) 줄마다 실행 횟수를 센다.
-    sys.monitoring(Python 3.12+)의 LINE 이벤트를 쓰며, 채점기·표준 라이브러리 줄은 처음 한 번 뒤로 꺼 둔다(DISABLE).
-    [예제 실행]에서만 쓰고 [시전]·채점에는 쓰지 않는다(약 3.5배 느려짐, design.md §9.6)."""
+    sys.monitoring(Python 3.12+)의 지역 이벤트(set_local_events)를 사용자 코드 객체에만 켠다. 채점기·표준 라이브러리에는
+    이벤트가 아예 생기지 않으므로 콜백에서 파일을 거를 필요가 없다(빠름).
+    - 여러 줄 코드(모듈, 보통 함수): LINE 이벤트로 줄마다 센다.
+    - 한 줄짜리 함수(lambda, def f(x): return x): 몸통이 첫 줄과 같아 LINE 이벤트가 버전마다 다르다(3.12는 생기고 3.14는 없음).
+      그래서 LINE은 끄고 호출(PY_START)마다 그 줄을 한 번 센다(sorted의 key=lambda가 몇 번 불렸는지 보이게).
+      한 줄짜리 제너레이터(sum(x for x in arr))는 다시 이어질 때(PY_RESUME)도 센다(값을 하나 꺼낼 때마다).
+    [예제 실행]에서만 쓰고 [시전]·채점에는 쓰지 않는다(Pyodide에서 약 5~7배 느려짐)."""
 
     def __init__(self):
         self.counts = {}
         self.tool = None
+        self.codes = []
         # 실제로 세기 시작했는지(sys.monitoring이 없거나 도구 자리가 없으면 False → 횟수 없이 지금처럼)
         self.started = False
 
-    def start(self):
+    @staticmethod
+    def _code_objects(module_code):
+        out, stack = [], [module_code]
+        while stack:
+            c = stack.pop()
+            out.append(c)
+            stack.extend(k for k in c.co_consts if isinstance(k, type(module_code)))
+        return out
+
+    @staticmethod
+    def _one_line(code):
+        if code.co_name == "<module>":
+            return False
+        first = code.co_firstlineno
+        return all(ln is None or ln == first for _s, _e, ln in code.co_lines())
+
+    def start(self, module_code):
         mon = getattr(sys, "monitoring", None)
         if mon is None:
             return False
         # 지난 실행이 정리되지 못하고 남긴 도구(같은 이름)는 먼저 치운다
         for tid in range(6):
             if mon.get_tool(tid) == LINE_COUNTER_NAME:
-                self._release(mon, tid)
+                self._release(mon, tid, [])
         tool = next((t for t in (mon.COVERAGE_ID, 3, 4, mon.PROFILER_ID) if mon.get_tool(t) is None), None)
         if tool is None:
             return False
         counts = self.counts
-        disable = mon.DISABLE
-        user_file = USER_FILE
 
-        def on_line(code, line):
-            if code.co_filename != user_file:
-                return disable
+        def on_line(_code, line):
             counts[line] = counts.get(line, 0) + 1
+
+        def on_start(code, _offset):
+            first = code.co_firstlineno
+            counts[first] = counts.get(first, 0) + 1
 
         try:
             mon.use_tool_id(tool, LINE_COUNTER_NAME)
+            self.tool = tool
             mon.register_callback(tool, mon.events.LINE, on_line)
-            mon.set_events(tool, mon.events.LINE)
+            mon.register_callback(tool, mon.events.PY_START, on_start)
+            mon.register_callback(tool, mon.events.PY_RESUME, on_start)
+            ev = mon.events
+            for c in self._code_objects(module_code):
+                if not self._one_line(c):
+                    events = ev.LINE
+                elif c.co_flags & CO_GENERATOR_FLAGS:
+                    events = ev.PY_START | ev.PY_RESUME
+                else:
+                    events = ev.PY_START
+                mon.set_local_events(tool, c, events)
+                self.codes.append(c)
         except BaseException:
-            self._release(mon, tool)
+            self.stop()
             return False
-        self.tool = tool
         self.started = True
         return True
 
@@ -193,15 +228,20 @@ class _LineCounter:
         if self.tool is None:
             return
         tool, self.tool = self.tool, None
-        self._release(sys.monitoring, tool)
+        codes, self.codes = self.codes, []
+        self._release(sys.monitoring, tool, codes)
 
     @staticmethod
-    def _release(mon, tool):
-        for fn in (
+    def _release(mon, tool, codes):
+        steps = [lambda c=c: mon.set_local_events(tool, c, 0) for c in codes]
+        steps += [
             lambda: mon.set_events(tool, 0),
             lambda: mon.register_callback(tool, mon.events.LINE, None),
+            lambda: mon.register_callback(tool, mon.events.PY_START, None),
+            lambda: mon.register_callback(tool, mon.events.PY_RESUME, None),
             lambda: mon.free_tool_id(tool),
-        ):
+        ]
+        for fn in steps:
             try:
                 fn()
             except BaseException:
@@ -227,7 +267,7 @@ def _exec_user(code, extra=None, module_name="__main__", counter=None):
     try:
         compiled = compile(code, USER_FILE, "exec", dont_inherit=True)
         if counter is not None:
-            counting = counter.start()
+            counting = counter.start(compiled)
             start = time.perf_counter()
         exec(compiled, g)
         if extra is not None:

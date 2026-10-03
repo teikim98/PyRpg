@@ -100,6 +100,32 @@ describe.skipIf(!hasMonitoring())("메아리 고리: judge.py 줄별 실행 횟�
     expect(Object.keys(r.lineCounts!).every((k) => Number(k) <= 4)).toBe(true);
   });
 
+  it("한 줄짜리 함수(lambda 등)는 호출마다 그 줄을 센다. 여러 줄 함수의 def 줄은 정의할 때 한 번만", () => {
+    const code = [
+      "arr = [3, 1, 2, 5]",
+      "arr.sort(key=lambda x: -x)",
+      "def double(x): return x * 2",
+      "def inc(x):",
+      "    return x + 1",
+      "print(*[double(inc(x)) for x in arr])",
+    ].join("\n");
+    const [r] = run([{ kind: "stdin", code, out: "12 8 6 4\n", lineCounts: true }]);
+    expect(r.verdict).toBe("AC");
+    // 2번째 줄: 문장 1번 + lambda 4번, 3번째 줄: 정의 1번 + 호출 4번, 4번째 줄(여러 줄 def): 정의 1번
+    expect(r.lineCounts).toMatchObject({ "1": 1, "2": 5, "3": 5, "4": 1, "5": 4 });
+  });
+
+  it("한 줄짜리 제너레이터 식은 값을 꺼낼 때마다 센다(버전과 상관없이 같은 수)", () => {
+    const code = ["arr = [1, 2, 3, 4, 5, 6]", "s = sum(x * x for x in arr)", "print(s)"].join("\n");
+    const [r] = run([{ kind: "stdin", code, out: "91\n", lineCounts: true }]);
+    expect(r.verdict).toBe("AC");
+    // 문장 1번 + 제너레이터 시작 1번 + 값 6개를 꺼내려고 다시 이어진 6번(마지막 StopIteration 포함)
+    expect(r.lineCounts!["1"]).toBe(1);
+    expect(r.lineCounts!["2"]).toBeGreaterThanOrEqual(7);
+    expect(r.lineCounts!["2"]).toBeLessThanOrEqual(9);
+    expect(r.lineCounts!["3"]).toBe(1);
+  });
+
   it("lineCounts를 켜지 않으면 횟수가 없다(시전·채점)", () => {
     const [r] = run([{ kind: "stdin", code: "print(1)", out: "1\n" }]);
     expect(r.verdict).toBe("AC");

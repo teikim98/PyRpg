@@ -69,7 +69,7 @@ export interface JudgeOptions {
   onStage?: (stage: JudgeStage) => void;
   /**
    * 메아리 고리(docs/phase3/region06-spec.md §7.2): 사용자 코드 줄마다 실행 횟수를 센다. scope "public"([예제 실행])에서만 쓴다.
-   * 세는 동안 실행이 느려지므로(약 3.5배, design.md §9.6) 시간 상한을 LINE_COUNT_SLOWDOWN배로 늘린다. 판정은 바뀌지 않는다
+   * 세는 동안 실행이 느려지므로(Pyodide에서 약 5~7배) 시간 상한을 LINE_COUNT_SLOWDOWN배로 늘린다. 판정은 바뀌지 않는다
    */
   lineCounts?: boolean;
 }
