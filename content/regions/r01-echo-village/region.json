@@ -4,6 +4,7 @@
   "name": "에코 마을",
   "introDialogue": "region_intro",
   "clearDialogue": "region_clear",
+  "ambience": { "grade": "dusty_teal", "particles": "sparkle" },
   "recommended": [
     { "site": "programmers", "id": 12932, "title": "자연수 뒤집어 배열로 만들기", "level": "Lv.1" },
     { "site": "programmers", "id": 68935, "title": "3진법 뒤집기", "level": "Lv.1" },

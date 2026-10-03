@@ -1,10 +1,14 @@
-// dev/world.html용 하네스: 지역 맵을 직접 불러 월드만 띄운다(기본 지역 1, ?map=r02면 지역 2, ?map=r03이면 지역 3).
+// dev/world.html용 하네스: 지역 맵을 직접 불러 월드만 띄운다(기본 지역 1, ?map=r02면 지역 2, ?map=r03이면 지역 3.
+// ?sheet=new·?tileanim=test·?fx=off는 harnessOptions 참고).
 // window.__world = 컨트롤러, window.__events = 콜백 기록(E2E에서 읽는다).
 import mapRaw from "../../content/regions/r01-echo-village/map.tmj?raw";
 import mapRawR02 from "../../content/regions/r02-crossroad-forest/map.tmj?raw";
 import mapRawR03 from "../../content/regions/r03-goblin-cave/map.tmj?raw";
-import type { Problem, Region } from "../contracts/content";
-import type { MapObjectDef, WorldController } from "../contracts/world";
+import regionR01 from "../../content/regions/r01-echo-village/region.json";
+import regionR02 from "../../content/regions/r02-crossroad-forest/region.json";
+import regionR03 from "../../content/regions/r03-goblin-cave/region.json";
+import type { Problem, Region, RegionAmbience } from "../contracts/content";
+import type { MapObjectDef, WorldController, WorldOptions } from "../contracts/world";
 import { createWorld } from "./index";
 import { parseTiledMap } from "./tiled";
 
@@ -66,10 +70,13 @@ const ENEMY_SPRITES_R03: Record<string, string> = {
 };
 
 type HarnessMap = "r01" | "r02" | "r03";
-const HARNESS_MAPS: Record<HarnessMap, { raw: string; sprites: Record<string, string>; name: string; order: number }> = {
-  r01: { raw: mapRaw, sprites: ENEMY_SPRITES, name: "에코 마을", order: 1 },
-  r02: { raw: mapRawR02, sprites: ENEMY_SPRITES_R02, name: "갈림길 숲", order: 2 },
-  r03: { raw: mapRawR03, sprites: ENEMY_SPRITES_R03, name: "고블린 동굴", order: 3 },
+const HARNESS_MAPS: Record<
+  HarnessMap,
+  { raw: string; sprites: Record<string, string>; name: string; order: number; ambience?: RegionAmbience }
+> = {
+  r01: { raw: mapRaw, sprites: ENEMY_SPRITES, name: "에코 마을", order: 1, ambience: regionR01.ambience },
+  r02: { raw: mapRawR02, sprites: ENEMY_SPRITES_R02, name: "갈림길 숲", order: 2, ambience: regionR02.ambience },
+  r03: { raw: mapRawR03, sprites: ENEMY_SPRITES_R03, name: "고블린 동굴", order: 3, ambience: regionR03.ambience },
 };
 
 export function buildHarnessRegion(which: HarnessMap = "r01"): Region {
@@ -78,7 +85,33 @@ export function buildHarnessRegion(which: HarnessMap = "r01"): Region {
   const problems = Object.entries(def.sprites).map(
     ([id, sprite]) => ({ id, regionId: which, enemy: { name: id, sprite, attack: 0 } }) as unknown as Problem,
   );
-  return { id: which, order: def.order, name: def.name, map, problems, lessons: [], dialogues: {}, recommended: [] };
+  const region: Region = { id: which, order: def.order, name: def.name, map, problems, lessons: [], dialogues: {}, recommended: [] };
+  if (def.ambience) region.ambience = def.ambience;
+  return region;
+}
+
+/**
+ * URL로 고르는 시험 옵션(E2E·눈으로 확인용)
+ * - ?sheet=new: 플레이어·누리·NPC를 코드로 그린 새 형식(16×24, 6×4) 시트로, 몬스터·보스는 4프레임으로
+ * - ?tileanim=test: 물 타일을 [water, path] 2프레임(4fps)으로 바꿔 보이게
+ * - ?fx=off: 화면 연출을 끈 채로 시작
+ */
+export function harnessOptions(search: string): WorldOptions {
+  const q = new URLSearchParams(search);
+  const options: WorldOptions = {};
+  if (q.get("sheet") === "new") {
+    options.testSheets = [
+      "player",
+      "nuri",
+      "npc_merchant",
+      "npc_villager",
+      "npc_child",
+      ...new Set(Object.values(HARNESS_MAPS).flatMap((m) => Object.values(m.sprites))),
+    ];
+  }
+  if (q.get("tileanim") === "test") options.tileAnimations = { water: { frames: ["water", "path"], fps: 4 } };
+  if (q.get("fx") === "off") options.ambience = false;
+  return options;
 }
 
 export async function startWorldHarness(): Promise<void> {
@@ -99,7 +132,7 @@ export async function startWorldHarness(): Promise<void> {
     onTrigger: (o) => log({ type: "trigger", id: o.id }),
     onMoved: (p) => log({ type: "moved", ...p }),
     onMenu: () => log({ type: "menu" }),
-  });
+  }, harnessOptions(location.search));
   const param = new URLSearchParams(location.search).get("map");
   const region = buildHarnessRegion(param === "r02" || param === "r03" ? param : "r01");
   const spawn = parseTiledMap(region.map).objects.find((o) => o.type === "spawn");

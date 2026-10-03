@@ -4,6 +4,7 @@
   "name": "갈림길 숲",
   "introDialogue": "region_intro",
   "clearDialogue": "region_clear",
+  "ambience": { "grade": "forest", "particles": "leaves" },
   "recommended": [
     { "site": "programmers", "id": 12937, "title": "짝수와 홀수", "level": "Lv.1" },
     { "site": "programmers", "id": 12928, "title": "약수의 합", "level": "Lv.1" },
