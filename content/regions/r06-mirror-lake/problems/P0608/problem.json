@@ -21,7 +21,7 @@
     }
   ],
   "timeLimitMs": 2000,
-  "budgetUnits": 30,
+  "budgetUnits": 35,
   "targetComplexity": "O(N log N)",
   "estimatedMinutes": 20,
   "tests": [

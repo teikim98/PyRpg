@@ -66,7 +66,7 @@
   "extraDiagnoses": [
     {
       "when": {"exception": "OverflowError", "messageMatches": "index-sized"},
-      "text": "n이 10^18이라 크기 n짜리 리스트는 못 만들어(칸 하나에 8바이트만 잡아도 800만 테라바이트야). 메아리가 실제로 거치는 세기는 n // 2, n // 3, n // 4, n // 6, …처럼 수천 개뿐이야. 필요한 값만 dict에 저장해: `memo = {}`에 구한 세기만 적어 두는 메모 재귀로 바꿔."
+      "text": "n이 10^18이라 크기 n짜리 리스트는 못 만들어(칸 하나에 8바이트만 잡아도 800만 테라바이트야). 메아리가 실제로 거치는 세기는 n // 2, n // 3, n // 4, n // 6, …처럼 천 개 남짓뿐이야. 필요한 값만 dict에 저장해: `memo = {}`에 구한 세기만 적어 두는 메모 재귀로 바꿔."
     }
   ],
   "wrong": [
@@ -104,13 +104,13 @@
       "expectFail": {"7": "RE", "8": "RE", "9": "RE"},
       "diagnosis": {
         "when": {"exception": "MemoryError"},
-        "text": "n이 10^18이라 크기 n짜리 리스트는 못 만들어(칸 하나에 8바이트만 잡아도 800만 테라바이트야). 메아리가 실제로 거치는 세기는 n // 2, n // 3, n // 4, n // 6, …처럼 수천 개뿐이야. 필요한 값만 dict에 저장해: `memo = {}`에 구한 세기만 적어 두는 메모 재귀로 바꿔."
+        "text": "n이 10^18이라 크기 n짜리 리스트는 못 만들어(칸 하나에 8바이트만 잡아도 800만 테라바이트야). 메아리가 실제로 거치는 세기는 n // 2, n // 3, n // 4, n // 6, …처럼 천 개 남짓뿐이야. 필요한 값만 dict에 저장해: `memo = {}`에 구한 세기만 적어 두는 메모 재귀로 바꿔."
       }
     }
   ],
   "hints": [
     "세기 n의 외침이 울리는 횟수는 두 메아리 `echo(n // 2)`와 `echo(n // 3)`의 합이야. 그대로 재귀로 짜면 1페이즈는 통과해. 그런데 `echo(n // 2)`와 `echo(n // 3)`이 각자 또 `echo(n // 6)`을 부르지 않을까? 같은 값을 몇 번이나 다시 계산하는지 생각해 봐.",
-    "한 번 구한 세기는 `memo = {}`에 적어 두자. `if n in memo: return memo[n]`으로 꺼내고, 처음 구했으면 `memo[n] = ...`로 적은 뒤 돌려줘. n이 10^18이라 크기 n 리스트는 못 만들지만, dict에는 실제로 거치는 세기 수천 개만 들어가. `@lru_cache(maxsize=None)`도 돼(그냥 `@lru_cache`는 최근 128개만 기억하니까 `maxsize=None`을 습관으로).",
+    "한 번 구한 세기는 `memo = {}`에 적어 두자. `if n in memo: return memo[n]`으로 꺼내고, 처음 구했으면 `memo[n] = ...`로 적은 뒤 돌려줘. n이 10^18이라 크기 n 리스트는 못 만들지만, dict에는 실제로 거치는 세기 천 개 남짓만 들어가. `@lru_cache(maxsize=None)`도 돼(그냥 `@lru_cache`는 최근 128개만 기억하니까 `maxsize=None`을 습관으로).",
     "```python\nimport sys\ninput = sys.stdin.readline\n\nmemo = {}\n\n\ndef echo(n):\n    if n == 0:\n        return 1\n    if n in memo:\n        return ____\n    memo[n] = echo(n // 2) + echo(n // 3)\n    return memo[n]\n\n\nq = int(input())\nfor _ in range(q):\n    print(echo(int(input())))\n```"
   ],
   "reward": {"xp": 1000, "gold": 500}
