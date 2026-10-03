@@ -1,9 +1,16 @@
 {
   "id": "L6-5",
-  "title": "(임시) 기억의 주문서",
+  "title": "기억의 주문: 메모이제이션",
   "scroll": {
     "id": "scroll.memo",
     "name": "기억의 주문서",
-    "summary": "(임시 요약: 콘텐츠 담당이 채움)"
+    "summary": "같은 값을 다시 계산하는 재귀는 호출 수가 폭발한다. 한 번 계산한 답을 적어 두는 메모: `memo = {}`, `if n in memo: return memo[n]`, 계산 후 `memo[n] = 값`. `from functools import lru_cache, cache`의 `@lru_cache(maxsize=None)`이나 `@cache`도 같은 일을 한다. `@lru_cache`만 쓰면 기본 `maxsize=128`이라 128개만 기억하니 주의. dict 메모는 필요한 값만 적으므로 n이 아주 커도 된다(크기 n 리스트는 못 만듦). 줄마다 실행 횟수는 메아리 고리로 볼 수 있다."
+  },
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 메모 장부의 이름을 채워서, 이미 계산한 값이면 꺼내 쓰게 해 봐.",
+    "code": "memo = {}\ndef fib(n):\n    if n < 2:\n        return n\n    if n in ___:\n        return memo[n]\n    memo[n] = fib(n - 1) + fib(n - 2)\n    return memo[n]\n\nprint(fib(90))\n",
+    "expectedOutput": "2880067194370816120\n",
+    "answer": "memo"
   }
 }
