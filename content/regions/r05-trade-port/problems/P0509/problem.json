@@ -1,0 +1,86 @@
+{
+  "id": "P0509",
+  "title": "가장 많이 실린 화물",
+  "kind": "function",
+  "entry": "solution",
+  "enemy": {"name": "눈금 앵무새", "sprite": "monster_tally_parrot", "attack": 20},
+  "requires": ["scroll.counter"],
+  "concept": "scroll.counter",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 7,
+  "tests": [
+    {"args": "(['salt', 'rope', 'salt', 'tea', 'salt'],)", "expect": "'salt'", "public": true, "note": "기본 동작"},
+    {"args": "(['silk'],)", "expect": "'silk'", "note": "경계: 화물 하나"},
+    {"args": "(['tea', 'rope', 'tea', 'rope'],)", "expect": "'rope'", "note": "동률이면 사전순"},
+    {"args": "(['d', 'b', 'c', 'a'],)", "expect": "'a'", "note": "모두 한 번씩(전부 동률)"},
+    {"args": "(['ab', 'a', 'ab', 'a', 'b', 'b'],)", "expect": "'a'", "note": "세 개가 동률, 짧은 이름이 사전순으로 앞"},
+    {"args": "(['net', 'oar', 'oar', 'net', 'oar'],)", "expect": "'oar'", "note": "나중에 나온 이름이 더 많음"},
+    {"args": "(['zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb', 'zz', 'aa', 'kk', 'pp', 'zz', 'aa', 'mm', 'kk', 'zz', 'aa', 'qq', 'mm', 'zz', 'aa', 'bb', 'qq', 'zz', 'aa', 'pp', 'bb'],)", "expect": "'aa'", "note": "경계: 화물 1000개, 동률"}
+  ],
+  "variants": [
+    {
+      "id": "P0509-v1",
+      "title": "어시장 경매",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"args": "(['eel', 'cod', 'eel'],)", "expect": "'eel'", "public": true, "note": "기본 동작"},
+        {"args": "(['tuna'],)", "expect": "'tuna'", "note": "경계: 화물 하나"},
+        {"args": "(['squid', 'clam', 'squid', 'clam'],)", "expect": "'clam'", "note": "동률이면 사전순"},
+        {"args": "(['z', 'y', 'x'],)", "expect": "'x'", "note": "모두 동률"}
+      ]
+    },
+    {
+      "id": "P0509-v2",
+      "title": "돛 가게 판매왕",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"args": "(['sail', 'rope', 'rope', 'sail'],)", "expect": "'rope'", "public": true, "note": "기본 동작(동률)"},
+        {"args": "(['pin', 'pin'],)", "expect": "'pin'", "note": "경계: 한 종류"},
+        {"args": "(['tar', 'hook', 'hook', 'bell', 'hook'],)", "expect": "'hook'", "note": "하나가 가장 많음"},
+        {"args": "(['mast', 'flag', 'mast', 'flag', 'anchor', 'anchor'],)", "expect": "'anchor'", "note": "세 개가 동률"}
+      ]
+    }
+  ],
+  "extraDiagnoses": [
+    {
+      "when": {"verdict": "WA", "outputMatches": "^''$"},
+      "text": "아직 빈 문자열 그대로야. `Counter(cargo)`로 이름마다 개수를 세고, 가장 큰 개수인 이름을 골라서 돌려줘."
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_a.py",
+      "title": "most_common(1)을 그대로 반환",
+      "expectFail": {"1": "WA", "2": "WA", "3": "WA", "4": "WA", "5": "WA", "6": "WA", "7": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA", "outputMatches": "^\\[\\("},
+        "text": "`[('salt', 3)]`처럼 리스트가 돌아갔어. `most_common(1)`은 이름이 아니라 **(이름, 개수) 튜플의 리스트**야. 하나만 달라고 해도 리스트로 줘. 그리고 이 문제는 동률이면 사전순이라서, 가장 큰 개수 `top`을 구하고 그 개수인 이름 중 `min`을 고르는 게 안전해."
+      }
+    },
+    {
+      "file": "wrong_b.py",
+      "title": "from collections import Counter를 빠뜨림",
+      "expectFail": {"1": "RE", "2": "RE", "3": "RE", "4": "RE", "5": "RE", "6": "RE", "7": "RE"},
+      "diagnosis": {
+        "when": {"exception": "NameError", "messageMatches": "Counter"},
+        "text": "`Counter`를 모른대! `Counter`는 `collections` 도구 상자 안에 있어서 먼저 불러와야 해. 맨 위에 `from collections import Counter`를 적어."
+      }
+    },
+    {
+      "file": "wrong_c.py",
+      "title": "most_common(1)[0][0]으로 동률을 무시",
+      "expectFail": {"3": "WA", "4": "WA", "5": "WA", "7": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA", "onlyHiddenFail": true},
+        "text": "예제는 통과했는데 개수가 같은 화물이 여럿일 때 틀렸어. `most_common`은 개수가 같으면 **먼저 센 것**을 앞에 둬서 사전순이 아니야. 가장 큰 개수 `top = max(count.values())`를 구하고, 그 개수인 이름들 중 `min`을 골라."
+      }
+    }
+  ],
+  "hints": [
+    "먼저 이름마다 몇 번 나왔는지 세야 해. 한 줄로 세 주는 도구가 있었지? 그다음 가장 큰 개수를 찾고, 그 개수인 이름이 여럿이면 어떻게 고를까?",
+    "`from collections import Counter`, `count = Counter(cargo)`, `top = max(count.values())`. 그다음 `[name for name, n in count.items() if n == top]` 중 `min`이 사전순으로 가장 앞선 이름이야.",
+    "```python\nfrom collections import Counter\n\n\ndef solution(cargo):\n    count = Counter(cargo)\n    top = ____\n    return min([name for name, n in count.items() if ____])\n```"
+  ],
+  "reward": {"xp": 100, "gold": 50}
+}

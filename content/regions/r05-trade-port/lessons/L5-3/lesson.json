@@ -1,0 +1,16 @@
+{
+  "id": "L5-3",
+  "title": "짐 검사의 주문: 집합",
+  "scroll": {
+    "id": "scroll.set",
+    "name": "짐 검사의 주문서",
+    "summary": "`set(arr)`이나 `{a, b}`로 만들고 같은 값은 하나만 남는다. 빈 집합은 `set()`(`{}`는 빈 dict). `add`/`discard`(없어도 OK)/`remove`(없으면 KeyError), `x in s`는 크기와 상관없이 빠르다. `&` 교집합, `|` 합집합, `-` 차집합. `len(set(arr))`은 종류 수. 집합은 순서가 없으니 출력 전에 `sorted`."
+  },
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 연산자를 채워서 두 배가 둘 다 실은 화물만 골라 봐. `['salt', 'tea']`가 출력돼야 해.",
+    "code": "ship_a = {\"salt\", \"rope\", \"tea\"}\nship_b = {\"tea\", \"fish\", \"salt\"}\nprint(sorted(ship_a ___ ship_b))\n",
+    "expectedOutput": "['salt', 'tea']\n",
+    "answer": "&"
+  }
+}

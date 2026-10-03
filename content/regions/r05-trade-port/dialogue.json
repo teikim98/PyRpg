@@ -1,0 +1,115 @@
+{
+  "region_intro": [
+    { "speaker": "system", "text": "대도서관 동쪽 문을 지나 해안 길을 따라 내려오자, 눈앞이 탁 트이며 바다가 펼쳐진다." },
+    { "speaker": "system", "text": "돛을 단 배들이 줄지어 정박한 커다란 항구. 부서지던 파도는 유리처럼 굳어 있고, 날갯짓하던 갈매기들이 공중에 그대로 걸려 있다." }
+  ],
+  "port_intro": [
+    { "speaker": "companion", "emotion": "surprised", "text": "바다다! …근데 파도가 안 움직여. 하얗게 부서지던 물보라가 얼음 조각처럼 공중에 박혀 있어. 갈매기도 날개를 편 채로 멈췄고!" },
+    { "speaker": "companion", "emotion": "neutral", "text": "여긴 '교역항'이야. 온 세상의 배가 드나들던 큰 항구래. 부두마다 내리다 만 화물이 산처럼 쌓여 있네." },
+    { "speaker": "companion", "emotion": "worried", "text": "그런데 상인들 장부가 엉망이야. 버그들이 장부 숫자를 갉아 먹어서, 무슨 화물이 몇 개인지 아무도 모른대." },
+    { "speaker": "companion", "emotion": "happy", "text": "대도서관까지가 주문의 기초였다면, 여기서부턴 '도구'를 모을 차례야! 값을 묶고, 이름표를 붙이고, 세고, 줄 세우는 도구들. 저기 시장 비석부터 가 보자, {player}!" }
+  ],
+  "lesson_L5-1_intro": [
+    { "speaker": "companion", "emotion": "happy", "text": "해안 시장의 비석이야! 여긴 '묶음의 주문'. 값 여러 개를 한 덩어리로 묶는 튜플이래." },
+    { "speaker": "companion", "emotion": "neutral", "text": "꼬리가 붙은 쌍둥이 물고기 봤어? 좌표 두 개를 꼭 붙여서 다니는 녀석이야. 묶음을 풀고 다시 맞바꾸는 법을 배우면 금방 상대할 수 있을 거야." }
+  ],
+  "lesson_L5-1_done": [
+    { "speaker": "system", "text": "묶음의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`x, y = point`로 풀고, `a, b = b, a`로 맞바꾸고, `return lo, hi`로 두 값을 한 번에! 임시 변수 없이 맞바꾸는 거, 진짜 편하다." }
+  ],
+  "npc_port_merchant": [
+    { "speaker": "항구 상인", "text": "어이쿠, 손님이다! 시간이 멈춘 뒤로 처음 보는 손님이에요. 저는 굳지 않았어요. 장사꾼은 손님 앞에선 절대 안 굳거든요!" },
+    { "speaker": "항구 상인", "text": "회복약도, 장신구도 다 있어요. 버그를 정화하고 받은 골드로 사 가세요. 에코 마을 상점이랑 물건은 같지만, 바닷바람 맞은 물건이라 더 튼튼… 할지도요." },
+    { "speaker": "항구 상인", "text": "다만 장부가 엉망이라 재고를 못 세겠어요. 같은 소금 자루를 세 번 적었다가 두 번 지웠다가… 길드장님이 세는 주문을 안다던데." },
+    { "speaker": "companion", "emotion": "neutral", "text": "세는 주문이라면 우리가 배울 차례야. 상인 길드로 가 보자. 그 전에 필요한 게 있으면 여기서 사 둬!" }
+  ],
+  "lesson_L5-2_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "상인 길드의 비석이야. 여긴 '장부의 주문'. 이름표(키)를 붙여서 값을 찾는 dict래." },
+    { "speaker": "companion", "emotion": "surprised", "text": "JS 객체랑 거의 같대! 딱 하나, 없는 이름표를 찾으면 `undefined`가 아니라 바로 폭발한대. 조심해서 보자." }
+  ],
+  "lesson_L5-2_done": [
+    { "speaker": "system", "text": "장부의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`d[k]`는 없으면 KeyError, `d.get(k, 0)`은 없으면 0! 세기는 `d[x] = d.get(x, 0) + 1`. 장부 갈매기가 무슨 숫자를 물고 가도 이제 다시 적을 수 있어." }
+  ],
+  "npc_guild_master": [
+    { "speaker": "상인 길드장", "text": "허허, 젊은 여행자로군. 나는 이 항구 상인 길드의 길드장일세. 보다시피 장부만큼 몸도 두툼하지." },
+    { "speaker": "상인 길드장", "text": "보여 줄 게 있네. 세계가 멈추던 날의 입항 장부야. 이날 항구로 들어온 배는 단 한 척. 마지막 배였지. 이름도 없이 검은 돛을 단 배였어." },
+    { "speaker": "상인 길드장", "text": "그 배를 몰던 자가 밀수꾼 선장이야. 배가 닿자마자 시간이 멈췄는데, 그 녀석만 멀쩡히 움직이더군. 항구의 시계 룬을 빼돌려 부두 끝 밀수선에 숨기고는, 화물 장부를 엉터리로 만들어 버렸지." },
+    { "speaker": "companion", "emotion": "surprised", "text": "시계 룬을 숨겼다고요? 그럼 그 선장을 쓰러뜨려야 이 항구 시간이 다시 흐르겠네!" },
+    { "speaker": "상인 길드장", "text": "그렇지. 멈춘 세계를 고치려면 도구가 필요해. 상인의 도구는 장부 정리 주문일세. 이름표로 값을 찾는 장부(dict), 한 번에 세어 주는 셈 주문(Counter). 비석들이 가르쳐 줄 걸세." },
+    { "speaker": "상인 길드장", "text": "참, 창고 거리 지날 때 화물 상자 더미를 잘 보게. 밧줄 더미 바로 북쪽의 빈 상자 하나는 뚜껑이 없어서 지나갈 수 있어. 밀수꾼들이 쓰던 샛길이지. 안쪽에 녀석들이 감춰 둔 골드가 있을 거야." },
+    { "speaker": "상인 길드장", "text": "그리고 소문 하나. 먼 옛날 '모든 주문을 제시간에 끝내도록 지키던 자'가 있었다더군. 선원들 사이에선 느린 주문을 쓰면 그자가 잡으러 온다는 뱃노래까지 있다네. 허허." },
+    { "speaker": "companion", "emotion": "serious", "text": "대도서관 봉인 기록에 있던 그 말이야… 여기까지 소문이 퍼져 있었구나." },
+    { "speaker": "상인 길드장", "text": "선장을 쓰러뜨리고 시간이 흐르면, 사막으로 가는 배편을 내가 꼭 마련해 주지. 상인은 약속을 장부에 적는다네." },
+    { "speaker": "companion", "emotion": "happy", "text": "밧줄 더미 바로 북쪽의 빈 상자, 지도에 적었어! 고마워요, 길드장님!" }
+  ],
+  "lesson_L5-3_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "창고 거리의 비석이야. 여긴 '짐 검사의 주문'. 같은 건 하나만 담는 주머니, set이래." },
+    { "speaker": "companion", "emotion": "surprised", "text": "속에 서로 다른 구슬이 하나씩만 든 해파리 봤어? 딱 set처럼 생겼더라. 들어 있는지 확인하는 게 엄청 빠르대!" }
+  ],
+  "lesson_L5-3_done": [
+    { "speaker": "system", "text": "짐 검사의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`set()`으로 빈 주머니(`{}`는 dict!), `&`는 둘 다, `|`는 하나라도, `-`는 빼기. 그리고 set엔 순서가 없으니까 출력 전엔 `sorted`! 금지 품목 검사도 문제없어." }
+  ],
+  "sign_warehouses": [
+    { "speaker": "system", "text": "『창고 거리. 화물은 종류별로 쌓을 것. 같은 화물을 두 번 적지 말 것. 무단 통행 금지.』" },
+    { "speaker": "system", "text": "모서리에 누군가 칼로 긁은 글씨가 있다. 『샛길: 밧줄 더미 바로 북쪽의 빈 상자.』" },
+    { "speaker": "companion", "emotion": "neutral", "text": "길드장님 말이랑 똑같아. 밧줄 더미 바로 북쪽의 빈 상자! 상자 더미를 잘 살펴보자." }
+  ],
+  "chest_hidden_crates": [
+    { "speaker": "system", "text": "빈 상자 칸 너머의 상자를 열었다. 80골드를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "진짜 뚜껑 없는 상자가 문이었어! 밀수꾼들이 감춰 둔 골드인가 봐. 이건 항구에 돌려줘도 되겠지만… 일단 여행 경비로!" },
+    { "speaker": "companion", "emotion": "neutral", "text": "똑같아 보이는 상자 더미에서 하나만 다른 걸 찾는 거. set으로 '이미 본 것'을 기억하면서 하나씩 보면 금방이야!" }
+  ],
+  "lesson_L5-4_intro": [
+    { "speaker": "companion", "emotion": "surprised", "text": "부두의 비석이야! 여긴 '셈의 주문'. 길드장님이 말한 그 Counter래!" },
+    { "speaker": "companion", "emotion": "neutral", "text": "dict로 하나씩 세던 걸 한 줄로 세 준대. 이름별로 묶어 주는 `defaultdict`도 같이 있어. 깃털에 눈금 새긴 앵무새를 이기려면 꼭 필요해." }
+  ],
+  "lesson_L5-4_done": [
+    { "speaker": "system", "text": "셈의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`from collections import Counter, defaultdict` 잊지 말기! `Counter(arr)`로 한 번에 세고, 없는 건 0, `most_common`은 `(값, 수)` 묶음의 리스트. 장부 정리 끝!" }
+  ],
+  "lesson_L5-5_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "등대 앞 비석이야. 여긴 '부두 줄의 주문'. 앞에서도 뒤에서도 넣고 뺄 수 있는 줄, deque래." },
+    { "speaker": "companion", "emotion": "worried", "text": "등에 작은 게들을 줄줄이 태운 소라게가 길을 막고 있어. 줄 맨 앞을 계속 빼야 하는데, 리스트로 하면 느려진대. 왜 그런지 보자." }
+  ],
+  "lesson_L5-5_done": [
+    { "speaker": "system", "text": "부두 줄의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`append`, `appendleft`, `pop`, `popleft`! 빈 줄에서 빼면 폭발하니까 `if q:`로 먼저 확인하기. 이제 밀수선까지 한 걸음 남았어." }
+  ],
+  "sign_lighthouse": [
+    { "speaker": "system", "text": "등대 벽에 젖은 항해 일지 한 장이 못 박혀 있다. 표지에는 검은 돛 그림이 그려져 있다." },
+    { "speaker": "system", "text": "『항해 일지, 마지막 장. 북쪽 바다에서 화물을 실었다. 장부에는 적지 않는다. 항구에 닿기 전에 시계 룬의 소리가 이상해졌다.』" },
+    { "speaker": "system", "text": "『배가 부두에 닿는 순간, 파도가 멈췄다. 갈매기도 멈췄다. 나만 빼고. 이 멈춘 시간 속에서는 아무도 내 화물을 세지 못한다.』" },
+    { "speaker": "companion", "emotion": "serious", "text": "마지막 배의 일지야. 선장은 시간이 멈춘 걸 기회로 삼은 거네. 아무도 못 세게 장부를 망가뜨리고…" },
+    { "speaker": "companion", "emotion": "neutral", "text": "그럼 우리가 세면 되지! 여기서 숨 돌리고 가자. 저 앞이 부두 끝, 밀수선이야." }
+  ],
+  "boss_intro": [
+    { "speaker": "companion", "emotion": "serious", "text": "저기, 밀수선 갑판에… 외눈 안대에 삼각모. 저 사람이 밀수꾼 선장이야. 허리에 시계 룬이 매달려 있어!" },
+    { "speaker": "밀수꾼 선장", "text": "크하하! 멈춘 항구에 손님이라니. 내 화물 목록이다. 질문마다 그 화물이 몇 개인지 대 봐라. 마지막엔 가장 많이 실린 화물을 말하고. 동률이면 이름이 사전에서 앞서는 놈으로!" },
+    { "speaker": "companion", "emotion": "worried", "text": "소문에 저 선장은 질문을 받을 때마다 화물칸을 처음부터 끝까지 다시 센대. 그래서 늘 시간이 모자라서 시간 결계를 친 거래. 우리도 그렇게 세면 결계에 갇혀." },
+    { "speaker": "companion", "emotion": "neutral", "text": "묶음, 장부, 짐 검사, 셈, 부두 줄. 항구에서 배운 도구를 다 쓸 때야. 한 번만 세어 두고, 질문엔 장부에서 바로 꺼내 답하자. 가자, {player}!" }
+  ],
+  "boss_defeated": [
+    { "speaker": "system", "text": "밀수꾼 선장이 장부를 떨어뜨리고 갑판에 주저앉는다. 허리의 시계 룬이 '딸깍' 하고 한 칸 움직인다." },
+    { "speaker": "system", "text": "굳어 있던 파도가 철썩 부서지고, 공중에 걸려 있던 갈매기들이 끼룩거리며 날아오른다." },
+    { "speaker": "밀수꾼 선장", "text": "…한 번만 세어 두면 되는 거였나. 나는 질문마다 화물칸을 다 뒤졌다. 그러니 언제나 시간이 모자랐지." },
+    { "speaker": "companion", "emotion": "happy", "text": "해냈다! 파도 소리 들려? 항구가 다시 움직여! 상인들이 장부를 들고 뛰어다니고 있어!" },
+    { "speaker": "companion", "emotion": "surprised", "text": "지도 봐! 항구에 색이 번지고, 바다 건너로 뱃길이 그려지고 있어!" }
+  ],
+  "region_clear": [
+    { "speaker": "companion", "emotion": "happy", "text": "교역항 지도 완성! 묶음, 장부, 짐 검사, 셈, 부두 줄까지. 이제 그냥 주문이 아니라 '도구'를 쓸 줄 알게 됐어!" },
+    { "speaker": "companion", "emotion": "neutral", "text": "바깥 시련장 목록도 새로 채워 뒀어. '완주하지 못한 선수', '폰켓몬', '의상'은 이 항구에서 연습한 dict랑 Counter 그대로야. 한번 도전해 봐!" },
+    { "speaker": "companion", "emotion": "serious", "text": "그리고 선장의 항해 일지. 시계 룬 소리가 이상해지고 세계가 멈췄대. '모든 주문을 제시간에 끝내도록 지키던 자'… 그 이야기가 이 항구까지 와 있었어." },
+    { "speaker": "상인 길드장", "text": "약속대로 사막으로 가는 배편은 길드가 마련하겠네. 배가 준비되면 부두 끝에서 기다리게." },
+    { "speaker": "companion", "emotion": "happy", "text": "다음은 바다 건너 사막이래! 지도 여백이 아직 한참 남았어. 같이 가자, {player}." }
+  ],
+  "east_gate_locked": [
+    { "speaker": "system", "text": "부두 끝 선착장을 밀수품 상자가 겹겹이 막고 있다. 상자마다 '장부 미기재'라는 딱지가 붙어 있다." },
+    { "speaker": "companion", "emotion": "worried", "text": "밀수꾼 선장이 쌓아 둔 상자 벽이야. 선장이 시계 룬을 놓아줘야 이 상자들도 치울 수 있을 거야." }
+  ],
+  "to_be_continued": [
+    { "speaker": "companion", "emotion": "happy", "text": "상자 벽이 치워졌다! 저기 길드장님이 마련해 준 배가 돛을 올리고 있어. 바다 건너가 사막이래!" },
+    { "speaker": "system", "text": "교역항 이야기는 여기까지입니다. 다음 지역은 준비 중이에요. 플레이해 주셔서 고맙습니다!" }
+  ]
+}

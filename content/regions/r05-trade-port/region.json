@@ -1,0 +1,15 @@
+{
+  "id": "r05",
+  "order": 5,
+  "name": "교역항",
+  "introDialogue": "region_intro",
+  "clearDialogue": "region_clear",
+  "recommended": [
+    { "site": "programmers", "id": 42576, "title": "완주하지 못한 선수", "level": "Lv.1" },
+    { "site": "programmers", "id": 1845, "title": "폰켓몬", "level": "Lv.1" },
+    { "site": "programmers", "id": 92334, "title": "신고 결과 받기", "level": "Lv.1" },
+    { "site": "programmers", "id": 42578, "title": "의상", "level": "Lv.2" },
+    { "site": "boj", "id": 1764, "title": "듣보잡", "level": "S4" },
+    { "site": "boj", "id": 1620, "title": "나는야 포켓몬 마스터 이다솜", "level": "S4" }
+  ]
+}

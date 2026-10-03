@@ -8,7 +8,8 @@ content/ 아래 데이터를 읽어서 아래를 확인한다. 하나라도 실�
 - 변형 문제(plan.md §5.1): 필드·statement 파일, 공개 1+/숨김 3+, 변형 ID 중복, 테스트 형식·4300자리,
   원래 모범답안 전부 AC, wrong_*.py는 변형마다 하나 이상 실패, 보스 slow.py는 전부 AC(시간 결계 없음)
 - 레슨: 주문서 ID, 빈칸 연습 정답 실행 결과, ```python run 블록이 에러 없이 실행되는지
-- 대사: region1-spec.md §5, region02-spec.md §5, region03-spec.md §5, region04-spec.md §5의 ID, 대사 줄 형식
+- 대사: region1-spec.md §5, region02-spec.md §5, region03-spec.md §5, region04-spec.md §5, region05-spec.md §5의 ID,
+  대사 줄 형식
 - 지역: recommended 필드(번호·제목·사이트·레벨만), map.tmj가 있으면 맵 오브젝트 참조(상자의 item은 items.json의 ID)
 - 보조 캐릭터: profile.json, traceback.json(실제 CPython 에러 메시지로 규칙 매칭 확인, 규칙의 lesson은 실제 레슨 ID)
 
@@ -64,6 +65,19 @@ REQUIRED_REGION_DIALOGUES = {
         "chest_archivist", "sign_sealed_record", "boss_intro", "boss_defeated", "east_gate_locked",
         "to_be_continued", "region_clear",
     ],
+    # docs/phase3/region05-spec.md §5
+    "r05": [
+        "region_intro", "port_intro", "npc_port_merchant", "npc_guild_master", "sign_warehouses",
+        "chest_hidden_crates", "sign_lighthouse", "boss_intro", "boss_defeated", "east_gate_locked",
+        "to_be_continued", "region_clear",
+    ],
+}
+# 명세가 문구를 고정한 대사(맵과 대사가 어긋나지 않도록). region05-spec.md §4: 숨겨진 길의 표지
+REQUIRED_DIALOGUE_PHRASES = {
+    "r05": {
+        "npc_guild_master": "밧줄 더미 바로 북쪽의 빈 상자",
+        "sign_warehouses": "밧줄 더미 바로 북쪽의 빈 상자",
+    },
 }
 REQUIRED_COMMON_DIALOGUES = [
     "need_scroll", "campfire_rest", "knockout", "solution_unlocked", "retreat",
@@ -98,6 +112,14 @@ REQUIRED_REGION_CONTENT = {
                      "P0411"],
         "boss": "P0411",
     },
+    # region05-spec.md §2, §3
+    "r05": {
+        "lessons": {"L5-1": "scroll.tuple", "L5-2": "scroll.dict", "L5-3": "scroll.set", "L5-4": "scroll.counter",
+                    "L5-5": "scroll.deque"},
+        "problems": ["P0501", "P0502", "P0503", "P0504", "P0505", "P0506", "P0507", "P0508", "P0509", "P0510",
+                     "P0511", "P0512", "P0513"],
+        "boss": "P0513",
+    },
 }
 # 명세의 아트 표(region02-spec.md §6 등)에 있어서 아트 담당이 만들 스프라이트.
 # 아직 assets/manifest.json에 없으면 오류 대신 경고로 둔다(콘텐츠와 아트를 따로 작업하므로)
@@ -110,6 +132,11 @@ PENDING_SPRITES = {
     "r03": {
         "monster_index_goblin", "monster_slice_bat", "monster_stack_crab", "monster_mirror_slime",
         "monster_grid_golem", "boss_goblin_chief", "npc_goblin",
+    },
+    # region05-spec.md §6(맵·아트 담당이 만든다)
+    "r05": {
+        "monster_twin_fish", "monster_ledger_gull", "monster_bubble_jelly", "monster_tally_parrot",
+        "monster_queue_crab", "boss_smuggler_captain", "npc_guild_master",
     },
 }
 # 맵 오브젝트 종류별 필수 props(src/contracts/world.ts)
@@ -1145,6 +1172,10 @@ def check_region(rep, runner, pool, folder, sprites, common_dialogues, items):
     for did in required:
         if did not in dialogues:
             rep.error(f"{rid}/dialogue.json", f"대사 ID {did!r}가 없음")
+    for did, phrase in REQUIRED_DIALOGUE_PHRASES.get(rid, {}).items():
+        lines = dialogues.get(did) if isinstance(dialogues.get(did), list) else []
+        if not any(isinstance(x, dict) and phrase in str(x.get("text", "")) for x in lines):
+            rep.error(f"{rid}/dialogue.json", f"{did}에 명세의 문구 {phrase!r}가 없음")
     overlap = set(dialogues) & set(common_dialogues)
     if overlap:
         rep.error(f"{rid}/dialogue.json", f"공통 대사와 ID가 겹침: {sorted(overlap)}")
