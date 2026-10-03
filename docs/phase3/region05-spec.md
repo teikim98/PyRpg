@@ -32,7 +32,7 @@
 |---|---|---|---|---|---|---|
 | P0501 | 뒤바뀐 좌표 | stdin | 언패킹, 맞바꾸기, 좌표 쌍 출력 | scroll.tuple | 해안 시장 | 필수 |
 | P0502 | 가장 싸고 가장 비싼 | function | 여러 값 반환 `return (lo, hi)`(튜플 비교) | scroll.tuple | 해안 시장 | 필수 |
-| P0503 | 시세표 조회 | stdin | dict 만들기 + 질문마다 `get`(없으면 정해진 문구) | scroll.dict | 해안 시장 | 선택 |
+| P0503 | 시세표 조회 | stdin | dict 만들기 + 질문마다 `get`(없으면 정해진 문구) | scroll.dict | 상인 길드 | 선택 |
 | P0504 | 단어 장부 | function | dict로 세기, 처음 나온 순서대로 `(단어, 수)` 리스트 반환 | scroll.dict | 상인 길드 | 필수 |
 | P0505 | 이름과 번호표 | stdin | 양방향 dict(이름 → 번호, 번호 → 이름. 백준 1620 유형의 오리지널) | scroll.dict | 상인 길드 | 선택 |
 | P0506 | 같은 화물 두 번 | function | set으로 처음 중복된 값 찾기(없으면 -1) | scroll.set | 창고 거리 | 필수 |
@@ -66,11 +66,11 @@
 | | `npc_port_merchant` | npc | `dialogue=npc_port_merchant`, `sprite=npc_merchant` (지역 1 상인 스프라이트 재사용) |
 | | `campfire_market` | campfire | |
 | | `m_P0501` | monster | `problem=P0501` (길목) |
-| | `m_P0503` | monster | `problem=P0503` (선택) |
 | | `m_P0502` | monster | `problem=P0502` (구역 출구) |
 | 2 상인 길드 | `rune_L5-2` | rune | `lesson=L5-2` |
 | | `npc_guild_master` | npc | `dialogue=npc_guild_master`, `sprite=npc_guild_master` (이야기 진행, 숨겨진 길 귀띔) |
 | | `board_shadow_r05` | board | |
+| | `m_P0503` | monster | `problem=P0503` (선택. 장부의 주문서가 필요해서 `rune_L5-2` 뒤. 처음 명세에는 해안 시장에 있었으나 비석 순서 검사에 걸려 옮김) |
 | | `m_P0505` | monster | `problem=P0505` (선택) |
 | | `m_P0504` | monster | `problem=P0504` (구역 출구) |
 | 3 창고 거리 | `rune_L5-3` | rune | `lesson=L5-3` |
@@ -111,9 +111,9 @@
 | `monster_queue_crab` | 16×16 × 2 | 등에 작은 게들이 줄지어 탄 소라게(deque). 지역 3 '층층 게'와 실루엣이 겹치지 않게 |
 | `boss_smuggler_captain` | 32×32 × 2 | 외눈 안대·삼각모의 밀수꾼 선장, 허리에 시계 룬, 손에 장부 |
 | `npc_guild_master` | 128×16 걷기 시트 | 상인 길드장(금테 모자, 두꺼운 장부, 둥근 체형) |
-| 항구 타일(타일셋 끝에 추가) | 16×16 | `port_cobble`, `dock_plank`, `harbor_water`, `frozen_wave`, `pier_post`, `crate`, `crate_gap`, `barrel`, `rope_coil`, `fishing_net`, `ship_deck`, `ship_rail`, `market_stall`, `lighthouse_wall` |
+| 항구 타일(타일셋 끝에 추가) | 16×16 | `port_cobble`, `dock_plank`, `harbor_water`, `frozen_wave`, `pier_post`, `port_crate`, `crate_gap`, `barrel`, `rope_coil`, `fishing_net`, `ship_deck`, `ship_rail`, `port_stall`, `lighthouse_wall`(지역 1의 `crate`·`market_stall`과 이름이 겹치지 않게 `port_` 접두) |
 
-- 새 타일 중 충돌 타일: `harbor_water`, `frozen_wave`, `pier_post`, `crate`, `barrel`, `fishing_net`, `ship_rail`, `market_stall`, `lighthouse_wall`(`port_cobble`, `dock_plank`, `ship_deck`, `rope_coil`, `crate_gap`은 지나갈 수 있음. `rope_coil`은 장식이지만 밟을 수 있게). `crate_gap`은 `crate`와 거의 같아 보이되 자세히 보면 뚜껑이 없거나 옆판 하나가 빠져 있게.
+- 새 타일 중 충돌 타일: `harbor_water`, `frozen_wave`, `pier_post`, `port_crate`, `barrel`, `fishing_net`, `ship_rail`, `port_stall`, `lighthouse_wall`(`port_cobble`, `dock_plank`, `ship_deck`, `rope_coil`, `crate_gap`은 지나갈 수 있음. `rope_coil`은 장식이지만 밟을 수 있게). `crate_gap`은 `port_crate`와 거의 같아 보이되 자세히 보면 뚜껑이 없거나 옆판 하나가 빠져 있게.
 - 화풍은 지역 1~4와 누리의 팔레트(색 윤곽선, 단계 음영)를 맞춥니다. 밝은 바다색·흰 돛·나무 부두에, 굳은 파도와 공중에 걸린 갈매기의 청록 서리 강조. 지역 1~4 몬스터와 실루엣이 겹치지 않게.
 
 ## 7. 함께 하는 시스템 작업(지역 4 결정 반영)

@@ -18,6 +18,18 @@
   },
   {
     "exception": "NameError",
+    "pattern": "name '(Counter|defaultdict)' is not defined",
+    "text": "`Counter`·`defaultdict`는 처음부터 있는 이름이 아니라서 먼저 불러와야 해. 맨 위에 `from collections import Counter, defaultdict`를 적어 줘.",
+    "lesson": "L5-4"
+  },
+  {
+    "exception": "NameError",
+    "pattern": "name 'deque' is not defined",
+    "text": "`deque`도 불러와야 쓸 수 있어. 맨 위에 `from collections import deque`를 적어 줘.",
+    "lesson": "L5-5"
+  },
+  {
+    "exception": "NameError",
     "text": "어, 처음 보는 이름이래! 강조된 줄에서 이름 철자를 확인해 봐. 대소문자도 다르면 다른 이름이야(`Print`와 `print`는 달라). 아니면 그 변수에 값을 넣기 전에 먼저 쓴 건 아닌지 봐 줘. JS의 `ReferenceError: x is not defined`랑 같은 종류야."
   },
   {
@@ -85,6 +97,18 @@
   },
   {
     "exception": "TypeError",
+    "pattern": "'tuple' object does not support item assignment",
+    "text": "tuple은 한 번 묶으면 칸을 바꿀 수 없어(불변). 바꿔야 한다면 `list(t)`로 풀어서 고치거나, 새 tuple을 만들어: `t = (3, t[1])`. 좌표처럼 바뀌면 안 되는 값을 tuple로 묶어 두는 거야.",
+    "lesson": "L5-1"
+  },
+  {
+    "exception": "TypeError",
+    "pattern": "unhashable type",
+    "text": "list·dict·set처럼 고칠 수 있는 값은 dict의 키나 set의 원소가 될 수 없어. 키로 쓰려면 tuple로 바꿔 줘: `tuple(arr)`. JS의 Map은 배열도 키로 받지만(같은 배열인지로 비교), Python은 값으로 찾기 때문에 안 바뀌는 값만 받아.",
+    "lesson": "L5-3"
+  },
+  {
+    "exception": "TypeError",
     "text": "자료형이 맞지 않는 곳에 값을 넣었대. 강조된 줄에서 각 값이 문자열인지 숫자인지 확인해 봐. `print(type(x))`로 찍어 보면 바로 알 수 있어. Python은 JS처럼 자료형을 알아서 바꿔 주지 않아."
   },
   {
@@ -135,8 +159,19 @@
   },
   {
     "exception": "IndexError",
+    "pattern": "pop from an empty deque|deque index out of range",
+    "text": "빈 줄(deque)에서 꺼내려고 했어. 꺼내기 전에 `if dq:`로 줄이 비었는지 먼저 확인해 봐. JS의 `arr.shift()`는 빈 배열이면 `undefined`를 주지만, Python은 에러를 내.",
+    "lesson": "L5-5"
+  },
+  {
+    "exception": "IndexError",
     "text": "목록의 없는 자리를 읽으려고 했어. 길이가 n이면 번호는 `0`부터 `n - 1`까지야. JS는 `arr[10]`이 조용히 `undefined`를 주지만, Python은 바로 알려 줘. 오히려 고마운 거야!",
     "lesson": "L3-1"
+  },
+  {
+    "exception": "KeyError",
+    "text": "장부(dict)에 없는 키를 찾았어! JS 객체는 없는 키가 조용히 `undefined`지만, Python dict는 바로 KeyError를 내. 없을 수도 있으면 `d.get(k, 0)`처럼 기본값을 주거나 `if k in d:`로 먼저 확인해 봐. 세는 중이었다면 `Counter`나 `defaultdict(int)`도 좋아.",
+    "lesson": "L5-2"
   },
   {
     "exception": "ZeroDivisionError",
@@ -231,6 +266,12 @@
     "pattern": "'int' object has no attribute",
     "text": "숫자(`int`)에는 그런 기능이 없어. 혹시 `strip()`이나 `split()`을 `int()`로 바꾼 뒤에 쓴 거야? 문자열 주문은 숫자로 바꾸기 전에 써야 해.",
     "lesson": "L1-2"
+  },
+  {
+    "exception": "AttributeError",
+    "pattern": "'dict' object has no attribute 'add'",
+    "text": "`{}`는 빈 set이 아니라 빈 dict야! 빈 set은 `set()`으로 만들어야 `add`를 쓸 수 있어. JS의 `new Set()`처럼 생각하면 돼.",
+    "lesson": "L5-3"
   },
   {
     "exception": "AttributeError",

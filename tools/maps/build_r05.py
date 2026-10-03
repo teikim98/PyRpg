@@ -12,9 +12,10 @@
 
   1 해안 시장    warp_west·spawn_west·t_port_intro가 1칸 통로에 나란히 있다(트리거는 피할 수 없음).
                  생선 좌판이 늘어선 바깥 시장(좌판 앞에 항구 상인 npc_port_merchant와 상점 shop_port, rune_L5-1,
-                 campfire_market) → 상자 벽의 길목 m_P0501 → 안쪽 시장(북쪽 상자 더미 사이 막다른 골목 끝에 선택 m_P0503)
+                 campfire_market) → 상자 벽의 길목 m_P0501 → 안쪽 시장(북쪽 상자 더미 사이 빈 막다른 골목)
                  → 출구 m_P0502. 남쪽 가장자리는 계선주가 선 부두 널
   2 상인 길드    북쪽에 통을 쌓은 길드 나무 테라스(npc_guild_master, rune_L5-2), 그 앞 자갈 마당에 board_shadow_r05,
+                 마당 남서쪽 구석에 선택 m_P0503(시세표 조회는 장부의 주문서가 필요해서 rune_L5-2 뒤),
                  남쪽 바다로 뻗은 막다른 잔교 끝에 선택 m_P0505, 동쪽 출구 m_P0504
   3 창고 거리    작은 앞마당(rune_L5-3, sign_warehouses) → 길목 m_P0506 → 화물 상자 더미 사이 골목들 → 출구 m_P0507.
                  남쪽 막다른 골목 끝에 선택 m_P0508.
@@ -54,7 +55,7 @@ H = 24
 ZONE1 = r"""
 CCCCCCCCCCCCCCCCCCCC
 CCCCCCCCCCCCCCCCCCCC
-CCCCCCCCCCCCCCCDCCCC
+CCCCCCCCCCCCCCCCCCCC
 CCCSSCSSCSSCCCC.CCCC
 CCC.M.k....CCCC.CCCC
 CCC........C......CC
@@ -91,7 +92,7 @@ C..............C
 C..............C
 C...C......C...C
 C..............C
-C..............C
+CD.............C
 ~~~~~~|=|~~~~~~~
 ~~~~~~|=|~~~~~~~
 ~~~~~~|=|~~~w~~~
@@ -270,8 +271,8 @@ OBJECTS = {
 STAGES: list[tuple[str | None, list[str], list[str]]] = [
     (None, ["warp_west", "t_port_intro", "rune_L5-1", "shop_port", "npc_port_merchant", "campfire_market",
             "m_P0501"], []),
-    ("m_P0501", ["m_P0503", "m_P0502"], []),
-    ("m_P0502", ["rune_L5-2", "npc_guild_master", "board_shadow_r05", "m_P0505", "m_P0504"], []),
+    ("m_P0501", ["m_P0502"], []),
+    ("m_P0502", ["rune_L5-2", "npc_guild_master", "board_shadow_r05", "m_P0503", "m_P0505", "m_P0504"], []),
     ("m_P0504", ["rune_L5-3", "sign_warehouses", "m_P0506"], []),
     ("m_P0506", ["chest_hidden_crates", "m_P0508", "m_P0507"], []),
     ("m_P0507", ["rune_L5-4", "campfire_docks", "m_P0509"], []),
@@ -287,8 +288,8 @@ OPTIONAL = {"m_P0503", "m_P0505", "m_P0508"}
 SCROLLS = ["scroll.tuple", "scroll.dict", "scroll.set", "scroll.counter", "scroll.deque"]
 RUNE_OF_SCROLL = {s: f"rune_L5-{k + 1}" for k, s in enumerate(SCROLLS)}
 REQUIRES = {
-    **{p: ["scroll.tuple"] for p in ("P0501", "P0502", "P0503")},
-    **{p: ["scroll.dict"] for p in ("P0504", "P0505")},
+    **{p: ["scroll.tuple"] for p in ("P0501", "P0502")},
+    **{p: ["scroll.dict"] for p in ("P0503", "P0504", "P0505")},
     **{p: ["scroll.set"] for p in ("P0506", "P0507", "P0508")},
     **{p: ["scroll.counter"] for p in ("P0509", "P0510", "P0511")},
     "P0512": ["scroll.deque"],
@@ -330,8 +331,8 @@ def zone_bounds() -> list[tuple[int, int]]:
 
 ZONE_OF = {  # 오브젝트 → 구역 번호(1부터), 명세 §4 표
     1: ["spawn_west", "warp_west", "t_port_intro", "rune_L5-1", "shop_port", "npc_port_merchant", "campfire_market",
-        "m_P0501", "m_P0503", "m_P0502"],
-    2: ["rune_L5-2", "npc_guild_master", "board_shadow_r05", "m_P0505", "m_P0504"],
+        "m_P0501", "m_P0502"],
+    2: ["rune_L5-2", "npc_guild_master", "board_shadow_r05", "m_P0503", "m_P0505", "m_P0504"],
     3: ["rune_L5-3", "sign_warehouses", "chest_hidden_crates", "m_P0506", "m_P0508", "m_P0507"],
     4: ["rune_L5-4", "campfire_docks", "m_P0509", "m_P0510", "m_P0511"],
     5: ["rune_L5-5", "sign_lighthouse", "campfire_lighthouse", "m_P0512", "t_boss_intro"],

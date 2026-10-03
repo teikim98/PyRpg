@@ -190,6 +190,15 @@ TRACEBACK_SAMPLES = [
     ('"a".indexOf("b")', "AttributeError", True),
     ('"a".startsWith("a")', "AttributeError", True),
     ("[].length", "AttributeError", True),
+    # dict·tuple·set·collections(지역 5, docs/phase3/region05-spec.md §3 흔한 실수)
+    ('{"a": 1}["b"]', "KeyError", False),
+    ("t = (1, 2)\nt[0] = 3", "TypeError", True),
+    ("{[1, 2]: 3}", "TypeError", True),
+    ("s = {}\ns.add(1)", "AttributeError", True),
+    ("Counter([1])", "NameError", True),
+    ("defaultdict(int)", "NameError", True),
+    ("deque()", "NameError", True),
+    ("from collections import deque\ndeque().popleft()", "IndexError", True),
     ("input()", "EOFError", False),
     ("def f():\n    return f()\nf()", "RecursionError", False),
     ("let x = 1", "SyntaxError", False),
@@ -204,7 +213,7 @@ TRACEBACK_SAMPLES = [
 ]
 REQUIRED_TRACEBACK_EXCEPTIONS = [
     "NameError", "TypeError", "ValueError", "IndexError", "ZeroDivisionError", "SyntaxError",
-    "IndentationError", "EOFError", "AttributeError", "RecursionError", "KeyboardInterrupt",
+    "IndentationError", "EOFError", "AttributeError", "RecursionError", "KeyboardInterrupt", "KeyError",
 ]
 
 # 사용자 코드를 새 globals에서 실행하고, 결과(예외 이름·메시지, 함수형은 비교 결과)를 파일로 남긴다
