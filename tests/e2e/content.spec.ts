@@ -33,6 +33,18 @@ const SLOW_PROBE_STDIN: Record<string, string> = {
 
 /** 시간 결계 보정 기준(§9.6 2단계): 제한은 모범답안의 3배 이상, 비효율 답안은 제한의 3배 이상 */
 const BUDGET_HEADROOM = 3;
+/**
+ * 비효율 답안 쪽 기준을 문제별로 낮춘 것(사용자 결정 12, 2026-10-03).
+ * P0411은 함수 밖 문자열 `+=`까지 인정하느라 slow.py와의 간격이 좁아서(이 PC에서 1.1~1.4배),
+ * 게임 판정과 같은 '제한 × 2'(TLE 재확인 기준, design.md §9.6 4단계)로 본다.
+ */
+const SLOW_HEADROOM: Record<string, number> = { P0411: 2 };
+/**
+ * 비효율 답안 쪽 기준을 문제별로 낮춘 것(사용자 결정 12, 2026-10-03).
+ * P0411은 함수 밖 문자열 `+=`까지 인정하느라 slow.py와의 간격이 좁아서(이 PC에서 1.1~1.4배),
+ * 게임 판정과 같은 '제한 × 2'(TLE 재확인 기준, design.md §9.6 4단계)로 본다.
+ */
+const SLOW_HEADROOM: Record<string, number> = { P0411: 2 };
 
 let page: Page;
 
@@ -401,7 +413,7 @@ for (const region of REGIONS) {
             .map((a) => `${a.file}=${a.ms.toFixed(1)} ms(${(a.ms / m.refMs).toFixed(2)} units, 제한/이 답안=${(m.limitMs / a.ms).toFixed(1)}배, ${a.verdict}), `)
             .join("") +
           `비효율 판정=${m.slowVerdicts.join(" ")} 시간=${m.slowTimesMs.join("/")} ms, ` +
-          `제한×${BUDGET_HEADROOM}에서도 미종료=${m.generous.map((g) => `#${g.index + 1}:${g.timedOut}(${Math.round(g.ms)} ms)`).join(" ")}, ` +
+          `제한×${SLOW_HEADROOM[m.id] ?? BUDGET_HEADROOM}에서도 미종료=${m.generous.map((g) => `#${g.index + 1}:${g.timedOut}(${Math.round(g.ms)} ms)`).join(" ")}, ` +
           `반복 1회≈${(m.perIterMs * 1e6).toFixed(0)} ns`,
       );
       expect(m.budgetUnits, "보스에 budgetUnits").toBeGreaterThan(0);
@@ -412,9 +424,9 @@ for (const region of REGIONS) {
         expect(a.verdict, `${a.file} 시간 결계 판정`).toBe("AC");
         expect(m.limitMs, `${a.file} 여유`).toBeGreaterThanOrEqual(BUDGET_HEADROOM * a.ms);
       }
-      // 비효율 답안은 제한의 3배를 줘도 끝나지 않는다
+      // 비효율 답안은 제한의 3배(SLOW_HEADROOM에 있으면 그 배수)를 줘도 끝나지 않는다
       expect(m.generous.length).toBeGreaterThan(0);
-      for (const g of m.generous) expect(g.timedOut, `slow.py #${g.index + 1} 제한×${BUDGET_HEADROOM}`).toBe(true);
+      for (const g of m.generous) expect(g.timedOut, `slow.py #${g.index + 1} 제한×${SLOW_HEADROOM[m.id] ?? BUDGET_HEADROOM}`).toBe(true);
     }
   });
 }
