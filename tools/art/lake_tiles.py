@@ -72,15 +72,13 @@ def _mirror():
     for y in range(16):
         for x in range(16):
             d = (x + y) % 16
-            if d in (3,):
-                g[y][x] = 6 if y % 5 else 5
-            elif d in (2, 4):
+            if d == 3:
+                g[y][x] = 6 if y % 6 == 1 else 5
+            elif d == 4:
                 g[y][x] = 4
-            elif d == 11:
-                g[y][x] = 5
-            elif d in (10, 12):
+            elif d == 11 and y % 4 != 0:
                 g[y][x] = 4
-            elif d == 7 and y % 3 == 0:
+            elif d == 8 and y % 3 == 0:
                 g[y][x] = 2
     # 거꾸로 비친 구름(아래가 둥근 반사)
     cloud = [(9, 1, 4), (8, 2, 6), (9, 3, 4)]

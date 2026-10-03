@@ -201,8 +201,26 @@ def _lilies(rows: list[str]) -> list[str]:
     return out
 
 
+def _shoreline(rows: list[str]) -> list[str]:
+    """흐르는 물(~)과 거울 수면(m)이 구역 경계에서 곧은 세로줄로 갈리지 않게, 경계를 줄마다 -2~+2칸 들쭉날쭉 옮긴다.
+    물 칸끼리만 바꾸므로(둘 다 막힘) 길은 바뀌지 않는다."""
+    out = [list(r) for r in rows]
+    x = 0
+    for k in range(len(ZONES) - 1):
+        x += len(RAW[k][0])
+        left, right = PAD[k], PAD[k + 1]
+        if left == right:
+            continue
+        for y in range(H):
+            off = (0, 1, 2, 1, 0, -1, -2, -1)[(y * 3 + x) % 8]
+            for xx in range(x - 3, x + 3):
+                if out[y][xx] in "~m":
+                    out[y][xx] = left if xx < x + off else right
+    return ["".join(r) for r in out]
+
+
 RAW = [_block(z, k) for k, z in enumerate(ZONES)]
-ROWS = _lilies(["".join(b[y] for b in RAW) for y in range(H)])
+ROWS = _lilies(_shoreline(["".join(b[y] for b in RAW) for y in range(H)]))
 MAP = "\n".join(ROWS)
 
 # 문자 → (타일 이름, 레이어)
