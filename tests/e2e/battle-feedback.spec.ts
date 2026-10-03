@@ -205,7 +205,7 @@ test.describe("시전 진행 표시와 조사(단위 3-5)", () => {
 
     // 모범답안: 남은 큰 입력 3개(1/3 … 3/3)를 만들며 시험 1/4 → 4/4. 결과 연출은 테스트마다
     await typeCode(page, code("solution.py"));
-    const okLog = await castWithStages(page, [{ when: /2페이즈 · 시험 [23]\/4/, path: `${SCREENS}/systems-cast-progress-test.png` }]);
+    const okLog = await castWithStages(page);
     console.log(`P0411 2페이즈 모범답안: ${okLog.wallMs} ms, 진행 ${JSON.stringify(okLog.stages)}, 최대 프레임 간격 ${okLog.maxFrameGapMs} ms`);
     // 첫 테스트(입력이 이미 있음)가 400 ms 안에 끝나는 빠른 기기에서는 '시험 1/4'가 보이기 전에 지나갈 수 있다
     expect(visibleTexts(okLog).filter((t) => t !== "2페이즈 · 시험 1/4")).toEqual([
