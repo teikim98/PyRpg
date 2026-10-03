@@ -134,9 +134,9 @@
 | `boss_mirror_twins` | 32×32 × 2 | 좌우가 반전된 쌍둥이 물의 정령, 가운데에 세로 거울 금. 중간 보스 |
 | `boss_lake_echo` | 32×32 × 2 | 동심원 물결이 겹친 거대한 메아리 정령, 가운데에 시계 룬, 물결이 둘·셋으로 갈라지는 무늬 |
 | `npc_lake_keeper` | 128×16 걷기 시트 | 늙은 호수지기(밀짚모자, 긴 삿대, 흰 수염) |
-| 호수 타일(타일셋 끝에 추가) | 16×16 | `lake_shore`, `lake_water`, `mirror_water`, `lake_reed`, `reed_gap`, `pebble_cairn`, `stepping_stone`, `lake_bridge`, `bridge_rail`, `willow_tree`, `lily_pad`, `mist_grass`, `echo_rock`, `island_grass`(지역 1~5와 이름이 겹치지 않게) |
+| 호수 타일(타일셋 끝에 추가) | 16×16 | `lake_shore`, `lake_water`, `mirror_water`, `lake_reed`, `reed_gap`, `pebble_cairn`, `lake_stepping_stone`(지역 2 `stepping_stone`과 겹쳐서 바꿈), `lake_bridge`, `bridge_rail`, `willow_tree`, `lily_pad`, `mist_grass`, `echo_rock`, `island_grass`(지역 1~5와 이름이 겹치지 않게) |
 
-- 충돌 타일: `lake_water`, `mirror_water`, `lake_reed`, `bridge_rail`, `willow_tree`, `lily_pad`, `echo_rock`. 지나갈 수 있는 타일: `lake_shore`, `reed_gap`, `pebble_cairn`, `stepping_stone`, `lake_bridge`, `mist_grass`, `island_grass`. `reed_gap`은 `lake_reed`와 거의 같아 보이되 자세히 보면 줄기 사이가 살짝 벌어져 있게.
+- 충돌 타일: `lake_water`, `mirror_water`, `lake_reed`, `bridge_rail`, `willow_tree`, `lily_pad`, `echo_rock`. 지나갈 수 있는 타일: `lake_shore`, `reed_gap`, `pebble_cairn`, `lake_stepping_stone`(지역 2 `stepping_stone`과 겹쳐서 바꿈), `lake_bridge`, `mist_grass`, `island_grass`. `reed_gap`은 `lake_reed`와 거의 같아 보이되 자세히 보면 줄기 사이가 살짝 벌어져 있게.
 - 화풍은 지역 1~5와 누리의 팔레트(색 윤곽선, 단계 음영)를 맞춥니다. 굳은 거울 수면(`mirror_water`)은 하늘색 반사와 은빛 하이라이트로 흐르는 물(`lake_water`)과 확실히 구별되게. 지역 1~5 몬스터와 실루엣이 겹치지 않게(특히 지역 5 `monster_twin_fish`와 `monster_zip_eel`, 지역 3 `monster_mirror_slime`과 `boss_mirror_twins`).
 
 ## 7. 함께 하는 시스템 작업
