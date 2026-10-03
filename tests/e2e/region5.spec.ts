@@ -847,17 +847,18 @@ test.describe.serial("지역 5 교역항 전체 플레이", () => {
     expect(await said(page)).toEqual([]);
     expect((await save(page)).location.regionId).toBe("r05");
 
-    // 보스가 있던 칸을 지나 동쪽 끝 문: 지역 6이 아직 없으므로 to_be_continued만 보여 주고 머문다(매번)
+    // 보스가 있던 칸을 지나 동쪽 끝 문: 지역 6 거울 호수의 spawn_west로 이어진다
+    // (처음 건널 때 누리의 연결 대사 → 지역 첫 대사 → spawn 옆 트리거. 대사 문구 검사는 지역 6 E2E에서)
     await walkTo(page, boss.x, boss.y);
-    for (let k = 0; k < 2; k++) {
-      const n = (await said(page)).length;
-      await interact(page, "warp_east");
-      const t = await readAll(page);
-      expect((await said(page)).slice(n)).toEqual(["to_be_continued"]);
-      expect(t.join(" ")).toContain("사막");
-      expect((await save(page)).location.regionId).toBe("r05");
-      await expect(page.locator(".hud-region")).toHaveText("교역항");
-    }
+    const n = (await said(page)).length;
+    await interact(page, "warp_east");
+    await readAll(page);
+    expect((await said(page)).slice(n)).toEqual(["to_be_continued", "region_intro", "lake_intro"]);
+    await expect(page.locator(".hud-region")).toHaveText("거울 호수");
+    const st = await page.evaluate(() => (window as any).__pyrpg.state());
+    expect(st.save.location.regionId).toBe("r06");
+    const spawn = await obj(page, "spawn_west");
+    expect(Math.abs(st.pos.x - spawn.x) + Math.abs(st.pos.y - spawn.y)).toBeLessThanOrEqual(1);
   });
 });
 
