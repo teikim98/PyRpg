@@ -271,6 +271,8 @@ test.describe.serial("시스템 화면(단위 3-1)", () => {
     await expect(page.locator(".shop-gold")).toHaveText("500 G");
     await expect(page.locator(".shop-item.is-locked .item-icon.is-silhouette").first()).toBeVisible();
     await expect(page.locator('.shop-item[data-item="dye-nuri-starlight"]')).toContainText("Lv 10에 열려");
+    // 메아리 고리는 지역 6 상점부터(앞 지역에는 실루엣도 없다, region06-spec.md §7.2)
+    await expect(page.locator('.shop-item[data-item="echo-ring"]')).toHaveCount(0);
     await page.locator('.shop-buy[data-buy="sturdy-cloak"]').click();
     await expect(page.locator(".shop-status")).toContainText("튼튼한 망토");
     await expect(page.locator(".shop-gold")).toHaveText("350 G");
@@ -285,7 +287,9 @@ test.describe.serial("시스템 화면(단위 3-1)", () => {
     await openMenu(page, ".menu-equipment", ".equip-modal");
     await page.locator('.equip-toggle[data-item="sturdy-cloak"]').click();
     await expect(page.locator(".hud-hp-text")).toHaveText("100/120");
-    await expect(page.locator('.equip-item[data-item="echo-ring"]')).toContainText("(준비 중)");
+    // 메아리 고리: 준비 중이 아니고, 아직 없으면 얻는 곳(지역 6 상점)
+    await expect(page.locator('.equip-item[data-item="echo-ring"]')).not.toContainText("준비 중");
+    await expect(page.locator('.equip-item[data-item="echo-ring"]')).toContainText("지역 6 상점");
     await page.locator('.equip-toggle[data-item="guide-feather"]').click();
     await expect(page.locator(".equip-modal .shop-status")).toContainText("슬롯");
     await shot(page, "systems-equipment.png");
@@ -442,5 +446,186 @@ test.describe.serial("기록관의 안경(단위 3-4)", () => {
     await expect(page.locator(".battle-msg-text .err-explain")).toBeVisible();
     await page.locator(".act-retreat").click();
     await settle(page);
+  });
+});
+
+test.describe.serial("메아리 고리(단위 3-6, region06-spec.md §7.2)", () => {
+  /** 거터의 줄별 표시: 줄 번호 → 문구 */
+  const gutterCounts = (page: Page) =>
+    page.evaluate(() => {
+      const out: Record<number, string> = {};
+      const lines = Array.from(document.querySelectorAll(".battle-editor .cm-lineNumbers .cm-gutterElement")) as HTMLElement[];
+      const marks = Array.from(document.querySelectorAll(".battle-editor .cm-echo-gutter .cm-gutterElement")) as HTMLElement[];
+      // 같은 높이(top)의 줄 번호와 짝짓는다
+      for (const m of marks) {
+        const text = m.textContent ?? "";
+        if (!text) continue;
+        const top = m.getBoundingClientRect().top;
+        const ln = lines.find((l) => Math.abs(l.getBoundingClientRect().top - top) < 2 && /^\d+$/.test(l.textContent ?? ""));
+        if (ln) out[Number(ln.textContent)] = text;
+      }
+      return out;
+    });
+
+  test("지역 6 상점에서 사서 끼면 [예제 실행]에서 줄 번호 옆에 줄별 실행 횟수, 코드를 고치면 지워지고, 시전은 그대로", async ({ page }) => {
+    test.setTimeout(300_000);
+    await boot(page);
+    const gate = await obj(page, "gate_well");
+    const cur = await save(page);
+    await seedAndReload(page, {
+      lessons: ["L1-1", "L1-2", "L1-3"],
+      removed: ["gate_well", "m_P0101", "m_P0106"],
+      at: { x: gate.x, y: gate.y - 1 },
+      flags: ["trigger.r01.t_prologue", "companion.joined"],
+      patch: { player: { ...cur.player, gold: 300, hp: 100 } },
+    });
+
+    // 에코 마을(지역 1) 상점: 메아리 고리가 없다
+    await interact(page, "shop_echo");
+    await settle(page, ".shop-modal");
+    await expect(page.locator(".shop-item").first()).toBeVisible();
+    await expect(page.locator('.shop-item[data-item="echo-ring"]')).toHaveCount(0);
+    await closeAll(page);
+
+    // 실제 지역 6 상점(shop_lake) 흐름은 region06.spec.ts가 확인한다. 여기서는 지역 순서만 6으로 바꿔 정확한 횟수를 빠르게 확인
+    await page.evaluate(() => ((window as any).__pyrpg.app.region.order = 6));
+    await interact(page, "shop_echo");
+    await settle(page, ".shop-modal");
+    const ring = page.locator('.shop-item[data-item="echo-ring"]');
+    await expect(ring).toBeVisible();
+    await expect(ring).toContainText("200 G");
+    await expect(ring).not.toContainText("준비 중");
+    await page.locator('.shop-buy[data-buy="echo-ring"]').click();
+    await expect(page.locator(".shop-status")).toContainText("메아리 고리");
+    await expect(ring).toHaveAttribute("data-state", "owned");
+    await closeAll(page);
+    expect((await save(page)).inventory["echo-ring"]).toBe(1);
+
+    await openMenu(page, ".menu-equipment", ".equip-modal");
+    await page.locator('.equip-toggle[data-item="echo-ring"]').click();
+    await expect(page.locator('.equip-item[data-item="echo-ring"]')).toHaveClass(/is-equipped/);
+    await closeAll(page);
+    expect((await save(page)).equipment).toEqual(["echo-ring"]);
+
+    // 지역 1 문제에서 [예제 실행](공개 예제 '7 2' 하나)
+    await bump(page, "m_P0102");
+    await settle(page, ".battle-modal");
+    const code = [
+      "a, b = map(int, input().split())",
+      "steps = 0",
+      "for i in range(10000):",
+      "    for j in range(b + 1):",
+      "        steps += 1",
+      "print(a // b, a % b)",
+    ].join("\n");
+    await typeCode(page, code);
+    await expect(page.locator(".battle-editor .cm-echo-count")).toHaveCount(0);
+    await page.locator(".act-public").click();
+    await expect(page.locator(".battle-editor .cm-echo-count").first()).toBeVisible({ timeout: 60_000 });
+    await expect(page.locator(".battle-msg-text")).toContainText("예제는 전부 통과");
+    await expect(page.locator(".battle-msg-text .echo-note")).toContainText("메아리 고리");
+    const counts = await gutterCounts(page);
+    // 몸통 줄: 1만 × (2 + 1) = 3만, 바깥 반복의 안쪽 for는 1만 × (3 + 1) = 4만(끝 확인 한 번씩 포함)
+    expect(counts[1]).toBe("×1");
+    expect(counts[2]).toBe("×1");
+    expect(counts[5]).toBe("×3만");
+    expect(counts[6]).toBe("×1");
+    expect(counts[3]).toMatch(/^×1(\.0)?만$/);
+    expect(counts[4]).toMatch(/^×[34](\.\d)?만$/);
+    // 정확한 횟수는 마우스를 올리면(title)
+    await expect(page.locator(".battle-editor .cm-echo-count", { hasText: "×3만" })).toHaveAttribute("title", "5번째 줄: 30,000번 실행");
+    await shot(page, "systems-echo-ring.png");
+
+    // 코드를 고치면 지운다
+    await editor(page).click();
+    await page.keyboard.press("Control+End");
+    await page.keyboard.type(" ");
+    await expect(page.locator(".battle-editor .cm-echo-count")).toHaveCount(0);
+
+    // 무한루프(시간 초과): 횟수 없이 지금처럼 TLE, 그 뒤 [예제 실행]은 다시 센다
+    await typeCode(page, "a, b = map(int, input().split())\nwhile True:\n    a += 1");
+    await page.locator(".act-public").click();
+    await expect(page.locator(".battle-msg-details")).toContainText("TLE", { timeout: 120_000 });
+    await expect(page.locator(".act-public")).toBeEnabled({ timeout: 30_000 });
+    await expect(page.locator(".battle-editor .cm-echo-count")).toHaveCount(0);
+    await typeCode(page, solution("P0102").replace(/\r\n/g, "\n").replace(/\n$/, ""));
+    await page.locator(".act-public").click();
+    await expect(page.locator(".battle-editor .cm-echo-count")).toHaveCount(2, { timeout: 60_000 });
+    expect(await gutterCounts(page)).toEqual({ 1: "×1", 2: "×1" });
+
+    // [시전]은 그대로(채점·판정 영향 없음)
+    await cast(page);
+    await expect(page.locator(".battle-banner.is-victory")).toBeVisible();
+    await page.locator(".banner-ok").click();
+    await settle(page, ".reward-modal");
+    await page.locator(".reward-ok").click();
+    await settle(page);
+    expect((await save(page)).problems.P0102.solved).toBe(true);
+  });
+});
+
+test.describe("중간 보스 화면(단위 3-6, region06-spec.md §7.1)", () => {
+  // 지역 6 콘텐츠가 아직 없으므로 UI 하네스(dev/ui.html, 가짜 실행기)에 보스 문제를 중간 보스로 바꿔 넣는다.
+  // 실제 지역 6 중간 보스 E2E는 통합 뒤 tests/e2e/region06.spec.ts에서 한다
+  test("전투·보상 문구가 '중간 보스'이고, 보스와 같은 페이즈·시간 결계·판정만 공개", async ({ page }) => {
+    await page.setViewportSize({ width: 1300, height: 800 });
+    await page.goto("/dev/ui.html?speed=0");
+    await page.waitForFunction(() => (window as any).__uiReady === true);
+    await page.evaluate(() => {
+      const ui = (window as any).__ui;
+      const boss = ui.problems.P0105;
+      ui.problems.P0608 = {
+        ...boss,
+        id: "P0608",
+        title: "[중간 보스] 거울 쌍둥이",
+        midBoss: true,
+        enemy: { ...boss.enemy, name: "거울 쌍둥이" },
+        reward: { xp: 400, gold: 200 },
+        // 페이즈 소개가 없을 때의 기본 문구를 본다
+        phases: boss.phases.map((p: any) => ({ phase: p.phase, name: p.name })),
+      };
+    });
+    const done = page.evaluate(() => (window as any).__ui.battle("P0608", { regionOrder: 6 }));
+    const msg = page.locator(".battle-msg-text");
+    await expect(page.locator(".battle.is-boss.is-midboss")).toBeVisible();
+    await expect(msg).toContainText("중간 보스 거울 쌍둥이가 나타났어!");
+    await expect(page.locator(".phase-label")).toHaveText("1페이즈 · 정확성");
+    await expect(page.locator(".time-gauge")).toBeHidden();
+
+    const queue = (spec: Record<string, unknown>) => page.evaluate((s) => (window as any).__ui.fake.queueJudge(s), spec);
+    await queue({ verdict: "AC" });
+    await page.locator(".act-cast").click();
+    await expect(page.locator(".phase-label")).toHaveText("2페이즈 · 시간 결계");
+    await expect(msg).toContainText("중간 보스가 시간 결계를 펼쳤어!");
+    await expect(page.locator(".time-gauge")).toBeVisible();
+
+    // 시간 결계 실패: 판정과 통과 개수만(테스트 내용은 감춤)
+    await queue({ verdict: "TLE", fail: [3] });
+    await page.locator(".act-cast").click();
+    const details = page.locator(".battle-msg-details");
+    await expect(details).toContainText("시간 초과(TLE) · 통과 2/3");
+    await expect(details.locator(".fb-test")).toHaveCount(0);
+    await expect(details).toContainText("판정과 통과 개수만");
+
+    await queue({ verdict: "AC", timeMs: 300 });
+    await page.locator(".act-cast").click();
+    await page.locator(".banner-ok").click();
+    expect(await done).toMatchObject({ result: "victory", attempts: 3, timeBarrierFirstTry: false });
+
+    // 보상 창: '중간 보스 격파!'
+    await page.evaluate(() => {
+      const ui = (window as any).__ui;
+      void ui.ui.reward.show({ xp: 400, gold: 200, penalty: 0, levelBefore: 5, levelAfter: 5 }, ui.problems.P0608);
+    });
+    await expect(page.locator(".reward-caption")).toHaveText("중간 보스 격파!");
+    await expect(page.locator(".reward-xp .reward-value")).toHaveText("+400 XP");
+    await page.locator(".reward-ok").click();
+    // 최종 보스는 그대로 '보스 격파!'
+    await page.evaluate(() => {
+      const ui = (window as any).__ui;
+      void ui.ui.reward.show({ xp: 1000, gold: 500, penalty: 0, levelBefore: 5, levelAfter: 5 }, ui.problems.P0105);
+    });
+    await expect(page.locator(".reward-caption")).toHaveText("보스 격파!");
+    await page.locator(".reward-ok").click();
   });
 });

@@ -217,7 +217,29 @@ describe("상점·장비·꾸미기(§7.2, §7.3)", () => {
   it("준비 중인 장신구는 효과가 없다", () => {
     const s = newSave();
     s.equipment = ["echo-ring"];
-    expect(equipmentEffects(s, items)).toEqual({ maxHpBonus: 0, guideFeather: false, targetComplexity: false, codexLinks: false });
+    const pendingRing: ItemDef = { ...item("echo-ring"), pending: true };
+    expect(equipmentEffects(s, [pendingRing])).toEqual({ maxHpBonus: 0, guideFeather: false, targetComplexity: false, codexLinks: false, lineCounts: false });
+  });
+
+  it("메아리 고리(region06-spec §7.2): 200 G, 지역 6 이상 상점에서만(앞 지역에는 실루엣도 없음), 장착하면 lineCounts", () => {
+    const ring = item("echo-ring");
+    expect(ring).toMatchObject({ kind: "accessory", price: 200, shopFromRegion: 6, effect: { type: "lineCounts" } });
+    expect(ring.pending).toBeUndefined();
+    const s = newSave();
+    s.player.gold = 1000;
+    // 지역 5 이하 상점: 목록에 없음(null), 살 수도 없음
+    for (const order of [1, 2, 5]) expect(shopState(s, ring, order)).toBeNull();
+    expect(() => buyItem(s, ring, 5)).toThrow("파는 물건이 아니야");
+    // 지역 6·7 상점: 살 수 있음
+    expect(shopState(s, ring, 6)).toBe("available");
+    expect(shopState(s, ring, 7)).toBe("available");
+    const bought = buyItem(s, ring, 6);
+    expect(bought.player.gold).toBe(800);
+    expect(shopState(bought, ring, 6)).toBe("owned");
+    // shopFromRegion이 없는 품목은 어느 지역 상점에서나
+    expect(shopState(s, item("sturdy-cloak"), 1)).toBe("available");
+    const worn = toggleAccessory(bought, ring).save;
+    expect(equipmentEffects(worn, items)).toMatchObject({ lineCounts: true, codexLinks: false });
   });
 
   it("꾸미기: 대상마다 하나, 다시 누르면 원래 색", () => {
@@ -313,6 +335,22 @@ describe("그림자 게시판(§7.6, plan §5.1)", () => {
     expect(p.boss).toBe(false);
     expect(p.phases).toBeUndefined();
     expect(p.budgetUnits).toBeUndefined();
+    expect(p.tests).toHaveLength(1);
+  });
+
+  it("중간 보스의 그림자도 보스가 아니다(midBoss 떼고 1페이즈만)", () => {
+    const mid = problem({
+      id: "P0608",
+      boss: true,
+      midBoss: true,
+      phases: [{ phase: 1, name: "a" }, { phase: 2, name: "b" }],
+      budgetUnits: 10,
+      tests: [{ in: "1\n", out: "1\n", public: true }, { in: "2\n", out: "2\n", phase: 2 }],
+    });
+    const p = shadowProblem(mid, []);
+    expect(p.boss).toBe(false);
+    expect(p.midBoss).toBeUndefined();
+    expect(p.phases).toBeUndefined();
     expect(p.tests).toHaveLength(1);
   });
 

@@ -115,6 +115,8 @@ interface PyResult {
   actual?: string;
   /** 함수형: 사용자 print 출력(채점과 무관) */
   stdout?: string;
+  /** 메아리 고리: 줄 번호 → 실행 횟수 */
+  lineCounts?: Record<string, number>;
   error: PyError | null;
   timeMs: number;
 }
@@ -201,8 +203,8 @@ function handle(req: WorkerRequest): Promise<WorkerResponse> | WorkerResponse {
       try {
         r =
           req.type === "stdinTest"
-            ? parse(judge.runStdinTest(req.code, req.expected))
-            : parse(judge.runFunctionTest(req.code, req.entry, req.args, req.expect, req.compare));
+            ? parse(judge.runStdinTest(req.code, req.expected, req.lineCounts === true))
+            : parse(judge.runFunctionTest(req.code, req.entry, req.args, req.expect, req.compare, req.lineCounts === true));
       } catch (e) {
         const esc = escapedError(e);
         if (!esc) throw e;
@@ -217,6 +219,7 @@ function handle(req: WorkerRequest): Promise<WorkerResponse> | WorkerResponse {
         verdict: r.verdict ?? "RE",
         actual,
       };
+      if (r.lineCounts && typeof r.lineCounts === "object") result.lineCounts = r.lineCounts;
       return { id: req.id, ok: true, type: "test", result };
     }
     case "reference": {

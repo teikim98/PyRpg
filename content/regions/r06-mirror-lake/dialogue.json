@@ -1,0 +1,132 @@
+{
+  "region_intro": [
+    { "speaker": "system", "text": "강을 거슬러 오르던 배가 '쿵' 하고 멈춘다. 뱃머리 앞의 물이 유리판처럼 단단하게 굳어 있다." },
+    { "speaker": "system", "text": "산으로 둘러싸인 넓은 호수. 굳은 수면에 하늘과 버드나무가 거꾸로 비치고, 옅은 보랏빛 안개 속에서 누군가의 목소리가 끝없이 되울린다." }
+  ],
+  "lake_intro": [
+    { "speaker": "companion", "emotion": "surprised", "text": "와, 호수가 통째로 거울이 됐어! 물이 아니라 단단한 유리 같아. 배가 더는 못 올라가겠네." },
+    { "speaker": "companion", "emotion": "neutral", "text": "여긴 '거울 호수'야. 교역항으로 흘러가는 강이 여기서 시작된대. 호수가 굳으니까 강물도 멈춘 거지." },
+    { "speaker": "companion", "emotion": "worried", "text": "들려? 아까부터 메아리가 계속 돌아와. 한 번 외친 소리가 두 갈래, 세 갈래로 갈라져서 안개 속을 떠돌고 있어. 멈추질 않아." },
+    { "speaker": "companion", "emotion": "happy", "text": "교역항에서 도구를 모았으니까, 여기선 그 도구로 나만의 '주문'을 지을 차례야! 이름을 붙여 두고 불러 쓰는 주문, 함수부터. 나루 옆 비석으로 가 보자, {player}!" }
+  ],
+  "lesson_L6-1_intro": [
+    { "speaker": "companion", "emotion": "happy", "text": "나루의 비석이야! 여긴 '부름의 주문'. 자주 쓰는 계산에 이름을 붙여 두고, 필요할 때 불러서 쓰는 함수래." },
+    { "speaker": "companion", "emotion": "neutral", "text": "혀를 쭉 뻗었다가 휙 되감는 개구리 봤어? 부르면 나갔다가, 답을 물고 돌아오는 게 꼭 함수 같더라. `return`을 잊으면 빈손으로 돌아온대!" }
+  ],
+  "lesson_L6-1_done": [
+    { "speaker": "system", "text": "부름의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`def`로 짓고, 이름으로 부르고, `return`으로 돌려받기! `return`이 없으면 `None`이 돌아오는 것만 기억하자. JS의 `undefined`랑 같아." }
+  ],
+  "npc_lake_merchant": [
+    { "speaker": "호숫가 상인", "text": "어서 오세요! 배가 멈춰서 저도 여기 발이 묶였지 뭐예요. 덕분에 나루에 좌판을 폈답니다. 회복약도 장신구도 다 있어요." },
+    { "speaker": "호숫가 상인", "text": "그리고 이번에 새로 들여온 물건! '메아리 고리'예요. 이 호수의 메아리를 담아 만든 고리인데, 끼고 주문을 시험해 보면 주문의 줄마다 몇 번 울렸는지 숫자가 떠요." },
+    { "speaker": "호숫가 상인", "text": "값이 좀 나가지만, 이 호수의 메아리처럼 같은 주문이 몇 번이고 되풀이되는 곳에선 이만한 게 없죠. 앞쪽 항구에선 구경도 못 했을걸요?" },
+    { "speaker": "companion", "emotion": "surprised", "text": "줄마다 실행 횟수가 보인다고? 장착하고 전투에서 [예제 실행]을 누르면, 줄 번호 옆에 `×N`으로 나온대. 재귀가 몇 번 불리는지 볼 때 딱이겠다!" },
+    { "speaker": "companion", "emotion": "neutral", "text": "골드가 모이면 하나 사 두자. 메아리 여울쯤 가면 꼭 쓰고 싶어질 거야." }
+  ],
+  "lesson_L6-2_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "버드나무 둑의 비석이야. 여긴 '펼침의 주문'. 값을 한 번에 나눠 담고, 한 번에 펼치고, 두 줄을 짝지어 도는 주문들이래." },
+    { "speaker": "companion", "emotion": "surprised", "text": "두 마리가 지퍼처럼 맞물려 헤엄치는 장어 봤어? 물 위 줄이랑 물속 줄을 한 칸씩 짝지어야 상대할 수 있대. 그게 바로 `zip`이야!" }
+  ],
+  "lesson_L6-2_done": [
+    { "speaker": "system", "text": "펼침의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`first, *rest = arr`로 모으고, `print(*arr)`로 펼치고, `enumerate(arr, 1)`로 1번부터 번호! 그리고 `map`이랑 `zip`은 한 번 쓰면 끝이니까 두 번 쓸 거면 `list()`로 담아 두기." }
+  ],
+  "npc_lake_keeper": [
+    { "speaker": "늙은 호수지기", "text": "허, 배가 멈춘 뒤로 처음 보는 얼굴이군. 나는 이 호수를 오십 년 지켜 온 호수지기라네. 삿대 한 자루가 내 전 재산이지." },
+    { "speaker": "늙은 호수지기", "text": "호수 한가운데 섬에 이 호수의 시계 룬이 있었어. 그런데 세계가 멈추던 날, 호수의 메아리가 그 룬을 꽉 붙잡아 버렸지. 그 뒤로 메아리가 그치질 않아. 한 번 울린 소리가 갈라지고, 또 갈라지고…" },
+    { "speaker": "companion", "emotion": "worried", "text": "그래서 메아리가 끝없이 돌아오는 거구나. 섬까지 가려면 어떻게 해야 해요?" },
+    { "speaker": "늙은 호수지기", "text": "호수 가운데 거울 다리를 건너야 해. 다만 다리 끝은 거울 쌍둥이가 지키고 있다네. 그 녀석들은 무엇이든 자기들 규칙대로 줄을 세워야 직성이 풀려. 줄을 제대로 세워 보이면 길을 내줄 거야." },
+    { "speaker": "늙은 호수지기", "text": "다리 너머 안개 갈대밭을 지날 땐 갈대 벽을 잘 보게. 조약돌 더미 바로 북쪽의 갈대는 줄기 사이가 살짝 벌어져 있어서 지나갈 수 있어. 내가 옛날에 쉬던 자리라, 그 안쪽에 비상금을 좀 숨겨 뒀지." },
+    { "speaker": "늙은 호수지기", "text": "그리고… 세계가 멈추기 조금 전에, 낯선 이가 호숫가에 와서 한참을 서 있다 갔다네. 끝나지 않는 메아리를 몹시도 싫어하는 눈치였어. 호수를 노려보며 '느려, 너무 느려'라고 중얼거리더군." },
+    { "speaker": "companion", "emotion": "serious", "text": "끝나지 않는 걸 싫어하는 누군가… 교역항 뱃노래에 나온 '제시간에 끝내도록 지키던 자'랑 같은 사람일까?" },
+    { "speaker": "companion", "emotion": "happy", "text": "아무튼 조약돌 더미 바로 북쪽의 갈대, 지도에 적었어! 고마워요, 호수지기 할아버지!" }
+  ],
+  "lesson_L6-3_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "거울 다리의 비석이야. 여긴 '줄 세움의 주문'. 무엇으로 비교할지 알려 주는 `key`와, 한 줄짜리 작은 함수 `lambda`래." },
+    { "speaker": "companion", "emotion": "surprised", "text": "다리랑 부리가 λ 모양으로 꺾인 왜가리 봤어? 물고기를 크기순으로 척척 세우더라. 쌍둥이를 만나기 전에 꼭 배워 두자!" }
+  ],
+  "lesson_L6-3_done": [
+    { "speaker": "system", "text": "줄 세움의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`sorted`는 새 리스트, `.sort()`는 제자리에 `None` 반환! 여러 기준은 튜플 key, 숫자는 `-`로 큰 순. 문자열엔 `-`가 안 되니까 두 번 정렬. 이제 쌍둥이 앞에서도 줄 세울 수 있어." }
+  ],
+  "sign_mirror_bridge": [
+    { "speaker": "system", "text": "다리 난간에 은빛 글씨가 새겨져 있다. 글씨가 좌우로 뒤집혀 있어서, 굳은 수면에 비친 모습으로 읽어야 한다." },
+    { "speaker": "system", "text": "『거울 쌍둥이의 줄 세우기. 사람마다 기록이 셋. 어떤 기록은 높은 사람이 앞, 어떤 기록은 낮은 사람이 앞. 앞의 기록이 같을 때만 다음 기록을 본다. 기록이 모두 같으면 이름이 사전에서 앞서는 사람이 먼저.』" },
+    { "speaker": "companion", "emotion": "neutral", "text": "기준이 여러 겹이고, 높은 순이랑 낮은 순이 섞여 있어. `reverse=True` 한 방으로는 안 되겠다. 튜플 key에 숫자는 `-`… 비석에서 배운 그대로야!" }
+  ],
+  "midboss_intro": [
+    { "speaker": "system", "text": "다리 끝의 굳은 수면에서 물의 정령 둘이 솟아오른다. 왼쪽과 오른쪽이 꼭 거울에 비친 듯 반대로 생겼다. 둘 사이에 세로로 거울 금이 번쩍인다." },
+    { "speaker": "거울 쌍둥이", "text": "건너려는 자여. / 자여, 건너려는." },
+    { "speaker": "거울 쌍둥이", "text": "호숫가 사람들을 우리 규칙대로 줄 세워라. 사람이 아주 많아도 제시간에. / 제시간에, 많아도 아주 사람이." },
+    { "speaker": "companion", "emotion": "worried", "text": "말까지 거꾸로 하네… 쟤들은 둘씩 짝지어서 하나하나 비교하며 자리를 바꾸는 식으로 줄을 세운대. 그러니 사람이 많으면 끝이 안 나서 시간 결계를 친 거고." },
+    { "speaker": "companion", "emotion": "neutral", "text": "우리는 `sorted`에 key 하나면 돼. 높은 순은 `-`, 낮은 순은 그대로, 마지막은 이름! 중간 보스야. 가자, {player}!" }
+  ],
+  "midboss_defeated": [
+    { "speaker": "system", "text": "두 정령이 서로를 마주 보더니, 거울 금을 사이에 두고 하나로 겹쳐져 수면 아래로 가라앉는다." },
+    { "speaker": "거울 쌍둥이", "text": "줄이 바르다. 지나가라. / 지나가라, 바르다 줄이." },
+    { "speaker": "companion", "emotion": "happy", "text": "해냈다! 다리 끝을 막던 거울 벽이 걷혔어. 저 너머가 호수지기 할아버지가 말한 안개 갈대밭이야." },
+    { "speaker": "companion", "emotion": "neutral", "text": "그래도 호수는 아직 굳어 있어. 시계 룬은 섬의 메아리가 쥐고 있으니까. 갈대밭을 지나 섬으로 가자!" }
+  ],
+  "lesson_L6-4_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "안개 갈대밭의 비석이야. 여긴 '되울림의 주문'. 함수가 자기 자신을 부르는 재귀래." },
+    { "speaker": "companion", "emotion": "surprised", "text": "연꽃 안에 작은 연꽃, 그 안에 더 작은 연꽃이 든 정령 봤어? 열고 또 열다 보면 맨 안쪽에서 멈춰. 재귀도 그렇게 '멈추는 곳'이 꼭 있어야 한대." }
+  ],
+  "lesson_L6-4_done": [
+    { "speaker": "system", "text": "되울림의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "기저 조건으로 멈추고, 부를 때마다 문제를 작게! 멈추는 곳이 없으면 `RecursionError`. 그리고 이 호수에선 재귀 깊이가 300을 넘지 않으니까 안심하고 불러도 돼." }
+  ],
+  "sign_reeds": [
+    { "speaker": "system", "text": "갈대 사이에 낡은 나무 표지가 꽂혀 있다. 『안개 갈대밭. 길을 잃으면 메아리를 따르지 말 것. 메아리는 같은 자리만 맴돈다.』" },
+    { "speaker": "system", "text": "아래쪽에 삿대 끝으로 긁은 듯한 글씨가 있다. 『쉼터: 조약돌 더미 바로 북쪽의 갈대.』" },
+    { "speaker": "companion", "emotion": "neutral", "text": "호수지기 할아버지 글씨인가 봐. 조약돌 더미 바로 북쪽의 갈대! 갈대 벽을 잘 살펴보자." }
+  ],
+  "chest_hidden_reeds": [
+    { "speaker": "system", "text": "벌어진 갈대 틈 너머에 작은 상자가 있다. 80골드를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "진짜 지나갈 수 있는 갈대였어! 할아버지 비상금이라니 조금 미안하지만… 섬의 메아리를 멈춰 드리는 걸로 갚자!" }
+  ],
+  "lesson_L6-5_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "메아리 여울의 비석이야. 여긴 '기억의 주문'. 한 번 계산한 답을 적어 두고 다시 꺼내 쓰는 메모래." },
+    { "speaker": "companion", "emotion": "worried", "text": "날개에 쪽지가 잔뜩 붙은 나방 봤어? 같은 걸 또 물어보면 쪽지를 펼쳐서 바로 답하더라. 메모 없이 덤비면 같은 계산을 수만 번 되풀이하게 될 거래." }
+  ],
+  "lesson_L6-5_done": [
+    { "speaker": "system", "text": "기억의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`memo = {}`에 적어 두고 `if n in memo:`로 꺼내기! `@lru_cache`는 꼭 `maxsize=None`, 아니면 `@cache`. 그리고 n이 아주 커도 dict엔 필요한 값만 적히니까 걱정 없어." },
+    { "speaker": "companion", "emotion": "neutral", "text": "호출 횟수가 궁금하면 메아리 고리를 끼고 [예제 실행]! 메모 전후로 숫자가 얼마나 줄어드는지 보면 재밌을 거야." }
+  ],
+  "sign_echo_shoal": [
+    { "speaker": "system", "text": "여울가의 바위에 오래된 글이 새겨져 있다. 『메아리 여울의 노래』" },
+    { "speaker": "system", "text": "『세기 n으로 외친 소리는 호수에 부딪혀 세기 n // 2와 n // 3인 두 메아리로 갈라져 돌아온다. 세기가 0이 된 메아리는 더 갈라지지 않고 한 번 울리고 사라진다.』" },
+    { "speaker": "system", "text": "『그리하여 큰 외침은 셀 수 없이 울린다. 그러나 귀 기울여 보라. 갈라진 메아리들 가운데 같은 세기의 것이 몇 번이고 다시 나타난다.』" },
+    { "speaker": "companion", "emotion": "serious", "text": "같은 세기의 메아리가 몇 번이고 다시… 그럼 그 세기가 결국 몇 번 울리는지는 한 번만 알아 두면 되잖아? 방금 배운 기억의 주문이 떠오르는데." },
+    { "speaker": "companion", "emotion": "neutral", "text": "여기서 숨 돌리고 가자. 섬이 바로 저기야." }
+  ],
+  "boss_intro": [
+    { "speaker": "system", "text": "섬에 오르자 호수 전체가 웅웅 울린다. 동심원 물결이 겹겹이 솟아올라 거대한 정령이 된다. 그 한가운데에서 시계 룬이 희미하게 빛난다." },
+    { "speaker": "호수의 메아리", "text": "외쳐라… 외쳐라… 세기 n의 외침이 결국 몇 번 울리는지 대답하라… 대답하라… 대답하라…" },
+    { "speaker": "companion", "emotion": "worried", "text": "저 메아리는 같은 세기의 메아리를 만날 때마다 처음부터 다시 갈라 보느라 영영 끝나지 않는대. 그래서 시간이 멈춰도 저 혼자 계속 울리는 거야. 우리도 그렇게 세면 시간 결계에 갇혀." },
+    { "speaker": "companion", "emotion": "neutral", "text": "부름, 펼침, 줄 세움, 되울림, 기억. 호수에서 배운 주문을 다 쓸 때야. 갈라지는 건 재귀로, 같은 세기는 한 번만 계산해서 적어 두기! 가자, {player}!" }
+  ],
+  "boss_defeated": [
+    { "speaker": "system", "text": "겹겹이 겹친 물결이 하나씩 잦아든다. 마지막 메아리가 한 번 울리고 사라지자, 시계 룬이 '딸깍' 하고 한 칸 움직인다." },
+    { "speaker": "system", "text": "거울처럼 굳어 있던 수면에 잔물결이 번진다. 쩡 하는 소리와 함께 호수가 풀리고, 멈춰 있던 강물이 다시 흐르기 시작한다." },
+    { "speaker": "호수의 메아리", "text": "…한 번만… 기억하면… 되었구나. 나는 같은 소리를… 몇 번이고… 처음부터…" },
+    { "speaker": "companion", "emotion": "happy", "text": "해냈다! 물소리 들려? 호수가 다시 흘러! 버드나무 잎도 흔들리고 있어!" },
+    { "speaker": "companion", "emotion": "surprised", "text": "지도 봐! 호수에 색이 번지고, 강줄기를 따라 물길이 그려지고 있어!" }
+  ],
+  "region_clear": [
+    { "speaker": "companion", "emotion": "happy", "text": "거울 호수 지도 완성! 함수를 짓고, 값을 펼치고, 줄을 세우고, 메아리처럼 되부르고, 한 번 한 계산은 기억하기까지. 이제 내 주문을 내가 지을 수 있게 됐어!" },
+    { "speaker": "companion", "emotion": "neutral", "text": "바깥 시련장 목록도 새로 채워 뒀어. '문자열 내 마음대로 정렬하기'는 줄 세움의 주문, '하노이의 탑'이랑 '쿼드압축 후 개수 세기'는 되울림, '피보나치 수'는 기억의 주문 그대로야. 한번 도전해 봐!" },
+    { "speaker": "늙은 호수지기", "text": "허허, 호수가 다시 숨을 쉬는구먼. 강도 다시 흐르니 배도 뜰 걸세. 사막으로 가는 물길은 이 호수 건너편에서 이어진다네." },
+    { "speaker": "companion", "emotion": "serious", "text": "할아버지가 말한 낯선 사람… 끝나지 않는 걸 몹시 싫어했대. 대도서관의 봉인 기록, 교역항의 뱃노래, 그리고 여기. 조금씩 그 사람한테 가까워지는 것 같아." },
+    { "speaker": "companion", "emotion": "happy", "text": "배가 다시 사막으로 떠날 준비를 하고 있어. 지도 여백은 아직 한참 남았어. 같이 가자, {player}." }
+  ],
+  "east_gate_locked": [
+    { "speaker": "system", "text": "섬 동쪽 나루의 물길이 거울처럼 굳어 있다. 배를 띄울 수가 없다." },
+    { "speaker": "companion", "emotion": "worried", "text": "호수의 메아리가 시계 룬을 쥐고 있는 동안엔 물길이 안 풀릴 거야. 메아리를 먼저 멈추자." }
+  ],
+  "to_be_continued": [
+    { "speaker": "companion", "emotion": "happy", "text": "물길이 풀렸다! 우리가 타고 온 배가 동쪽 나루에서 돛을 올리고 있어. 호수 건너편으로 가면 그다음은 사막이래!" },
+    { "speaker": "system", "text": "거울 호수 이야기는 여기까지입니다. 다음 지역은 준비 중이에요. 플레이해 주셔서 고맙습니다!" }
+  ]
+}

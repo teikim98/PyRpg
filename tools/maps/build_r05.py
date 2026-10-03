@@ -262,7 +262,15 @@ OBJECTS = {
     ">": (
         "warp_east",
         "warp",
-        {"requires": "problem:P0513", "lockedDialogue": "east_gate_locked", "openDialogue": "to_be_continued"},
+        {
+            "requires": "problem:P0513",
+            "lockedDialogue": "east_gate_locked",
+            # 지역 간 이동(docs/phase3/region06-spec.md §4): 배를 타고 강을 거슬러 거울 호수 나루(서쪽 입구)로.
+            # 처음 건널 때 누리의 연결 대사(to_be_continued)를 한 번 보여 주고 넘어간다(지역 4 문과 같은 방식)
+            "openDialogue": "to_be_continued",
+            "target": "r06",
+            "targetSpawn": "spawn_west",
+        },
         "ship_deck",
     ),
 }

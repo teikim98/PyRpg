@@ -19,6 +19,12 @@ export const GENERAL_SLOWDOWN = 2;
 /** 시간 결계 제한 = budgetUnits × ref × 1.5 + 50 ms */
 export const BUDGET_MARGIN = 1.5;
 export const BUDGET_OVERHEAD_MS = 50;
+/**
+ * 메아리 고리로 줄별 실행 횟수를 셀 때 느려지는 만큼 늘리는 시간 상한 배수(docs/phase3/region06-spec.md §7.2).
+ * design.md §9.6은 약 3.5배였지만, 단위 3-6에서 Pyodide 314(Chromium)로 잰 값은 반복문 약 4배, 재귀 약 7배였다.
+ * 공개 예제는 작아서 대개 상한과 멀다. 무한루프가 멈출 때까지 기다리는 시간과 맞바꿔 6배
+ */
+export const LINE_COUNT_SLOWDOWN = 6;
 /** 소프트 중단 뒤 이 시간 안에 응답이 없으면 워커를 강제 종료(§9.5 2단계) */
 export const HARD_STOP_GRACE_MS = 1000;
 

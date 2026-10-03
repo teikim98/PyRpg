@@ -29,10 +29,20 @@ const SLOW_PROBE_STDIN: Record<string, string> = {
   P0411: `${"a".repeat(1000)}\n500\n${Array.from({ length: 500 }, (_, i) => `SWAP ${(i % 1000) + 1} ${((i * 7) % 1000) + 1}`).join("\n")}\n`,
   // 화물 1000개에 질문 1000개: 질문마다 cargo.count가 1000개를 훑어 10^6번 비교한다(마지막 최빈값 고르기는 종류 20개 × 1000)
   P0513: `1000\n${Array.from({ length: 1000 }, (_, i) => `w${i % 20}`).join(" ")}\n1000\n${Array.from({ length: 1000 }, (_, i) => `w${(i * 7) % 23}`).join("\n")}\n`,
+  // 1414명을 선택 정렬: before()를 1414 × 1413 / 2 ≈ 10^6번 부른다
+  P0608: `1414\n${Array.from({ length: 1414 }, (_, i) => `p${i} ${(i * 37) % 101} ${(i * 11) % 7} ${(i * 13) % 101}`).join("\n")}\n`,
+  // 메모 없는 재귀로 E(10^7) = 464131: echo()를 2 × 464131 − 1 ≈ 0.93 × 10^6번 부른다
+  P0614: "1\n10000000\n",
 };
 
 /** 시간 결계 보정 기준(§9.6 2단계): 제한은 모범답안의 3배 이상, 비효율 답안은 제한의 3배 이상 */
 const BUDGET_HEADROOM = 3;
+/**
+ * 비효율 답안 쪽 기준을 문제별로 낮춘 것(사용자 결정 12, 2026-10-03).
+ * P0411은 함수 밖 문자열 `+=`까지 인정하느라 slow.py와의 간격이 좁아서(이 PC에서 1.1~1.4배),
+ * 게임 판정과 같은 '제한 × 2'(TLE 재확인 기준, design.md §9.6 4단계)로 본다.
+ */
+const SLOW_HEADROOM: Record<string, number> = { P0411: 2 };
 
 let page: Page;
 
@@ -322,17 +332,19 @@ for (const region of REGIONS) {
   });
 
   test(`콘텐츠 스모크 ${region.id}: 보스 시간 결계 budgetUnits 보정(§9.6 2단계)`, async () => {
-    test.setTimeout(240_000);
     const bosses = await page.evaluate(
       (rid: string) =>
         (window as any).__content.regions
           .find((r: any) => r.id === rid)
           .problems.filter((p: any) => p.boss)
-          .map((p: any) => p.id) as string[],
+          .map((p: any) => ({ id: p.id, mid: p.midBoss === true })) as { id: string; mid: boolean }[],
       region.id,
     );
-    expect(bosses.length).toBe(1);
-    for (const pid of bosses) {
+    // 최종 보스는 하나, 중간 보스는 0~1개(region06-spec.md §7.1). 둘 다 시간 결계를 잰다
+    expect(bosses.filter((b) => !b.mid).length).toBe(1);
+    expect(bosses.filter((b) => b.mid).length).toBeLessThanOrEqual(1);
+    test.setTimeout(240_000 * bosses.length);
+    for (const pid of bosses.map((b) => b.id)) {
       const m = await page.evaluate(
         async ([id, headroom, probeStdin]: [string, number, string]) => {
           const W = window as any;
@@ -401,7 +413,7 @@ for (const region of REGIONS) {
             .map((a) => `${a.file}=${a.ms.toFixed(1)} ms(${(a.ms / m.refMs).toFixed(2)} units, 제한/이 답안=${(m.limitMs / a.ms).toFixed(1)}배, ${a.verdict}), `)
             .join("") +
           `비효율 판정=${m.slowVerdicts.join(" ")} 시간=${m.slowTimesMs.join("/")} ms, ` +
-          `제한×${BUDGET_HEADROOM}에서도 미종료=${m.generous.map((g) => `#${g.index + 1}:${g.timedOut}(${Math.round(g.ms)} ms)`).join(" ")}, ` +
+          `제한×${SLOW_HEADROOM[m.id] ?? BUDGET_HEADROOM}에서도 미종료=${m.generous.map((g) => `#${g.index + 1}:${g.timedOut}(${Math.round(g.ms)} ms)`).join(" ")}, ` +
           `반복 1회≈${(m.perIterMs * 1e6).toFixed(0)} ns`,
       );
       expect(m.budgetUnits, "보스에 budgetUnits").toBeGreaterThan(0);
@@ -412,9 +424,9 @@ for (const region of REGIONS) {
         expect(a.verdict, `${a.file} 시간 결계 판정`).toBe("AC");
         expect(m.limitMs, `${a.file} 여유`).toBeGreaterThanOrEqual(BUDGET_HEADROOM * a.ms);
       }
-      // 비효율 답안은 제한의 3배를 줘도 끝나지 않는다
+      // 비효율 답안은 제한의 3배(SLOW_HEADROOM에 있으면 그 배수)를 줘도 끝나지 않는다
       expect(m.generous.length).toBeGreaterThan(0);
-      for (const g of m.generous) expect(g.timedOut, `slow.py #${g.index + 1} 제한×${BUDGET_HEADROOM}`).toBe(true);
+      for (const g of m.generous) expect(g.timedOut, `slow.py #${g.index + 1} 제한×${SLOW_HEADROOM[m.id] ?? BUDGET_HEADROOM}`).toBe(true);
     }
   });
 }

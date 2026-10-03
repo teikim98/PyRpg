@@ -1,0 +1,117 @@
+{
+  "id": "P0614",
+  "title": "[보스] 호수의 메아리",
+  "kind": "stdin",
+  "enemy": {"name": "호수의 메아리", "sprite": "boss_lake_echo", "attack": 40},
+  "requires": ["scroll.function", "scroll.unpack", "scroll.sort", "scroll.recursion", "scroll.memo"],
+  "concept": "scroll.memo",
+  "boss": true,
+  "phases": [
+    {
+      "phase": 1,
+      "name": "정확성",
+      "intro": "호수의 메아리가 깨어났어! 세기 n의 외침은 세기 n // 2와 n // 3인 두 메아리로 갈라지고, 세기 0이 된 메아리는 한 번 울리고 끝나. 지금은 n이 10000 이하라서 그대로 재귀로 세어도 괜찮아. 기저 조건부터 잘 세워 보자!"
+    },
+    {
+      "phase": 2,
+      "name": "시간 결계",
+      "stopOnTle": true,
+      "intro": "으악, 시간 결계야! 외침의 세기가 10^18까지 커졌어. 갈라지는 메아리를 메모 없이 전부 따라가면 수백조 번을 불러야 해. 그런데 잘 보면 같은 세기가 자꾸 다시 나와! 한 번 구한 값은 dict에 적어 두고 꺼내 쓰자."
+    }
+  ],
+  "timeLimitMs": 2000,
+  "budgetUnits": 10,
+  "targetComplexity": "O(Q · log² n)",
+  "estimatedMinutes": 20,
+  "tests": [
+    {"in": "4\n0\n1\n6\n10\n", "out": "1\n2\n7\n9\n", "public": true, "phase": 1, "note": "기본 동작"},
+    {"in": "1\n0\n", "out": "1\n", "phase": 1, "note": "경계: n = 0 하나(Q = 1)"},
+    {"in": "4\n3\n2\n1\n0\n", "out": "4\n3\n2\n1\n", "phase": 1, "note": "경계: n = 3, 2, 1, 0"},
+    {"in": "1\n10000\n", "out": "1964\n", "phase": 1, "note": "경계: 가장 큰 n = 10,000"},
+    {"in": "9\n4\n5\n6\n7\n8\n9\n11\n12\n13\n", "out": "5\n5\n7\n7\n8\n9\n9\n12\n12\n", "phase": 1, "note": "작은 세기가 차례로(같은 메아리를 여러 번 거침)"},
+    {"in": "20\n10000\n9999\n0\n7777\n1\n5000\n4096\n6561\n1234\n10000\n2\n8191\n3000\n59\n999\n100\n2048\n729\n9000\n10000\n", "out": "1964\n1964\n1\n1861\n2\n1137\n1074\n1444\n388\n1964\n3\n1861\n816\n37\n351\n55\n616\n265\n1898\n1964\n", "phase": 1, "note": "경계: Q = 20, 같은 질문 반복과 0·1·10,000이 섞임"},
+    {"gen": "gen_big.py", "genArg": "random", "phase": 2, "note": "경계: Q = 100, n은 10^15 ~ 10^18"},
+    {"gen": "gen_big.py", "genArg": "edge", "phase": 2, "note": "경계: Q = 100, n = 10^15과 10^18, 2·3의 거듭제곱 근처, 같은 질문 반복"},
+    {"gen": "gen_big.py", "genArg": "near", "phase": 2, "note": "경계: Q = 100, 10^18 근처의 이웃한 세기"}
+  ],
+  "accepted": [
+    {"file": "alt_lru.py", "title": "@lru_cache(maxsize=None)로 메모"},
+    {"file": "alt_lru128.py", "title": "@lru_cache 기본값(최근 128개만 기억)"},
+    {"file": "alt_fresh.py", "title": "질문마다 새 dict 메모"}
+  ],
+  "variants": [
+    {
+      "id": "P0614-v1",
+      "title": "그림자 메아리",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"in": "3\n2\n5\n0\n", "out": "3\n5\n1\n", "public": true, "note": "기본 동작"},
+        {"in": "2\n10000\n1\n", "out": "1964\n2\n", "note": "경계: 가장 큰 n과 1"},
+        {"in": "2\n0\n0\n", "out": "1\n1\n", "note": "경계: n = 0 두 번"},
+        {"in": "5\n27\n16\n81\n64\n100\n", "out": "21\n13\n49\n38\n55\n", "note": "2와 3의 거듭제곱"}
+      ]
+    },
+    {
+      "id": "P0614-v2",
+      "title": "갈라지는 물결",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"in": "3\n12\n0\n30\n", "out": "12\n1\n21\n", "public": true, "note": "기본 동작"},
+        {"in": "1\n1\n", "out": "2\n", "note": "경계: n = 1 하나"},
+        {"in": "4\n9999\n3\n6\n0\n", "out": "1964\n4\n7\n1\n", "note": "경계: 큰 n과 작은 n, 0이 섞임"},
+        {"in": "3\n500\n500\n250\n", "out": "200\n200\n114\n", "note": "같은 질문 반복"}
+      ]
+    }
+  ],
+  "extraDiagnoses": [
+    {
+      "when": {"exception": "OverflowError", "messageMatches": "index-sized"},
+      "text": "n이 10^18이라 크기 n짜리 리스트는 못 만들어(칸 하나에 8바이트만 잡아도 800만 테라바이트야). 메아리가 실제로 거치는 세기는 n // 2, n // 3, n // 4, n // 6, …처럼 천 개 남짓뿐이야. 필요한 값만 dict에 저장해: `memo = {}`에 구한 세기만 적어 두는 메모 재귀로 바꿔."
+    }
+  ],
+  "wrong": [
+    {
+      "file": "slow.py",
+      "title": "메모 없는 재귀(비효율 답안)",
+      "slow": true,
+      "expectFail": {"7": "TLE", "8": "TLE", "9": "TLE"},
+      "diagnosis": {
+        "when": {"verdict": "TLE"},
+        "text": "답은 맞았지만 끝나지 않아! 메모 없는 재귀는 같은 세기의 메아리를 몇 번이고 처음부터 다시 계산해. 세기 10^18이면 부르는 횟수가 450조 번쯤이야. `memo = {}`에 한 번 구한 값을 적어 두고 `if n in memo: return memo[n]`으로 꺼내 쓰거나, 함수 위에 `@lru_cache(maxsize=None)`을 붙여. 0부터 n까지 반복문으로 채우는 것도 10^18번이라 안 돼."
+      }
+    },
+    {
+      "file": "wrong_base.py",
+      "title": "기저 조건을 n == 1로 둠",
+      "expectFail": {"1": "RE", "2": "RE", "3": "RE", "4": "RE", "5": "RE", "6": "RE", "7": "RE", "8": "RE", "9": "RE"},
+      "diagnosis": {
+        "when": {"exception": "RecursionError"},
+        "text": "세기 0의 메아리가 끝나지 않아! 기저 조건이 `n == 1`이면 `echo(0)`이 `echo(0 // 2)`, 즉 다시 `echo(0)`을 부르고 또 부르다가 `RecursionError`가 나. 문제의 기저는 '세기 0은 한 번 울린다'야: `if n == 0: return 1`. 세기 1은 0과 0으로 갈라지니까 2번 울려."
+      }
+    },
+    {
+      "file": "wrong_sum.py",
+      "title": "질문마다 출력하지 않고 합만 출력",
+      "expectFail": {"1": "WA", "3": "WA", "5": "WA", "6": "WA", "7": "WA", "8": "WA", "9": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA", "outputMatches": "^\\d+\\s*$"},
+        "text": "답이 한 줄뿐이야. 질문마다 그 세기가 울린 횟수를 **한 줄씩** 출력해야 해. 합을 모으지 말고 질문을 읽을 때마다 `print(echo(n))`."
+      }
+    },
+    {
+      "file": "big_list.py",
+      "title": "크기 n+1 리스트로 아래에서부터 채움(2페이즈에서만 실패)",
+      "expectFail": {"7": "RE", "8": "RE", "9": "RE"},
+      "diagnosis": {
+        "when": {"exception": "MemoryError"},
+        "text": "n이 10^18이라 크기 n짜리 리스트는 못 만들어(칸 하나에 8바이트만 잡아도 800만 테라바이트야). 메아리가 실제로 거치는 세기는 n // 2, n // 3, n // 4, n // 6, …처럼 천 개 남짓뿐이야. 필요한 값만 dict에 저장해: `memo = {}`에 구한 세기만 적어 두는 메모 재귀로 바꿔."
+      }
+    }
+  ],
+  "hints": [
+    "세기 n의 외침이 울리는 횟수는 두 메아리 `echo(n // 2)`와 `echo(n // 3)`의 합이야. 그대로 재귀로 짜면 1페이즈는 통과해. 그런데 `echo(n // 2)`와 `echo(n // 3)`이 각자 또 `echo(n // 6)`을 부르지 않을까? 같은 값을 몇 번이나 다시 계산하는지 생각해 봐.",
+    "한 번 구한 세기는 `memo = {}`에 적어 두자. `if n in memo: return memo[n]`으로 꺼내고, 처음 구했으면 `memo[n] = ...`로 적은 뒤 돌려줘. n이 10^18이라 크기 n 리스트는 못 만들지만, dict에는 실제로 거치는 세기 천 개 남짓만 들어가. `@lru_cache(maxsize=None)`도 돼(그냥 `@lru_cache`는 최근 128개만 기억하니까 `maxsize=None`을 습관으로).",
+    "```python\nimport sys\ninput = sys.stdin.readline\n\nmemo = {}\n\n\ndef echo(n):\n    if n == 0:\n        return 1\n    if n in memo:\n        return ____\n    memo[n] = echo(n // 2) + echo(n // 3)\n    return memo[n]\n\n\nq = int(input())\nfor _ in range(q):\n    print(echo(int(input())))\n```"
+  ],
+  "reward": {"xp": 1000, "gold": 500}
+}

@@ -12,6 +12,7 @@ import type {
 } from "../contracts/runner";
 import {
   HARD_STOP_GRACE_MS,
+  LINE_COUNT_SLOWDOWN,
   REFERENCE_RUNS,
   budgetLimitMs,
   generalLimitMs,
@@ -379,7 +380,14 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
     beforeRun?: () => void;
   }
 
-  async function runOneTest(problem: Problem, code: string, t: ProblemTest, limit: number, hooks: TestHooks = {}): Promise<OneTest> {
+  async function runOneTest(
+    problem: Problem,
+    code: string,
+    t: ProblemTest,
+    limit: number,
+    hooks: TestHooks = {},
+    lineCounts = false,
+  ): Promise<OneTest> {
     let data: { in: string; out: string } | undefined;
     if (isStdinTest(t)) {
       try {
@@ -390,7 +398,7 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
       }
     }
     const body: RequestBody = data
-      ? { type: "stdinTest", code, stdin: data.in, expected: data.out }
+      ? { type: "stdinTest", code, stdin: data.in, expected: data.out, ...(lineCounts ? { lineCounts } : {}) }
       : {
           type: "functionTest",
           code,
@@ -398,6 +406,7 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
           args: (t as FunctionTest).args,
           expect: (t as FunctionTest).expect,
           compare: problem.compare ? JSON.stringify(problem.compare) : "",
+          ...(lineCounts ? { lineCounts } : {}),
         };
     hooks.beforeRun?.();
     const ex = await execute<TestReply>(body, limit, (res) => (res.ok && res.type === "test" ? res.result : undefined));
@@ -444,6 +453,11 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
         /* 연출 콜백 오류는 채점에 영향 주지 않는다 */
       }
     };
+    // 메아리 고리: [예제 실행]에서만 줄별 실행 횟수를 센다. 세는 만큼 느려지므로 시간 상한을 늘린다
+    const counting = opts.lineCounts === true && opts.scope === "public";
+    const slow = counting ? LINE_COUNT_SLOWDOWN : 1;
+    const lineTotals = new Map<number, number>();
+    let countsComplete = counting;
     const genTotal = selected.filter(({ t }) => isStdinTest(t) && t.gen && !generated.has(t)).length;
     let genIndex = 0;
 
@@ -457,22 +471,24 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
         expected: isStdinTest(t) ? t.out : (t as FunctionTest).expect,
       };
       let result: TestResult;
+      /** 이 테스트에서 센 줄별 실행 횟수(메아리 고리) */
+      let testCounts: Record<string, number> | undefined;
       if (stopVerdict) {
         result = { ...base, verdict: stopVerdict, timeMs: 0, actual: "" };
       } else if (skipTlePhases.has(base.phase)) {
         result = { ...base, verdict: "TLE", timeMs: 0, actual: "" };
       } else {
         const budget = usesBudget(problem, t);
-        const limit = testLimitMs(problem, t, refMs);
+        const limit = testLimitMs(problem, t, refMs) * slow;
         const testStage = (retry: boolean): JudgeStage => ({ kind: "test", index: order + 1, total: selected.length, phase: base.phase, retry });
         let one = await runOneTest(problem, code, t, limit, {
           beforeGenerate: () => emitStage({ kind: "generate", index: Math.min(++genIndex, genTotal), total: genTotal }),
           beforeRun: () => emitStage(testStage(false)),
-        });
+        }, counting);
         // 시간 결계 경계에서는 한 번 더 실행해서 두 번 다 넘을 때만 TLE(§9.6 4단계).
         // 같은 채점에서 이미 시간 결계 TLE가 확정됐으면 다시 확인하지 않는다
         if (one.exceeded && !one.fatal && needsTleConfirmation(problem, t, barrierTleConfirmed)) {
-          const again = await runOneTest(problem, code, t, limit, { beforeRun: () => emitStage(testStage(true)) });
+          const again = await runOneTest(problem, code, t, limit, { beforeRun: () => emitStage(testStage(true)) }, counting);
           if (!again.exceeded || again.fatal) one = again;
         }
         if (one.fatal) {
@@ -503,11 +519,17 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
           };
         } else {
           const r = one.reply;
+          testCounts = r.lineCounts;
           result = { ...base, verdict: r.verdict, timeMs: r.timeMs, actual: r.actual };
           if (r.error) result.error = r.error;
           // 함수형의 print 출력(stdin형은 actual이 곧 stdout)
           if (!isStdinTest(t) && r.stdout) result.stdout = r.stdout;
         }
+      }
+      // 메아리 고리: 테스트마다 센 횟수를 더한다. 세지 못한 테스트(시간 초과·런타임 사망·건너뜀)가 있으면 횟수는 보이지 않는다
+      if (countsComplete) {
+        if (!testCounts) countsComplete = false;
+        else for (const [k, v] of Object.entries(testCounts)) lineTotals.set(Number(k), (lineTotals.get(Number(k)) ?? 0) + v);
       }
       tests.push(result);
       try {
@@ -519,10 +541,9 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
 
     const firstFail = tests.find((r) => r.verdict !== "AC");
     const budgetTest = selected.find(({ t }) => usesBudget(problem, t));
-    const limitMs = budgetTest
-      ? budgetLimitMs(problem.budgetUnits!, refMs)
-      : generalLimitMs(problem.timeLimitMs, refMs);
-    return {
+    const limitMs =
+      (budgetTest ? budgetLimitMs(problem.budgetUnits!, refMs) : generalLimitMs(problem.timeLimitMs, refMs)) * slow;
+    const result: JudgeResult = {
       verdict: firstFail ? firstFail.verdict : "AC",
       passed: tests.filter((r) => r.verdict === "AC").length,
       total: tests.length,
@@ -530,6 +551,8 @@ export function createPythonRunner(options: PythonRunnerOptions = {}): PythonRun
       fatal,
       limitMs,
     };
+    if (countsComplete && !fatal && tests.length > 0) result.lineCounts = Object.fromEntries(lineTotals);
+    return result;
   }
 
   return {

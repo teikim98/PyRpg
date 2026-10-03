@@ -1,6 +1,7 @@
 # PyRpg 채점기(design.md §5.5, §9.4). 워커가 Pyodide FS에 pyrpg_judge.py로 써 두고 import한다.
 # 모든 함수는 JSON 문자열만 돌려준다. 큰 정수가 JS를 거치지 않게 비교는 여기서 하고 repr만 넘긴다.
 import ast
+import bisect
 import builtins
 import io
 import json
@@ -144,18 +145,156 @@ def _safe_repr(value):
         return "<" + type(value).__name__ + ": repr 실패>"
 
 
-def _exec_user(code, extra=None, module_name="__main__"):
+LINE_COUNTER_NAME = "pyrpg-echo-ring"
+# inspect.CO_GENERATOR | CO_COROUTINE | CO_ASYNC_GENERATOR
+CO_GENERATOR_FLAGS = 0x20 | 0x80 | 0x200
+
+
+class _LineCounter:
+    """메아리 고리(design.md §7.3, docs/phase3/region06-spec.md §7.2): 사용자 코드(<주문>) 줄마다 실행 횟수를 센다.
+    sys.monitoring(Python 3.12+)의 지역 이벤트(set_local_events)를 사용자 코드 객체에만 켠다. 채점기·표준 라이브러리에는
+    이벤트가 아예 생기지 않으므로 콜백에서 파일을 거를 필요가 없다(빠름).
+    - 여러 줄 코드(모듈, 보통 함수): LINE 이벤트로 줄마다 센다. LINE은 같은 줄 안에서 뒤로 점프할 때는 생기지 않으므로
+      (한 줄짜리 반복문 `for i in r: s += i`, 리스트·dict·set 컴프리헨션) JUMP 이벤트에서 '같은 줄로 뒤로 점프'를 한 번 더 센다.
+    - 한 줄짜리 함수(lambda, def f(x): return x): 몸통이 첫 줄과 같아 LINE 이벤트가 버전마다 다르다(3.12는 생기고 3.14는 없음).
+      그래서 LINE은 끄고 호출(PY_START)마다 그 줄을 한 번 센다(sorted의 key=lambda가 몇 번 불렸는지 보이게).
+      한 줄짜리 제너레이터(sum(x for x in arr))는 다시 이어질 때(PY_RESUME)도 센다(값을 하나 꺼낼 때마다).
+    [예제 실행]에서만 쓰고 [시전]·채점에는 쓰지 않는다(Pyodide에서 약 5~7배 느려짐)."""
+
+    def __init__(self):
+        self.counts = {}
+        self.tool = None
+        self.codes = []
+        # 실제로 세기 시작했는지(sys.monitoring이 없거나 도구 자리가 없으면 False → 횟수 없이 지금처럼)
+        self.started = False
+
+    @staticmethod
+    def _code_objects(module_code):
+        out, stack = [], [module_code]
+        while stack:
+            c = stack.pop()
+            out.append(c)
+            stack.extend(k for k in c.co_consts if isinstance(k, type(module_code)))
+        return out
+
+    @staticmethod
+    def _one_line(code):
+        if code.co_name == "<module>":
+            return False
+        first = code.co_firstlineno
+        return all(ln is None or ln == first for _s, _e, ln in code.co_lines())
+
+    def start(self, module_code):
+        mon = getattr(sys, "monitoring", None)
+        if mon is None:
+            return False
+        # 지난 실행이 정리되지 못하고 남긴 도구(같은 이름)는 먼저 치운다
+        for tid in range(6):
+            if mon.get_tool(tid) == LINE_COUNTER_NAME:
+                self._release(mon, tid, [])
+        tool = next((t for t in (mon.COVERAGE_ID, 3, 4, mon.PROFILER_ID) if mon.get_tool(t) is None), None)
+        if tool is None:
+            return False
+        counts = self.counts
+
+        def on_line(_code, line):
+            counts[line] = counts.get(line, 0) + 1
+
+        # 코드 객체마다 (시작 오프셋 목록, 줄 목록): 오프셋 → 줄
+        line_tables = {}
+
+        def line_at(code, offset):
+            table = line_tables.get(code)
+            if table is None:
+                return None
+            starts, lines = table
+            i = bisect.bisect_right(starts, offset) - 1
+            return lines[i] if i >= 0 else None
+
+        def on_jump(code, src, dest):
+            if dest < src:
+                line = line_at(code, dest)
+                if line is not None and line == line_at(code, src):
+                    counts[line] = counts.get(line, 0) + 1
+
+        def on_start(code, _offset):
+            first = code.co_firstlineno
+            counts[first] = counts.get(first, 0) + 1
+
+        try:
+            mon.use_tool_id(tool, LINE_COUNTER_NAME)
+            self.tool = tool
+            mon.register_callback(tool, mon.events.LINE, on_line)
+            mon.register_callback(tool, mon.events.PY_START, on_start)
+            mon.register_callback(tool, mon.events.PY_RESUME, on_start)
+            mon.register_callback(tool, mon.events.JUMP, on_jump)
+            ev = mon.events
+            for c in self._code_objects(module_code):
+                if not self._one_line(c):
+                    events = ev.LINE | ev.JUMP
+                    starts, lines = [], []
+                    for s0, _e, ln in c.co_lines():
+                        starts.append(s0)
+                        lines.append(ln)
+                    line_tables[c] = (starts, lines)
+                elif c.co_flags & CO_GENERATOR_FLAGS:
+                    events = ev.PY_START | ev.PY_RESUME
+                else:
+                    events = ev.PY_START
+                mon.set_local_events(tool, c, events)
+                self.codes.append(c)
+        except BaseException:
+            self.stop()
+            return False
+        self.started = True
+        return True
+
+    def stop(self):
+        if self.tool is None:
+            return
+        tool, self.tool = self.tool, None
+        codes, self.codes = self.codes, []
+        self._release(sys.monitoring, tool, codes)
+
+    @staticmethod
+    def _release(mon, tool, codes):
+        steps = [lambda c=c: mon.set_local_events(tool, c, 0) for c in codes]
+        steps += [
+            lambda: mon.set_events(tool, 0),
+            lambda: mon.register_callback(tool, mon.events.LINE, None),
+            lambda: mon.register_callback(tool, mon.events.PY_START, None),
+            lambda: mon.register_callback(tool, mon.events.PY_RESUME, None),
+            lambda: mon.register_callback(tool, mon.events.JUMP, None),
+            lambda: mon.free_tool_id(tool),
+        ]
+        for fn in steps:
+            try:
+                fn()
+            except BaseException:
+                pass
+
+    def result(self):
+        # JSON 키는 문자열(줄 번호)
+        return {str(k): v for k, v in sorted(self.counts.items())}
+
+
+def _exec_user(code, extra=None, module_name="__main__", counter=None):
     """새 globals에서 사용자 코드를 실행한다. (status, error, globals, elapsed_ms)
 
     status: "ok" | "error" | "timeout"
+    counter(_LineCounter)가 있으면 사용자 코드 줄마다 실행 횟수를 센다(메아리 고리).
     """
     _reset_interpreter()
     _register_source(code)
     g = {"__name__": module_name, "__builtins__": builtins}
-    start = time.perf_counter()
     status, error = "ok", None
+    counting = False
+    start = time.perf_counter()
     try:
         compiled = compile(code, USER_FILE, "exec", dont_inherit=True)
+        if counter is not None:
+            counting = counter.start(compiled)
+            start = time.perf_counter()
         exec(compiled, g)
         if extra is not None:
             extra(g)
@@ -167,9 +306,19 @@ def _exec_user(code, extra=None, module_name="__main__"):
             status, error = "error", _error_info(e)
     except BaseException as e:
         status, error = "error", _error_info(e)
+    finally:
+        if counting:
+            counter.stop()
     elapsed = (time.perf_counter() - start) * 1000.0
     _flush()
     return status, error, g, elapsed
+
+
+def _with_line_counts(payload, counter, status):
+    # 시간 초과(무한루프 등)면 세다 만 횟수는 보이지 않는다(지금처럼 판정만)
+    if counter is not None and counter.started and status != "timeout":
+        payload["lineCounts"] = counter.result()
+    return payload
 
 
 # 줄 끝에서 무시하는 공백(ASCII). str.rstrip()의 기본값은 유니코드 공백·\x1c~\x1f까지 지워서 JS와 달라지므로 명시한다
@@ -191,8 +340,9 @@ def run_program(code):
     return json.dumps({"status": status, "error": error, "timeMs": elapsed}, ensure_ascii=False)
 
 
-def run_stdin_test(code, expected):
-    status, error, _g, elapsed = _exec_user(code)
+def run_stdin_test(code, expected, line_counts=False):
+    counter = _LineCounter() if line_counts else None
+    status, error, _g, elapsed = _exec_user(code, counter=counter)
     actual = pyrpg_io.take_stdout()
     if status == "timeout":
         verdict = "TLE"
@@ -200,9 +350,8 @@ def run_stdin_test(code, expected):
         verdict = "RE"
     else:
         verdict = "AC" if normalize_output(actual) == normalize_output(expected) else "WA"
-    return json.dumps(
-        {"verdict": verdict, "actual": actual, "error": error, "timeMs": elapsed}, ensure_ascii=False
-    )
+    payload = {"verdict": verdict, "actual": actual, "error": error, "timeMs": elapsed}
+    return json.dumps(_with_line_counts(payload, counter, status), ensure_ascii=False)
 
 
 def sequences_as_lists(v):
@@ -219,7 +368,7 @@ def results_equal(expected, result, compare=None):
     return bool(expected == result)
 
 
-def run_function_test(code, entry, args_src, expect_src, compare_json=""):
+def run_function_test(code, entry, args_src, expect_src, compare_json="", line_counts=False):
     try:
         compare = json.loads(compare_json) if compare_json else None
         args = ast.literal_eval(args_src)
@@ -237,7 +386,8 @@ def run_function_test(code, entry, args_src, expect_src, compare_json=""):
             raise NameError(f"name '{entry}' is not defined")
         box["result"] = fn(*args)
 
-    status, error, _g, elapsed = _exec_user(code, call, FUNCTION_MODULE_NAME)
+    counter = _LineCounter() if line_counts else None
+    status, error, _g, elapsed = _exec_user(code, call, FUNCTION_MODULE_NAME, counter)
     # 사용자 print 출력은 채점에 쓰지 않고 [예제 실행] 결과에 보여 준다
     stdout = _clip(pyrpg_io.take_stdout() or "", REPR_LIMIT)
     actual = ""
@@ -257,10 +407,8 @@ def run_function_test(code, entry, args_src, expect_src, compare_json=""):
             same = False
             error = _error_info(e)
         verdict = "AC" if same else "WA"
-    return json.dumps(
-        {"verdict": verdict, "actual": actual, "error": error, "timeMs": elapsed, "stdout": stdout},
-        ensure_ascii=False,
-    )
+    payload = {"verdict": verdict, "actual": actual, "error": error, "timeMs": elapsed, "stdout": stdout}
+    return json.dumps(_with_line_counts(payload, counter, status), ensure_ascii=False)
 
 
 def _reference_body():

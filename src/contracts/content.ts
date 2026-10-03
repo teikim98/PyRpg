@@ -110,6 +110,8 @@ export interface Problem {
   /** 이 전투를 시작하려면 가지고 있어야 할 주문서 ID */
   requires: string[];
   boss: boolean;
+  /** 지역 중간의 중간 보스(boss와 함께 true). 지역 클리어는 중간 보스가 아닌 최종 보스로만(region06-spec.md §7.1) */
+  midBoss?: boolean;
   /** 보스만. 페이즈 순서대로 */
   phases?: BossPhase[];
   /** 같은 개념 연습 전투(시간 기반 우회, §7.1) */
@@ -244,6 +246,11 @@ export interface ItemDef {
   price?: number;
   /** 상점에서 살 수 있는 레벨(§7.1: 열리지 않은 품목은 실루엣) */
   minLevel?: number;
+  /**
+   * 이 순서(Region.order) 이상인 지역의 상점에서만 판다(예: 메아리 고리는 6 → 거울 호수 상점부터).
+   * 그 앞 지역 상점에는 실루엣도 보이지 않는다(docs/phase3/region06-spec.md §7.2)
+   */
+  shopFromRegion?: number;
   /** 상점에 없을 때 얻는 곳 안내. 예: "지역 2 보스" */
   source?: string;
   /** 이 문제를 처음 이기면 얻는다(예: 지역 2 보스 → 길잡이 깃털) */

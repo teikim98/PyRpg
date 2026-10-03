@@ -46,6 +46,7 @@ export interface ProblemFile {
   requires: string[];
   concept: string;
   boss: boolean;
+  midBoss?: boolean;
   phases?: BossPhase[];
   practice?: boolean;
   timeLimitMs: number;
@@ -170,6 +171,7 @@ function buildProblem(src: ContentSources, regionDir: string, regionId: string, 
     reward: p.reward,
   };
   if (p.kind === "function") problem.entry = p.entry ?? "solution";
+  if (p.boss === true && p.midBoss === true) problem.midBoss = true;
   if (p.phases) problem.phases = p.phases;
   if (p.practice) problem.practice = true;
   if (p.budgetUnits !== undefined) problem.budgetUnits = p.budgetUnits;

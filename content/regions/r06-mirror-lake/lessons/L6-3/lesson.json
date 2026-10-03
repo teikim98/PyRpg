@@ -1,0 +1,16 @@
+{
+  "id": "L6-3",
+  "title": "줄 세움의 주문: lambda와 정렬",
+  "scroll": {
+    "id": "scroll.sort",
+    "name": "줄 세움의 주문서",
+    "summary": "`lambda x: 식`은 한 줄짜리 이름 없는 함수. `sorted(arr, key=함수, reverse=True)`는 새 리스트, `arr.sort()`는 제자리 정렬이고 `None`을 돌려준다. key는 값 하나를 받아 비교할 값을 돌려준다(JS의 비교 함수와 다름). 여러 기준은 튜플 `key=lambda x: (-x[1], x[0])`: 숫자는 `-`로 큰 순, 문자열은 `-`가 안 되니 덜 중요한 기준부터 두 번 정렬(안정 정렬). `reverse=True`는 모든 기준을 뒤집는다. `min`/`max`도 `key`를 받는다."
+  },
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 첫째 기준을 채워서 점수 큰 순, 같으면 이름 사전순으로 세워 봐. `[('bo', 5), ('ann', 3), ('cy', 3)]`이 출력돼야 해.",
+    "code": "boats = [(\"ann\", 3), (\"bo\", 5), (\"cy\", 3)]\nboats.sort(key=lambda b: (___, b[0]))\nprint(boats)\n",
+    "expectedOutput": "[('bo', 5), ('ann', 3), ('cy', 3)]\n",
+    "answer": "-b[1]"
+  }
+}

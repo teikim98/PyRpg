@@ -1,0 +1,16 @@
+{
+  "id": "L6-2",
+  "title": "펼침의 주문: 언패킹과 내장 함수",
+  "scroll": {
+    "id": "scroll.unpack",
+    "name": "펼침의 주문서",
+    "summary": "`first, *rest = arr`로 남는 값을 리스트로 모으고, `print(*arr)`·`f(*args)`로 펼쳐 넘긴다. `enumerate(arr, 1)`은 1부터 번호를 붙이고, `zip(a, b)`는 같은 칸끼리 짝지으며 짧은 쪽에 맞춘다. `map`·`zip`은 한 번 쓰면 끝나는 지연 객체라 `list()`로 펼쳐 둔다. `sum`/`min`/`max`/`any`/`all`, `max(arr, key=len)`."
+  },
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 내장 함수 이름을 채워서 이름과 나이를 같은 칸끼리 짝지어 출력해 봐.",
+    "code": "names = [\"ann\", \"bo\"]\nages = [12, 9]\nfor name, age in ___(names, ages):\n    print(name, age)\n",
+    "expectedOutput": "ann 12\nbo 9\n",
+    "answer": "zip"
+  }
+}

@@ -65,6 +65,8 @@ export function shadowProblem(original: Problem, history: SaveData["history"]): 
 
 function plain(p: Problem): Problem {
   const out: Problem = { ...p, boss: false, tests: p.boss ? p.tests.filter((t) => (t.phase ?? 1) === 1) : p.tests };
+  // 중간 보스도 그림자전에서는 보스가 아니다(midBoss는 boss일 때만 뜻이 있다)
+  delete out.midBoss;
   delete out.phases;
   delete out.budgetUnits;
   delete out.variants;

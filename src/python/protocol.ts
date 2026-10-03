@@ -5,7 +5,15 @@ import type { PyError } from "../contracts/runner";
 export type WorkerRequest =
   | { id: number; type: "init"; interruptBuffer?: SharedArrayBuffer }
   | { id: number; type: "run"; code: string; stdin: string }
-  | { id: number; type: "stdinTest"; code: string; stdin: string; expected: string }
+  | {
+      id: number;
+      type: "stdinTest";
+      code: string;
+      stdin: string;
+      expected: string;
+      /** 메아리 고리: 사용자 코드 줄마다 실행 횟수를 센다([예제 실행]만) */
+      lineCounts?: boolean;
+    }
   | {
       id: number;
       type: "functionTest";
@@ -15,6 +23,8 @@ export type WorkerRequest =
       expect: string;
       /** Problem.compare를 JSON 문자열로. 없으면 "" */
       compare: string;
+      /** 메아리 고리: 사용자 코드 줄마다 실행 횟수를 센다([예제 실행]만) */
+      lineCounts?: boolean;
     }
   | { id: number; type: "reference"; runs: number }
   /** 큰 입력 생성기 실행(design.md §11.1). 시간을 재지 않는다 */
@@ -38,6 +48,8 @@ export interface RunReply {
 export interface TestReply extends RunReply {
   verdict: Verdict;
   actual: string;
+  /** 메아리 고리: 줄 번호(문자열) → 실행 횟수. 요청하지 않았거나 시간 초과·세지 못했으면 없음 */
+  lineCounts?: Record<string, number>;
 }
 
 export type WorkerResponse =

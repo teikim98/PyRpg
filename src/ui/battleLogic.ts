@@ -47,6 +47,12 @@ export function testsInScope(problem: Problem, phase?: number): ProblemTest[] {
   return phase === undefined ? problem.tests : problem.tests.filter((t) => testPhase(t) === phase);
 }
 
+/** 보스 종류 이름: 중간 보스(midBoss)면 "중간 보스", 아니면 "보스"(docs/phase3/region06-spec.md §7.1). 보스가 아니면 null */
+export function bossKind(problem: Pick<Problem, "boss" | "midBoss">): "중간 보스" | "보스" | null {
+  if (!problem.boss) return null;
+  return problem.midBoss ? "중간 보스" : "보스";
+}
+
 export function bossPhases(problem: Problem): number[] {
   if (!problem.boss) return [];
   if (problem.phases?.length) return problem.phases.map((p) => p.phase);
@@ -166,6 +172,27 @@ export function genericVerdictMessage(verdict: Verdict): string {
     default:
       return "";
   }
+}
+
+/**
+ * 메아리 고리의 줄별 실행 횟수 표시(docs/phase3/region06-spec.md §7.2). 거터 폭에 맞게 줄인다(내림이라 실제보다 크게 보이지 않는다).
+ * 예: 7 → "×7", 9999 → "×9999", 12345 → "×1.2만", 123456 → "×12만", 1000000 이상 → "×99만+"
+ */
+export function formatLineCount(n: number): string {
+  if (!(n >= 0)) return "×0";
+  if (n < 10_000) return `×${Math.floor(n)}`;
+  if (n < 100_000) return `×${Math.floor(n / 1000) / 10}만`;
+  if (n < 1_000_000) return `×${Math.floor(n / 10_000)}만`;
+  return "×99만+";
+}
+
+/** 줄별 실행 횟수 → 거터 표시(줄 순서). title은 정확한 횟수 */
+export function lineCountLabels(counts: Record<number, number>): { line: number; text: string; title: string }[] {
+  return Object.entries(counts)
+    .map(([k, n]) => ({ line: Number(k), n }))
+    .filter(({ line, n }) => Number.isInteger(line) && line >= 1 && n > 0)
+    .sort((a, b) => a.line - b.line)
+    .map(({ line, n }) => ({ line, text: formatLineCount(n), title: `${line}번째 줄: ${n.toLocaleString("ko-KR")}번 실행` }));
 }
 
 /** 시전 중 진행 표시가 나타나기까지 기다리는 시간(ms). 이보다 빨리 끝나는 일반 전투에서는 아예 보이지 않아 깜빡이지 않는다 */

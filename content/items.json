@@ -39,10 +39,12 @@
     "id": "echo-ring",
     "name": "메아리 고리",
     "kind": "accessory",
-    "description": "예제 실행 결과 옆에 각 줄의 실행 횟수를 보여 준다.",
+    "description": "전투에서 [예제 실행]을 누르면 코드 줄 번호 옆에 그 줄이 몇 번 실행됐는지(예제 전체 합계) 보여 준다. 재귀가 몇 번 불리는지 보기 좋다.",
+    "price": 200,
+    "minLevel": 1,
+    "shopFromRegion": 6,
     "source": "지역 6 상점",
-    "effect": { "type": "lineCounts" },
-    "pending": true
+    "effect": { "type": "lineCounts" }
   },
   {
     "id": "archivist-glasses",

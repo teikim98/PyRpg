@@ -9,6 +9,7 @@ import {
   CAST_PROGRESS_DELAY_MS,
   HINT_COSTS,
   VERDICT_LABEL,
+  bossKind,
   bossPhases,
   buildCastFeedback,
   buildPublicFeedback,
@@ -19,6 +20,7 @@ import {
   formatRunOutput,
   genericVerdictMessage,
   hintShortCost,
+  lineCountLabels,
   practiceThresholdMs,
   testsInScope,
   timeGaugePercent,
@@ -92,7 +94,8 @@ export function createBattleUI(env: UiEnv): BattleUI {
         const cleanups: (() => void)[] = [];
 
         const modal = env.stack.open({ className: "battle-modal", label: `전투: ${p.enemy.name}` });
-        const root = h("div", { class: `battle ${p.boss ? "is-boss" : ""} ${ctx.shadow ? "is-shadow" : ""}`, "data-problem": p.id });
+        const kind = bossKind(p);
+        const root = h("div", { class: `battle ${p.boss ? "is-boss" : ""} ${p.boss && p.midBoss ? "is-midboss" : ""} ${ctx.shadow ? "is-shadow" : ""}`, "data-problem": p.id });
         modal.el.append(root);
 
         // ---------- 위: 적과 나 ----------
@@ -206,9 +209,12 @@ export function createBattleUI(env: UiEnv): BattleUI {
             ctx.onDraft(code);
           }
         };
+        // 메아리 고리: [예제 실행]에서 줄마다 실행 횟수를 줄 번호 옆에(region06-spec.md §7.2)
+        const echoRing = ctx.perks?.lineCounts === true;
         const editor = createCodeEditor(ctx.draft ?? p.starter, {
           label: "주문 코드 에디터",
           className: "battle-editor",
+          labelGutter: echoRing,
           onChange: () => {
             if (draftTimer !== null) window.clearTimeout(draftTimer);
             draftTimer = window.setTimeout(flushDraft, DRAFT_DEBOUNCE_MS);
@@ -430,18 +436,26 @@ export function createBattleUI(env: UiEnv): BattleUI {
           if (busy) return;
           setBusy(true);
           editor.highlightLine(null);
+          editor.setGutterLabels(null);
           say("neutral", runnerWaitText());
           try {
             await ensureRunner(ctx.runner);
-            say("neutral", "예제로 시험해 보는 중…");
-            const res = await ctx.runner.judge(p, editor.getCode(), { scope: "public" });
+            say("neutral", echoRing ? "예제로 시험해 보는 중… 메아리 고리가 줄마다 횟수를 세고 있어." : "예제로 시험해 보는 중…");
+            const code = editor.getCode();
+            const res = await ctx.runner.judge(p, code, echoRing ? { scope: "public", lineCounts: true } : { scope: "public" });
             if (closed) return;
             const fb = buildPublicFeedback(res);
+            // 실행하는 동안 코드를 고쳤으면 횟수를 붙이지 않는다(고친 코드의 횟수가 아니므로)
+            const counts = echoRing && res.lineCounts && editor.getCode() === code ? lineCountLabels(res.lineCounts) : [];
+            if (counts.length) editor.setGutterLabels(counts);
+            const echoNote = counts.length
+              ? `<div class="echo-note">메아리 고리: 줄 번호 옆 <strong>×N</strong>은 예제 ${res.total}개를 돌리는 동안 그 줄이 실행된 횟수야. 코드를 고치면 지워져.</div>`
+              : "";
             if (res.verdict === "AC" && !res.fatal) {
-              say("happy", "예제는 전부 통과! 이제 [시전]으로 숨겨진 테스트까지 도전해 봐.", detailsEl(fb));
+              say("happy", `예제는 전부 통과! 이제 [시전]으로 숨겨진 테스트까지 도전해 봐.${echoNote}`, detailsEl(fb));
             } else {
               const ex = explainResult(res);
-              say(ex.emotion, ex.html, detailsEl(fb));
+              say(ex.emotion, `${ex.html}${echoNote}`, detailsEl(fb));
             }
           } catch (e) {
             say("worried", `실행하지 못했어: ${escapeHtml((e as Error).message)}`);
@@ -586,7 +600,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
           delete gauge.dataset.percent;
           const ph = p.phases?.find((x) => x.phase === currentPhase());
           restartAnim(root, "is-phase-change");
-          const intro = ph?.intro ? substituteNames(ph.intro, names) : "보스가 시간 결계를 펼쳤어! 이제는 정확할 뿐 아니라 빨라야 해.";
+          const intro = ph?.intro ? substituteNames(ph.intro, names) : `${kind ?? "보스"}가 시간 결계를 펼쳤어! 이제는 정확할 뿐 아니라 빨라야 해.`;
           say("surprised", `<div class="phase-intro"><strong>${currentPhase()}페이즈${ph ? ` · ${escapeHtml(ph.name)}` : ""}</strong></div>${renderInline(intro)}`);
         };
 
@@ -720,7 +734,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
           ctx.shadow
             ? `<strong>${escapeHtml(p.enemy.name)}의 그림자</strong>가 나타났어! 예전에 막혔던 개념이야. 이야기와 값은 달라도 같은 주문으로 이길 수 있어.`
             : p.boss
-            ? `보스 <strong>${escapeHtml(p.enemy.name)}</strong>${josa(p.enemy.name, "이/가")} 나타났어! 페이즈마다 한 번에 모든 테스트를 통과해야 해.`
+            ? `${kind} <strong>${escapeHtml(p.enemy.name)}</strong>${josa(p.enemy.name, "이/가")} 나타났어! 페이즈마다 한 번에 모든 테스트를 통과해야 해.`
             : `<strong>${escapeHtml(p.enemy.name)}</strong>${josa(p.enemy.name, "이/가")} 길을 막고 있어! 한 번의 시전에서 모든 테스트를 통과해야 쓰러뜨릴 수 있어.`,
         );
         env.stack.focusInitial(modal, editor.view.contentDOM);

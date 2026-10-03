@@ -49,7 +49,7 @@ describe("traceback.json의 lesson", () => {
     ["AttributeError", "'list' object has no attribute 'filter'", "L3-4"],
     ["AttributeError", "'str' object has no attribute 'length'", "L1-2"],
     ["AttributeError", "'int' object has no attribute 'strip'", "L1-2"],
-    ["RecursionError", "maximum recursion depth exceeded", undefined],
+    ["RecursionError", "maximum recursion depth exceeded", "L6-4"],
     // 지역 4 문자열 규칙: L4 레슨으로 연결
     ["TypeError", "'str' object does not support item assignment", "L4-1"],
     ["TypeError", "sequence item 0: expected str instance, int found", "L4-3"],
@@ -57,6 +57,25 @@ describe("traceback.json의 lesson", () => {
     ["AttributeError", "'str' object has no attribute 'push'", "L4-3"],
     ["AttributeError", "'str' object has no attribute 'toUpperCase'", "L4-2"],
     ["IndexError", "string index out of range", "L4-1"],
+    // 지역 6 함수·정렬·재귀·메모 규칙(docs/phase3/region06-spec.md §3 흔한 실수)
+    ["TypeError", "f() missing 1 required positional argument: 'b'", "L6-1"],
+    ["TypeError", "f() takes from 1 to 2 positional arguments but 3 were given", "L6-1"],
+    ["TypeError", "cannot unpack non-iterable NoneType object", "L6-1"],
+    ["TypeError", "unsupported operand type(s) for +: 'NoneType' and 'int'", "L6-1"],
+    ["UnboundLocalError", "cannot access local variable 'c' where it is not associated with a value", "L6-1"],
+    ["TypeError", "cannot unpack non-iterable int object", "L6-2"],
+    ["TypeError", "'map' object is not subscriptable", "L6-2"],
+    ["TypeError", "object of type 'zip' has no len()", "L6-2"],
+    ["TypeError", "'int' object is not iterable", "L2-2"],
+    ["TypeError", "bad operand type for unary -: 'str'", "L6-3"],
+    ["TypeError", "<lambda>() missing 1 required positional argument: 'b'", "L6-3"],
+    ["TypeError", "sort() takes no positional arguments", "L6-3"],
+    ["TypeError", "list.sort() takes no positional arguments", "L6-3"],
+    ["TypeError", "sorted expected 1 argument, got 2", "L6-3"],
+    ["TypeError", "'<' not supported between instances of 'str' and 'int'", "L6-3"],
+    ["AttributeError", "'NoneType' object has no attribute 'append'", "L3-3"],
+    ["NameError", "name 'lru_cache' is not defined", "L6-5"],
+    ["NameError", "name 'functools' is not defined", "L6-5"],
   ];
   it.each(cases)("%s: %s → %s", (type, message, lesson) => {
     expect(lessonForError(err(type, message), rules)).toBe(lesson);
@@ -126,7 +145,7 @@ describe("codexLinkFor(버튼을 보일 조건)", () => {
     expect(item("archivist-glasses").pending).toBeUndefined();
     const s = newSave();
     s.equipment = ["archivist-glasses"];
-    expect(equipmentEffects(s, items)).toEqual({ maxHpBonus: 0, guideFeather: false, targetComplexity: false, codexLinks: true });
+    expect(equipmentEffects(s, items)).toEqual({ maxHpBonus: 0, guideFeather: false, targetComplexity: false, codexLinks: true, lineCounts: false });
   });
 });
 
