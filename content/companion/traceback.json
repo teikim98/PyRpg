@@ -30,7 +30,18 @@
   },
   {
     "exception": "NameError",
+    "pattern": "name '(lru_cache|cache|functools|cmp_to_key)' is not defined",
+    "text": "`lru_cache`·`cache`는 `functools`라는 도구 상자에 들어 있어서 먼저 불러와야 써. 맨 위에 `from functools import lru_cache`(또는 `cache`)를 적어 줘. `@functools.lru_cache(maxsize=None)`처럼 쓰려면 `import functools`가 필요해.",
+    "lesson": "L6-5"
+  },
+  {
+    "exception": "NameError",
     "text": "어, 처음 보는 이름이래! 강조된 줄에서 이름 철자를 확인해 봐. 대소문자도 다르면 다른 이름이야(`Print`와 `print`는 달라). 아니면 그 변수에 값을 넣기 전에 먼저 쓴 건 아닌지 봐 줘. JS의 `ReferenceError: x is not defined`랑 같은 종류야."
+  },
+  {
+    "exception": "UnboundLocalError",
+    "text": "함수 안에서 바깥 변수의 값을 바꾸려고 했어! Python은 함수 안에서 `=`나 `+=`로 값을 넣는 이름을 그 함수만의 지역 변수로 보는데, 그 지역 변수에 아직 값이 없어서 에러가 난 거야. 값을 인자로 받아서 `return`으로 돌려주는 게 가장 깔끔하고, 꼭 바깥 변수를 바꿔야 한다면 함수 첫 줄에 `global 이름`을 적어 줘.",
+    "lesson": "L6-1"
   },
   {
     "exception": "TypeError",
@@ -59,7 +70,8 @@
   {
     "exception": "TypeError",
     "pattern": "unsupported operand type\\(s\\) for .*'NoneType'",
-    "text": "값이 없는 `None`으로 계산하려고 했어. 어떤 변수가 `None`이 됐는지 찾아봐. 함수에서 `return`을 빠뜨리면 `None`이 돌아오거든(JS에서 `undefined`가 돌아오는 것처럼)."
+    "text": "값이 없는 `None`으로 계산하려고 했어. 어떤 변수가 `None`이 됐는지 찾아봐. 함수에서 `return`을 빠뜨리면 `None`이 돌아오거든(JS에서 `undefined`가 돌아오는 것처럼).",
+    "lesson": "L6-1"
   },
   {
     "exception": "TypeError",
@@ -80,7 +92,7 @@
   {
     "exception": "TypeError",
     "pattern": "'NoneType' object is not (subscriptable|iterable)|after \\* must be an iterable, not NoneType",
-    "text": "리스트인 줄 알았던 값이 `None`이야! `arr.sort()`, `arr.reverse()`, `arr.append(x)`처럼 리스트를 제자리에서 바꾸는 주문은 `None`을 돌려줘. 그래서 `arr = arr.sort()`라고 쓰면 리스트가 사라져. 정렬된 새 리스트가 필요하면 `sorted(arr)`, 아니면 `arr.sort()`만 한 줄에 써.",
+    "text": "리스트인 줄 알았던 값이 `None`이야! `arr.sort()`, `arr.reverse()`, `arr.append(x)`처럼 리스트를 제자리에서 바꾸는 주문은 `None`을 돌려줘. 그래서 `arr = arr.sort()`라고 쓰면 리스트가 사라져. 정렬된 새 리스트가 필요하면 `sorted(arr)`, 아니면 `arr.sort()`만 한 줄에 써. 함수에서 돌려받은 값이라면 그 함수 끝에 `return`을 빠뜨리지 않았는지도 봐 줘. `return`이 없으면 `None`이 돌아와.",
     "lesson": "L3-3"
   },
   {
@@ -106,6 +118,60 @@
     "pattern": "unhashable type",
     "text": "list·dict·set처럼 고칠 수 있는 값은 dict의 키나 set의 원소가 될 수 없어. 키로 쓰려면 tuple로 바꿔 줘: `tuple(arr)`. JS의 Map은 배열도 키로 받지만(같은 배열인지로 비교), Python은 값으로 찾기 때문에 안 바뀌는 값만 받아.",
     "lesson": "L5-3"
+  },
+  {
+    "exception": "TypeError",
+    "pattern": "<lambda>\\(\\) (missing \\d+ required positional arguments?|takes \\d+ positional arguments? but \\d+ (was|were) given)",
+    "text": "lambda가 받는 값 개수가 맞지 않아. 정렬의 `key=`에 넣었다면, Python의 key 함수는 JS 비교 함수 `(a, b) => a - b`와 달리 값을 **하나**만 받아서 '비교할 값'을 돌려줘. `key=lambda x: x[1]`처럼 매개변수를 하나로 바꾸고, 큰 순은 `reverse=True`나 숫자에 `-`를 붙여서 만들어.",
+    "lesson": "L6-3"
+  },
+  {
+    "exception": "TypeError",
+    "pattern": "sort\\(\\) takes no positional arguments|sorted expected 1 argument, got \\d+",
+    "text": "`sort`/`sorted`에 함수를 이름 없이 넘겼어. JS의 `arr.sort((a, b) => a - b)`와 달리, Python은 `key=`와 `reverse=`를 이름을 붙여서 넘겨야 해: `arr.sort(key=lambda x: x[1], reverse=True)`, `sorted(arr, key=len)`.",
+    "lesson": "L6-3"
+  },
+  {
+    "exception": "TypeError",
+    "pattern": "missing \\d+ required positional arguments?|takes (from \\d+ to )?\\d+ positional arguments? but \\d+ (was|were) given",
+    "text": "함수를 부를 때 넘긴 값 개수가 `def`에 적은 매개변수 개수와 달라. `missing ... argument`는 모자라다는 뜻, `takes ... but ... given`은 넘친다는 뜻이야. JS는 모자라면 `undefined`로 채우고 넘치면 무시하지만, Python은 개수가 딱 맞아야 해. 빼도 되는 매개변수라면 `def f(a, b=0):`처럼 기본값을 줘.",
+    "lesson": "L6-1"
+  },
+  {
+    "exception": "TypeError",
+    "pattern": "cannot unpack non-iterable NoneType object|object of type 'NoneType' has no len\\(\\)",
+    "text": "값이 `None`이라서 나눠 담거나 길이를 잴 수 없어. 함수에서 돌려받은 값이라면 그 함수 끝에 `return`을 빠뜨리지 않았는지 봐 줘. `return`이 없으면 `None`이 돌아와(JS의 `undefined`처럼). `arr.sort()`처럼 제자리에서 바꾸는 주문의 결과를 담아도 `None`이야.",
+    "lesson": "L6-1"
+  },
+  {
+    "exception": "TypeError",
+    "pattern": "cannot unpack non-iterable (int|float|bool) object",
+    "text": "`a, b = 값`으로 나눠 담으려는데 오른쪽이 숫자 하나야. 나눠 담으려면 오른쪽이 리스트·튜플처럼 값이 여러 개 든 묶음이어야 해. 입력 한 줄에서 두 수를 읽는다면 `a, b = map(int, input().split())`처럼 써.",
+    "lesson": "L6-2"
+  },
+  {
+    "exception": "TypeError",
+    "pattern": "bad operand type for unary -: 'str'",
+    "text": "문자열 앞에 `-`를 붙였어. `-` 트릭은 숫자에만 통해. 숫자로 읽어야 하는 값이면 먼저 `int()`로 바꾸고, 정말 문자열을 사전 역순으로 세우고 싶다면 두 번 정렬해: 덜 중요한 기준으로 먼저 정렬하고(`reverse=True`), 그다음 중요한 기준으로 한 번 더. Python 정렬은 비교 값이 같은 것끼리 원래 순서를 지켜 줘.",
+    "lesson": "L6-3"
+  },
+  {
+    "exception": "TypeError",
+    "pattern": "'(map|zip|filter|enumerate)' object is not subscriptable|object of type '(map|zip|filter|enumerate)' has no len\\(\\)",
+    "text": "`map`·`zip`·`enumerate`의 결과는 리스트가 아니라 꺼낼 때마다 하나씩 만들어 주는 지연 객체야. 그래서 `[0]`처럼 칸 번호로 읽거나 `len()`을 쓸 수 없어. `list(...)`로 펼쳐서 리스트로 만들어 줘: `nums = list(map(int, input().split()))`. 한 번 끝까지 꺼내면 비어 버리니까 두 번 쓸 때도 `list()`로 담아 둬.",
+    "lesson": "L6-2"
+  },
+  {
+    "exception": "TypeError",
+    "pattern": "'(int|float|bool)' object is not iterable|after \\* must be an iterable, not (int|float|bool)",
+    "text": "숫자 하나는 하나씩 꺼내 돌 수 없어. `for i in n:`이었다면 `for i in range(n):`으로 바꾸고, `sum`·`max`·`zip`·`enumerate`·`print(*...)`에 숫자를 넣었다면 리스트를 넣어야 해. 리스트여야 할 변수에 숫자를 다시 담지 않았는지도 확인해 봐.",
+    "lesson": "L2-2"
+  },
+  {
+    "exception": "TypeError",
+    "pattern": "'(<|>|<=|>=)' not supported between instances of",
+    "text": "서로 크기를 비교할 수 없는 두 값을 비교했어. 정렬·`min`·`max`도 안에서 `<`로 비교하거든. 메시지의 두 자료형을 봐! 숫자와 문자열이 섞였다면 입력을 `int()`로 바꿨는지 확인하고, key가 튜플이라면 같은 칸끼리 자료형이 같은지(`None`이 섞이지 않았는지) 봐 줘.",
+    "lesson": "L6-3"
   },
   {
     "exception": "TypeError",
@@ -263,6 +329,12 @@
   },
   {
     "exception": "AttributeError",
+    "pattern": "'NoneType' object has no attribute",
+    "text": "`None`에서 메서드를 쓰려고 했어. `arr = arr.sort()`처럼 제자리에서 바꾸는 주문(`sort`, `reverse`, `append`)의 결과를 담으면 `None`이 돼. 그런 주문은 한 줄에 따로 쓰고, 함수에서 받은 값이라면 그 함수에 `return`이 있는지 봐 줘.",
+    "lesson": "L3-3"
+  },
+  {
+    "exception": "AttributeError",
     "pattern": "'int' object has no attribute",
     "text": "숫자(`int`)에는 그런 기능이 없어. 혹시 `strip()`이나 `split()`을 `int()`로 바꾼 뒤에 쓴 거야? 문자열 주문은 숫자로 바꾸기 전에 써야 해.",
     "lesson": "L1-2"
@@ -279,7 +351,8 @@
   },
   {
     "exception": "RecursionError",
-    "text": "함수가 자기 자신을 너무 깊이 불렀어! 재귀가 멈추는 조건(기저 사례)이 있는지, 매번 문제가 작아지는지 확인해 봐. 아주 깊어야 하는 문제라면 반복문으로 바꾸는 게 안전해."
+    "text": "함수가 자기 자신을 너무 깊이 불렀어! 재귀가 멈추는 조건(기저 조건)이 있는지, 부를 때마다 문제가 작아져서 결국 그 조건에 닿는지 확인해 봐. 아주 깊어야 하는 문제라면 반복문으로 바꾸는 게 안전해.",
+    "lesson": "L6-4"
   },
   {
     "exception": "KeyboardInterrupt",

@@ -109,7 +109,9 @@
     { "speaker": "companion", "emotion": "worried", "text": "밀수꾼 선장이 쌓아 둔 상자 벽이야. 선장이 시계 룬을 놓아줘야 이 상자들도 치울 수 있을 거야." }
   ],
   "to_be_continued": [
-    { "speaker": "companion", "emotion": "happy", "text": "상자 벽이 치워졌다! 저기 길드장님이 마련해 준 배가 돛을 올리고 있어. 바다 건너가 사막이래!" },
-    { "speaker": "system", "text": "교역항 이야기는 여기까지입니다. 다음 지역은 준비 중이에요. 플레이해 주셔서 고맙습니다!" }
+    { "speaker": "companion", "emotion": "happy", "text": "상자 벽이 치워졌다! 저기 길드장님이 마련해 준 배가 돛을 올리고 있어. 어서 타자!" },
+    { "speaker": "system", "text": "배는 해안을 따라 나아가다 큰 강어귀로 들어선다. 사막으로 가는 뱃길은 이 강을 거슬러 올라 산 너머로 이어진다고 한다." },
+    { "speaker": "companion", "emotion": "neutral", "text": "강을 거슬러 오르는구나. 그런데 이상해. 위로 갈수록 물살이 점점 느려져. 꼭 강물이 어딘가에서 멈춰 버린 것처럼…" },
+    { "speaker": "system", "text": "며칠 뒤, 강의 수원인 산정 호수가 가까워질 무렵. 안개 너머에서 누군가의 목소리가 끝없이 되울려 온다." }
   ]
 }
