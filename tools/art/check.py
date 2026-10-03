@@ -34,7 +34,10 @@ GROUND_TILES = {"grass", "grass_flower", "path", "plaza_stone", "water", "house_
                 # 지역 4(무너진 대도서관): 마루·카펫·떠 있는 페이지, 벽 앞면·윗면, 칸을 채우는 책장과 빈 책장 칸
                 "lib_floor", "lib_carpet", "floating_pages", "lib_wall", "lib_wall_top", "bookshelf", "shelf_gap",
                 # 지역 5(교역항): 자갈길·부두 널·갑판·바다·굳은 파도, 칸을 채우는 등대 벽
-                "port_cobble", "dock_plank", "ship_deck", "harbor_water", "frozen_wave", "lighthouse_wall"}
+                "port_cobble", "dock_plank", "ship_deck", "harbor_water", "frozen_wave", "lighthouse_wall",
+                # 지역 6(거울 호수): 호숫가·섬 풀·안개 풀·다리 널·흐르는 물·거울 수면·물 위 징검돌
+                "lake_shore", "island_grass", "mist_grass", "lake_bridge", "lake_water", "mirror_water",
+                "lake_stepping_stone"}
 
 # 지역 2 명세(docs/phase3/region02-spec.md §6): 타일셋 끝에 이 순서로 붙고, 이 중 일부는 막힌다
 R02_TILES = ["forest_floor", "fallen_leaves", "tall_grass", "stump", "log", "mushroom_patch", "stream",
@@ -64,6 +67,13 @@ R05_BLOCKING = {"harbor_water", "frozen_wave", "pier_post", "port_crate", "barre
                 "port_stall", "lighthouse_wall"}
 R05_SPRITES = {"monster_twin_fish", "monster_ledger_gull", "monster_bubble_jelly", "monster_tally_parrot",
                "monster_queue_crab", "boss_smuggler_captain", "npc_guild_master"}
+# 지역 6 명세(docs/phase3/region06-spec.md §6): 지역 5 타일 뒤에 이 순서로 붙는다. reed_gap·pebble_cairn 등은 지나갈 수 있다.
+# 명세의 stepping_stone은 지역 2 타일과 이름이 겹쳐 lake_stepping_stone으로 붙였다
+R06_TILES = ["lake_shore", "lake_water", "mirror_water", "lake_reed", "reed_gap", "pebble_cairn", "lake_stepping_stone",
+             "lake_bridge", "bridge_rail", "willow_tree", "lily_pad", "mist_grass", "echo_rock", "island_grass"]
+R06_BLOCKING = {"lake_water", "mirror_water", "lake_reed", "bridge_rail", "willow_tree", "lily_pad", "echo_rock"}
+R06_SPRITES = {"monster_call_frog", "monster_zip_eel", "monster_lambda_heron", "monster_nesting_lily",
+               "monster_memo_moth", "boss_mirror_twins", "boss_lake_echo", "npc_lake_keeper"}
 # 지역 1 타일 24종의 인덱스는 바뀌면 안 된다(지역 1 맵이 gid로 참조)
 R01_TILE_COUNT = 24
 
@@ -160,6 +170,14 @@ def main():
             errors.append(f"overworld: tile {t} blocking should be {t in R05_BLOCKING}")
     for name in sorted(R05_SPRITES - set(manifest["sprites"])):
         errors.append(f"sprite {name}: missing from manifest (region-5 spec §6)")
+    r06_at = r05_at + len(R05_TILES)
+    if ow["tiles"][r06_at:r06_at + len(R06_TILES)] != R06_TILES:
+        errors.append("overworld: region-6 tiles must follow the region-5 tiles in spec order")
+    for t in R06_TILES:
+        if (t in ow["blocking"]) != (t in R06_BLOCKING):
+            errors.append(f"overworld: tile {t} blocking should be {t in R06_BLOCKING}")
+    for name in sorted(R06_SPRITES - set(manifest["sprites"])):
+        errors.append(f"sprite {name}: missing from manifest (region-6 spec §6)")
 
     for name, spr in manifest["sprites"].items():
         rule = frame_rule(name)

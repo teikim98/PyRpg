@@ -25,10 +25,10 @@
    "name": "overworld",
    "image": "../../../assets/tiles/overworld.png",
    "imagewidth": 128,
-   "imageheight": 160,
+   "imageheight": 176,
    "tilewidth": 16,
    "tileheight": 16,
-   "tilecount": 74,
+   "tilecount": 88,
    "columns": 8,
    "margin": 0,
    "spacing": 0,
@@ -844,6 +844,160 @@
        "name": "blocking",
        "type": "bool",
        "value": true
+      }
+     ]
+    },
+    {
+     "id": 74,
+     "type": "lake_shore",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 75,
+     "type": "lake_water",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 76,
+     "type": "mirror_water",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 77,
+     "type": "lake_reed",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 78,
+     "type": "reed_gap",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 79,
+     "type": "pebble_cairn",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 80,
+     "type": "lake_stepping_stone",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 81,
+     "type": "lake_bridge",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 82,
+     "type": "bridge_rail",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 83,
+     "type": "willow_tree",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 84,
+     "type": "lily_pad",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 85,
+     "type": "mist_grass",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 86,
+     "type": "echo_rock",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 87,
+     "type": "island_grass",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
       }
      ]
     }
