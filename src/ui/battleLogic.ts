@@ -65,6 +65,127 @@ export function practiceThresholdMs(estimatedMinutes: number): number {
   return Math.max(estimatedMinutes * 2, 10) * 60_000;
 }
 
+/**
+ * 기준 시간(ms): T = min(max(예상 × 2, 10), 20)분(design.md §7.1, 결정 23 P-D1).
+ * 해설서 힌트 경로(§5.3)와 연습 제안(단위 3-E3)이 같은 값을 쓴다. 누적 시간(priorElapsedMs + 이번 전투)과 비교한다
+ */
+export function detourThresholdMs(estimatedMinutes: number): number {
+  return Math.min(Math.max(estimatedMinutes * 2, 10), 20) * 60_000;
+}
+
+/** 해설서 쓰러짐 경로: 같은 적에게 쓰러진 횟수(design.md §5.3, systems/battle.ts SOLUTION_UNLOCK_KNOCKOUTS와 같음) */
+export const SOLUTION_KNOCKOUTS = 3;
+/** 해설서 힌트 경로: 힌트 3을 연 뒤 이번 전투에서 실패한 시전 수(design.md §5.3) */
+export const SOLUTION_HINT_FAILS = 2;
+
+export interface SolutionAccessInput {
+  /** 이 적에게 쓰러진 횟수(이전 전투까지) */
+  knockouts: number;
+  /** 지금까지 연 가장 높은 힌트 단계(이전 전투 포함) */
+  hintLevel: HintLevel;
+  /** 이번 전투에서 힌트 3이 열린 뒤 실패한 시전 수(AC가 아닌 시전, fatal 포함. 보스 페이즈 통과·실행기 예외 제외) */
+  failsAfterHint3: number;
+  /** 이 문제에 쓴 누적 시간(ms) = 이전 전투들 + 이번 전투 */
+  elapsedMs: number;
+  /** 문제의 예상 시간(분). 기준 시간은 detourThresholdMs */
+  estimatedMinutes: number;
+}
+
+export interface SolutionAccess {
+  unlocked: boolean;
+  /** 어느 경로로 열렸는가. 잠겨 있으면 null */
+  via: "knockout" | "hint" | null;
+  /** 해설서 버튼 문구 */
+  label: string;
+  /** 해설서 버튼 툴팁 */
+  title: string;
+  /** 힌트 경로에서 시간 조건만 남았는가(전투 화면이 1초마다 다시 그린다) */
+  timeOnly: boolean;
+}
+
+/**
+ * 해설서를 열 수 있는가(design.md §5.3). (가) 쓰러짐 3회 또는 (나) 힌트 3 + 그 뒤 이번 전투 실패 2회 + 누적 시간 ≥ 기준 시간.
+ * (나)는 전투마다 다시 판정한다(결정 23 P-E2). 버튼 문구: 힌트 3 전에는 "해설서 (n/3)", 그 뒤 "해설서 (실패 n/2)", "해설서 (시간 m/T분)"
+ */
+export function solutionAccess(i: SolutionAccessInput): SolutionAccess {
+  const ko = Math.min(Math.max(0, i.knockouts), SOLUTION_KNOCKOUTS);
+  const tMs = detourThresholdMs(i.estimatedMinutes);
+  const tMin = tMs / 60_000;
+  const open = (via: "knockout" | "hint"): SolutionAccess => ({ unlocked: true, via, label: "해설서", title: "모범답안과 풀이(보상 0)", timeOnly: false });
+  if (i.knockouts >= SOLUTION_KNOCKOUTS) return open("knockout");
+  const fails = Math.min(Math.max(0, i.failsAfterHint3), SOLUTION_HINT_FAILS);
+  const elapsed = Math.max(0, i.elapsedMs);
+  const mins = Math.min(Math.floor(elapsed / 60_000), tMin);
+  const hintRoute = `힌트 3을 연 뒤 이번 전투에서 두 번 더 실패하고 이 문제에 모두 ${tMin}분을 쓰면`;
+  if (i.hintLevel < 3) {
+    return {
+      unlocked: false,
+      via: null,
+      label: `해설서 (${ko}/3)`,
+      title: `같은 적에게 세 번 쓰러지거나(${ko}/3), ${hintRoute} 열 수 있어`,
+      timeOnly: false,
+    };
+  }
+  if (i.failsAfterHint3 < SOLUTION_HINT_FAILS) {
+    return {
+      unlocked: false,
+      via: null,
+      label: `해설서 (실패 ${fails}/2)`,
+      title: `${hintRoute} 열 수 있어(실패 ${fails}/2 · 시간 ${mins}/${tMin}분). 세 번 쓰러져도 열려(${ko}/3)`,
+      timeOnly: false,
+    };
+  }
+  if (elapsed < tMs) {
+    return {
+      unlocked: false,
+      via: null,
+      label: `해설서 (시간 ${mins}/${tMin}분)`,
+      title: `이 문제에 ${tMin}분을 쓰면 열 수 있어(${mins}/${tMin}분). 세 번 쓰러져도 열려(${ko}/3)`,
+      timeOnly: true,
+    };
+  }
+  return open("hint");
+}
+
+/** 멈췄다 이어 셀 수 있는 경과 시간 타이머(단위 3-E1). 전투 화면은 탭이 보이는 동안만 센다(결정 23 P-E1) */
+export interface ActiveTimer {
+  /** 0부터 다시 세기 시작 */
+  start(): void;
+  /** 지금까지 센 시간을 쌓고 멈춤(이미 멈췄으면 그대로) */
+  pause(): void;
+  /** 멈춘 곳부터 이어 셈(이미 세는 중이면 그대로) */
+  resume(): void;
+  /** 지금까지 센 시간(ms) */
+  elapsed(): number;
+  readonly running: boolean;
+}
+
+/** now는 단조 시계(ms). 기본은 performance.now(Playwright의 page.clock도 이것을 바꾼다) */
+export function createActiveTimer(now: () => number = () => performance.now()): ActiveTimer {
+  let acc = 0;
+  let since: number | null = null;
+  return {
+    start() {
+      acc = 0;
+      since = now();
+    },
+    pause() {
+      if (since === null) return;
+      acc += Math.max(0, now() - since);
+      since = null;
+    },
+    resume() {
+      if (since === null) since = now();
+    },
+    elapsed() {
+      return acc + (since === null ? 0 : Math.max(0, now() - since));
+    },
+    get running() {
+      return since !== null;
+    },
+  };
+}
+
 /** 제한 시간 대비 가장 오래 걸린 테스트의 비율(%) */
 export function timeGaugePercent(result: Pick<JudgeResult, "tests" | "limitMs">): number {
   if (!result.limitMs || result.tests.length === 0) return 0;

@@ -2219,3 +2219,59 @@
 .pyrpg-ui .codex-purified-list li {
   color: #c8b4ff;
 }
+
+/* ---------- 해설서: 설명 먼저, 코드를 보는 동안 에디터 가림(design.md §5.3, 단위 3-E4) ---------- */
+.pyrpg-ui .solution-code-note {
+  margin-top: 12px;
+  color: var(--muted);
+}
+
+.pyrpg-ui .solution-show-code {
+  margin-top: 6px;
+}
+
+.pyrpg-ui .solution-code-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.pyrpg-ui .solution-code-box .solution-hide-code {
+  align-self: flex-start;
+}
+
+/* 모범답안 코드는 복사할 수 없게(결정 23 P-E4) */
+.pyrpg-ui .solution-code {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.pyrpg-ui .battle-editor-col.is-covered {
+  position: relative;
+}
+
+.pyrpg-ui .editor-cover {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  text-align: center;
+  color: var(--muted);
+  background: var(--navy-900);
+}
+
+.pyrpg-ui .editor-cover-title {
+  color: var(--gold);
+}
+
+.pyrpg-ui .battle-msg .solution-unlock-note {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 2px dashed var(--border-dim);
+}

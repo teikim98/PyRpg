@@ -2,7 +2,7 @@
 import type { DiagnosisRule, Problem, TracebackRule } from "../../../src/contracts/content";
 import type { JudgeResult, PyError } from "../../../src/contracts/runner";
 import type { BattleOutcome, HintLevel, RewardSummary } from "../../../src/contracts/state";
-import type { BattleContext, HudState, MenuActions, NameContext } from "../../../src/contracts/ui";
+import type { BattleContext, BattleProgress, HudState, MenuActions, NameContext } from "../../../src/contracts/ui";
 import { createUi } from "../../../src/ui";
 import { FakeRunner } from "./fakeRunner";
 import { L12, P0101, companion, dialogueLines, lessons, problems, recommended, traceback } from "./problems";
@@ -36,6 +36,9 @@ export interface BattleOverrides {
   regionOrder?: number;
   draft?: string;
   companionLines?: BattleContext["companionLines"];
+  /** 이전 전투들에서 쓴 누적 시간(ms, 단위 3-E1) */
+  priorElapsedMs?: number;
+  shadow?: boolean;
 }
 
 export function mountHarness(game: HTMLElement) {
@@ -48,6 +51,8 @@ export function mountHarness(game: HTMLElement) {
   const results: unknown[] = [];
   /** onVictory로 받은 결과(AC 순간) */
   const victories: BattleOutcome[] = [];
+  /** onProgress로 받은 진행(힌트·해설서·반격·탭 숨김) */
+  const progresses: BattleProgress[] = [];
   const logEl = document.getElementById("log");
   const record = <T>(label: string, p: Promise<T>): Promise<T> =>
     p.then((v) => {
@@ -79,6 +84,7 @@ export function mountHarness(game: HTMLElement) {
     menuCalls,
     results,
     victories,
+    progresses,
     problems,
     /** 전투 해설 규칙(테스트가 실제 콘텐츠 규칙을 앞에 끼워 넣을 수 있다) */
     traceback,
@@ -95,12 +101,15 @@ export function mountHarness(game: HTMLElement) {
         draft: o.draft,
         knockouts: o.knockouts ?? 0,
         hintLevel: o.hintLevel ?? 0,
+        ...(o.priorElapsedMs !== undefined ? { priorElapsedMs: o.priorElapsedMs } : {}),
+        ...(o.shadow ? { shadow: true } : {}),
         regionOrder: o.regionOrder ?? 1,
         traceback,
         explain: fakeExplain,
         diagnose: fakeDiagnose,
         onDraft: (code) => drafts.push(code),
         onVictory: (outcome) => victories.push(outcome),
+        onProgress: (p) => progresses.push(p),
         companionLines: o.companionLines,
       };
       return record(`battle ${id}`, ui.battle.open(ctx));

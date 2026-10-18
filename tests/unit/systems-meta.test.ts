@@ -150,6 +150,16 @@ describe("일일 퀘스트(§7.5)", () => {
     expect(applyQuestEvent(s, qc, { type: "win", maxHintLevel: 0, attempts: 1 }).completed).toHaveLength(1);
   });
 
+  it("해설서를 보고 이긴 전투는 '힌트 없이'·'첫 시전'에 넣지 않는다(단위 3-E4). '아무 전투'에는 들어간다", () => {
+    const s = newSave();
+    s.quests = { date: "2026-10-01", ids: ["win-nohint-1", "win-firstcast-1", "anywin-2"], progress: [0, 0, 0], claimed: [false, false, false], chest: false };
+    const r = applyQuestEvent(s, qc, { type: "win", maxHintLevel: 0, attempts: 1, solutionViewed: true });
+    expect(r.completed).toEqual([]);
+    expect(r.save.quests!.progress).toEqual([0, 0, 1]);
+    const ok = applyQuestEvent(s, qc, { type: "win", maxHintLevel: 0, attempts: 1, solutionViewed: false });
+    expect(ok.completed.map((q) => q.id).sort()).toEqual(["win-firstcast-1", "win-nohint-1"]);
+  });
+
   it("퀘스트 XP로 레벨이 오르면 levelAfter가 알려 준다", () => {
     const s = newSave();
     s.player.xp = xpForLevel(2) - 10;
@@ -270,6 +280,20 @@ describe("칭호(§7.4)", () => {
     const r = awardTitles(s, content.titles, regions);
     expect(r.earned.map((t) => t.id).sort()).toEqual(["first-spell", "liberator-r01", "persistence", "time-turner"].sort());
     expect(awardTitles(r.save, content.titles, regions).earned).toEqual([]);
+  });
+
+  it("끈기: 해설서를 본 승리는 제외(단위 3-E4), 이미 받은 칭호는 회수하지 않는다", () => {
+    const s = newSave();
+    s.problems.P0101 = { attempts: 9, knockouts: 3, solved: true, maxHintLevel: 3, solutionViewed: true };
+    expect(titleMet(def("persistence").condition, s, regions)).toBe(false);
+    s.problems.P0102 = { attempts: 5, knockouts: 0, solved: true, maxHintLevel: 3, solutionViewed: false };
+    expect(titleMet(def("persistence").condition, s, regions)).toBe(true);
+    // 이미 받은 칭호: 조건이 다시 안 맞아도 그대로
+    const got = awardTitles(s, content.titles, regions).save;
+    expect(got.titles).toContain("persistence");
+    delete got.problems.P0102;
+    expect(awardTitles(got, content.titles, regions).save.titles).toContain("persistence");
+    expect(def("persistence").description).toContain("해설서 없이");
   });
 
   it("맨손의 주문사: 한 지역의 모든 전투를 힌트 없이", () => {

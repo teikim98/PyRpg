@@ -14,7 +14,7 @@ export interface QuestContext {
 }
 
 export type QuestEvent =
-  | { type: "win"; maxHintLevel: number; attempts: number }
+  | { type: "win"; maxHintLevel: number; attempts: number; /** 해설서를 본 승리(단위 3-E4). 없으면 false */ solutionViewed?: boolean }
   | { type: "shadow" }
   | { type: "lesson" }
   | { type: "codexRun" }
@@ -88,6 +88,8 @@ function matches(q: QuestDef, e: QuestEvent): boolean {
       return e.type === "win" || e.type === "shadow";
     case "win":
       if (e.type !== "win") return false;
+      // 해설서를 보고 이긴 전투는 '힌트 없이'·'첫 시전'에 넣지 않는다(design.md §7.5)
+      if ((q.filter?.noHint || q.filter?.firstCast) && e.solutionViewed) return false;
       if (q.filter?.noHint && e.maxHintLevel > 0) return false;
       if (q.filter?.firstCast && e.attempts !== 1) return false;
       return true;

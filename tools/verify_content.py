@@ -98,6 +98,7 @@ REQUIRED_DIALOGUE_PHRASES = {
 REQUIRED_COMMON_DIALOGUES = [
     "need_scroll", "campfire_rest", "knockout", "solution_unlocked", "retreat",
     "practice_suggest", "shadow_registered", "level_up", "fatal_recursion",
+    "solution_unlocked_hint",  # 단위 3-E4: 힌트 경로로 해설서가 열릴 때
 ]
 # region1-spec.md §2, §3
 REQUIRED_REGION_CONTENT = {

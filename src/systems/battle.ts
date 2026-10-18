@@ -15,6 +15,15 @@ export const STREAK_REPAIR_FLAG = "streak.repair:";
 
 export const solutionFlag = (problemId: string) => `solution.unlocked:${problemId}`;
 
+/** 한 전투에서 기록하는 경과 시간의 상한(2시간, 결정 23 P-E1). 창을 열어 둔 채 자리를 비운 시간이 기준 시간을 부풀리지 않게 */
+export const MAX_BATTLE_ELAPSED_MS = 2 * 60 * 60 * 1000;
+
+/** 한 전투의 경과 시간을 기록할 값으로: 반올림 정수, NaN·음수는 0, 상한 2시간 */
+export function battleElapsedMs(ms: number): number {
+  if (typeof ms !== "number" || Number.isNaN(ms) || ms <= 0) return 0;
+  return Math.min(MAX_BATTLE_ELAPSED_MS, Math.round(ms));
+}
+
 export type BattleEvent =
   | { type: "victory"; problemId: string; firstClear: boolean }
   | { type: "knockout"; problemId: string; knockouts: number; respawn: { regionId: string; x: number; y: number } }
@@ -65,9 +74,10 @@ export function applyBattleOutcome(save: SaveData, problem: Problem, outcome: Ba
   const shadowBattle = !!opts.shadow;
   const levelBefore = levelFromXp(s.player.xp);
   const reward = computeBattleReward(problem, outcome, save, { shadow: shadowBattle });
+  const elapsed = battleElapsedMs(outcome.elapsedMs);
 
   const log = (grade: AttemptLog["grade"]) =>
-    s.history.push({ at: iso, problemId: id, concept: problem.concept, grade, shadow: shadowBattle });
+    s.history.push({ at: iso, problemId: id, concept: problem.concept, grade, shadow: shadowBattle, ...(elapsed > 0 ? { elapsedMs: elapsed } : {}) });
 
   if (!shadowBattle) {
     const prev = s.problems[id] ?? emptyRecord();
@@ -78,6 +88,8 @@ export function applyBattleOutcome(save: SaveData, problem: Problem, outcome: Ba
       solutionViewed: prev.solutionViewed || outcome.solutionViewed,
       draft: outcome.finalCode,
     };
+    // 누적 시간(design.md §7.1 기준 시간): 처치 전까지의 전투만. 승리·쓰러짐·후퇴 모두 더한다
+    if (!prev.solved && elapsed > 0) rec.elapsedTotalMs = (prev.elapsedTotalMs ?? 0) + elapsed;
     if (outcome.result === "victory") {
       const firstClear = !prev.solved;
       if (firstClear) {
