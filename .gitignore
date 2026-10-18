@@ -6,3 +6,5 @@ __pycache__/
 *.pyc
 .DS_Store
 .claude/worktrees/
+# GCP 서비스 계정 키
+primeval-pen-506612-b4-*.json
