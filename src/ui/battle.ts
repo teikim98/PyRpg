@@ -130,8 +130,11 @@ export function createBattleUI(env: UiEnv): BattleUI {
         const hiddenInfo = h("span", { class: "enemy-hidden" });
         const gaugeFill = h("div", { class: "bar-fill" });
         const gaugeText = h("span", { class: "time-gauge-text" }, "—");
-        // 모래시계 부적(design.md §7.3): 목표 복잡도
-        const gaugeTarget = ctx.perks?.targetComplexity ? h("span", { class: "time-gauge-target" }, `목표 ${ctx.perks.targetComplexity}`) : null;
+        // 모래시계 부적(design.md §7.3, 단위 3-E5): 목표 복잡도. 이 문제에서 시간 결계 TLE가 한 번 확정되기 전에는 숨긴다(결정 23 P-E7)
+        let targetShown = ctx.perks?.targetRevealed === true;
+        const gaugeTarget = ctx.perks?.targetComplexity
+          ? h("span", { class: "time-gauge-target", hidden: !targetShown }, `목표 ${ctx.perks.targetComplexity}`)
+          : null;
         const gauge = h(
           "div",
           { class: "time-gauge", hidden: true, "aria-label": "시간 게이지" },
@@ -557,6 +560,26 @@ export function createBattleUI(env: UiEnv): BattleUI {
           };
         };
 
+        // 모래시계 부적: 시간 결계 페이즈의 시전 결과에 TLE가 있으면(실행기가 두 번 재서 확정한 판정) 목표 복잡도를 보여 주고 누리가 한 줄 말한다
+        const revealTargetOnTle = (res: JudgeResult) => {
+          if (!gaugeTarget || targetShown || !(phases.length && phaseIdx >= 1)) return;
+          if (!res.tests.some((t) => t.verdict === "TLE")) return;
+          targetShown = true;
+          gaugeTarget.hidden = false;
+          restartAnim(gaugeTarget, "is-revealed");
+          try {
+            ctx.perks?.onTargetRevealed?.();
+          } catch (e) {
+            console.error(e);
+          }
+          const common = companionSay(ctx.companionLines?.hourglassReveal);
+          const html = common?.html ?? `<p class="nuri-line">모래시계 부적이 반짝였어! 시간 게이지 옆에 <strong>목표 복잡도</strong>가 떠올랐어.</p>`;
+          const note = h("div", { class: "hourglass-note", html });
+          msg.append(note);
+          msgBox.dataset.hourglass = "revealed";
+          updateMsgMore();
+        };
+
         const runnerWaitText = () => (ctx.runner.isReady() ? "주문을 읽는 중…" : "실행기를 깨우는 중… 처음 한 번은 조금 걸려.");
 
         const cast = async () => {
@@ -628,6 +651,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
             if (practiceMode) {
               // 연습 전투는 반격하지 않는다
               say(ex.emotion, `${ex.html}<div class="counter is-practice">연습 전투라 반격은 없어. 천천히 고쳐 보자.</div>`, detailsEl(fb));
+              revealTargetOnTle(res);
               timers.push(window.setTimeout(refillEnemy, 900));
               return;
             }
@@ -637,6 +661,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
             floatText(`-${dmg}`, "float-dmg");
             reportProgress();
             say(ex.emotion, `${ex.html}<div class="counter">${escapeHtml(p.enemy.name)}의 반격! HP −${dmg}</div>`, detailsEl(fb));
+            revealTargetOnTle(res);
             timers.push(window.setTimeout(refillEnemy, 900));
             if (hp <= 0) {
               knockout();

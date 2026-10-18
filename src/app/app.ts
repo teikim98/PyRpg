@@ -80,6 +80,8 @@ import { arrivalSpot } from "./travel";
 
 /** 보조 캐릭터가 합류했는지(프롤로그 트리거의 joinCompanion) */
 export const COMPANION_FLAG = "companion.joined";
+/** 모래시계 부적이 이 문제의 목표 복잡도를 이미 공개했는가(design.md §7.3, 결정 23 P-E7). 키는 원래 문제 ID(그림자 변형 ID가 아님) */
+export const hourglassFlag = (problemId: string): string => `hourglass.revealed:${problemId}`;
 
 export interface AppDeps {
   content: GameContent;
@@ -514,6 +516,7 @@ export class App {
         fatalRecursion: this.deps.content.commonDialogues.fatal_recursion,
         ...this.practiceLines(),
         solutionUnlockedHint: this.deps.content.commonDialogues.solution_unlocked_hint,
+        hourglassReveal: this.deps.content.commonDialogues.hourglass_reveal,
       },
       shadow,
       ...(shadowItem?.anonymous ? { shadowAnonymous: true } : {}),
@@ -521,6 +524,16 @@ export class App {
       perks: {
         freeHint2: fx.guideFeather,
         targetComplexity: fx.targetComplexity ? problem.targetComplexity : undefined,
+        // 모래시계 부적의 공개는 문제마다 유지한다(결정 23 P-E7). 그림자전의 변형도 원래 문제의 공개 상태를 쓴다
+        ...(fx.targetComplexity && problem.targetComplexity
+          ? {
+              targetRevealed: this.save.flags[hourglassFlag(this.originalProblemId(problem))] === true,
+              onTargetRevealed: () => {
+                this.save.flags[hourglassFlag(this.originalProblemId(problem))] = true;
+                saveDuringBattle(true);
+              },
+            }
+          : {}),
         // 메아리 고리: [예제 실행]에서 줄별 실행 횟수(docs/phase3/region06-spec.md §7.2)
         ...(fx.lineCounts ? { lineCounts: true } : {}),
         // 기록관의 안경: 해설 아래 코덱스 바로가기. 코덱스는 전투 창 위에 열리고, 닫으면 전투로 돌아간다
@@ -763,6 +776,8 @@ export class App {
         this.refreshHud();
         await this.deps.ui.board.openQuests({ quests: this.questPanelView(), streak: this.streakView() });
       },
+      // 메뉴에서 여는 상점(design.md §7.2, 단위 3-E5): 품목은 가 본 가장 먼 지역의 상점 기준(결정 23 P-E6)
+      openShop: () => this.openShop(this.farthestRegionOrder()),
       exportSave: async () => {
         await this.autosaver.flush();
         const { text, filename } = exportSave(this.save, this.now());
@@ -925,13 +940,14 @@ export class App {
     return view;
   }
 
-  private async openShop(): Promise<void> {
+  /** 상점. regionOrder는 품목을 거르는 지역 순서(맵 상점은 지금 지역, 메뉴 상점은 가 본 가장 먼 지역) */
+  private async openShop(regionOrder = this.region.order): Promise<void> {
     await this.deps.ui.shop.open(
-      () => this.shopView(),
+      () => this.shopView(regionOrder),
       async (id) => {
         const item = this.item(id);
         if (!item) throw new Error("없는 물건이야");
-        this.save = buyItem(this.save, item, this.region.order);
+        this.save = buyItem(this.save, item, regionOrder);
         await this.persist();
         this.refreshHud();
         if (item.kind === "accessory") return `${item.name}${objectParticle(item.name)} 샀어! 메뉴의 장비에서 장착해 봐.`;
@@ -943,10 +959,9 @@ export class App {
     );
   }
 
-  shopView(): ShopView {
+  shopView(regionOrder = this.region.order): ShopView {
     const entries: ShopView["entries"] = [];
     // 지역 순서가 모자란 상점에는 그 품목이 아예 나오지 않는다(예: 메아리 고리는 지역 6 상점부터)
-    const regionOrder = this.region.order;
     for (const item of this.deps.content.items) {
       const state = shopState(this.save, item, regionOrder);
       if (!state) continue;
@@ -1128,6 +1143,19 @@ export class App {
 
   private allProblems(): Problem[] {
     return this.deps.content.regions.flatMap((r) => r.problems);
+  }
+
+  /** 가 본 가장 먼 지역의 순서: 첫 대사(region.<id>.intro)를 본 지역과 지금 지역 가운데 가장 큰 것(결정 23 P-E6) */
+  farthestRegionOrder(): number {
+    let order = this.region.order;
+    for (const r of this.deps.content.regions) if (this.save.flags[`region.${r.id}.intro`] && r.order > order) order = r.order;
+    return order;
+  }
+
+  /** 그림자전·연습 전투의 변형 문제 → 원래 문제 ID(원래 문제면 그대로). 모래시계 부적 공개 플래그의 키 */
+  private originalProblemId(problem: Problem): string {
+    if (this.deps.content.regions.some((r) => r.problems.some((p) => p.id === problem.id))) return problem.id;
+    return this.allProblems().find((p) => p.variants?.some((v) => v.id === problem.id))?.id ?? problem.id;
   }
 
   private regionOrderOf(problem: Problem): number {

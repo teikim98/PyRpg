@@ -91,6 +91,8 @@ export interface BattleContext {
     practiceSuggestNone?: DialogueLine[];
     /** 힌트 경로로 해설서가 처음 열렸을 때(solution_unlocked_hint, design.md §5.3, 단위 3-E4) */
     solutionUnlockedHint?: DialogueLine[];
+    /** 모래시계 부적이 목표 복잡도를 처음 보여 줄 때(hourglass_reveal, design.md §7.3, 단위 3-E5) */
+    hourglassReveal?: DialogueLine[];
   };
   /** 그림자 몬스터 전투(§7.6): 보상 50%, 해설서 없음, 연습 제안 없음 */
   shadow?: boolean;
@@ -114,8 +116,15 @@ export interface BattleContext {
   perks?: {
     /** 길잡이 깃털: 힌트 2단계 대가 없음(그림자 등록은 그대로) */
     freeHint2?: boolean;
-    /** 모래시계 부적: 시간 게이지에 보일 목표 복잡도 */
+    /**
+     * 모래시계 부적(design.md §7.3, 단위 3-E5): 시간 게이지에 보일 목표 복잡도. 처음에는 숨겨 두고,
+     * 시간 결계 페이즈(2페이즈 이후)의 시전에서 TLE가 확정되면(실행기가 이미 재확인한 판정) 공개한다
+     */
     targetComplexity?: string;
+    /** 이 문제에서 이미 공개했으면 true(처음부터 보인다, 결정 23 P-E7). 앱이 flags["hourglass.revealed:<원래 문제 ID>"]로 정한다 */
+    targetRevealed?: boolean;
+    /** 이번 전투에서 목표 복잡도를 처음 공개한 순간(앱이 공개 플래그를 저장한다) */
+    onTargetRevealed?(): void;
     /**
      * 메아리 고리(docs/phase3/region06-spec.md §7.2): [예제 실행]에서 줄마다 실행 횟수(공개 예제 합계)를 에디터 거터에 보인다.
      * 코드를 고치면 지운다. [시전]·채점에는 영향 없음
@@ -194,6 +203,8 @@ export interface MenuActions {
   openTitles?(): Promise<void>;
   /** 일일 퀘스트·스트릭(§7.5) */
   openQuests?(): Promise<void>;
+  /** 상점(§7.2, 단위 3-E5). 품목은 가 본 가장 먼 지역의 상점 기준(결정 23 P-E6) */
+  openShop?(): Promise<void>;
   exportSave(): Promise<void>;
   importSave(file: File): Promise<void>;
   resetSave(): Promise<void>;

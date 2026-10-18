@@ -1,6 +1,6 @@
 // 앱 계층(src/app/app.ts)을 가짜 월드·UI·저장소로 돌려 본다(docs/phase3/plan.md §1 5·6·9, region02-spec §4 지역 간 이동).
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { App, COMPANION_FLAG } from "../../src/app/app";
+import { App, COMPANION_FLAG, hourglassFlag } from "../../src/app/app";
 import { loadContent } from "../../src/content/loader";
 import type { DialogueLine, GameContent, Lesson, Region } from "../../src/contracts/content";
 import type { PythonRunner } from "../../src/contracts/runner";
@@ -1113,5 +1113,161 @@ describe("중간 보스(midBoss, region06-spec §7.1)", () => {
     expect(h.said).toEqual([]);
     expect(h.recommended).toEqual([]);
     expect(store.data!.flags["region.r01.clear"]).toBeUndefined();
+  });
+});
+
+describe("메뉴 상점과 모래시계 부적(단위 3-E5)", () => {
+  async function e5Harness(mutate: (s: SaveData) => void, tweak: (c: GameContent) => void = () => undefined) {
+    const base = makeContent(false);
+    const content = { ...base, quests: { ...base.quests, pool: [] } };
+    tweak(content);
+    const store = new MemoryStore();
+    store.data = r01Save(content, (s) => {
+      s.removedObjects.push("gate_well");
+      mutate(s);
+    });
+    const h = harness(content, store);
+    await h.app.start({} as HTMLElement);
+    await idle(h.app);
+    return { h, store, content };
+  }
+
+  /** 지역 3 상점부터 파는 시험용 품목(회복약 복사본) */
+  const addR3Item = (c: GameContent) => {
+    const potion = c.items.find((i) => i.id === "potion")!;
+    c.items.push({ ...potion, id: "test-r3-potion", name: "시험 물약", shopFromRegion: 3 });
+  };
+
+  it("메뉴의 '상점'은 가 본 가장 먼 지역(region.<id>.intro) 기준: 그 지역 품목은 보이고 사지며, 더 뒤 지역 전용 품목은 안 보인다", async () => {
+    const { h, store } = await e5Harness((s) => {
+      s.player.gold = 500;
+      s.flags["region.r02.intro"] = true;
+      s.flags["region.r03.intro"] = true;
+    }, addR3Item);
+    expect(h.app.region.order).toBe(1);
+    expect(h.app.farthestRegionOrder()).toBe(3);
+
+    let ids: string[] = [];
+    let order = 0;
+    h.sys.menu = async (a) => {
+      expect(a.openShop).toBeTypeOf("function");
+      await a.openShop!();
+    };
+    h.sys.shop = async (view, buy) => {
+      order = view().regionOrder;
+      ids = view().entries.map((e) => e.id);
+      expect(await buy("test-r3-potion")).toContain("시험 물약");
+      await expect(buy("echo-ring")).rejects.toThrow("파는 물건이 아니야");
+    };
+    h.callbacks.onMenu();
+    await idle(h.app);
+    expect(order).toBe(3);
+    expect(ids).toContain("test-r3-potion");
+    expect(ids).toContain("potion");
+    expect(ids).not.toContain("echo-ring");
+    expect(store.data!.inventory["test-r3-potion"]).toBe(1);
+    expect(store.data!.player.gold).toBe(470);
+
+    // 맵의 상점(에코 마을)은 지금처럼 그 지역(1) 기준
+    h.sys.shop = async (view) => {
+      order = view().regionOrder;
+      ids = view().entries.map((e) => e.id);
+    };
+    h.callbacks.onInteract(h.world.obj("shop_echo"));
+    await idle(h.app);
+    expect(order).toBe(1);
+    expect(ids).not.toContain("test-r3-potion");
+
+    // 지역 6을 가 봤으면 메뉴 상점에 메아리 고리
+    h.app.save.flags["region.r06.intro"] = true;
+    h.sys.shop = async (view) => {
+      order = view().regionOrder;
+      ids = view().entries.map((e) => e.id);
+    };
+    h.callbacks.onMenu();
+    await idle(h.app);
+    expect(order).toBe(6);
+    expect(ids).toContain("echo-ring");
+  });
+
+  const charmTweak = (c: GameContent) => {
+    for (const r of c.regions) for (const p of r.problems) if (p.id === "P0105") p.targetComplexity = "O(1)";
+  };
+  const retreat = (ctx: BattleContext): BattleOutcome => ({
+    problemId: ctx.problem.id, result: "retreat", attempts: 1, maxHintLevel: 0, solutionViewed: false, finalCode: "x", hpLeft: ctx.player.hp, elapsedMs: 1,
+  });
+
+  it("모래시계 부적: 목표는 숨긴 채 넘기고, 첫 TLE 공개를 저장해 같은 문제의 다음 전투에서는 처음부터 보인다", async () => {
+    const { h, store, content } = await e5Harness((s) => {
+      s.inventory["hourglass-charm"] = 1;
+      s.equipment = ["hourglass-charm"];
+    }, charmTweak);
+    const perks: NonNullable<BattleContext["perks"]>[] = [];
+    let lines: BattleContext["companionLines"];
+    h.battle.open = async (ctx) => {
+      perks.push(ctx.perks!);
+      lines = ctx.companionLines;
+      if (perks.length === 1) {
+        // 시간 결계 TLE가 확정된 순간(전투 UI가 부른다): 바로 저장된다
+        ctx.perks!.onTargetRevealed!();
+        await vi.waitFor(() => expect(store.data!.flags[hourglassFlag("P0105")]).toBe(true));
+      }
+      return retreat(ctx);
+    };
+    h.callbacks.onInteract(h.world.obj("m_P0105"));
+    await idle(h.app);
+    expect(perks[0]).toMatchObject({ targetComplexity: "O(1)", targetRevealed: false });
+    expect(lines?.hourglassReveal).toBe(content.commonDialogues.hourglass_reveal);
+    expect(content.commonDialogues.hourglass_reveal.length).toBeGreaterThan(0);
+    expect(store.data!.flags["hourglass.revealed:P0105"]).toBe(true);
+
+    h.callbacks.onInteract(h.world.obj("m_P0105"));
+    await idle(h.app);
+    expect(perks[1]).toMatchObject({ targetComplexity: "O(1)", targetRevealed: true });
+
+    // 다른 보스는 따로(P0105의 공개가 번지지 않는다): 목표가 없는 문제는 부적 정보도 없다
+    h.callbacks.onInteract(h.world.obj("m_P0101"));
+    await idle(h.app);
+    expect(perks[2].targetComplexity).toBeUndefined();
+    expect(perks[2].targetRevealed).toBeUndefined();
+  });
+
+  it("모래시계 부적을 끼지 않으면 목표도 공개 콜백도 없다", async () => {
+    const { h } = await e5Harness(() => undefined, charmTweak);
+    let perks: BattleContext["perks"];
+    h.battle.open = async (ctx) => {
+      perks = ctx.perks;
+      return retreat(ctx);
+    };
+    h.callbacks.onInteract(h.world.obj("m_P0105"));
+    await idle(h.app);
+    expect(perks?.targetComplexity).toBeUndefined();
+    expect(perks?.onTargetRevealed).toBeUndefined();
+  });
+
+  it("그림자전의 변형도 원래 보스 ID로 공개 상태를 읽고 쓴다", async () => {
+    const today = studyDate(NOW);
+    const { h, store } = await e5Harness((s) => {
+      s.inventory["hourglass-charm"] = 1;
+      s.equipment = ["hourglass-charm"];
+      s.problems.P0105 = { ...emptyRec(), solved: true, solvedAt: "2026-09-01T00:00:00Z" };
+      s.removedObjects.push("m_P0105");
+      s.shadows = [{ concept: "scroll.arith", problemId: "P0105", box: 3, due: addDays(today, -1), purified: false, createdAt: "2026-09-01T00:00:00Z" }];
+    }, charmTweak);
+    h.sys.board = async (v) => v.shadows[0]?.concept ?? null;
+    let ctxSeen: BattleContext | null = null;
+    h.battle.open = async (ctx) => {
+      ctxSeen = ctx;
+      expect(ctx.perks?.targetRevealed).toBe(false);
+      ctx.perks!.onTargetRevealed!();
+      return retreat(ctx);
+    };
+    h.callbacks.onInteract(h.world.obj("board_shadow"));
+    await idle(h.app);
+    expect(ctxSeen).not.toBeNull();
+    expect(ctxSeen!.shadow).toBe(true);
+    expect(ctxSeen!.problem.id).not.toBe("P0105");
+    expect(store.data!.flags[hourglassFlag("P0105")]).toBe(true);
+    expect(store.data!.flags[hourglassFlag(ctxSeen!.problem.id)]).toBeUndefined();
   });
 });

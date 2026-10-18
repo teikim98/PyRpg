@@ -16,6 +16,8 @@ const SPEC_COMMON_DIALOGUES = [
   "solution_unlocked_hint",
   // 단위 3-E3: 연습 상대 종류별 제안(② 연습 몬스터, ③ 몸풀기, 응용 전투의 몸풀기, ④ 상대 없음)
   "practice_suggest_monster", "practice_suggest_warmup", "practice_suggest_applied", "practice_suggest_none",
+  // 단위 3-E5: 모래시계 부적이 목표 복잡도를 처음 보여 줄 때
+  "hourglass_reveal",
 ];
 const SPEC_PROBLEMS = ["P0101", "P0102", "P0103", "P0104", "P0105", "P0106", "P0107", "P0108", "P0109", "P0110"];
 const SPEC_SCROLLS = { "L1-1": "scroll.voice", "L1-2": "scroll.convert", "L1-3": "scroll.arith", "L1-4": "scroll.quick_ear" };

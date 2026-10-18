@@ -1,6 +1,7 @@
 // 시스템 화면 E2E(단위 3-1, design.md §7.2~§7.6): 실제 게임(/?e2e)에서 실제 키·클릭으로
 // 그림자 게시판 → 그림자전, 일일 퀘스트와 상자, 상점, 장비(망토·깃털), 칭호를 확인한다.
 // 단위 3-4: 기록관의 안경(Traceback 해설의 코덱스 바로가기, region04-spec.md §6. 단위 3-5부터 해설 위)
+// 단위 3-E5: 메뉴의 상점(가 본 가장 먼 지역 기준)
 // PW_PORT=4194 npx playwright test tests/e2e/systems.spec.ts
 import { mkdirSync, readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
@@ -324,6 +325,49 @@ test.describe.serial("시스템 화면(단위 3-1)", () => {
     await shot(page, "systems-titles.png");
     await closeAll(page);
     expect((await save(page)).activeTitle).toBe("first-spell");
+  });
+
+  test("메뉴의 '상점'(단위 3-E5): 가 본 가장 먼 지역의 상점 품목이 보이고, 하나를 산다", async ({ page }) => {
+    test.setTimeout(180_000);
+    await boot(page);
+    const gate = await obj(page, "gate_well");
+    const cur = await save(page);
+    // 에코 마을(지역 1)에 서 있지만 거울 호수(지역 6)까지 가 봤다(region.r06.intro, 결정 23 P-E6)
+    await seedAndReload(page, {
+      lessons: ["L1-1", "L1-2", "L1-3"],
+      removed: ["gate_well", "m_P0101", "m_P0106"],
+      at: { x: gate.x, y: gate.y - 1 },
+      flags: ["trigger.r01.t_prologue", "companion.joined", "region.r01.intro", "region.r06.intro"],
+      // 칭호 알림이 상점 화면을 가리지 않게 이미 받은 것으로
+      patch: { player: { ...cur.player, gold: 300, hp: 100 }, titles: ["first-spell"] },
+    });
+    await page.keyboard.press("KeyM");
+    await expect(page.locator(".menu-modal")).toBeVisible();
+    // '퀘스트' 바로 다음
+    const labels = await page.locator(".menu-list .menu-btn").allTextContents();
+    expect(labels.indexOf("상점")).toBe(labels.indexOf("퀘스트") + 1);
+    await page.locator(".menu-shop").click();
+    await expect(page.locator(".shop-modal")).toBeVisible();
+    await expect(page.locator(".shop-gold")).toHaveText("300 G");
+    // 지역 6 상점부터 파는 메아리 고리가 메뉴 상점에는 있다
+    const ring = page.locator('.shop-item[data-item="echo-ring"]');
+    await expect(ring).toBeVisible();
+    await page.locator('.shop-buy[data-buy="echo-ring"]').click();
+    await expect(page.locator(".shop-status")).toContainText("메아리 고리");
+    await expect(page.locator(".shop-gold")).toHaveText("100 G");
+    await expect(ring).toHaveAttribute("data-state", "owned");
+    await shot(page, "engine-e5-menu-shop.png");
+    await closeAll(page);
+    const s = await save(page);
+    expect(s.inventory["echo-ring"]).toBe(1);
+    expect(s.player.gold).toBe(100);
+
+    // 맵의 에코 마을 상점은 그 지역(1) 기준이라 메아리 고리가 없다
+    await interact(page, "shop_echo");
+    await settle(page, ".shop-modal");
+    await expect(page.locator(".shop-item").first()).toBeVisible();
+    await expect(page.locator('.shop-item[data-item="echo-ring"]')).toHaveCount(0);
+    await closeAll(page);
   });
 });
 

@@ -98,6 +98,7 @@ REQUIRED_COMMON_DIALOGUES = [
     "solution_unlocked_hint",  # 단위 3-E4: 힌트 경로로 해설서가 열릴 때
     # 단위 3-E3: 연습 상대 종류별 제안(② 연습 몬스터, ③ 몸풀기, 응용 전투의 몸풀기, ④ 상대 없음)
     "practice_suggest_monster", "practice_suggest_warmup", "practice_suggest_applied", "practice_suggest_none",
+    "hourglass_reveal",  # 단위 3-E5: 모래시계 부적이 목표 복잡도를 처음 보여 줄 때
 ]
 # 연습 제안 대사(design.md §6.2): 상대 이름 {target}을 반드시 말하는 것(④ practice_suggest_none은 상대가 없으므로 쓰지 않음)
 PRACTICE_TARGET_DIALOGUES = ["practice_suggest", "practice_suggest_monster", "practice_suggest_warmup", "practice_suggest_applied"]
