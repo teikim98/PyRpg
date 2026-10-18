@@ -4,7 +4,7 @@
   "scroll": {
     "id": "scroll.ascii",
     "name": "글자 번호의 주문서",
-    "summary": "`ord(c)`는 글자 → 번호(`a` 97, `A` 65), `chr(n)`은 번호 → 글자. `ord(c) - ord(\"a\")`로 0~25 칸 번호, `[0] * 26`으로 알파벳 세기. k칸 밀기는 `(ord(c) - ord(\"a\") + k) % 26`, 대문자는 `ord(\"A\")` 기준. `isupper`/`islower`로 판별."
+    "summary": "`ord(c)`는 글자 → 번호(`a` 97, `A` 65), `chr(n)`은 번호 → 글자. `ord(c) - ord(\"a\")`로 0~25 칸 번호. 칸 번호와 `[0] * 칸 수` 리스트로 개수 세기(숫자 글자는 `int(ch)`가 칸 번호). 끝을 넘어가면 `% 26`으로 한 바퀴 돌리기. `isupper`/`islower`로 판별."
   },
   "exercise": {
     "kind": "blank",

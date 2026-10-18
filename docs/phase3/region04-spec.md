@@ -20,8 +20,8 @@
 |---|---|---|---|---|
 | L4-1 | `scroll.string` | 글자 읽기의 주문서 | 문자열 인덱싱·음수 인덱스·슬라이싱(지역 3 복습), `len`, `in`, `for c in s`, 불변성(TypeError), `[::-1]`로 뒤집기 | JS 문자열도 불변. `s.length` → `len(s)`, `s.at(-1)` → `s[-1]`, `s.includes(x)` → `x in s`, `[...s].reverse().join("")` → `s[::-1]` |
 | L4-2 | `scroll.strmethods` | 글자 다듬기의 주문서 | `upper`/`lower`/`strip`/`replace`/`find`/`count`/`startswith`/`endswith`, `isdigit`/`isalpha`/`isupper`, 메서드가 새 문자열을 돌려줌(`s.upper()`만 쓰고 대입 안 하는 실수) | `toUpperCase` → `upper`, `trim` → `strip`, `indexOf` → `find`(없으면 -1), `replaceAll` → `replace`(기본이 전부 바꿈) |
-| L4-3 | `scroll.splitjoin` | 엮고 푸는 주문서 | `split()` vs `split(",")`, `"구분자".join(리스트)`(원소가 문자열이어야 함, `map(str, …)`), f-string과 서식(`:.2f`, `:>5`, `:03d`), `print(*arr)` 복습 | `arr.join(" ")` ↔ `" ".join(arr)`(주어가 반대), 템플릿 리터럴 `${x}` ↔ f-string `{x}`, `toFixed(2)` ↔ `:.2f` |
-| L4-4 | `scroll.ascii` | 글자 번호의 주문서 | `ord`/`chr`, `ord(c) - ord("a")`로 0~25 칸 번호, `[0] * 26`으로 알파벳 세기, 알파벳 밀기(`% 26`), 대소문자 판별 | `charCodeAt` ↔ `ord`, `String.fromCharCode` ↔ `chr` |
+| L4-3 | `scroll.splitjoin` | 엮고 푸는 주문서 | `split()` vs `split(",")`, `"구분자".join(리스트)`(원소가 문자열이어야 함, `map(str, …)`), `list(s)`로 고치고 `"".join`으로 엮기, 두 칸 맞바꾸기(`arr[0], arr[2] = arr[2], arr[0]`: L3-5 `n, m = 3, 4`와 같은 모양, 오른쪽을 먼저 계산하고 나눠 담음. P0411 복선), f-string과 서식(`:.2f`, `:03d`. 정렬 `:>5`·`:<5`는 한 문장 소개만), `print(*arr)` 복습. 서식 예제는 P0407 출력 형식과 주제·변수 이름을 다르게(서가·높이, 이름·권수·골드를 쓰지 않음) | `arr.join(" ")` ↔ `" ".join(arr)`(주어가 반대), 템플릿 리터럴 `${x}` ↔ f-string `{x}`, `toFixed(2)` ↔ `:.2f` |
+| L4-4 | `scroll.ascii` | 글자 번호의 주문서 | `ord`/`chr`, `ord(c) - ord("a")`로 0~25 칸 번호(한 줄), 개수 세기는 숫자 글자로(`[0] * 10`, `if ch.isdigit(): cnt[int(ch)] += 1`. 알파벳 26칸 세기는 P0408에서 스스로), 알파벳 밀기는 고정 칸 수만(`"y"`를 3칸, `% 26`. k칸 이동식과 대문자 `ord("A")` 기준 식은 P0409에서 스스로), 대소문자 판별 | `charCodeAt` ↔ `ord`, `String.fromCharCode` ↔ `chr` |
 
 - 레슨마다 run 블록 2개 이상과 빈칸 연습 1개(지역 1~3과 같은 형식). L4-1에서 `s[0] = "x"`가 TypeError를 내는 run 블록을 보여 주고, 그래서 '고칠 때는 `list(s)`로 바꿔서 고치고 `"".join`으로 돌려놓는다'를 L4-3에서 다시 짚습니다(보스 복선).
 
@@ -33,7 +33,7 @@
 | P0402 | 거울 제목 | function | `[::-1]`로 회문 판별(대소문자 그대로, `True`/`False` 반환) | scroll.string | 정문 홀 | 필수 |
 | P0403 | 모음 갉아먹는 벌레 | stdin | `for c in s` + `in "aeiou"`로 모음 개수 | scroll.string | 정문 홀 | 선택 |
 | P0404 | 낡은 제목 정리 | function | `strip`/`lower`/`replace` 연쇄(앞뒤 공백 제거, 소문자, `_` → 공백) | scroll.strmethods | 열람실 | 필수 |
-| P0405 | 주문어 찾기 | stdin | `find`(처음 위치, 없으면 -1)와 `count`(겹치지 않는 개수) | scroll.strmethods | 열람실 | 선택 |
+| P0405 | 주문어 찾기 | stdin | `find`(처음 위치, 없으면 -1)와 `count`(겹치지 않는 개수). 위치는 0부터 세고(지문에 **0번** 굵게), 답이 0인 숨김 테스트를 둠(공개 테스트는 추가하지 않음, 결정 P-A3) | scroll.strmethods | 열람실 | 선택 |
 | P0406 | 거꾸로 꽂힌 단어들 | stdin | `split` → 단어 순서 뒤집기 → `" ".join` | scroll.splitjoin | 서고 미로 | 필수 |
 | P0407 | 대출 장부 | function | f-string 서식: 이름과 권수·연체료를 `"{name}: {n:03d}권 {fee:.2f}골드"` 같은 정해진 형식의 문자열 리스트로 반환 | scroll.splitjoin | 서고 미로 | 필수 |
 | P0408 | 글자 수 세기 | stdin | `ord(c) - ord("a")`, `[0] * 26`, `print(*cnt)`(백준 10808 유형의 오리지널) | scroll.ascii | 필사실 | 필수 |
