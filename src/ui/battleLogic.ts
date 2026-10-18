@@ -60,14 +60,9 @@ export function bossPhases(problem: Problem): number[] {
   return [...set].sort((a, b) => a - b);
 }
 
-/** 시간 기반 우회 제안 기준(예상 시간 × 2, 최소 10분, design.md §7.1) */
-export function practiceThresholdMs(estimatedMinutes: number): number {
-  return Math.max(estimatedMinutes * 2, 10) * 60_000;
-}
-
 /**
  * 기준 시간(ms): T = min(max(예상 × 2, 10), 20)분(design.md §7.1, 결정 23 P-D1).
- * 해설서 힌트 경로(§5.3)와 연습 제안(단위 3-E3)이 같은 값을 쓴다. 누적 시간(priorElapsedMs + 이번 전투)과 비교한다
+ * 해설서 힌트 경로(§5.3)와 연습 제안(§7.1 시간 기반 우회, 단위 3-E3)이 같은 값을 쓴다. 누적 시간(priorElapsedMs + 이번 전투)과 비교한다
  */
 export function detourThresholdMs(estimatedMinutes: number): number {
   return Math.min(Math.max(estimatedMinutes * 2, 10), 20) * 60_000;

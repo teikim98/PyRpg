@@ -99,7 +99,15 @@ REQUIRED_COMMON_DIALOGUES = [
     "need_scroll", "campfire_rest", "knockout", "solution_unlocked", "retreat",
     "practice_suggest", "shadow_registered", "level_up", "fatal_recursion",
     "solution_unlocked_hint",  # 단위 3-E4: 힌트 경로로 해설서가 열릴 때
+    # 단위 3-E3: 연습 상대 종류별 제안(② 연습 몬스터, ③ 몸풀기, 응용 전투의 몸풀기, ④ 상대 없음)
+    "practice_suggest_monster", "practice_suggest_warmup", "practice_suggest_applied", "practice_suggest_none",
 ]
+# 연습 제안 대사(design.md §6.2): 상대 이름 {target}을 반드시 말하는 것(④ practice_suggest_none은 상대가 없으므로 쓰지 않음)
+PRACTICE_TARGET_DIALOGUES = ["practice_suggest", "practice_suggest_monster", "practice_suggest_warmup", "practice_suggest_applied"]
+# 응용 전투 보상(design.md §7.1, 결정 23 P-E13): 통합형 / 판별형
+APPLIED_REWARDS = {"integrated": {"xp": 200, "gold": 100}, "discriminating": {"xp": 300, "gold": 100}}
+# 응용 전투·연습 몬스터 배치 규칙이 오류가 되는 첫 지역(design.md §6.2: 지역 1~6은 경고)
+PRACTICE_RULES_FROM_REGION = 7
 # region1-spec.md §2, §3
 REQUIRED_REGION_CONTENT = {
     "r01": {
@@ -540,10 +548,26 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
         rep.error(where, "midBoss는 boss와 함께 쓰는 true/false(region06-spec.md §7.1)")
         mid = False
     p["midBoss"] = mid
-    # design.md §7.1~7.2: 일반 100/50, 중간 보스 400/200, 최종 보스 1000/500
-    want_reward = ({"xp": 400, "gold": 200} if mid else {"xp": 1000, "gold": 500}) if p["boss"] else {"xp": 100, "gold": 50}
-    if p["reward"] != want_reward:
-        rep.error(where, f"reward {p['reward']} != {want_reward}(design.md §7.1~7.2)")
+    # 연습 몬스터·응용 전투(design.md §6.2, §11.1, 단위 3-E3): 불리언, boss와 함께 쓰지 않고 서로도 배타
+    for key in ("practice", "applied"):
+        if key in p and not isinstance(p[key], bool):
+            rep.error(where, f"{key}는 true/false(design.md §11.1)")
+            p[key] = False
+    practice, applied = p.get("practice") is True, p.get("applied") is True
+    if p["boss"] and (practice or applied):
+        rep.error(where, "practice·applied는 boss와 함께 쓰지 않음(design.md §11.1)")
+    if practice and applied:
+        rep.error(where, "practice와 applied는 함께 쓰지 않음(design.md §11.1)")
+    # design.md §7.1~7.2: 일반 100/50(연습 몬스터 포함), 중간 보스 400/200, 최종 보스 1000/500,
+    # 응용 전투 통합형 200/100·판별형 300/100
+    if applied and not p["boss"]:
+        if p["reward"] not in APPLIED_REWARDS.values():
+            rep.error(where, f"응용 전투 reward {p['reward']}는 통합형 {APPLIED_REWARDS['integrated']} 또는 "
+                             f"판별형 {APPLIED_REWARDS['discriminating']}(design.md §7.1)")
+    else:
+        want_reward = ({"xp": 400, "gold": 200} if mid else {"xp": 1000, "gold": 500}) if p["boss"] else {"xp": 100, "gold": 50}
+        if p["reward"] != want_reward:
+            rep.error(where, f"reward {p['reward']} != {want_reward}(design.md §7.1~7.2)")
     if p["timeLimitMs"] <= 0 or p["estimatedMinutes"] <= 0:
         rep.error(where, "timeLimitMs/estimatedMinutes는 양수")
 
@@ -991,7 +1015,8 @@ def check_dialogues(rep, where, d):
             if line["speaker"] == "companion" and "emotion" not in line:
                 rep.warn(where, f"{did} {n}번째 줄: 보조 캐릭터 줄에 emotion 없음")
             for ph in re.findall(r"\{(\w+)\}", line["text"]):
-                if ph not in ("player", "companion"):
+                # {target}: 연습 제안 대사의 상대 이름(전투 화면이 바꾼다, 단위 3-E3)
+                if ph not in ("player", "companion") and not (ph == "target" and did.startswith("practice_suggest")):
                     rep.error(where, f"{did} {n}번째 줄: 모르는 치환자 {{{ph}}}")
     return d
 
@@ -1272,6 +1297,7 @@ def check_region(rep, runner, pool, folder, sprites, common_dialogues, items):
     for m in mids:
         if not set(problems[m]["requires"]) < set(scrolls):
             rep.error(rid, f"중간 보스 {m}의 requires는 지역 주문서의 일부여야 함")
+    check_practice_applied(rep, rid, order, problems, scrolls)
 
     # 명세(region1-spec.md)와 대조
     spec = REQUIRED_REGION_CONTENT.get(rid)
@@ -1297,6 +1323,44 @@ def check_region(rep, runner, pool, folder, sprites, common_dialogues, items):
         rep.warn(rid, "map.tmj가 없어서 맵 오브젝트 참조 검사를 건너뜀")
 
 
+def check_practice_applied(rep, rid, order, problems, scrolls):
+    """응용 전투와 연습 몬스터의 지역 규칙(design.md §6.2, 단위 3-E3). 지역 1~6은 경고, 지역 7부터 오류.
+    - 응용 전투: requires = 지역 주문서 전부, 통합형(200/100)·판별형(300/100) 각 1개(지역 7부터, 지역 17 제외)
+    - 연습 몬스터: 주문서마다 1개 이상(requires가 그 주문서 하나), estimatedMinutes ≤ 같은 주문서의 첫 필수 문제
+      ('첫 필수 문제' = requires 집합이 같고 practice·applied·boss가 아닌 문제 가운데 ID가 가장 작은 것.
+      맵 위의 실제 배치(비석 뒤, 첫 필수 몬스터 앞, 숨겨진 길 끝 아님)는 tools/maps/common.py check_practice_placement)"""
+    strict = order >= PRACTICE_RULES_FROM_REGION
+    report = rep.error if strict else rep.warn
+    applied = {pid: p for pid, p in problems.items() if p.get("applied") is True and not p["boss"]}
+    for pid, p in applied.items():
+        if set(p["requires"]) != set(scrolls):
+            rep.error(f"{rid}/{pid}", "응용 전투의 requires는 지역 주문서 전부(design.md §6.2)")
+    if strict and order < 17:
+        for kind, label in (("integrated", "통합형"), ("discriminating", "판별형")):
+            n = sum(1 for p in applied.values() if p["reward"] == APPLIED_REWARDS[kind])
+            if n != 1:
+                rep.error(rid, f"응용 전투 {label}({APPLIED_REWARDS[kind]['xp']} XP)은 지역마다 1개: {n}개(design.md §6.2)")
+
+    def first_required(req):
+        cands = sorted(pid for pid, p in problems.items()
+                       if set(p["requires"]) == set(req) and not p["boss"] and p.get("practice") is not True
+                       and p.get("applied") is not True)
+        return cands[0] if cands else None
+
+    practice = {pid: p for pid, p in problems.items() if p.get("practice") is True}
+    missing = [s for s in sorted(scrolls) if not any(p["requires"] == [s] for p in practice.values())]
+    if missing:
+        report(rid, f"연습 몬스터(practice: true)가 없는 주문서 {len(missing)}개: {', '.join(missing)}"
+                    f"(design.md §6.2 연습 몬스터 배치{'' if strict else ', 지역 1~6은 경고'})")
+    for pid, p in sorted(practice.items()):
+        first = first_required(p["requires"])
+        if first is None:
+            report(f"{rid}/{pid}", f"연습 몬스터와 같은 주문서({p['requires']})의 필수 문제가 없음")
+        elif p["estimatedMinutes"] > problems[first]["estimatedMinutes"]:
+            report(f"{rid}/{pid}", f"연습 몬스터 estimatedMinutes {p['estimatedMinutes']} > 같은 주문서 첫 필수 문제 "
+                                   f"{first}의 {problems[first]['estimatedMinutes']}(design.md §6.2)")
+
+
 def main():
     global CONTENT
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
@@ -1317,6 +1381,12 @@ def main():
     for did in REQUIRED_COMMON_DIALOGUES:
         if did not in common:
             rep.error("common/dialogue.json", f"대사 ID {did!r}가 없음")
+    for did in PRACTICE_TARGET_DIALOGUES:
+        if isinstance(common.get(did), list) and not any("{target}" in str(x.get("text", "")) for x in common[did] if isinstance(x, dict)):
+            rep.error("common/dialogue.json", f"{did}에 상대 이름 {{target}}이 없음(design.md §6.2: 상대가 있을 때만 '있다'고 이름을 말함)")
+    if isinstance(common.get("practice_suggest_none"), list) and \
+            any("{target}" in str(x.get("text", "")) for x in common["practice_suggest_none"] if isinstance(x, dict)):
+        rep.error("common/dialogue.json", "practice_suggest_none은 상대가 없을 때라 {target}을 쓰지 않음")
     check_companion(rep, runner, portraits)
     items = {i.get("id") for i in (load_json(rep, os.path.join(CONTENT, "items.json")) or []) if isinstance(i, dict)}
 

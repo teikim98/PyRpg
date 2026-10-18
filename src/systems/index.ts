@@ -10,3 +10,4 @@ export * from "./quests";
 export * from "./items";
 export * from "./titles";
 export * from "./shadowBoard";
+export * from "./practice";

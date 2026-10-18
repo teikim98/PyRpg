@@ -3,7 +3,7 @@ import type { Problem } from "../contracts/content";
 import type { SaveData } from "../contracts/state";
 import type { HudState } from "../contracts/ui";
 import { levelFromXp, levelProgress, maxHp } from "./level";
-import { settleStreak, weekDays } from "./streak";
+import { markActivity, settleStreak, weekDays } from "./streak";
 import { studyDate } from "./time";
 
 /**
@@ -24,21 +24,36 @@ export interface LessonResult {
   levelAfter: number;
   /** 처음 완료했을 때만 true(다시 열람하면 보상 없음) */
   firstTime: boolean;
+  /** 이번 첫 완료로 오늘이 처음 학습일로 인정됐는가(opts.now를 넘겼을 때만, design.md §7.5) */
+  streakCounted: boolean;
 }
 
-/** 레슨 완료: 주문서 획득 + 30 XP. 이미 완료한 레슨은 보상 없음 */
-export function completeLesson(save: SaveData, lesson: { id: string; scroll: { id: string } }, opts: { maxHpBonus?: number } = {}): LessonResult {
+/**
+ * 레슨 완료: 주문서 획득 + 30 XP. 이미 완료한 레슨은 보상 없음.
+ * opts.now를 넘기면 처음 완료한 날을 스트릭 학습일로 인정한다(오늘 처치 수는 올리지 않음, 단위 3-E3)
+ */
+export function completeLesson(
+  save: SaveData,
+  lesson: { id: string; scroll: { id: string } },
+  opts: { maxHpBonus?: number; now?: Date } = {},
+): LessonResult {
   const s: SaveData = structuredClone(save);
   const levelBefore = levelFromXp(s.player.xp);
   const firstTime = !s.lessonsCompleted.includes(lesson.id);
+  let streakCounted = false;
   if (firstTime) {
     s.lessonsCompleted.push(lesson.id);
     s.player.xp += LESSON_XP;
+    if (opts.now) {
+      const m = markActivity(s.streak, opts.now, { countOnly: true });
+      s.streak = m.state;
+      streakCounted = m.counted;
+    }
   }
   if (!s.scrolls.includes(lesson.scroll.id)) s.scrolls.push(lesson.scroll.id);
   const levelAfter = levelFromXp(s.player.xp);
   if (levelAfter > levelBefore) s.player.hp = maxHp(levelAfter, opts.maxHpBonus ?? 0);
-  return { save: s, xp: firstTime ? LESSON_XP : 0, levelBefore, levelAfter, firstTime };
+  return { save: s, xp: firstTime ? LESSON_XP : 0, levelBefore, levelAfter, firstTime, streakCounted };
 }
 
 /** 캠프파이어: HP 회복 + 마지막 캠프파이어 갱신(저장은 앱이 바로 한다) */

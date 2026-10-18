@@ -114,8 +114,16 @@ export interface Problem {
   midBoss?: boolean;
   /** 보스만. 페이즈 순서대로 */
   phases?: BossPhase[];
-  /** 같은 개념 연습 전투(시간 기반 우회, §7.1) */
+  /**
+   * 연습 몬스터(design.md §6.2, §11.1): 맵 위의 숨겨지지 않은 선택 몬스터. 보상은 일반 전투와 같고,
+   * 이 전투에서는 연습 제안을 하지 않는다. 막힌 문제의 연습 상대 탐색 ②가 이름을 안내한다(src/systems/practice.ts)
+   */
   practice?: boolean;
+  /**
+   * 응용 전투(design.md §6.2, §11.1, 지역 7~16, 결정 23 P-E13). 유형은 보상으로 구분한다: 통합형 200 XP·100골드, 판별형 300 XP·100골드.
+   * requires는 지역 주문서 전부, boss·practice와 함께 쓰지 않는다(tools/verify_content.py). 막혔을 때는 몸풀기 연습만 제안한다
+   */
+  applied?: boolean;
   /** 그림자 몬스터 개념 단위(§7.6). 보통 주문서 ID */
   concept: string;
   /** 일반 테스트의 시간 상한(ms). 로컬 검증 기준 */

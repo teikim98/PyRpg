@@ -3,7 +3,18 @@
 import type { DialogueLine, GameContent, ItemDef, Lesson, Problem, Region } from "../contracts/content";
 import type { PythonRunner } from "../contracts/runner";
 import type { BattleOutcome, Facing, SaveData } from "../contracts/state";
-import type { BattleProgress, BoardView, EquipmentView, NameContext, QuestPanelView, ShopView, StreakView, TitlesView, UiServices } from "../contracts/ui";
+import type {
+  BattleProgress,
+  BoardView,
+  EquipmentView,
+  NameContext,
+  PracticeOffer,
+  QuestPanelView,
+  ShopView,
+  StreakView,
+  TitlesView,
+  UiServices,
+} from "../contracts/ui";
 import type { MapObjectDef, WorldController, WorldFactory } from "../contracts/world";
 import { OPPOSITE } from "../game/grid";
 import { diagnoseResult } from "../python/diagnose";
@@ -14,6 +25,7 @@ import { createNewSave } from "../state/newGame";
 import {
   accessorySlots,
   applyBattleOutcome,
+  applyPracticeOutcome,
   applyQuestEvent,
   awardTitles,
   boardShadows,
@@ -26,6 +38,7 @@ import {
   emptyRecord,
   ensureDailyQuests,
   equipmentEffects,
+  findPracticeOffer,
   grantItem,
   hudState,
   isFinalBoss,
@@ -60,6 +73,7 @@ import {
 } from "../systems";
 import { codexLinkFor } from "./codexLink";
 import { objectParticle } from "./josa";
+import { reachableMonsterProblems } from "./reach";
 import { checkRequires, missingScrolls } from "./requires";
 import { arrivalSpot } from "./travel";
 
@@ -289,7 +303,8 @@ export class App {
     if (first) await this.say(`lesson_${lesson.id}_intro`);
     const { completed } = await this.deps.ui.lesson.open(lesson, this.deps.runner, this.names);
     if (!completed) return;
-    const r = completeLesson(this.save, lesson, { maxHpBonus: this.hpBonus() });
+    // 새 레슨 첫 완료도 그날을 스트릭 학습일로 인정한다(오늘 처치 수는 그대로, design.md §7.5, 단위 3-E3)
+    const r = completeLesson(this.save, lesson, { maxHpBonus: this.hpBonus(), now: this.now() });
     this.save = r.save;
     if (r.firstTime) this.questEvent({ type: "lesson" });
     await this.persist();
@@ -430,6 +445,8 @@ export class App {
     const level = levelFromXp(this.save.player.xp);
     const fx = this.effects();
     const potion = this.potionItem();
+    // 막혔을 때 제안할 연습 상대(design.md §6.2, 단위 3-E3). 그림자전·연습 몬스터 전투에서는 제안하지 않는다
+    const practiceOffer = shadow || problem.practice ? undefined : this.findPracticeOffer(problem);
     // 전투 도중의 자동 저장: 힌트·해설서·반격·탭 숨김이 있었으면 '지금 후퇴(HP 0이면 쓰러짐)했다면'의 결과를 저장한다.
     // 그러지 않으면 새로고침으로 힌트 대가·해설서(보상 0)·쓰러짐 기록을 지울 수 있다(§5.3, §7.6)
     let progress: BattleProgress | null = null;
@@ -486,10 +503,11 @@ export class App {
       },
       companionLines: {
         fatalRecursion: this.deps.content.commonDialogues.fatal_recursion,
-        practiceSuggest: this.deps.content.commonDialogues.practice_suggest,
+        ...this.practiceLines(),
         solutionUnlockedHint: this.deps.content.commonDialogues.solution_unlocked_hint,
       },
       shadow,
+      ...(practiceOffer ? { practiceOffer } : {}),
       perks: {
         freeHint2: fx.guideFeather,
         targetComplexity: fx.targetComplexity ? problem.targetComplexity : undefined,
@@ -529,8 +547,78 @@ export class App {
     }
     await this.persist();
     this.refreshHud();
-    await this.afterBattle(problem, opts.object, result.events, result.summary, shadow);
+    // [연습 전투] 버튼(결정 23 P-E5): 이 전투는 후퇴로 적용했고, 후퇴 대사 없이 바로 연습 전투를 연다
+    const practice = outcome.startPractice && outcome.result === "retreat" && practiceOffer && "problem" in practiceOffer ? practiceOffer.problem : null;
+    await this.afterBattle(problem, opts.object, result.events, result.summary, shadow, practice !== null);
     await this.flushNotices();
+    if (practice) await this.runPracticeBattle(practice);
+  }
+
+  /**
+   * 연습 전투(design.md §7.1 "'연습 몬스터'와 '연습 전투'는 다릅니다"): 이미 푼 문제의 변형. 반격·보상·문제 기록·그림자·history 없음,
+   * 해설서·회복약·연습 제안 없음, 빈 틀에서 시작, 퀘스트·칭호에 넣지 않음(결정 23 P-E8). 이기면 그날을 스트릭 학습일로 인정
+   */
+  private async runPracticeBattle(problem: Problem): Promise<void> {
+    const fx = this.effects();
+    const outcome = await this.deps.ui.battle.open({
+      problem,
+      runner: this.deps.runner,
+      companion: this.deps.content.companion,
+      names: this.names,
+      player: { hp: this.save.player.hp, maxHp: maxHp(levelFromXp(this.save.player.xp), fx.maxHpBonus) },
+      knockouts: 0,
+      hintLevel: 0,
+      priorElapsedMs: 0,
+      regionOrder: this.regionOrderOf(problem),
+      traceback: this.deps.content.traceback,
+      explain: explainError,
+      diagnose: diagnoseResult,
+      // 작성 코드·진행은 저장하지 않는다(연습은 기록을 바꾸지 않는다)
+      onDraft: () => undefined,
+      companionLines: { fatalRecursion: this.deps.content.commonDialogues.fatal_recursion },
+      practice: true,
+      perks: fx.lineCounts ? { lineCounts: true } : {},
+    });
+    const r = applyPracticeOutcome(this.save, outcome, this.now());
+    this.save = r.save;
+    await this.persist();
+    this.refreshHud();
+    if (outcome.result === "victory") {
+      this.deps.ui.hud.toast(r.streakCounted ? "연습 전투 승리! 보상은 없지만 오늘 공부한 날로 인정됐어." : "연습 전투 승리! 이제 원래 버그에 다시 도전해 보자.");
+    }
+  }
+
+  /** 막힌 문제의 연습 상대(src/systems/practice.ts). ②의 '지금 걸어서 닿는가'는 지금 지역 맵에서 본다 */
+  private findPracticeOffer(problem: Problem): PracticeOffer {
+    const now = this.now();
+    // ①③의 변형은 그날 그림자 게시판에 오른 문제를 피한다
+    const avoid = new Set(boardShadows(this.save, now).map((s) => s.entry.problemId));
+    const region = this.region;
+    let reach: Set<string> | null = null;
+    const canReach = (id: string) => {
+      if (reach === null) {
+        try {
+          reach = reachableMonsterProblems(region, new Set(this.save.removedObjects), this.world.getPlayerPosition());
+        } catch (e) {
+          console.error("연습 몬스터 도달 계산 실패", e);
+          reach = new Set();
+        }
+      }
+      return reach.has(id);
+    };
+    return findPracticeOffer({ problem, problems: this.allProblems(), save: this.save, avoid, ...(problem.regionId === region.id ? { canReach } : {}) });
+  }
+
+  /** 연습 제안 공통 대사(content/common/dialogue.json practice_suggest*) */
+  private practiceLines() {
+    const d = this.deps.content.commonDialogues;
+    return {
+      practiceSuggest: d.practice_suggest,
+      practiceSuggestMonster: d.practice_suggest_monster,
+      practiceSuggestWarmup: d.practice_suggest_warmup,
+      practiceSuggestApplied: d.practice_suggest_applied,
+      practiceSuggestNone: d.practice_suggest_none,
+    };
   }
 
   /** 전투 결과를 저장 데이터에 적용한다(저장은 부르는 쪽에서). 승리면 퀘스트·칭호·보상 아이템까지 */
@@ -570,6 +658,8 @@ export class App {
     events: BattleEvent[],
     summary: Parameters<UiServices["reward"]["show"]>[0],
     shadow = false,
+    /** [연습 전투]로 끝난 후퇴: 돌려세우기만 하고 후퇴 대사는 하지 않는다(바로 연습 전투가 열린다) */
+    toPractice = false,
   ): Promise<void> {
     const ui = this.deps.ui;
     for (const e of events) {
@@ -595,7 +685,7 @@ export class App {
           this.world.teleport(pos.x, pos.y, OPPOSITE[pos.facing]);
           this.save.location = { regionId: this.region.id, x: pos.x, y: pos.y, facing: OPPOSITE[pos.facing] };
           this.scheduleSave(this.save);
-          await this.sayCommon("retreat");
+          if (!toPractice) await this.sayCommon("retreat");
           break;
         }
         case "solutionUnlocked":

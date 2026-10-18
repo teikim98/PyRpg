@@ -291,6 +291,62 @@ def check_runes_before_monsters(info: dict, stages: list[Stage], region_dir: Pat
                 errors.append(f"{oid} needs {scroll}, but {rune} is not reachable before {oid}")
     return errors
 
+def check_practice_placement(info: dict, stages: list[Stage], region_dir: Path, hidden: set[tuple[int, int]],
+                             optional: set[str]) -> list[str]:
+    """연습 몬스터(problem.json의 practice: true) 배치(design.md §6.2 '연습 몬스터 배치', 단위 3-E3). 지역 7 생성기부터 부른다
+    (지역 1~6은 이 규칙 전에 만들어져 부르지 않는다. 예: 지역 4의 m_P0403은 m_P0401을 이긴 뒤에야 닿는다).
+    연습 몬스터마다:
+    1. 선택 몬스터(optional)이고 진행 단계에서 치우지 않는다
+    2. 숨겨진 길 칸(hidden: 생성기가 아는 숨겨진 통로 칸)을 막은 채로도 닿는다(숨겨진 길 끝 금지)
+    3. 같은 주문서(requires 집합이 같음)의 첫 필수 몬스터(진행 단계에서 가장 먼저 치우는 것)를 치우기 전에 닿는다
+    4. 그 주문서의 비석보다 먼저 닿지 않는다(비석 뒤): 단계마다 연습 몬스터에 닿으면 비석에도 닿아야 한다
+    게임의 연습 상대 탐색 ②(src/app/reach.ts)는 숨겨진 길을 구별하지 않으므로 2가 '숨겨지지 않은' 조건을 지킨다."""
+    errors: list[str] = []
+    rune_of = {}
+    for lj in sorted((region_dir / "lessons").glob("*/lesson.json")):
+        lesson = json.loads(lj.read_text(encoding="utf-8"))
+        rune_of[lesson["scroll"]["id"]] = f"rune_{lesson['id']}"
+    monsters: dict[str, dict] = {}
+    for o in info["objects"]:
+        if o["type"] != "monster":
+            continue
+        pid = next(p["value"] for p in o.get("properties", []) if p["name"] == "problem")
+        monsters[o["name"]] = json.loads((region_dir / "problems" / pid / "problem.json").read_text(encoding="utf-8"))
+    removal_order = [r for r, _, _ in stages if r]
+    for oid, prob in sorted(monsters.items()):
+        if prob.get("practice") is not True:
+            continue
+        req = set(prob.get("requires", []))
+        if oid not in optional:
+            errors.append(f"{oid}: practice monster must be optional")
+        if oid in removal_order:
+            errors.append(f"{oid}: practice monster must not be removed on the main path")
+        if not touches(info, reachable(info, set(removal_order), hidden), oid):
+            errors.append(f"{oid}: practice monster must be reachable without hidden passages")
+        firsts = [r for r in removal_order if r in monsters and set(monsters[r].get("requires", [])) == req
+                  and not monsters[r].get("boss") and monsters[r].get("practice") is not True
+                  and monsters[r].get("applied") is not True]
+        if not firsts:
+            errors.append(f"{oid}: no required monster with the same requires {sorted(req)}")
+        else:
+            first = firsts[0]
+            before = reachable(info, removed_before(stages, first) - {first}, hidden)
+            if not touches(info, before, oid):
+                errors.append(f"{oid}: practice monster must be reachable before {first} (the first required monster of its scroll)")
+        runes = [rune_of[sc] for sc in sorted(req) if sc in rune_of]
+        removed: set[str] = set()
+        for remove, _, _ in [(None, [], [])] + stages:
+            if remove:
+                removed.add(remove)
+            area = reachable(info, removed)
+            if touches(info, area, oid):
+                for rune in runes:
+                    if not touches(info, area, rune):
+                        errors.append(f"{oid}: practice monster is reachable before {rune} (must be behind its rune)")
+                break
+    return errors
+
+
 def dump(tmj: dict, width: int) -> str:
     """JSON으로 쓰되 타일 데이터는 맵 한 줄을 한 줄로 쓴다(diff를 읽기 쉽게)."""
     rows: dict[str, str] = {}

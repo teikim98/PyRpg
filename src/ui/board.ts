@@ -62,6 +62,8 @@ export function streakPanel(s: StreakView): HTMLElement {
       `모닥불 불씨 ${s.embers} · 얼음 룬 ${s.iceRunes} (합쳐서 ${s.maxProtections}개까지). 빠진 날이 생기면 불씨부터 자동으로 써서 지켜 줘.`,
     ),
     h("p", { class: "streak-today" }, `오늘 처치 ${s.todayCount}/${s.emberThreshold} · ${s.emberThreshold}번 처치하면 불씨 1개 충전`),
+    // 스트릭 인정 조건(design.md §7.5, 단위 3-E3): 연습 전투 승리·새 레슨 첫 완료도 그날을 인정하지만 처치 수에는 넣지 않는다
+    h("p", { class: "streak-rule" }, "전투나 그림자 1마리를 처치하면 오늘이 인정돼. 연습 전투 승리나 새 레슨 첫 완료도 인정되지만, 불씨·복구의 처치 수에는 세지 않아."),
   ];
   if (s.repair) {
     els.push(
