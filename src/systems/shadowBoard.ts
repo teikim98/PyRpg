@@ -19,7 +19,8 @@ export const SHADOW_PHASE2_NOTE = "> 1페이즈를 통과하면 그림자가 '�
 /**
  * 2페이즈를 붙이지 않는 보스(1페이즈만 내고 예상 시간은 절반, 결정 23 P-E11).
  * 기준: Pyodide에서 첫 시전(입력 생성 포함) 20초, 두 번째 시전 10초, slow.py 시전 15초 가운데 하나라도 넘으면 제외.
- * 값은 tests/e2e/shadow-measure.spec.ts(PYRPG_MEASURE_SHADOW=1)로 잰 결과(design.md §7.6 보스 그림자)
+ * 값은 tests/e2e/shadow-measure.spec.ts(PYRPG_MEASURE_SHADOW=1)로 잰 결과(design.md §7.6 보스 그림자).
+ * 2026-10-19 이 PC 단독 측정(중앙값): 가장 긴 P0411도 첫 6.3초·두 번째 1.8초·slow.py 5.8초라 보스 7개 모두 포함(빈 목록)
  */
 export const SHADOW_PHASE2_EXCLUDE: ReadonlySet<string> = new Set<string>();
 /** 보스 그림자 보상의 기준(일반 전투 보상, design.md §7.1). 여기에 그림자 비율 50%가 곱해져 50 XP·25골드 */
