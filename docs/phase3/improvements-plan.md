@@ -106,7 +106,7 @@
 
 ## 4. 단위 3-B: 묶음 B(선행 지식 검사)
 
-**목표**: 레슨 27개의 `lesson.json`에 `introduces`를 채우고, `npm run verify`가 Python `ast`로 "학습 시점까지 소개되지 않은 것"을 R2 기준(모범답안·레슨 예제는 오류, 힌트·보스 `slow.py`는 경고)으로 잡습니다. 지역 7부터 README 지역 7 규칙 5를 사람이 대조하지 않고 검사기가 지킵니다. 바탕은 `docs/improvements/prototype/`의 프로토타입(태거 `tagger.py`, 검사 `prereq_proto.py`, 지금 콘텐츠 기준 `introduces` 초안 `introduces-draft.json`)입니다.
+**목표**: 레슨 27개의 `lesson.json`에 `introduces`를 채우고, `npm run verify`가 Python `ast`로 "학습 시점까지 소개되지 않은 것"을 R2 기준(모범답안·레슨 예제는 오류, 힌트·보스 `slow.py`는 경고)으로 잡습니다. 지역 7부터 README 지역 7 규칙 5를 사람이 대조하지 않고 검사기가 지킵니다. 바탕은 `docs/improvements/prototype/`의 프로토타입(태거 `tagger.py`, 검사 `prereq_proto.py`, 지금 콘텐츠 기준 `introduces` 초안 `introduces.json`)입니다.
 
 **데이터**: 레슨마다 `lesson.json`의 `scroll` 뒤에 `"introduces": [...]`(모든 레슨에 필수, `[]` 허용, 같은 태그는 전체에서 한 레슨만). 예외는 `prereqExceptions: [{"tag", "reason"}]`(`problem.json`·`lesson.json`). 어휘는 02 §4의 형식: `call:<내장>`, `method:<이름>`(자료형 추론 없이 이름만, 알려진 한계), `import:<모듈>`, `api:<모듈>.<경로>`, `kwarg:<이름>`, `op:<기호>`, 고정 문법 태그 목록(`for`, `for-iter`, `nested-loop`, `tuple-assign`, `unpack-assign`, `subscript-unpack`, `listcomp`, `fstring`, `recursion`, `nested-def`, `try` 등)과 새 태그 `from-import`, `try-show-error`(레슨 전용). 어휘 파일은 따로 두지 않고 검사기 상수로 둡니다. 게임은 이 필드를 읽지 않으므로 **`src/`의 계약·로더는 고치지 않습니다**(`buildLesson`이 필드를 골라 복사함, `src/content/loader.ts:206-220`).
 
