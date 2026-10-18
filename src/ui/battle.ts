@@ -2,7 +2,7 @@
 import type { DialogueLine, Emotion } from "../contracts/content";
 import type { JudgeResult, JudgeStage, PyError, TestResult } from "../contracts/runner";
 import type { BattleOutcome, HintLevel } from "../contracts/state";
-import type { BattleContext, BattleUI } from "../contracts/ui";
+import type { BattleContext, BattleUI, PracticeOffer } from "../contracts/ui";
 import { josa, withJosa } from "../app/josa";
 import { createPortrait, createSprite } from "./assets";
 import {
@@ -16,13 +16,13 @@ import {
   castStageText,
   computeDamage,
   createActiveTimer,
+  detourThresholdMs,
   disclosureMode,
   firstFailed,
   formatRunOutput,
   genericVerdictMessage,
   hintShortCost,
   lineCountLabels,
-  practiceThresholdMs,
   solutionAccess,
   testsInScope,
   timeGaugePercent,
@@ -94,7 +94,9 @@ export function createBattleUI(env: UiEnv): BattleUI {
         let accessTick: number | null = null;
         // 시간 결계 페이즈(2페이즈 이후)를 모두 첫 시전에 통과했는가(칭호 '시간을 돌린 자')
         let barrierFirstTry = true;
-        let potions = ctx.potions?.count ?? 0;
+        // 연습 전투(design.md §7.1, 단위 3-E3): 반격·보상·기록 없음, 해설서·회복약·연습 제안 없음, 힌트는 대가 없이
+        const practiceMode = ctx.practice === true;
+        let potions = practiceMode ? 0 : (ctx.potions?.count ?? 0);
         const freeHint2 = ctx.perks?.freeHint2 === true;
         let closed = false;
         // 승리·쓰러짐 배너가 뜬 뒤에는 버튼을 다시 켜지 않는다
@@ -108,12 +110,15 @@ export function createBattleUI(env: UiEnv): BattleUI {
 
         const modal = env.stack.open({ className: "battle-modal", label: `전투: ${p.enemy.name}` });
         const kind = bossKind(p);
-        const root = h("div", { class: `battle ${p.boss ? "is-boss" : ""} ${p.boss && p.midBoss ? "is-midboss" : ""} ${ctx.shadow ? "is-shadow" : ""}`, "data-problem": p.id });
+        const root = h("div", {
+          class: `battle ${p.boss ? "is-boss" : ""} ${p.boss && p.midBoss ? "is-midboss" : ""} ${ctx.shadow ? "is-shadow" : ""} ${practiceMode ? "is-practice" : ""}`,
+          "data-problem": p.id,
+        });
         modal.el.append(root);
 
         // ---------- 위: 적과 나 ----------
         const sprite = createSprite(p.enemy.sprite, p.boss ? 3 : 4, p.enemy.name);
-        const enemyName = h("div", { class: "enemy-name" }, ctx.shadow ? `${p.enemy.name}의 그림자` : p.enemy.name);
+        const enemyName = h("div", { class: "enemy-name" }, ctx.shadow ? `${p.enemy.name}의 그림자` : practiceMode ? `${p.enemy.name} (연습)` : p.enemy.name);
         const phaseLabel = h("div", { class: "phase-label", hidden: !phases.length });
         const segs = h("div", { class: "enemy-hp", role: "meter", "aria-label": `${p.enemy.name} HP` });
         const hiddenInfo = h("span", { class: "enemy-hidden" });
@@ -319,8 +324,10 @@ export function createBattleUI(env: UiEnv): BattleUI {
           b.addEventListener("click", () => void openHint(lv));
           return b;
         });
-        const btnSolution = h("button", { class: "btn act-solution", type: "button", hidden: ctx.shadow === true }, "해설서");
+        const btnSolution = h("button", { class: "btn act-solution", type: "button", hidden: ctx.shadow === true || practiceMode }, "해설서");
         const btnPotion = h("button", { class: "btn act-potion", type: "button", hidden: potions <= 0 });
+        // 연습 제안이 시작할 수 있는 상대(①③)일 때만 보인다(결정 23 P-E5: 누르면 이 전투는 후퇴 처리)
+        const btnPractice = h("button", { class: "btn act-practice", type: "button", hidden: true, title: "이 전투는 후퇴로 처리하고 연습 전투를 시작" }, "연습 전투");
         const btnRetreat = h("button", { class: "btn act-retreat", type: "button" }, "후퇴");
         const actions = h(
           "div",
@@ -331,6 +338,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
           ...hintBtns,
           btnSolution,
           btnPotion,
+          btnPractice,
           h("span", { class: "act-sep", "aria-hidden": "true" }),
           btnRetreat,
         );
@@ -356,9 +364,16 @@ export function createBattleUI(env: UiEnv): BattleUI {
             const opened = lv <= hintLevel;
             b.disabled = busy || lv > hintLevel + 1;
             b.classList.toggle("is-open", opened);
-            const free = lv === 2 && freeHint2;
-            b.textContent = opened ? `힌트 ${lv} ✓` : free ? "힌트 2 (깃털: 무료)" : `힌트 ${lv} (${hintShortCost(lv)})`;
-            b.title = opened ? "다시 보기" : free ? "길잡이 깃털: 보상 대가 없음(그림자 몬스터 등록은 그대로)" : `대가: ${HINT_COSTS[lv].label}`;
+            const free = lv === 2 && freeHint2 && !practiceMode;
+            // 연습 전투는 보상·기록이 없으므로 힌트에 대가가 없다
+            b.textContent = opened ? `힌트 ${lv} ✓` : practiceMode ? `힌트 ${lv}` : free ? "힌트 2 (깃털: 무료)" : `힌트 ${lv} (${hintShortCost(lv)})`;
+            b.title = opened
+              ? "다시 보기"
+              : practiceMode
+              ? "연습 전투: 대가 없음"
+              : free
+              ? "길잡이 깃털: 보상 대가 없음(그림자 몬스터 등록은 그대로)"
+              : `대가: ${HINT_COSTS[lv].label}`;
             b.classList.toggle("is-free", free && !opened);
           });
           const acc = access();
@@ -368,17 +383,18 @@ export function createBattleUI(env: UiEnv): BattleUI {
           btnSolution.textContent = solutionViewed ? "해설서" : acc.label;
           btnSolution.dataset.via = solutionViewed ? "viewed" : (acc.via ?? "locked");
           // 시간 조건만 남았으면 1초마다 다시 그린다(그림자전에는 해설서가 없다)
-          const wantTick = !ctx.shadow && !ended && !closed && !solutionViewed && acc.timeOnly;
+          const wantTick = !ctx.shadow && !practiceMode && !ended && !closed && !solutionViewed && acc.timeOnly;
           if (wantTick && accessTick === null) accessTick = window.setInterval(updateButtons, 1000);
           else if (!wantTick && accessTick !== null) {
             window.clearInterval(accessTick);
             accessTick = null;
           }
-          if (!ctx.shadow && acc.via === "hint" && !hintUnlockSaid && !solutionViewed && !busy && !ended && !closed) announceHintUnlock();
+          if (!ctx.shadow && !practiceMode && acc.via === "hint" && !hintUnlockSaid && !solutionViewed && !busy && !ended && !closed) announceHintUnlock();
           btnPotion.hidden = potions <= 0;
           btnPotion.textContent = `${ctx.potions?.name ?? "회복약"} ×${potions}`;
           btnPotion.disabled = busy || ended || hp >= maxHp;
           btnPotion.title = `HP ${ctx.potions?.heal ?? 0} 회복`;
+          btnPractice.disabled = busy || ended;
         };
         const setBusy = (v: boolean) => {
           busy = v || ended;
@@ -601,13 +617,19 @@ export function createBattleUI(env: UiEnv): BattleUI {
             if (phases.length && phaseIdx >= 1) barrierFirstTry = false;
             // 해설서 힌트 경로: 힌트 3을 연 뒤의 실패만 센다(fatal 포함, 결정 23 P-E3)
             if (hintLevel >= 3) failsAfterHint3++;
+            const ex = explainResult(res);
+            const fb = buildCastFeedback(res, disclosureMode(ctx.regionOrder, p.boss));
+            if (practiceMode) {
+              // 연습 전투는 반격하지 않는다
+              say(ex.emotion, `${ex.html}<div class="counter is-practice">연습 전투라 반격은 없어. 천천히 고쳐 보자.</div>`, detailsEl(fb));
+              timers.push(window.setTimeout(refillEnemy, 900));
+              return;
+            }
             const dmg = computeDamage(p.enemy.attack, res.passed, res.total);
             setHp(hp - dmg);
             restartAnim(root, "is-damaged");
             floatText(`-${dmg}`, "float-dmg");
             reportProgress();
-            const ex = explainResult(res);
-            const fb = buildCastFeedback(res, disclosureMode(ctx.regionOrder, p.boss));
             say(ex.emotion, `${ex.html}<div class="counter">${escapeHtml(p.enemy.name)}의 반격! HP −${dmg}</div>`, detailsEl(fb));
             timers.push(window.setTimeout(refillEnemy, 900));
             if (hp <= 0) {
@@ -653,8 +675,13 @@ export function createBattleUI(env: UiEnv): BattleUI {
             console.error(e);
           }
           restartAnim(sprite, "is-defeated");
-          say("happy", `해냈어! ${escapeHtml(withJosa(p.enemy.name, "을/를"))} 정화했어!`);
           setBusy(true);
+          if (practiceMode) {
+            say("happy", "연습 성공! 이 감각 그대로 원래 버그에 다시 도전해 보자.");
+            showBanner("연습 완료!", "보상은 없지만, 연습 전투 승리도 오늘 공부한 날로 인정돼.", "계속", "is-victory is-practice", () => finish("victory"));
+            return;
+          }
+          say("happy", `해냈어! ${escapeHtml(withJosa(p.enemy.name, "을/를"))} 정화했어!`);
           showBanner("정화 완료!", `${withJosa(p.enemy.name, "이/가")} 빛이 되어 흩어졌다.`, "계속", "is-victory", () => finish("victory"));
         };
 
@@ -668,7 +695,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
 
         const openHint = async (lv: 1 | 2 | 3) => {
           if (busy || lv > hintLevel + 1) return;
-          if (lv > hintLevel && lv > 1) {
+          if (lv > hintLevel && lv > 1 && !practiceMode) {
             const cost = lv === 2 && freeHint2 ? "길잡이 깃털 덕분에 보상은 그대로야. 그래도 그림자 몬스터로는 등록돼" : `이 힌트를 열면 ${HINT_COSTS[lv].label}`;
             const ok = await confirmDialog(env, `힌트 ${lv}단계`, `${cost}. 열어 볼까?`, "열기");
             if (!ok || closed) return;
@@ -714,7 +741,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
         });
 
         const openSolution = async () => {
-          if (busy || ctx.shadow) return;
+          if (busy || ctx.shadow || practiceMode) return;
           if (!solutionViewed) {
             if (!access().unlocked) return;
             const ok = await confirmDialog(env, "해설서", "해설서를 열면 이 전투의 보상이 0이 되고, 이 개념이 그림자 몬스터로 등록돼. 열어 볼까?", "해설서 열기");
@@ -750,7 +777,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
           updateMsgMore();
         };
 
-        const outcomeOf = (result: BattleOutcome["result"]): BattleOutcome => ({
+        const outcomeOf = (result: BattleOutcome["result"], startPractice = false): BattleOutcome => ({
           problemId: p.id,
           result,
           attempts,
@@ -760,6 +787,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
           hpLeft: result === "knockout" ? 0 : hp,
           elapsedMs: Math.round(timer.elapsed()),
           ...(phases.length > 1 && result === "victory" ? { timeBarrierFirstTry: barrierFirstTry } : {}),
+          ...(startPractice ? { startPractice: true } : {}),
         });
 
         const usePotion = () => {
@@ -778,13 +806,13 @@ export function createBattleUI(env: UiEnv): BattleUI {
           say("happy", `${escapeHtml(withJosa(ctx.potions?.name ?? "회복약", "을/를"))} 마셨어! HP가 ${hp - before} 돌아왔어.`);
         };
 
-        const finish = (result: BattleOutcome["result"]) => {
+        const finish = (result: BattleOutcome["result"], startPractice = false) => {
           if (closed) return;
           flushDraft();
           closed = true;
           timers.forEach((t) => window.clearTimeout(t));
           cleanups.forEach((f) => f());
-          const outcome = outcomeOf(result);
+          const outcome = outcomeOf(result, startPractice);
           editor.destroy();
           modal.close();
           resolve(outcome);
@@ -814,26 +842,78 @@ export function createBattleUI(env: UiEnv): BattleUI {
         document.addEventListener("visibilitychange", onVisibility);
         cleanups.push(() => document.removeEventListener("visibilitychange", onVisibility));
 
-        // 시간 기반 우회 제안(design.md §7.1)
-        if (!p.practice) {
-          timers.push(
-            window.setTimeout(() => {
-              if (closed) return;
-              // 해설서가 힌트 경로로 열렸다는 안내는 연습 제안에 덮이지 않게 다시 붙인다(같은 때에 열릴 수 있다)
-              const unlockNote = msg.querySelector(".solution-unlock-note");
-              const common = companionSay(ctx.companionLines?.practiceSuggest);
-              if (common) say(common.emotion, common.html);
-              else {
-                say(
-                  "neutral",
-                  "꽤 오래 붙잡고 있네! 같은 주문서의 <strong>연습 전투</strong>를 먼저 해 보는 건 어때? 강제는 아니고, 돌아와도 보상은 그대로야.",
-                );
-              }
-              if (unlockNote) msg.append(unlockNote);
-              msgBox.dataset.practice = "true";
-            }, practiceThresholdMs(p.estimatedMinutes)),
-          );
+        // 시간 기반 우회: 연습 상대 제안(design.md §6.2, §7.1, 단위 3-E3). 앱이 찾은 상대(practiceOffer)를
+        // 누적 시간 ≥ 기준 시간이거나 이 문제에서 쓰러진 적이 있으면(시작 직후) 지금 메시지 아래에 붙인다.
+        // 그림자전·연습 전투·연습 몬스터 전투에서는 제안하지 않는다
+        const offer = !ctx.shadow && !practiceMode && !p.practice ? ctx.practiceOffer : undefined;
+        let offerShown = false;
+        let offerTick: number | null = null;
+        const stopOfferTick = () => {
+          if (offerTick !== null) window.clearInterval(offerTick);
+          offerTick = null;
+        };
+        const offerDue = () => ctx.knockouts >= 1 || (ctx.priorElapsedMs ?? 0) + timer.elapsed() >= detourThresholdMs(p.estimatedMinutes);
+        const offerHtml = (o: PracticeOffer): { emotion: Emotion; html: string } => {
+          const name = "name" in o ? o.name : "";
+          const cl = ctx.companionLines;
+          const lines =
+            o.kind === "variant"
+              ? cl?.practiceSuggest
+              : o.kind === "monster"
+              ? cl?.practiceSuggestMonster
+              : o.kind === "warmup"
+              ? o.applied
+                ? cl?.practiceSuggestApplied
+                : cl?.practiceSuggestWarmup
+              : cl?.practiceSuggestNone;
+          // 문장 안의 {target}은 상대 이름(renderInline이 이스케이프한다)
+          const common = companionSay(lines?.map((l) => ({ ...l, text: l.text.replace(/\{target\}/g, () => name) })));
+          if (common) return common;
+          const target = `<strong>${escapeHtml(name)}</strong>`;
+          const start = "아래 [연습 전투]를 누르면 바로 시작해. 이 전투는 후퇴로 처리되고, 연습엔 반격도 보상도 없어.";
+          const text = {
+            variant: `전에 이긴 ${target}, 기억나? 같은 주문을 쓰는 그 문제를 살짝 바꾼 연습 전투가 있어. ${start}`,
+            monster: `같은 주문서로 상대할 수 있는 연습 몬스터 ${target}, 지금 있는 곳에서 걸어서 갈 수 있어. 돌아와도 이 버그의 보상은 줄지 않아.`,
+            warmup:
+              o.kind === "warmup" && o.applied
+                ? `최근에 이긴 ${target}, 그걸 살짝 바꾼 몸풀기 전투 어때? ${start}`
+                : `같은 주문서로 연습할 상대는 지금은 없어. 대신 최근에 이긴 ${target}, 그걸 살짝 바꾼 몸풀기 전투 어때? 이 버그와는 개념이 달라. ${start}`,
+            none: "지금 바로 연습할 상대는 없네. 힌트 1(대가 없음)부터 열어 보거나, 물러나서 코덱스의 레슨 예제를 다시 돌려 봐.",
+          }[o.kind];
+          return { emotion: "worried", html: `<p class="nuri-line">${text}</p>` };
+        };
+        const showOffer = (o: PracticeOffer) => {
+          offerShown = true;
+          stopOfferTick();
+          const { emotion, html } = offerHtml(o);
+          // 지금 메시지(채점 결과, 힌트 경로 해설서 안내 등)는 지우지 않고 아래에 붙인다
+          const note = h("div", { class: "practice-offer", "data-kind": o.kind, html });
+          msg.append(note);
+          portrait.set(emotion);
+          msgBox.dataset.emotion = emotion;
+          msgBox.dataset.practice = "true";
+          msgBox.dataset.practiceKind = o.kind;
+          btnPractice.hidden = !(o.kind === "variant" || o.kind === "warmup");
+          updateButtons();
+          note.scrollIntoView({ block: "nearest" });
+          updateMsgMore();
+        };
+        // 시전·실행 중에는 결과 메시지가 덮으므로 끝난 뒤에, 모범답안 코드를 보는 동안에는 닫은 뒤에 보인다
+        const checkOffer = () => {
+          if (!offer || offerShown || closed || ended || busy || codeVisible) return;
+          if (offerDue()) showOffer(offer);
+        };
+        if (offer) {
+          offerTick = window.setInterval(checkOffer, 1000);
+          cleanups.push(stopOfferTick);
         }
+        const startPractice = async () => {
+          if (busy || ended || closed || btnPractice.hidden) return;
+          const ok = await confirmDialog(env, "연습 전투", "연습 전투를 시작하면 이 전투는 후퇴로 처리돼. 써 둔 코드와 쓴 시간은 그대로 남아. 시작할까?", "연습 시작");
+          if (!ok || closed || ended) return;
+          finish("retreat", true);
+        };
+        btnPractice.addEventListener("click", () => void startPractice());
 
         setSegments();
         setHp(hp);
@@ -842,10 +922,13 @@ export function createBattleUI(env: UiEnv): BattleUI {
           "neutral",
           ctx.shadow
             ? `<strong>${escapeHtml(p.enemy.name)}의 그림자</strong>가 나타났어! 예전에 막혔던 개념이야. 이야기와 값은 달라도 같은 주문으로 이길 수 있어.`
+            : practiceMode
+            ? `<strong>${escapeHtml(p.enemy.name)}</strong> 연습 전투야! 전에 이긴 문제를 살짝 바꿨어. 반격도 보상도 없고 기록도 남지 않으니까 마음 편히 시험해 봐.`
             : p.boss
             ? `${kind} <strong>${escapeHtml(p.enemy.name)}</strong>${josa(p.enemy.name, "이/가")} 나타났어! 페이즈마다 한 번에 모든 테스트를 통과해야 해.`
             : `<strong>${escapeHtml(p.enemy.name)}</strong>${josa(p.enemy.name, "이/가")} 길을 막고 있어! 한 번의 시전에서 모든 테스트를 통과해야 쓰러뜨릴 수 있어.`,
         );
+        checkOffer();
         env.stack.focusInitial(modal, editor.view.contentDOM);
       });
     },

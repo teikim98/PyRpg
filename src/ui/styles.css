@@ -2275,3 +2275,34 @@
   padding-top: 6px;
   border-top: 2px dashed var(--border-dim);
 }
+
+/* 연습 제안과 연습 전투(design.md §6.2, §7.1, 단위 3-E3) */
+.pyrpg-ui .battle-msg .practice-offer {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 2px dashed var(--border-dim);
+}
+
+.pyrpg-ui .act-practice {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+.pyrpg-ui .is-practice .enemy-name {
+  color: var(--ok);
+}
+
+.pyrpg-ui .is-practice .enemy-sprite-wrap .sprite,
+.pyrpg-ui .is-practice .enemy-sprite-wrap canvas,
+.pyrpg-ui .is-practice .enemy-sprite-wrap img {
+  filter: saturate(0.6) drop-shadow(0 0 4px var(--ok));
+}
+
+.pyrpg-ui .counter.is-practice {
+  color: var(--ok);
+}
+
+.pyrpg-ui .sys-section .streak-rule {
+  color: var(--muted);
+  font-size: 0.9em;
+}

@@ -27,6 +27,12 @@ async function shotE4(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: `docs/phase3/screens/engine-e4-${name}.png` });
 }
 
+/** 단위 3-E3 연습 제안·연습 전투 화면 기록(docs/phase3/screens/engine-e3-*.png) */
+async function shotE3(page: Page, name: string): Promise<void> {
+  await page.waitForTimeout(1100);
+  await page.screenshot({ path: `docs/phase3/screens/engine-e3-${name}.png` });
+}
+
 // ───────────── 훅 읽기 ─────────────
 
 const where = (page: Page) => page.evaluate(() => (window as any).__pyrpg.where()) as Promise<{ x: number; y: number; facing: Facing; busy: boolean; modal: boolean }>;
@@ -654,6 +660,75 @@ test.describe("실패와 복구", () => {
     expect(s.problems.P0101.elapsedTotalMs).toBeGreaterThan(10 * 60_000);
     // 해설서를 본 개념은 그림자 칸 0
     expect(s.shadows.find((x: any) => x.concept === "scroll.convert")).toMatchObject({ box: 0 });
+  });
+
+  test("연습 전투(단위 3-E3): 쓰러졌던 문제는 시작 직후 연습 상대 제안 → [연습 전투] → 원래 전투는 후퇴 → 반격·보상 없는 연습 → 스트릭만 인정", async ({ page }) => {
+    test.setTimeout(180_000);
+    await boot(page);
+    await settle(page);
+    const gate = await obj(page, "gate_well");
+    // P0101(scroll.convert)에 한 번 쓰러진 기록, 같은 개념의 연습 몬스터 P0109는 이미 처치
+    const solved = { attempts: 1, knockouts: 0, solved: true, solvedAt: "2026-01-01T00:00:00.000Z", maxHintLevel: 0, solutionViewed: false };
+    const knocked = { attempts: 3, knockouts: 1, solved: false, maxHintLevel: 0, solutionViewed: false, draft: "print('draft')" };
+    await seedAndReload(page, {
+      lessons: ["L1-1", "L1-2"],
+      removed: ["gate_well", "m_P0109"],
+      at: { x: gate.x, y: gate.y - 1 },
+      flags: ["trigger.r01.t_prologue"],
+      patch: { problems: { P0109: solved, P0101: knocked } },
+    });
+    const before = await save(page);
+    await bump(page, "m_P0101");
+    await settle(page, ".battle-modal");
+    // 시작 대사는 그대로, 아래에 연습 상대(①: P0109의 변형)
+    const msg = page.locator(".battle-msg-text");
+    await expect(msg).toContainText("길을 막고 있어!");
+    await expect(page.locator(".battle-msg")).toHaveAttribute("data-practice-kind", "variant");
+    const p0109 = JSON.parse(readFileSync(`${PROBLEMS}/P0109/problem.json`, "utf8"));
+    await expect(msg.locator(".practice-offer strong").first()).toHaveText(p0109.enemy.name);
+    await expect(msg.locator(".practice-offer")).toContainText("[연습 전투]");
+    await expect(page.locator(".act-practice")).toBeVisible();
+    await shotE3(page, "offer");
+    await page.locator(".act-practice").click();
+    await expect(page.locator(".confirm-msg")).toContainText("후퇴로 처리");
+    await page.locator(".confirm-yes").click();
+
+    // 연습 전투: P0109의 변형, 빈 틀, 해설서·연습 버튼 없음, 힌트 대가 없음
+    await settle(page, ".battle.is-practice");
+    await expect(page.locator(".battle")).toHaveAttribute("data-problem", /^P0109-v[12]$/);
+    await expect(page.locator(".enemy-name")).toHaveText(`${p0109.enemy.name} (연습)`);
+    await expect.poll(() => editorText(page)).toBe(code("P0109", "starter.py"));
+    await expect(page.locator(".act-solution")).toBeHidden();
+    await expect(page.locator(".act-practice")).toBeHidden();
+    await expect(page.locator(".act-hint-3")).toHaveText("힌트 3");
+    const hp = await page.locator(".player-hp-text").textContent();
+    await typeCode(page, "print(0)");
+    await cast(page);
+    await expect(msg).toContainText("반격은 없어");
+    await expect(page.locator(".player-hp-text")).toHaveText(hp!);
+    await shotE3(page, "practice");
+    await typeCode(page, solution("P0109"));
+    await cast(page);
+    await expect(page.locator(".battle-banner")).toContainText("연습 완료!");
+    await shotE3(page, "practice-clear");
+    await page.locator(".banner-ok").click();
+    await expect(page.locator(".toast", { hasText: "오늘 공부한 날로 인정" })).toBeVisible();
+    await settle(page);
+    expect(await said(page)).not.toContain("retreat");
+
+    const s = await save(page);
+    // 원래 전투는 후퇴로(시도·쓰러짐·작성 코드 그대로, 시간은 더해짐)
+    expect(s.problems.P0101).toMatchObject({ solved: false, knockouts: 1, attempts: 3, draft: "print('draft')" });
+    // 연습 전투는 보상·기록·그림자·history를 바꾸지 않는다
+    expect(s.player.xp).toBe(before.player.xp);
+    expect(s.player.gold).toBe(before.player.gold);
+    expect(s.problems.P0109).toEqual(before.problems.P0109);
+    expect(Object.keys(s.problems).filter((id) => id.includes("-v"))).toEqual([]);
+    expect(s.history).toEqual(before.history);
+    expect(s.shadows).toEqual(before.shadows);
+    // 그날을 인정(오늘 처치 수는 그대로)
+    expect(s.streak.activeDays).toContain(s.streak.todayDate);
+    expect(s.streak.todayCount).toBe(before.streak.todayCount);
   });
 
   test("무한루프: while True: pass → TLE, 후퇴 후 이동·메뉴가 반응, 다음 시전은 정상 채점", async ({ page }) => {

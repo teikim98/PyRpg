@@ -6,6 +6,7 @@
   "requires": ["scroll.set"],
   "concept": "scroll.set",
   "boss": false,
+  "practice": true,
   "timeLimitMs": 2000,
   "estimatedMinutes": 6,
   "tests": [

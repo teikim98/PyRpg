@@ -1,5 +1,5 @@
 // 그림자 게시판(design.md §7.6, phase3/plan.md §5.1): 오늘 나타난 그림자 목록과, 그림자전에 낼 변형 문제.
-import type { Problem } from "../contracts/content";
+import type { Problem, ProblemVariant } from "../contracts/content";
 import type { SaveData, ShadowEntry } from "../contracts/state";
 import { dueShadows, intervalFor, isReturnShadow, MAX_BOX, NEVER_DUE } from "./shadows";
 import { daysBetween, studyDate } from "./time";
@@ -42,8 +42,14 @@ export function returnCleared(e: ShadowEntry): boolean {
  * 변형이 없으면 원래 문제. 보스 변형은 1페이즈만이므로 시간 결계(페이즈·예산)를 뗀다.
  */
 export function shadowProblem(original: Problem, history: SaveData["history"]): Problem {
+  const idx = nextShadowVariantIndex(original, history);
+  return idx < 0 ? plain(original) : variantProblem(original, original.variants![idx]);
+}
+
+/** 그림자전에 다음으로 낼 변형의 위치(변형이 없으면 -1). 연습 전투(src/systems/practice.ts)가 이 변형을 피한다 */
+export function nextShadowVariantIndex(original: Problem, history: SaveData["history"]): number {
   const variants = original.variants ?? [];
-  if (variants.length === 0) return plain(original);
+  if (variants.length === 0) return -1;
   let last: string | undefined;
   for (let i = history.length - 1; i >= 0; i--) {
     const h = history[i];
@@ -52,8 +58,14 @@ export function shadowProblem(original: Problem, history: SaveData["history"]): 
       break;
     }
   }
-  const idx = variants.findIndex((v) => v.id === last);
-  const v = variants[(idx + 1) % variants.length];
+  return (variants.findIndex((v) => v.id === last) + 1) % variants.length;
+}
+
+/**
+ * 변형 하나 → 전투에 낼 문제(그림자전과 연습 전투가 같이 쓴다, 단위 3-E3). 이야기·입력값만 바꾸고 형식·시그니처·힌트·적은 원래 문제 것.
+ * 보스 변형은 1페이즈만이므로 시간 결계(페이즈·예산)를 떼고 boss: false
+ */
+export function variantProblem(original: Problem, v: ProblemVariant): Problem {
   return {
     ...plain(original),
     id: v.id,

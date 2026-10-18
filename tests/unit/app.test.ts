@@ -455,6 +455,9 @@ describe("전투", () => {
     // 9: 공통 대사를 전투 UI에 넘긴다
     expect(ctxSeen.companionLines?.fatalRecursion).toBe(content.commonDialogues.fatal_recursion);
     expect(ctxSeen.companionLines?.practiceSuggest).toBe(content.commonDialogues.practice_suggest);
+    expect(ctxSeen.companionLines?.practiceSuggestMonster).toBe(content.commonDialogues.practice_suggest_monster);
+    expect(ctxSeen.companionLines?.practiceSuggestWarmup).toBe(content.commonDialogues.practice_suggest_warmup);
+    expect(ctxSeen.companionLines?.practiceSuggestApplied).toBe(content.commonDialogues.practice_suggest_applied);
     expect(ctxSeen.companionLines?.solutionUnlockedHint).toBe(content.commonDialogues.solution_unlocked_hint);
     expect(content.commonDialogues.solution_unlocked_hint).toHaveLength(2);
   });
@@ -484,6 +487,99 @@ describe("전투", () => {
     await idle(h.app);
     expect(priors).toEqual([0, 120_000]);
     expect(store.data!.problems.P0101.elapsedTotalMs).toBe(121_000);
+  });
+
+  it("연습 전투(단위 3-E3): [연습 전투]로 끝나면 원래 전투는 후퇴, 연습은 보상·기록·퀘스트 없이 스트릭만 인정", async () => {
+    const { h, store, content } = await battleHarness();
+    // 같은 개념(scroll.convert)의 P0109를 이미 풀었다 → 연습 상대 ①
+    h.app.save.problems.P0109 = { ...emptyRec(), solved: true, solvedAt: "2026-09-30T09:00:00.000Z" };
+    h.app.save.removedObjects.push("m_P0109");
+    h.app.save.quests = { date: studyDate(NOW), ids: ["anywin-2", "win-nohint-1", "rest-1"], progress: [0, 0, 0], claimed: [false, false, false], chest: false };
+    const before = structuredClone(h.app.save);
+    const ctxs: BattleContext[] = [];
+    h.battle.open = async (ctx) => {
+      ctxs.push(ctx);
+      if (ctxs.length === 1) {
+        return { problemId: ctx.problem.id, result: "retreat", attempts: 1, maxHintLevel: 0, solutionViewed: false, finalCode: "draft", hpLeft: 80, elapsedMs: 700_000, startPractice: true };
+      }
+      ctx.onDraft("print(9)");
+      return { problemId: ctx.problem.id, result: "victory", attempts: 3, maxHintLevel: 3, solutionViewed: false, finalCode: "print(9)", hpLeft: 80, elapsedMs: 60_000 };
+    };
+    h.callbacks.onInteract(h.world.obj("m_P0101"));
+    await idle(h.app);
+    expect(ctxs).toHaveLength(2);
+    const [orig, prac] = ctxs;
+    expect(orig.practice).toBeUndefined();
+    expect(orig.practiceOffer).toMatchObject({ kind: "variant", sourceId: "P0109" });
+    expect(orig.companionLines?.practiceSuggestNone).toBe(content.commonDialogues.practice_suggest_none);
+    // 연습 전투: P0109의 변형, 빈 틀, 반격·회복약·제안 없음
+    expect(prac.practice).toBe(true);
+    expect(prac.problem.id).toMatch(/^P0109-v[12]$/);
+    expect(prac.problem.starter).toBe(content.regions[0].problems.find((p) => p.id === "P0109")!.starter);
+    expect(prac.draft).toBeUndefined();
+    expect(prac.potions).toBeUndefined();
+    expect(prac.practiceOffer).toBeUndefined();
+    expect(prac.knockouts).toBe(0);
+    expect(prac.hintLevel).toBe(0);
+    const s = store.data!;
+    // 원래 전투는 후퇴(시간·시도·작성 코드), 후퇴 대사 없이 바로 연습
+    expect(s.problems.P0101).toMatchObject({ solved: false, attempts: 1, draft: "draft", elapsedTotalMs: 700_000 });
+    expect(h.said).not.toContain("retreat");
+    // 연습 전투는 보상·기록·그림자·history·퀘스트를 바꾸지 않는다
+    expect(s.player.xp).toBe(before.player.xp);
+    expect(s.player.gold).toBe(before.player.gold);
+    expect(s.problems.P0109).toEqual(before.problems.P0109);
+    expect(Object.keys(s.problems).some((id) => id.includes("-v"))).toBe(false);
+    expect(s.history).toEqual(before.history);
+    expect(s.shadows).toEqual(before.shadows);
+    expect(s.quests).toEqual(before.quests);
+    // 스트릭: 그날 인정, 오늘 처치 수는 그대로
+    expect(s.streak.activeDays).toContain(studyDate(NOW));
+    expect(s.streak.todayCount).toBe(before.streak.todayDate === studyDate(NOW) ? before.streak.todayCount : 0);
+    expect(h.toasts.some((t) => t.includes("오늘 공부한 날로 인정"))).toBe(true);
+  });
+
+  it("연습 제안(단위 3-E3): 그림자전·연습 몬스터 전투에는 offer가 없고, 같은 개념을 푼 문제가 없으면 ③·④", async () => {
+    const { h } = await battleHarness();
+    const ctxs: BattleContext[] = [];
+    h.battle.open = async (ctx) => {
+      ctxs.push(ctx);
+      return { problemId: ctx.problem.id, result: "retreat", attempts: 0, maxHintLevel: 0, solutionViewed: false, finalCode: "x", hpLeft: 100, elapsedMs: 1 };
+    };
+    // 아무것도 안 풀었으면 ④
+    h.callbacks.onInteract(h.world.obj("m_P0101"));
+    await idle(h.app);
+    expect(ctxs.at(-1)!.practiceOffer).toEqual({ kind: "none" });
+    // 다른 개념(scroll.arith) P0102만 풀었으면 ③ 몸풀기
+    h.app.save.problems.P0102 = { ...emptyRec(), solved: true, solvedAt: "2026-09-30T09:00:00.000Z" };
+    h.callbacks.onInteract(h.world.obj("m_P0101"));
+    await idle(h.app);
+    expect(ctxs.at(-1)!.practiceOffer).toMatchObject({ kind: "warmup", sourceId: "P0102" });
+    // 연습 몬스터(P0109) 전투에는 제안하지 않는다
+    h.callbacks.onInteract(h.world.obj("m_P0109"));
+    await idle(h.app);
+    expect(ctxs.at(-1)!.problem.id).toBe("P0109");
+    expect(ctxs.at(-1)!.practiceOffer).toBeUndefined();
+    // 그림자전에도 없다
+    h.app.save.problems.P0101 = { ...emptyRec(), solved: true, solvedAt: "2026-09-29T09:00:00.000Z" };
+    h.app.save.shadows = [{ concept: "scroll.convert", problemId: "P0101", box: 1, due: studyDate(NOW), purified: false, createdAt: "2026-09-01T00:00:00Z" }];
+    await (h.app as unknown as { fightShadow(c: string): Promise<void> }).fightShadow("scroll.convert");
+    expect(ctxs.at(-1)!.shadow).toBe(true);
+    expect(ctxs.at(-1)!.practiceOffer).toBeUndefined();
+  });
+
+  it("새 레슨 첫 완료(단위 3-E3)는 그날을 스트릭 학습일로 인정하고 오늘 처치 수는 올리지 않는다", async () => {
+    const { h, store, content } = await battleHarness();
+    h.app.save.lessonsCompleted = h.app.save.lessonsCompleted.filter((id) => id !== "L1-1");
+    h.app.save.streak = { ...h.app.save.streak, activeDays: [], todayCount: 0 };
+    (h.app as unknown as { deps: { ui: { lesson: { open: () => Promise<{ completed: boolean }> } } } }).deps.ui.lesson.open = async () => ({ completed: true });
+    const rune = h.world.objects.find((o) => o.type === "rune" && o.props.lesson === "L1-1")!;
+    h.callbacks.onInteract(rune);
+    await idle(h.app);
+    expect(store.data!.lessonsCompleted).toContain("L1-1");
+    expect(store.data!.streak.activeDays).toEqual([studyDate(NOW)]);
+    expect(store.data!.streak.todayCount).toBe(0);
+    expect(content.regions[0].lessons.some((l) => l.id === "L1-1")).toBe(true);
   });
 
   it("보스 승리를 저장한 뒤 클리어 연출 전에 새로고침하면 다시 시작할 때 클리어 연출을 보여 준다", async () => {

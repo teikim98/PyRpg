@@ -332,9 +332,9 @@ test.describe("battle", () => {
         { speaker: "companion", emotion: "surprised", text: "룬 엔진이 꺼졌다 켜졌어!" },
         { speaker: "companion", emotion: "neutral", text: "{player}, 재귀를 반복문으로 바꿔 볼래?" },
       ],
-      practiceSuggest: [{ speaker: "companion", emotion: "worried", text: "연습할 수 있는 작은 버그가 있어." }],
+      practiceSuggest: [{ speaker: "companion", emotion: "worried", text: "전에 이긴 **{target}** 변형으로 연습할 수 있어, {player}!" }],
     };
-    const done = page.evaluate((cl) => (window as Win).__ui.battle("P0101", { companionLines: cl }), lines);
+    const done = page.evaluate((cl) => (window as Win).__ui.battle("P0101", { companionLines: cl, practiceOffer: { kind: "variant", sourceId: "P0103" } }), lines);
     await page.evaluate(() => (window as Win).__ui.fake.queueJudge({ verdict: "RE", fatal: true, fail: [4] }));
     await page.locator(".act-cast").click();
     const msg = page.locator(".battle-msg-text");
@@ -344,7 +344,10 @@ test.describe("battle", () => {
     await expect(page.locator(".battle-msg")).toHaveAttribute("data-emotion", "surprised");
     await page.clock.fastForward("10:01");
     await expect(page.locator(".battle-msg")).toHaveAttribute("data-practice", "true");
-    await expect(msg).toContainText("연습할 수 있는 작은 버그가 있어.");
+    await expect(msg.locator(".practice-offer")).toHaveText("전에 이긴 철갑 두더지 변형으로 연습할 수 있어, 하늘!");
+    await expect(msg.locator(".practice-offer strong")).toHaveText("철갑 두더지");
+    // 지금 메시지(실행기 재시작 안내)는 지우지 않고 아래에 붙인다
+    await expect(msg).toContainText("룬 엔진이 꺼졌다 켜졌어!");
     await expect(page.locator(".battle-msg")).toHaveAttribute("data-emotion", "worried");
     await page.locator(".act-retreat").click();
     await done;
@@ -599,19 +602,128 @@ test.describe("battle", () => {
     expect(phases).toEqual(["all:1", "all:2", "all:2"]);
   });
 
-  test("practice suggestion after estimatedMinutes × 2 (min 10)", async ({ page }) => {
+  test("practice suggestion (unit 3-E3): at the reference time T = min(max(est × 2, 10), 20) of cumulative time, then [연습 전투] retreats into practice", async ({ page }) => {
     await page.clock.install();
     await boot(page);
-    const done = page.evaluate(() => (window as Win).__ui.battle("P0101"));
+    const done = page.evaluate(() => (window as Win).__ui.battle("P0101", { practiceOffer: { kind: "variant", sourceId: "P0103" } }));
+    const practiceBtn = page.locator(".act-practice");
     await expect(page.locator(".battle-msg")).not.toHaveAttribute("data-practice", "true");
+    await expect(practiceBtn).toBeHidden();
     await page.clock.fastForward("09:00");
     await expect(page.locator(".battle-msg")).not.toHaveAttribute("data-practice", "true");
     await page.clock.fastForward("01:01");
     await expect(page.locator(".battle-msg")).toHaveAttribute("data-practice", "true");
-    await expect(page.locator(".battle-msg-text")).toContainText("연습 전투");
-    await page.locator(".act-retreat").click();
+    await expect(page.locator(".battle-msg")).toHaveAttribute("data-practice-kind", "variant");
+    await expect(page.locator(".battle-msg-text .practice-offer")).toContainText("철갑 두더지");
+    await expect(practiceBtn).toBeVisible();
+    // 취소하면 그대로 전투
+    await practiceBtn.click();
+    await page.locator(".confirm-no").click();
+    await expect(page.locator(".battle-modal")).toBeVisible();
+    await practiceBtn.click();
+    await expect(page.locator(".confirm-msg")).toContainText("후퇴로 처리");
+    await page.locator(".confirm-yes").click();
     const out = await done;
+    expect(out).toMatchObject({ result: "retreat", startPractice: true });
     expect(out.elapsedMs).toBeGreaterThanOrEqual(600_000);
+  });
+
+  test("practice suggestion (unit 3-E3): prior cumulative time counts, the cap is 20 minutes, and nothing without an offer", async ({ page }) => {
+    await page.clock.install();
+    await boot(page);
+    // P0105(예상 15분): 예전 기준(30분)이 아니라 상한 20분. 이전 전투들에서 19분을 썼으면 1분 뒤
+    const done = page.evaluate(() => (window as Win).__ui.battle("P0105", { priorElapsedMs: 19 * 60_000, practiceOffer: { kind: "none" } }));
+    await expect(page.locator(".battle-modal")).toBeVisible();
+    await page.clock.fastForward("00:50");
+    await expect(page.locator(".battle-msg")).not.toHaveAttribute("data-practice", "true");
+    await page.clock.fastForward("00:15");
+    await expect(page.locator(".battle-msg")).toHaveAttribute("data-practice-kind", "none");
+    await expect(page.locator(".battle-msg-text .practice-offer")).toContainText("힌트 1");
+    await expect(page.locator(".act-practice")).toBeHidden();
+    await page.locator(".act-retreat").click();
+    await done;
+    // 앱이 상대를 넘기지 않으면(그림자전 등) 아무 말도 하지 않는다
+    const none = page.evaluate(() => (window as Win).__ui.battle("P0101", { priorElapsedMs: 60 * 60_000 }));
+    await page.clock.fastForward("00:05");
+    await expect(page.locator(".battle-msg")).not.toHaveAttribute("data-practice", "true");
+    await page.locator(".act-retreat").click();
+    await none;
+  });
+
+  test("practice suggestion (unit 3-E3): right after the start when this problem has knocked us out; monster and warmup kinds", async ({ page }) => {
+    await boot(page);
+    const lines = {
+      practiceSuggestMonster: [{ speaker: "companion", emotion: "worried", text: "연습 몬스터 **{target}**, 지금 걸어서 갈 수 있어." }],
+      practiceSuggestWarmup: [{ speaker: "companion", emotion: "neutral", text: "최근에 이긴 **{target}** 몸풀기. 이 버그와는 개념이 달라." }],
+      practiceSuggestApplied: [{ speaker: "companion", emotion: "neutral", text: "최근에 이긴 **{target}** 몸풀기 어때?" }],
+    };
+    // ② 연습 몬스터: 이름만, 버튼 없음. 시작 대사는 그대로 두고 아래에 붙인다
+    let done = page.evaluate((cl) => (window as Win).__ui.battle("P0101", { knockouts: 1, companionLines: cl, practiceOffer: { kind: "monster", sourceId: "P0103", name: "졸린 책벌레" } }), lines);
+    const msg = page.locator(".battle-msg-text");
+    await expect(msg).toContainText("길을 막고 있어!");
+    await expect(msg.locator(".practice-offer")).toHaveText("연습 몬스터 졸린 책벌레, 지금 걸어서 갈 수 있어.");
+    await expect(page.locator(".battle-msg")).toHaveAttribute("data-practice-kind", "monster");
+    await expect(page.locator(".act-practice")).toBeHidden();
+    await page.locator(".act-retreat").click();
+    await done;
+    // ③ 몸풀기: 버튼 있음
+    done = page.evaluate((cl) => (window as Win).__ui.battle("P0101", { knockouts: 2, companionLines: cl, practiceOffer: { kind: "warmup", sourceId: "P0103" } }), lines);
+    await expect(msg.locator(".practice-offer")).toContainText("철갑 두더지 몸풀기. 이 버그와는 개념이 달라.");
+    await expect(page.locator(".act-practice")).toBeVisible();
+    await page.locator(".act-retreat").click();
+    expect((await done).startPractice).toBeUndefined();
+    // 응용 전투의 몸풀기는 개념을 말하지 않는 대사
+    done = page.evaluate((cl) => (window as Win).__ui.battle("P0101", { knockouts: 1, companionLines: cl, practiceOffer: { kind: "warmup", sourceId: "P0103", applied: true } }), lines);
+    await expect(msg.locator(".practice-offer")).toHaveText("최근에 이긴 철갑 두더지 몸풀기 어때?");
+    await page.locator(".act-retreat").click();
+    await done;
+  });
+
+  test("practice suggestion (unit 3-E3): never in shadow battles or against a practice monster", async ({ page }) => {
+    await boot(page);
+    for (const o of [{ shadow: true }, { patch: { practice: true } }]) {
+      const done = page.evaluate((o) => (window as Win).__ui.battle("P0101", { ...o, knockouts: 1, priorElapsedMs: 60 * 60_000, practiceOffer: { kind: "variant", sourceId: "P0103" } }), o);
+      await expect(page.locator(".battle-modal")).toBeVisible();
+      await page.waitForTimeout(1300);
+      await expect(page.locator(".battle-msg")).not.toHaveAttribute("data-practice", "true");
+      await expect(page.locator(".practice-offer")).toHaveCount(0);
+      await expect(page.locator(".act-practice")).toBeHidden();
+      await page.locator(".act-retreat").click();
+      await done;
+    }
+  });
+
+  test("practice battle mode (unit 3-E3): no counter-attack, no solution book or potions, free hints, no offer", async ({ page }) => {
+    await page.clock.install();
+    await boot(page);
+    const done = page.evaluate(() => (window as Win).__ui.battle("P0101", { practice: true, potions: 2, hp: 50, knockouts: 3, practiceOffer: { kind: "variant", sourceId: "P0103" } }));
+    await expect(page.locator(".battle")).toHaveClass(/is-practice/);
+    await expect(page.locator(".enemy-name")).toHaveText("타입 슬라임 (연습)");
+    await expect(page.locator(".battle-msg-text")).toContainText("연습 전투야!");
+    await expect(page.locator(".act-solution")).toBeHidden();
+    await expect(page.locator(".act-potion")).toBeHidden();
+    await expect(page.locator(".act-practice")).toBeHidden();
+    // 힌트는 대가 없이, 확인창 없이
+    await expect(page.locator(".act-hint-2")).toHaveText("힌트 2");
+    await page.locator(".act-hint-1").click();
+    await page.locator(".act-hint-2").click();
+    await expect(page.locator(".confirm-yes")).toHaveCount(0);
+    await expect(page.locator(".act-hint-2")).toHaveText("힌트 2 ✓");
+    // 틀려도 반격 없음
+    await page.evaluate(() => (window as Win).__ui.fake.queueJudge({ verdict: "WA", fail: [2] }));
+    await page.locator(".act-cast").click();
+    await expect(page.locator(".battle-msg-text")).toContainText("반격은 없어");
+    await expect(page.locator(".player-hp-text")).toHaveText("50/100");
+    // 연습 제안도 없다(쓰러짐·시간 조건이 있어도)
+    await page.clock.fastForward("30:00");
+    await expect(page.locator(".battle-msg")).not.toHaveAttribute("data-practice", "true");
+    await page.evaluate(() => (window as Win).__ui.fake.queueJudge({ verdict: "AC" }));
+    await page.locator(".act-cast").click();
+    await expect(page.locator(".battle-banner")).toContainText("연습 완료!");
+    await expect(page.locator(".battle-banner")).toContainText("오늘 공부한 날로 인정");
+    await page.locator(".banner-ok").click();
+    const out = await done;
+    expect(out).toMatchObject({ result: "victory", maxHintLevel: 2, hpLeft: 50 });
   });
 
   test("elapsed time (unit 3-E1): counts only while the tab is visible, reports progress when hidden", async ({ page }) => {

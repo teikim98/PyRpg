@@ -25,8 +25,28 @@
     { "speaker": "companion", "emotion": "happy", "text": "코덱스를 한 번 훑어보고 다시 오면 분명 보일 거야. 이 버그는 어디 안 가!" }
   ],
   "practice_suggest": [
-    { "speaker": "companion", "emotion": "worried", "text": "이 버그랑 꽤 오래 씨름하고 있네. 머리가 뜨거워질 땐 잠깐 돌아가는 것도 방법이야." },
-    { "speaker": "companion", "emotion": "neutral", "text": "같은 주문서로 연습할 수 있는 작은 버그가 있어. 하나 정화하고 오면 감이 잡힐 거야. 물론 계속 붙어 봐도 좋아. 보상은 줄지 않아!" }
+    { "speaker": "companion", "emotion": "worried", "text": "이 버그, 만만치 않지? 꽉 막혔을 땐 잠깐 돌아가는 것도 방법이야." },
+    { "speaker": "companion", "emotion": "neutral", "text": "전에 이긴 **{target}**, 기억나? 같은 주문을 쓰는 그 문제를 살짝 바꾼 연습 전투가 있어. 아래 **[연습 전투]**를 누르면 바로 시작해!" },
+    { "speaker": "companion", "emotion": "happy", "text": "연습엔 반격도 보상도 없고, 이 전투는 후퇴로 처리돼. 써 둔 코드는 그대로 남아. 물론 계속 붙어 봐도 좋아!" }
+  ],
+  "practice_suggest_monster": [
+    { "speaker": "companion", "emotion": "worried", "text": "이 버그, 만만치 않지? 꽉 막혔을 땐 잠깐 돌아가는 것도 방법이야." },
+    { "speaker": "companion", "emotion": "neutral", "text": "같은 주문서로 상대할 수 있는 연습 몬스터 **{target}**, 지금 있는 곳에서 걸어서 갈 수 있어. 하나 정화하고 오면 감이 잡힐 거야!" },
+    { "speaker": "companion", "emotion": "happy", "text": "물론 계속 붙어 봐도 좋아. 돌아와도 이 버그의 보상은 줄지 않아!" }
+  ],
+  "practice_suggest_warmup": [
+    { "speaker": "companion", "emotion": "worried", "text": "이 버그, 만만치 않지? 같은 주문서로 연습할 상대는 지금은 없네." },
+    { "speaker": "companion", "emotion": "neutral", "text": "대신 최근에 이긴 **{target}**, 그걸 살짝 바꾼 몸풀기 전투 어때? 이 버그와는 개념이 다르지만, 손이 풀리면 다시 보일 거야. 아래 **[연습 전투]**를 누르면 바로 시작해!" },
+    { "speaker": "companion", "emotion": "happy", "text": "연습엔 반격도 보상도 없고, 이 전투는 후퇴로 처리돼. 써 둔 코드는 그대로 남아!" }
+  ],
+  "practice_suggest_applied": [
+    { "speaker": "companion", "emotion": "worried", "text": "이 버그, 만만치 않지? 꽉 막혔을 땐 잠깐 쉬어 가도 돼." },
+    { "speaker": "companion", "emotion": "neutral", "text": "최근에 이긴 **{target}**, 그걸 살짝 바꾼 몸풀기 전투 어때? 손을 한번 풀고 오면 이 버그도 다르게 보일 거야. 아래 **[연습 전투]**를 누르면 바로 시작해!" },
+    { "speaker": "companion", "emotion": "happy", "text": "연습엔 반격도 보상도 없고, 이 전투는 후퇴로 처리돼. 써 둔 코드는 그대로 남아!" }
+  ],
+  "practice_suggest_none": [
+    { "speaker": "companion", "emotion": "worried", "text": "이 버그, 만만치 않지? 지금 바로 연습할 상대는 없네." },
+    { "speaker": "companion", "emotion": "neutral", "text": "대신 **힌트 1**부터 열어 봐. 힌트 1은 대가가 없어! 물러나서 메뉴의 **코덱스**로 배운 레슨 예제를 다시 돌려 보는 것도 좋아." }
   ],
   "shadow_registered": [
     { "speaker": "companion", "emotion": "serious", "text": "방금 주문의 그림자가 남았어. 며칠 뒤에 그림자 게시판에 다시 나타날 거야." },

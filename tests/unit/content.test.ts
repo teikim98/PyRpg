@@ -14,6 +14,8 @@ const SPEC_COMMON_DIALOGUES = [
   "shadow_registered", "level_up", "fatal_recursion",
   // 단위 3-E4: 힌트 경로로 해설서가 열릴 때
   "solution_unlocked_hint",
+  // 단위 3-E3: 연습 상대 종류별 제안(② 연습 몬스터, ③ 몸풀기, 응용 전투의 몸풀기, ④ 상대 없음)
+  "practice_suggest_monster", "practice_suggest_warmup", "practice_suggest_applied", "practice_suggest_none",
 ];
 const SPEC_PROBLEMS = ["P0101", "P0102", "P0103", "P0104", "P0105", "P0106", "P0107", "P0108", "P0109", "P0110"];
 const SPEC_SCROLLS = { "L1-1": "scroll.voice", "L1-2": "scroll.convert", "L1-3": "scroll.arith", "L1-4": "scroll.quick_ear" };
@@ -118,6 +120,21 @@ describe("content loader: region r01", () => {
     expect(p.diagnoses.some((d) => d.when.verdict === "TLE")).toBe(true);
   });
 
+  it("연습 제안 대사(단위 3-E3): 상대가 있는 종류만 {target}으로 이름을 말하고, 응용 전투는 주문서·개념을 말하지 않는다", () => {
+    const text = (id: string) => content.commonDialogues[id].map((l) => l.text).join(" ");
+    for (const id of ["practice_suggest", "practice_suggest_monster", "practice_suggest_warmup", "practice_suggest_applied"]) {
+      expect(text(id), id).toContain("{target}");
+    }
+    expect(text("practice_suggest_none")).not.toContain("{target}");
+    expect(text("practice_suggest_none")).toContain("힌트 1");
+    expect(text("practice_suggest_none")).toContain("코덱스");
+    expect(text("practice_suggest_applied")).not.toMatch(/주문서|개념/);
+    expect(text("practice_suggest_warmup")).toContain("개념이 다르");
+    // ①③은 [연습 전투] 버튼, ②는 맵 위의 몬스터(버튼 없음)
+    for (const id of ["practice_suggest", "practice_suggest_warmup", "practice_suggest_applied"]) expect(text(id), id).toContain("[연습 전투]");
+    expect(text("practice_suggest_monster")).not.toContain("[연습 전투]");
+  });
+
   it("every spec dialogue id exists", () => {
     for (const id of SPEC_REGION_DIALOGUES) expect(r01.dialogues[id], id).toBeDefined();
     for (const l of r01.lessons) {
@@ -146,9 +163,9 @@ describe("content loader: region r01", () => {
 });
 
 describe("content loader: practice monsters", () => {
-  it("practice: true is exactly P0109, P0305, P0405, P0503 and none is a boss (design.md §6.2, 단위 3-A)", () => {
+  it("practice: true is exactly P0109, P0305, P0405, P0503 (단위 3-A) + P0403, P0508, P0607 (단위 3-E3, 결정 23 P-E10) and none is a boss", () => {
     const practice = content.regions.flatMap((r) => r.problems).filter((p) => p.practice);
-    expect(practice.map((p) => p.id).sort()).toEqual(["P0109", "P0305", "P0405", "P0503"]);
+    expect(practice.map((p) => p.id).sort()).toEqual(["P0109", "P0305", "P0403", "P0405", "P0503", "P0508", "P0607"]);
     for (const p of practice) expect(p.boss, p.id).toBe(false);
   });
 });
@@ -199,6 +216,21 @@ describe("buildContent", () => {
     const src = collectSources();
     const text = { ...src.text, "regions/r01-echo-village/map.tmj": '{"width": 3, "layers": []}' };
     expect(buildContent({ json: src.json, text }).regions[0].map).toEqual({ width: 3, layers: [] });
+  });
+
+  it("applied(응용 전투, 단위 3-E3)는 true일 때만 Problem.applied로 옮긴다", () => {
+    const src = collectSources();
+    const key = "regions/r01-echo-village/problems/P0110/problem.json";
+    const json = { ...src.json, [key]: { ...(src.json[key] as object), applied: true, reward: { xp: 200, gold: 100 } } };
+    const c = buildContent({ json, text: src.text });
+    const ps = c.regions[0].problems;
+    expect(ps.find((p) => p.id === "P0110")!.applied).toBe(true);
+    expect(ps.find((p) => p.id === "P0110")!.reward).toEqual({ xp: 200, gold: 100 });
+    expect("applied" in ps.find((p) => p.id === "P0101")!).toBe(false);
+    const off = { ...src.json, [key]: { ...(src.json[key] as object), applied: false } };
+    expect("applied" in buildContent({ json: off, text: src.text }).regions[0].problems.find((p) => p.id === "P0110")!).toBe(false);
+    // 지금 콘텐츠에는 응용 전투가 없다(지역 7부터)
+    expect(content.regions.flatMap((r) => r.problems).filter((p) => p.applied)).toEqual([]);
   });
 
   it("reports which file is missing", () => {

@@ -121,6 +121,11 @@ export interface BattleOutcome {
   elapsedMs: number;
   /** 보스 시간 결계 페이즈를 첫 시전에 통과했는가(칭호 '시간을 돌린 자', §7.4). 보스가 아니면 생략 */
   timeBarrierFirstTry?: boolean;
+  /**
+   * 전투 창의 [연습 전투] 버튼으로 끝났다(결정 23 P-E5). result는 "retreat"이고, 앱은 후퇴를 적용한 뒤
+   * BattleContext.practiceOffer의 연습 전투를 바로 연다. 아니면 생략
+   */
+  startPractice?: boolean;
 }
 
 export interface RewardSummary {

@@ -1,4 +1,5 @@
-// 스트릭(design.md §7.5). 전투 1개 또는 그림자 1마리 처치로 그날을 인정한다. 하루 경계는 새벽 4시.
+// 스트릭(design.md §7.5). 전투 1개 또는 그림자 1마리 처치로 그날을 인정한다. 연습 전투 승리·새 레슨 첫 완료도 그날을 인정하지만
+// 오늘 처치 수(불씨·복구)에는 넣지 않는다(countOnly). 하루 경계는 새벽 4시.
 import type { StreakState } from "../contracts/state";
 import { addDays, daysBetween, studyDate, weekDates } from "./time";
 
@@ -122,18 +123,27 @@ export interface MarkResult {
   repaired: string[] | null;
 }
 
-/** 전투 승리 또는 그림자 처치 1회 */
-export function markActivity(state: StreakState, now: Date, opts: { lastRepair?: string } = {}): MarkResult {
+export interface MarkOptions {
+  lastRepair?: string;
+  /**
+   * 그날을 인정만 하고 오늘 처치 수(todayCount)는 올리지 않는다(design.md §7.5, 단위 3-E3).
+   * 연습 전투 승리와 새 레슨 첫 완료: 불씨 충전·스트릭 복구 횟수에는 넣지 않는다
+   */
+  countOnly?: boolean;
+}
+
+/** 전투 승리 또는 그림자 처치 1회(countOnly면 연습 전투 승리·새 레슨 첫 완료) */
+export function markActivity(state: StreakState, now: Date, opts: MarkOptions = {}): MarkResult {
   const today = studyDate(now);
   // 복구 판정은 보호 정산 전 상태로 미리 계산(정산은 복구 가능 여부를 바꾸지 않는다)
-  const offer = repairOffer(state, now, opts.lastRepair);
+  const offer = opts.countOnly ? null : repairOffer(state, now, opts.lastRepair);
   const settled = settleStreak(state, now);
   const s = cloneStreak(settled.state);
   if (s.todayDate !== today) {
     s.todayDate = today;
     s.todayCount = 0;
   }
-  s.todayCount++;
+  if (!opts.countOnly) s.todayCount++;
   let counted = false;
   if (!s.activeDays.includes(today)) {
     s.activeDays = [...s.activeDays, today].sort();
@@ -141,7 +151,7 @@ export function markActivity(state: StreakState, now: Date, opts: { lastRepair?:
   }
   let emberCharged = false;
   let repaired: string[] | null = null;
-  if (s.todayCount === EMBER_THRESHOLD) {
+  if (!opts.countOnly && s.todayCount === EMBER_THRESHOLD) {
     if (protections(s) < MAX_PROTECTIONS) {
       s.embers++;
       emberCharged = true;
