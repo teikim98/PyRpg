@@ -6,6 +6,7 @@
     "name": "부름의 주문서",
     "summary": "`def 이름(매개변수):`로 만들고 `이름(인자)`로 부른다. `return 값`은 값을 돌려주며 함수를 바로 끝낸다(없으면 `None`, JS의 `undefined`). 기본값 인자 `def f(a, b=1):`, 키워드 인자 `f(a, b=2)`. 인자 개수가 다르면 TypeError. 함수 안에서 만든 변수는 지역 변수이고, 바깥 변수를 바꾸려면 `global`이 필요하지만 `return`으로 돌려받는 게 깔끔하다. 큰 일은 도우미 함수로 나눈다. 숫자의 크기(절댓값)는 내장 함수 `abs(x)`(JS `Math.abs`)."
   },
+  "introduces": ["call:abs", "def", "def-default", "global", "kwarg-user", "return"],
   "exercise": {
     "kind": "blank",
     "prompt": "빈칸에 낱말 하나를 채워서 `double(21)`이 `42`를 돌려주게 해 봐. 출력만 하는 게 아니라 값을 돌려줘야 해.",

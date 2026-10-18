@@ -6,6 +6,7 @@
     "name": "격자의 주문서",
     "summary": "`grid[줄][칸]`으로 읽고 쓴다. n줄 m칸은 `[[0] * m for _ in range(n)]`로 만든다(`[[0] * m] * n`은 같은 줄을 n번 가리키는 함정). 바깥 반복이 줄이면 가로 읽기, 열이면 세로 읽기."
   },
+  "introduces": ["list-mult", "tuple-assign"],
   "exercise": {
     "kind": "blank",
     "prompt": "빈칸에 줄 번호를 채워서 아래 줄의 마지막 칸에 7이 들어가게 해 봐.",

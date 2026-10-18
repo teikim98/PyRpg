@@ -6,6 +6,7 @@
     "name": "부두 줄의 주문서",
     "summary": "`from collections import deque`. `append`/`pop`은 오른쪽 끝, `appendleft`/`popleft`는 왼쪽 끝. `q[0]`, `q[-1]`, `len(q)`. 빈 deque에서 빼면 IndexError라 `if q:`로 먼저 확인. `rotate(k)`는 오른쪽으로 k칸(음수면 왼쪽). `list.pop(0)`도 되지만 긴 줄에서는 느리다."
   },
+  "introduces": ["api:collections.deque", "method:appendleft", "method:popleft", "method:rotate"],
   "exercise": {
     "kind": "blank",
     "prompt": "빈칸에 메서드 이름을 채워서 줄 맨 앞의 `1`을 빼서 출력해 봐.",

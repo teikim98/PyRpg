@@ -1,0 +1,24 @@
+{
+  "id": "P0104",
+  "requires": [
+    "scroll.voice",
+    "scroll.branch",
+    "scroll.loop"
+  ],
+  "boss": true,
+  "hints": [
+    "힌트 1",
+    "힌트 2",
+    "힌트 3"
+  ],
+  "prereqExceptions": [
+    {
+      "tag": "call:sum",
+      "reason": " "
+    },
+    {
+      "tag": "call:max",
+      "reason": "쓰지 않는 예외"
+    }
+  ]
+}

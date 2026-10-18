@@ -1,0 +1,21 @@
+{
+  "id": "L2-1",
+  "title": "L2-1 픽스처",
+  "scroll": {
+    "id": "scroll.func",
+    "name": "L2-1 주문서",
+    "summary": "L2-1 요약"
+  },
+  "introduces": [
+    "def",
+    "return",
+    "call:print",
+    "loop:bogus"
+  ],
+  "prereqExceptions": [
+    {
+      "tag": "lambda",
+      "reason": "맛보기로만 보여 줌"
+    }
+  ]
+}
