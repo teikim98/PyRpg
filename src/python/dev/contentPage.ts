@@ -8,6 +8,7 @@ import { diagnoseResult, ruleMatches } from "../diagnose";
 import { explainError, pickRule } from "../explain";
 import { budgetLimitMs, isTimeBarrier, testLimitMs, usesBudget } from "../limits";
 import { createPythonRunner } from "../runner";
+import { shadowProblem } from "../../systems/shadowBoard";
 
 function problemIdOf(path: string): { pid: string; file: string } {
   const m = /problems\/([^/]+)\/([^/]+)$/.exec(path);
@@ -60,6 +61,8 @@ Object.assign(window as object, {
     testLimitMs,
     budgetLimitMs,
   },
+  // 칸 3 이상 보스 그림자의 2페이즈 측정(tests/e2e/shadow-measure.spec.ts, 단위 3-E2)
+  __shadow: { shadowProblem },
 });
 
 const status = document.getElementById("status")!;
