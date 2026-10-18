@@ -95,6 +95,11 @@ export interface BattleContext {
   /** 그림자 몬스터 전투(§7.6): 보상 50%, 해설서 없음, 연습 제안 없음 */
   shadow?: boolean;
   /**
+   * 칸 3 이상의 '이름 없는 그림자'(design.md §7.6, 단위 3-E2). problem의 적 이름·제목은 이미 감춰져 있고,
+   * 전투 화면은 "~의 그림자"를 붙이지 않고 시작 대사에서도 주문서·원래 몬스터를 말하지 않는다. 이긴 뒤 보상 화면에서 공개한다
+   */
+  shadowAnonymous?: boolean;
+  /**
    * 막혔을 때 제안할 연습 상대(design.md §6.2, src/systems/practice.ts findPracticeOffer). 앱이 전투를 열 때 찾아서 넘긴다.
    * 전투 화면은 누적 시간(priorElapsedMs + 이번 전투) ≥ 기준 시간이거나 이 문제에서 쓰러진 적이 있으면(knockouts ≥ 1, 시작 직후) 보여 준다.
    * 그림자전·연습 전투·연습 몬스터(problem.practice) 전투에서는 넘기지 않고, 넘겨도 쓰지 않는다
@@ -217,6 +222,20 @@ export interface ShadowBoardEntry {
   nextIntervalDays: number;
   /** 정화 90일 뒤 돌아온 귀환 그림자 */
   returning: boolean;
+  /** 칸 3 이상: 이름을 숨긴 '이름 없는 그림자'(name도 감춘 이름, 단위 3-E2) */
+  anonymous: boolean;
+  /** 오늘 계획에서 잡은 예상 분(보스를 1페이즈만 내면 절반 올림) */
+  minutes: number;
+}
+
+/** 대기 중인 그림자(design.md §7.6 하루 계획 2): 대표 문제를 아직 처치하지 못했거나 오늘 처치해서 다음 학습일부터 나온다 */
+export interface ShadowPendingView {
+  concept: string;
+  /** 주문서 이름(anonymous면 감춘 이름) */
+  name: string;
+  box: number;
+  anonymous: boolean;
+  reason: "unsolved" | "solvedToday";
 }
 
 export interface QuestView {
@@ -250,12 +269,23 @@ export interface StreakView {
 }
 
 export interface BoardView {
+  /** 오늘의 하루 계획에서 남은 그림자(게시판·출제·퀘스트가 같은 계획을 쓴다, 단위 3-E2) */
   shadows: ShadowBoardEntry[];
+  /** 출현일은 됐지만 대기 중인 그림자 */
+  pending: ShadowPendingView[];
   /** 등록됐지만 오늘은 아닌 그림자 수 */
   waiting: number;
   /** 오늘 이미 상대한 그림자 수 / 하루 상한 */
   foughtToday: number;
   dailyLimit: number;
+  /** shadows의 예상 분 합("오늘 복습 예상 약 N분") */
+  plannedMinutes: number;
+  /** 오늘 이미 치른 그림자의 예상 분 합 */
+  usedMinutes: number;
+  /** 하루 시간 예산(분) */
+  budgetMinutes: number;
+  /** 하루 상한(마리 수·시간)에 걸려 다음 날로 넘어간 그림자 수 */
+  deferred: number;
   quests: QuestPanelView;
   streak: StreakView;
 }
