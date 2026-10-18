@@ -165,13 +165,15 @@ export function validateSave(raw: unknown): ValidationResult {
   }
 
   c.arr(d.history, "history", (v, p) => {
-    if (!c.obj(v, p, { required: ["at", "problemId", "concept", "grade", "shadow"], optional: ["elapsedMs"] })) return;
+    if (!c.obj(v, p, { required: ["at", "problemId", "concept", "grade", "shadow"], optional: ["elapsedMs", "budgetMinutes"] })) return;
     c.iso(v.at, `${p}.at`);
     c.str(v.problemId, `${p}.problemId`, true);
     c.str(v.concept, `${p}.concept`, true);
     c.oneOf(v.grade, `${p}.grade`, GRADES);
     c.bool(v.shadow, `${p}.shadow`);
     if (v.elapsedMs !== undefined) c.int(v.elapsedMs, `${p}.elapsedMs`);
+    // 그림자 기록에만: 그날 계획에서 이 그림자에 잡은 예상 분(단위 3-E2, 결정 23 P-E12)
+    if (v.budgetMinutes !== undefined) c.int(v.budgetMinutes, `${p}.budgetMinutes`);
   });
 
   if (d.quests !== undefined && c.obj(d.quests, "quests", { required: ["date", "ids", "progress", "claimed", "chest"] })) {

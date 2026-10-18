@@ -10,6 +10,8 @@ export const RETURN_AFTER_DAYS = 90;
 /** 귀환 그림자에게 지면 돌아가는 칸 */
 export const RETURN_FAIL_BOX = 3;
 export const DAILY_SHADOW_LIMIT = 3;
+/** 하루 그림자 시간 예산(분, design.md §7.6 하루 계획 6). 오늘 치른 것 + 담을 것의 예상 분 합이 이를 넘는 지점에서 멈춘다 */
+export const DAILY_SHADOW_MINUTES = 15;
 /** 다시 나타나지 않음(귀환까지 통과) */
 export const NEVER_DUE = "9999-12-31";
 
@@ -84,7 +86,7 @@ export interface RegisterResult {
 /**
  * 등록(§7.6). 해설서 → 칸 0, 쓰러짐·힌트 2~3단계 → 칸 1.
  * 같은 개념이 이미 있으면 새로 만들지 않고 강등 규칙을 적용한다(해설서·쓰러짐 두 칸/최소 0, 힌트 한 칸/최소 1).
- * 정화된 개념이면 다시 활성화한다.
+ * 정화된 개념이면 다시 활성화한다. 다시 등록될 때(강등·재활성)는 대표 문제를 이번에 막힌 문제로 바꾼다(규칙 A-1, 단위 3-E2)
  */
 export function registerShadow(
   shadows: ShadowEntry[],
@@ -97,7 +99,7 @@ export function registerShadow(
   if (!existing || existing.purified) {
     const entry: ShadowEntry = {
       concept: reg.concept,
-      problemId: existing?.problemId ?? reg.problemId,
+      problemId: reg.problemId,
       box: startBox,
       due: addDays(today, intervalFor(startBox)),
       purified: false,
@@ -112,7 +114,7 @@ export function registerShadow(
     };
   }
   const box = reg.trigger === "hint" ? demote(existing.box, 1, 1) : demote(existing.box, 2, 0);
-  const entry: ShadowEntry = { ...existing, box, due: addDays(today, intervalFor(box)) };
+  const entry: ShadowEntry = { ...existing, problemId: reg.problemId, box, due: addDays(today, intervalFor(box)) };
   const change = box !== existing.box ? "demoted" : "unchanged";
   return {
     shadows: replace(shadows, entry),
@@ -186,17 +188,24 @@ export function shadowsFoughtToday(history: AttemptLog[], now: Date): number {
 }
 
 /**
- * 오늘 나타나는 그림자(최대 3마리, 오늘 이미 상대한 수만큼 줄어듦).
- * 연체일이 긴 것 → 칸이 낮은 것 순서. 나머지는 벌칙 없이 다음 날로 넘어간다.
+ * 출현일이 오늘 이전인 그림자 전부(하루 계획의 후보, design.md §7.6 하루 계획 1·3).
+ * 연체일이 긴 것 → 칸이 낮은 것 → 등록이 이른 것 → 개념 순
  */
-export function dueShadows(save: Pick<SaveData, "shadows" | "history">, now: Date, limit = DAILY_SHADOW_LIMIT): ShadowEntry[] {
+export function shadowCandidates(save: Pick<SaveData, "shadows">, now: Date): ShadowEntry[] {
   const today = studyDate(now);
-  const remaining = Math.max(0, limit - shadowsFoughtToday(save.history, now));
-  if (remaining === 0) return [];
   return save.shadows
     .filter((s) => s.due !== NEVER_DUE && s.due <= today)
     .map((s) => ({ s, overdue: daysBetween(s.due, today) }))
     .sort((a, b) => b.overdue - a.overdue || a.s.box - b.s.box || a.s.createdAt.localeCompare(b.s.createdAt) || a.s.concept.localeCompare(b.s.concept))
-    .slice(0, remaining)
     .map((x) => x.s);
+}
+
+/**
+ * 오늘 나타날 수 있는 그림자를 개수만 보고 고른 것(최대 3마리, 오늘 이미 상대한 수만큼 줄어듦).
+ * 게임 화면은 대기·15분 예산까지 보는 하루 계획(shadowBoard.ts planShadows)을 쓴다. 이 함수는 그 후보 순서의 기준이다
+ */
+export function dueShadows(save: Pick<SaveData, "shadows" | "history">, now: Date, limit = DAILY_SHADOW_LIMIT): ShadowEntry[] {
+  const remaining = Math.max(0, limit - shadowsFoughtToday(save.history, now));
+  if (remaining === 0) return [];
+  return shadowCandidates(save, now).slice(0, remaining);
 }

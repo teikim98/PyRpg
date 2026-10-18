@@ -45,6 +45,11 @@ export interface AttemptLog {
   shadow: boolean;
   /** 이 전투에서 쓴 시간(ms, 탭이 보이는 동안만, 상한 2시간). 0이면 생략. 단위 3-E1에서 더한 선택 항목 */
   elapsedMs?: number;
+  /**
+   * 그림자 기록에만: 그날 하루 계획에서 이 그림자에 잡은 예상 분(design.md §7.6 하루 계획 5·6, 결정 23 P-E12).
+   * 오늘 치른 분량을 셀 때 쓴다(보스 2페이즈를 붙였는지는 기록만으로 알 수 없으므로 저장). 단위 3-E2에서 더한 선택 항목
+   */
+  budgetMinutes?: number;
 }
 
 export interface StreakState {

@@ -41,6 +41,11 @@ export type BattleEvent =
 export interface ApplyOptions {
   /** 그림자 게시판에서 시작한 전투. 개념은 problem.concept */
   shadow?: boolean;
+  /**
+   * 그림자전: 그날 하루 계획에서 이 그림자에 잡은 예상 분(ShadowPlanItem.minutes). 그림자 기록에 budgetMinutes로 남겨
+   * 오늘 치른 분량을 센다(design.md §7.6 하루 계획 6, 결정 23 P-E12). 그림자전이 아니면 쓰지 않는다
+   */
+  shadowMinutes?: number;
   /** 장비로 늘어난 최대 HP */
   maxHpBonus?: number;
 }
@@ -76,8 +81,17 @@ export function applyBattleOutcome(save: SaveData, problem: Problem, outcome: Ba
   const reward = computeBattleReward(problem, outcome, save, { shadow: shadowBattle });
   const elapsed = battleElapsedMs(outcome.elapsedMs);
 
+  const budgetMinutes = shadowBattle && opts.shadowMinutes !== undefined ? Math.max(0, Math.round(opts.shadowMinutes)) : undefined;
   const log = (grade: AttemptLog["grade"]) =>
-    s.history.push({ at: iso, problemId: id, concept: problem.concept, grade, shadow: shadowBattle, ...(elapsed > 0 ? { elapsedMs: elapsed } : {}) });
+    s.history.push({
+      at: iso,
+      problemId: id,
+      concept: problem.concept,
+      grade,
+      shadow: shadowBattle,
+      ...(elapsed > 0 ? { elapsedMs: elapsed } : {}),
+      ...(budgetMinutes !== undefined ? { budgetMinutes } : {}),
+    });
 
   if (!shadowBattle) {
     const prev = s.problems[id] ?? emptyRecord();

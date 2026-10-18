@@ -91,9 +91,16 @@ export interface BattleContext {
     practiceSuggestNone?: DialogueLine[];
     /** 힌트 경로로 해설서가 처음 열렸을 때(solution_unlocked_hint, design.md §5.3, 단위 3-E4) */
     solutionUnlockedHint?: DialogueLine[];
+    /** 모래시계 부적이 목표 복잡도를 처음 보여 줄 때(hourglass_reveal, design.md §7.3, 단위 3-E5) */
+    hourglassReveal?: DialogueLine[];
   };
   /** 그림자 몬스터 전투(§7.6): 보상 50%, 해설서 없음, 연습 제안 없음 */
   shadow?: boolean;
+  /**
+   * 칸 3 이상의 '이름 없는 그림자'(design.md §7.6, 단위 3-E2). problem의 적 이름·제목은 이미 감춰져 있고,
+   * 전투 화면은 "~의 그림자"를 붙이지 않고 시작 대사에서도 주문서·원래 몬스터를 말하지 않는다. 이긴 뒤 보상 화면에서 공개한다
+   */
+  shadowAnonymous?: boolean;
   /**
    * 막혔을 때 제안할 연습 상대(design.md §6.2, src/systems/practice.ts findPracticeOffer). 앱이 전투를 열 때 찾아서 넘긴다.
    * 전투 화면은 누적 시간(priorElapsedMs + 이번 전투) ≥ 기준 시간이거나 이 문제에서 쓰러진 적이 있으면(knockouts ≥ 1, 시작 직후) 보여 준다.
@@ -109,8 +116,15 @@ export interface BattleContext {
   perks?: {
     /** 길잡이 깃털: 힌트 2단계 대가 없음(그림자 등록은 그대로) */
     freeHint2?: boolean;
-    /** 모래시계 부적: 시간 게이지에 보일 목표 복잡도 */
+    /**
+     * 모래시계 부적(design.md §7.3, 단위 3-E5): 시간 게이지에 보일 목표 복잡도. 처음에는 숨겨 두고,
+     * 시간 결계 페이즈(2페이즈 이후)의 시전에서 TLE가 확정되면(실행기가 이미 재확인한 판정) 공개한다
+     */
     targetComplexity?: string;
+    /** 이 문제에서 이미 공개했으면 true(처음부터 보인다, 결정 23 P-E7). 앱이 flags["hourglass.revealed:<원래 문제 ID>"]로 정한다 */
+    targetRevealed?: boolean;
+    /** 이번 전투에서 목표 복잡도를 처음 공개한 순간(앱이 공개 플래그를 저장한다) */
+    onTargetRevealed?(): void;
     /**
      * 메아리 고리(docs/phase3/region06-spec.md §7.2): [예제 실행]에서 줄마다 실행 횟수(공개 예제 합계)를 에디터 거터에 보인다.
      * 코드를 고치면 지운다. [시전]·채점에는 영향 없음
@@ -189,6 +203,8 @@ export interface MenuActions {
   openTitles?(): Promise<void>;
   /** 일일 퀘스트·스트릭(§7.5) */
   openQuests?(): Promise<void>;
+  /** 상점(§7.2, 단위 3-E5). 품목은 가 본 가장 먼 지역의 상점 기준(결정 23 P-E6) */
+  openShop?(): Promise<void>;
   exportSave(): Promise<void>;
   importSave(file: File): Promise<void>;
   resetSave(): Promise<void>;
@@ -217,6 +233,20 @@ export interface ShadowBoardEntry {
   nextIntervalDays: number;
   /** 정화 90일 뒤 돌아온 귀환 그림자 */
   returning: boolean;
+  /** 칸 3 이상: 이름을 숨긴 '이름 없는 그림자'(name도 감춘 이름, 단위 3-E2) */
+  anonymous: boolean;
+  /** 오늘 계획에서 잡은 예상 분(보스를 1페이즈만 내면 절반 올림) */
+  minutes: number;
+}
+
+/** 대기 중인 그림자(design.md §7.6 하루 계획 2): 대표 문제를 아직 처치하지 못했거나 오늘 처치해서 다음 학습일부터 나온다 */
+export interface ShadowPendingView {
+  concept: string;
+  /** 주문서 이름(anonymous면 감춘 이름) */
+  name: string;
+  box: number;
+  anonymous: boolean;
+  reason: "unsolved" | "solvedToday";
 }
 
 export interface QuestView {
@@ -250,12 +280,23 @@ export interface StreakView {
 }
 
 export interface BoardView {
+  /** 오늘의 하루 계획에서 남은 그림자(게시판·출제·퀘스트가 같은 계획을 쓴다, 단위 3-E2) */
   shadows: ShadowBoardEntry[];
+  /** 출현일은 됐지만 대기 중인 그림자 */
+  pending: ShadowPendingView[];
   /** 등록됐지만 오늘은 아닌 그림자 수 */
   waiting: number;
   /** 오늘 이미 상대한 그림자 수 / 하루 상한 */
   foughtToday: number;
   dailyLimit: number;
+  /** shadows의 예상 분 합("오늘 복습 예상 약 N분") */
+  plannedMinutes: number;
+  /** 오늘 이미 치른 그림자의 예상 분 합 */
+  usedMinutes: number;
+  /** 하루 시간 예산(분) */
+  budgetMinutes: number;
+  /** 하루 상한(마리 수·시간)에 걸려 다음 날로 넘어간 그림자 수 */
+  deferred: number;
   quests: QuestPanelView;
   streak: StreakView;
 }

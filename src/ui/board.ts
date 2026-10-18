@@ -100,16 +100,41 @@ export function createBoardUI(env: UiEnv): BoardUI {
           list.append(
             h(
               "li",
-              { class: `shadow-card ${s.returning ? "is-returning" : ""}`, "data-concept": s.concept },
+              { class: `shadow-card ${s.returning ? "is-returning" : ""} ${s.anonymous ? "is-anonymous" : ""}`, "data-concept": s.concept },
               h("span", { class: "shadow-icon", "aria-hidden": "true" }),
               h(
                 "div",
                 { class: "shadow-info" },
-                h("div", { class: "shadow-name" }, `그림자 · ${s.name}`),
-                h("div", { class: "shadow-meta" }, boxPips(s.box), h("span", { class: "shadow-box" }, `칸 ${s.box}`), s.overdueDays > 0 ? h("span", { class: "shadow-overdue" }, `${s.overdueDays}일 밀림`) : null),
+                // 칸 3 이상은 주문서 이름 대신 '이름 없는 그림자'(이긴 뒤 공개, design.md §7.6)
+                h("div", { class: "shadow-name" }, s.anonymous ? s.name : `그림자 · ${s.name}`),
+                h(
+                  "div",
+                  { class: "shadow-meta" },
+                  boxPips(s.box),
+                  h("span", { class: "shadow-box" }, `칸 ${s.box}`),
+                  h("span", { class: "shadow-minutes" }, `약 ${s.minutes}분`),
+                  s.overdueDays > 0 ? h("span", { class: "shadow-overdue" }, `${s.overdueDays}일 밀림`) : null,
+                ),
                 h("div", { class: "shadow-next" }, next),
               ),
               btn,
+            ),
+          );
+        }
+        // 대기(design.md §7.6 하루 계획 2): 원래 몬스터를 아직 못 이겼거나 오늘 이긴 그림자. 고를 수 없다
+        const pendingList = h("ul", { class: "shadow-pending-list" });
+        for (const s of view.pending) {
+          pendingList.append(
+            h(
+              "li",
+              { class: `shadow-pending ${s.anonymous ? "is-anonymous" : ""}`, "data-concept": s.concept },
+              h("span", { class: "shadow-pending-name" }, s.anonymous ? s.name : `그림자 · ${s.name}`),
+              h("span", { class: "shadow-box" }, `칸 ${s.box}`),
+              h(
+                "span",
+                { class: "shadow-pending-why" },
+                s.reason === "unsolved" ? "원래 몬스터를 이긴 다음 날부터 나타나" : "오늘 원래 몬스터를 이겼으니 내일부터 나타나",
+              ),
             ),
           );
         }
@@ -118,16 +143,33 @@ export function createBoardUI(env: UiEnv): BoardUI {
             ? `오늘 나타난 그림자야. 이기면 보상은 원래의 절반이지만, 개념이 단단해져!`
             : view.foughtToday >= view.dailyLimit
               ? `오늘 그림자는 ${view.dailyLimit}마리까지야. 다 상대했으니 푹 쉬어도 돼!`
-              : view.waiting > 0
-                ? `오늘은 그림자가 조용해. 기다리는 그림자 ${view.waiting}마리는 날이 되면 나타날 거야.`
-                : `아직 그림자가 없어. 힌트를 많이 쓰거나 쓰러진 개념이 여기 나타나.`;
+              : view.foughtToday > 0 && view.deferred > 0
+                ? `오늘 복습은 여기까지! 그림자는 하루 ${view.budgetMinutes}분 정도만 낼게. 남은 그림자는 내일 나타날 거야.`
+                : view.pending.length > 0
+                  ? `지금은 기다리는 그림자만 있어. 원래 몬스터를 이긴 다음 날부터 나타날 거야.`
+                  : view.waiting > 0
+                    ? `오늘은 그림자가 조용해. 기다리는 그림자 ${view.waiting}마리는 날이 되면 나타날 거야.`
+                    : `아직 그림자가 없어. 힌트를 많이 쓰거나 쓰러진 개념이 여기 나타나.`;
+        // 오늘 복습 예상(design.md §7.6 하루 계획 7)
+        const budget =
+          view.shadows.length > 0 || view.usedMinutes > 0
+            ? h(
+                "p",
+                { class: "shadow-budget" },
+                `오늘 복습 예상 약 ${view.plannedMinutes}분`,
+                view.usedMinutes > 0 ? h("span", { class: "shadow-budget-used" }, ` · 오늘 치른 그림자 약 ${view.usedMinutes}분`) : null,
+              )
+            : null;
         shell.body.append(
           h(
             "section",
             { class: "sys-section shadow-panel" },
             h("h3", {}, `오늘 나타난 그림자 (${view.shadows.length})`),
             h("p", { class: "sys-nuri" }, h("span", { class: "nuri-name" }, names.companion), intro),
+            budget,
             view.shadows.length ? list : null,
+            view.pending.length ? h("h4", { class: "shadow-pending-head" }, `기다리는 그림자 (${view.pending.length})`) : null,
+            view.pending.length ? pendingList : null,
           ),
           questPanel(view.quests),
           streakPanel(view.streak),

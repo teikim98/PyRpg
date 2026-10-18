@@ -50,6 +50,9 @@ export interface BattleOverrides {
   potions?: number;
   /** 고정 데이터 문제를 고쳐서 연다(예: { practice: true }로 연습 몬스터) */
   patch?: Partial<Problem>;
+  /** 모래시계 부적(단위 3-E5): 목표 복잡도. targetRevealed면 처음부터 보인다 */
+  targetComplexity?: string;
+  targetRevealed?: boolean;
 }
 
 /** 하네스용 연습 상대 */
@@ -76,6 +79,8 @@ export function mountHarness(game: HTMLElement) {
   const victories: BattleOutcome[] = [];
   /** onProgress로 받은 진행(힌트·해설서·반격·탭 숨김) */
   const progresses: BattleProgress[] = [];
+  /** onTargetRevealed로 받은 공개(모래시계 부적, 단위 3-E5): 문제 ID */
+  const reveals: string[] = [];
   const logEl = document.getElementById("log");
   const record = <T>(label: string, p: Promise<T>): Promise<T> =>
     p.then((v) => {
@@ -108,6 +113,7 @@ export function mountHarness(game: HTMLElement) {
     results,
     victories,
     progresses,
+    reveals,
     problems,
     /** 전투 해설 규칙(테스트가 실제 콘텐츠 규칙을 앞에 끼워 넣을 수 있다) */
     traceback,
@@ -129,6 +135,9 @@ export function mountHarness(game: HTMLElement) {
         ...(o.practiceOffer ? { practiceOffer: harnessOffer(o.practiceOffer) } : {}),
         ...(o.practice ? { practice: true } : {}),
         ...(o.potions ? { potions: { count: o.potions, heal: 30, name: "회복약" } } : {}),
+        ...(o.targetComplexity
+          ? { perks: { targetComplexity: o.targetComplexity, targetRevealed: o.targetRevealed === true, onTargetRevealed: () => void reveals.push(id) } }
+          : {}),
         regionOrder: o.regionOrder ?? 1,
         traceback,
         explain: fakeExplain,
