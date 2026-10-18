@@ -15,4 +15,6 @@ cd docs/improvements/prototype
 PYTHONUTF8=1 python prereq_proto.py
 ```
 
-알려진 한계: 함수 안의 도우미 함수(재귀가 아닌 것, 예: P0610 `compress`)를 `nested-def`로 잡지 못했습니다. 3-B에서 고칩니다.
+~~알려진 한계: 함수 안의 도우미 함수(재귀가 아닌 것, 예: P0610 `compress`)를 `nested-def`로 잡지 못했습니다.~~ 바로잡음(2026-10-18, 단위 3-B): 태거는 함수 안의 `def`에 모두 `nested-def`를 붙였고(`compress`는 재귀이기도 함), P0610이 위반으로 나오지 않은 것은 `starter.py`가 이미 `solution` 안의 `def compress`를 보여 주어 '시작 코드 태그 허용' 규칙으로 통과했기 때문입니다.
+
+**3-B에서 `tools/prereq.py`로 대체됨**(레슨 `introduces`는 `lesson.json`으로 옮김). 이 폴더는 기록으로만 둡니다.
