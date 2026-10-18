@@ -8,6 +8,7 @@ content/ 아래 데이터를 읽어서 아래를 확인한다. 하나라도 실�
 - 변형 문제(plan.md §5.1): 필드·statement 파일, 공개 1+/숨김 3+, 변형 ID 중복, 테스트 형식·4300자리,
   원래 모범답안 전부 AC, wrong_*.py는 변형마다 하나 이상 실패, 보스 slow.py는 전부 AC(시간 결계 없음)
 - 레슨: 주문서 ID, 빈칸 연습 정답 실행 결과, ```python run 블록이 에러 없이 실행되는지
+- 선행 지식(tools/prereq.py): 레슨 introduces와 학습 시점으로 모범답안·레슨 코드는 오류, 힌트·보스 slow.py는 경고(파싱만)
 - 대사: region1-spec.md §5, region02-spec.md §5, region03-spec.md §5, region04-spec.md §5, region05-spec.md §5의 ID,
   대사 줄 형식
 - 지역: recommended 필드(번호·제목·사이트·레벨만), map.tmj가 있으면 맵 오브젝트 참조(상자의 item은 items.json의 ID)
@@ -28,6 +29,7 @@ import subprocess
 import sys
 import tempfile
 from concurrent.futures import ThreadPoolExecutor
+import prereq
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONTENT = os.path.join(ROOT, "content")
@@ -1311,6 +1313,7 @@ def main():
             if os.path.isdir(os.path.join(rdir, name)):
                 check_region(rep, runner, pool, os.path.join(rdir, name), sprites, common, items)
 
+    prereq.check_all(rep, rdir)
     check_warps(rep, rdir)
 
     print(f"실행 {runner.count}회, 경고 {len(rep.warnings)}개, 오류 {len(rep.errors)}개")
