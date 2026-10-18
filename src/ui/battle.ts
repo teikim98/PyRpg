@@ -23,6 +23,7 @@ import {
   hintShortCost,
   lineCountLabels,
   practiceThresholdMs,
+  solutionAccess,
   testsInScope,
   timeGaugePercent,
   type Feedback,
@@ -83,6 +84,14 @@ export function createBattleUI(env: UiEnv): BattleUI {
         let hintLevel: HintLevel = ctx.hintLevel;
         let solutionViewed = false;
         let busy = false;
+        // 해설서 힌트 경로(design.md §5.3): 힌트 3이 열린 뒤 이번 전투에서 실패한 시전 수(결정 23 P-E3)
+        let failsAfterHint3 = 0;
+        // 힌트 경로로 열렸다는 누리 대사를 이미 했는가(전투마다 한 번)
+        let hintUnlockSaid = false;
+        // 모범답안 코드가 보이는 동안은 에디터를 가리고 시전·실행을 막는다
+        let codeVisible = false;
+        // 시간 조건만 남았을 때 해설서 버튼을 1초마다 다시 그리는 타이머
+        let accessTick: number | null = null;
         // 시간 결계 페이즈(2페이즈 이후)를 모두 첫 시전에 통과했는가(칭호 '시간을 돌린 자')
         let barrierFirstTry = true;
         let potions = ctx.potions?.count ?? 0;
@@ -193,6 +202,8 @@ export function createBattleUI(env: UiEnv): BattleUI {
         const tabSolution = h("button", { class: "tab", type: "button" }, "해설서");
         const tabs = h("div", { class: "battle-tabs", hidden: true }, tabStatement, tabSolution);
         const showTab = (which: "statement" | "solution") => {
+          // [문제] 탭으로 돌아가면 모범답안 코드를 닫고 에디터 가림을 푼다
+          if (which === "statement" && codeVisible) setCodeVisible(false);
           statement.hidden = which !== "statement";
           solutionView.hidden = which !== "solution";
           tabStatement.classList.toggle("is-active", which === "statement");
@@ -228,19 +239,22 @@ export function createBattleUI(env: UiEnv): BattleUI {
         stdinArea.addEventListener("keydown", (e) => e.stopPropagation());
         stdinArea.addEventListener("keyup", (e) => e.stopPropagation());
         const customBtn = h("button", { class: "btn btn-small custom-run", type: "button" }, p.kind === "stdin" ? "직접 입력으로 실행" : "그냥 실행(print 확인)");
-        const right = h(
-          "div",
-          { class: "battle-editor-col panel" },
-          editor.wrapper,
-          h("div", { class: "editor-hint" }, "Tab: 들여쓰기 · Esc 다음 Tab: 에디터 밖으로"),
-          h(
-            "details",
-            { class: "custom-run-box" },
-            h("summary", {}, "직접 실행해 보기"),
-            p.kind === "stdin" ? stdinArea : null,
-            customBtn,
-          ),
+        const editorHint = h("div", { class: "editor-hint" }, "Tab: 들여쓰기 · Esc 다음 Tab: 에디터 밖으로");
+        const customBox = h(
+          "details",
+          { class: "custom-run-box" },
+          h("summary", {}, "직접 실행해 보기"),
+          p.kind === "stdin" ? stdinArea : null,
+          customBtn,
         );
+        // 모범답안 코드를 보는 동안 에디터를 덮는 막(design.md §5.3). 코드를 옮겨 적지 말고 이해한 뒤 직접 쓰게
+        const editorCover = h(
+          "div",
+          { class: "editor-cover", hidden: true, role: "note" },
+          h("p", { class: "editor-cover-title" }, "모범답안을 보는 동안은 에디터를 가려 둘게."),
+          h("p", {}, "[문제] 탭이나 [코드 닫기]를 누르면 다시 쓸 수 있어."),
+        );
+        const right = h("div", { class: "battle-editor-col panel" }, editor.wrapper, editorHint, customBox, editorCover);
         root.append(h("div", { class: "battle-mid" }, left, right));
 
         // ---------- 아래: 누리와 버튼 ----------
@@ -323,10 +337,19 @@ export function createBattleUI(env: UiEnv): BattleUI {
         const banner = h("div", { class: "battle-banner", hidden: true });
         root.append(h("div", { class: "battle-bottom panel" }, h("div", { class: "battle-portrait" }, portrait.el), msgWrap, msgDetails), actions, banner);
 
+        // 해설서를 열 수 있는가(쓰러짐 3회 또는 힌트 경로, 전투마다 다시 판정)
+        const access = () =>
+          solutionAccess({
+            knockouts: ctx.knockouts,
+            hintLevel,
+            failsAfterHint3,
+            elapsedMs: (ctx.priorElapsedMs ?? 0) + timer.elapsed(),
+            estimatedMinutes: p.estimatedMinutes,
+          });
         const updateButtons = () => {
-          btnPublic.disabled = busy;
-          btnCast.disabled = busy;
-          customBtn.disabled = busy;
+          btnPublic.disabled = busy || codeVisible;
+          btnCast.disabled = busy || codeVisible;
+          customBtn.disabled = busy || codeVisible;
           btnRetreat.disabled = ended;
           hintBtns.forEach((b, i) => {
             const lv = (i + 1) as 1 | 2 | 3;
@@ -338,10 +361,20 @@ export function createBattleUI(env: UiEnv): BattleUI {
             b.title = opened ? "다시 보기" : free ? "길잡이 깃털: 보상 대가 없음(그림자 몬스터 등록은 그대로)" : `대가: ${HINT_COSTS[lv].label}`;
             b.classList.toggle("is-free", free && !opened);
           });
-          const canSolution = ctx.knockouts >= 3;
+          const acc = access();
+          const canSolution = solutionViewed || acc.unlocked;
           btnSolution.disabled = busy || !canSolution;
-          btnSolution.title = canSolution ? "모범답안과 풀이(보상 0)" : `같은 적에게 세 번 쓰러지면 열 수 있어 (${Math.min(ctx.knockouts, 3)}/3)`;
-          btnSolution.textContent = canSolution ? "해설서" : `해설서 (${Math.min(ctx.knockouts, 3)}/3)`;
+          btnSolution.title = solutionViewed ? "해설서 다시 보기" : acc.title;
+          btnSolution.textContent = solutionViewed ? "해설서" : acc.label;
+          btnSolution.dataset.via = solutionViewed ? "viewed" : (acc.via ?? "locked");
+          // 시간 조건만 남았으면 1초마다 다시 그린다(그림자전에는 해설서가 없다)
+          const wantTick = !ctx.shadow && !ended && !closed && !solutionViewed && acc.timeOnly;
+          if (wantTick && accessTick === null) accessTick = window.setInterval(updateButtons, 1000);
+          else if (!wantTick && accessTick !== null) {
+            window.clearInterval(accessTick);
+            accessTick = null;
+          }
+          if (!ctx.shadow && acc.via === "hint" && !hintUnlockSaid && !solutionViewed && !busy && !ended && !closed) announceHintUnlock();
           btnPotion.hidden = potions <= 0;
           btnPotion.textContent = `${ctx.potions?.name ?? "회복약"} ×${potions}`;
           btnPotion.disabled = busy || ended || hp >= maxHp;
@@ -437,7 +470,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
         };
 
         const runPublic = async () => {
-          if (busy) return;
+          if (busy || codeVisible) return;
           setBusy(true);
           editor.highlightLine(null);
           editor.setGutterLabels(null);
@@ -469,7 +502,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
         };
 
         const runCustom = async () => {
-          if (busy) return;
+          if (busy || codeVisible) return;
           setBusy(true);
           editor.highlightLine(null);
           say("neutral", runnerWaitText());
@@ -505,7 +538,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
         const runnerWaitText = () => (ctx.runner.isReady() ? "주문을 읽는 중…" : "실행기를 깨우는 중… 처음 한 번은 조금 걸려.");
 
         const cast = async () => {
-          if (busy) return;
+          if (busy || codeVisible) return;
           setBusy(true);
           attempts++;
           editor.highlightLine(null);
@@ -566,6 +599,8 @@ export function createBattleUI(env: UiEnv): BattleUI {
             }
             // 실패: 반격
             if (phases.length && phaseIdx >= 1) barrierFirstTry = false;
+            // 해설서 힌트 경로: 힌트 3을 연 뒤의 실패만 센다(fatal 포함, 결정 23 P-E3)
+            if (hintLevel >= 3) failsAfterHint3++;
             const dmg = computeDamage(p.enemy.attack, res.passed, res.total);
             setHp(hp - dmg);
             restartAnim(root, "is-damaged");
@@ -648,9 +683,40 @@ export function createBattleUI(env: UiEnv): BattleUI {
           say("neutral", `<strong class="hint-title">힌트 ${lv} · ${title}</strong>`, body);
         };
 
+        // 해설서 보기(design.md §5.3): 제목 → 보상 0 안내 → 풀이 설명 → [모범답안 코드 보기]. 코드는 한 번 더 눌러야 보인다
+        const showCodeBtn = h("button", { class: "btn solution-show-code", type: "button" }, "모범답안 코드 보기");
+        const hideCodeBtn = h("button", { class: "btn btn-small solution-hide-code", type: "button" }, "코드 닫기");
+        // 코드는 복사할 수 없게(결정 23 P-E4. CSS user-select: none + copy 막기, 개발자 도구로는 우회 가능)
+        const solutionCode = h("pre", { class: "md-code solution-code", "aria-label": "모범답안 코드" }, p.solution.replace(/\n$/, ""));
+        solutionCode.addEventListener("copy", (e) => e.preventDefault());
+        solutionCode.addEventListener("cut", (e) => e.preventDefault());
+        const codeBox = h("div", { class: "solution-code-box", hidden: true }, solutionCode, hideCodeBtn);
+        function setCodeVisible(v: boolean): void {
+          codeVisible = v;
+          codeBox.hidden = !v;
+          showCodeBtn.hidden = v;
+          editorCover.hidden = !v;
+          right.classList.toggle("is-covered", v);
+          // 가린 동안은 에디터·직접 실행에 포커스도 들어가지 않게
+          for (const el of [editor.wrapper, editorHint, customBox]) el.toggleAttribute("inert", v);
+          updateButtons();
+        }
+        showCodeBtn.addEventListener("click", () => {
+          if (busy || closed) return;
+          flushDraft();
+          setCodeVisible(true);
+          codeBox.scrollIntoView({ block: "nearest" });
+          hideCodeBtn.focus();
+        });
+        hideCodeBtn.addEventListener("click", () => {
+          setCodeVisible(false);
+          showCodeBtn.focus();
+        });
+
         const openSolution = async () => {
-          if (busy || ctx.knockouts < 3) return;
+          if (busy || ctx.shadow) return;
           if (!solutionViewed) {
+            if (!access().unlocked) return;
             const ok = await confirmDialog(env, "해설서", "해설서를 열면 이 전투의 보상이 0이 되고, 이 개념이 그림자 몬스터로 등록돼. 열어 볼까?", "해설서 열기");
             if (!ok || closed) return;
             solutionViewed = true;
@@ -658,13 +724,30 @@ export function createBattleUI(env: UiEnv): BattleUI {
             solutionView.append(
               h("h2", { class: "battle-title" }, "해설서"),
               h("p", { class: "solution-note" }, "이 전투의 보상은 0이 돼."),
-              h("pre", { class: "md-code solution-code" }, p.solution.replace(/\n$/, "")),
               h("div", { class: "md solution-explanation", html: renderMarkdown(substituteNames(p.explanation, names)) }),
+              h("p", { class: "solution-code-note" }, "설명을 먼저 읽어 봐. 그래도 막히면 코드를 볼 수 있어. 코드를 보는 동안은 에디터를 가려 둘게."),
+              showCodeBtn,
+              codeBox,
             );
             tabs.hidden = false;
+            updateButtons();
           }
           showTab("solution");
-          say("serious", "괜찮아, 막혔을 땐 풀이를 보고 이해하는 것도 실력이야. 이해했으면 직접 다시 써 보자.");
+          say("serious", "괜찮아, 막혔을 땐 풀이를 보고 이해하는 것도 실력이야. 설명부터 천천히 읽고, 이해했으면 직접 다시 써 보자.");
+        };
+
+        // 힌트 경로로 해설서가 처음 열렸을 때 누리 대사(전투마다 한 번). 지금 메시지(채점 결과 등)는 지우지 않고 아래에 붙인다
+        const announceHintUnlock = () => {
+          hintUnlockSaid = true;
+          const common = companionSay(ctx.companionLines?.solutionUnlockedHint);
+          const html =
+            common?.html ??
+            `<p class="nuri-line">힌트 3까지 보고 이만큼 버텼으면 정말 열심히 한 거야. 이제 <strong>해설서</strong>를 열 수 있어.</p><p class="nuri-line">설명부터 읽고 코드는 꼭 필요할 때만 봐. 대신 이번 보상은 없고 그림자 몬스터로 다시 만나게 돼. 고르는 건 너야!</p>`;
+          const note = h("div", { class: "solution-unlock-note", html });
+          msg.append(note);
+          msgBox.dataset.solutionUnlocked = "hint";
+          note.scrollIntoView({ block: "nearest" });
+          updateMsgMore();
         };
 
         const outcomeOf = (result: BattleOutcome["result"]): BattleOutcome => ({
@@ -713,6 +796,10 @@ export function createBattleUI(env: UiEnv): BattleUI {
         btnSolution.addEventListener("click", () => void openSolution());
         btnRetreat.addEventListener("click", () => finish("retreat"));
         btnPotion.addEventListener("click", usePotion);
+        cleanups.push(() => {
+          if (accessTick !== null) window.clearInterval(accessTick);
+          accessTick = null;
+        });
 
         // 탭을 숨기면 시간을 멈추고 지금까지를 임시 저장한다(탭을 닫거나 새로고침해도 시간이 남게). 다시 보이면 이어 센다
         const onVisibility = () => {
@@ -732,6 +819,8 @@ export function createBattleUI(env: UiEnv): BattleUI {
           timers.push(
             window.setTimeout(() => {
               if (closed) return;
+              // 해설서가 힌트 경로로 열렸다는 안내는 연습 제안에 덮이지 않게 다시 붙인다(같은 때에 열릴 수 있다)
+              const unlockNote = msg.querySelector(".solution-unlock-note");
               const common = companionSay(ctx.companionLines?.practiceSuggest);
               if (common) say(common.emotion, common.html);
               else {
@@ -740,6 +829,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
                   "꽤 오래 붙잡고 있네! 같은 주문서의 <strong>연습 전투</strong>를 먼저 해 보는 건 어때? 강제는 아니고, 돌아와도 보상은 그대로야.",
                 );
               }
+              if (unlockNote) msg.append(unlockNote);
               msgBox.dataset.practice = "true";
             }, practiceThresholdMs(p.estimatedMinutes)),
           );

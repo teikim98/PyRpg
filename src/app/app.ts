@@ -487,6 +487,7 @@ export class App {
       companionLines: {
         fatalRecursion: this.deps.content.commonDialogues.fatal_recursion,
         practiceSuggest: this.deps.content.commonDialogues.practice_suggest,
+        solutionUnlockedHint: this.deps.content.commonDialogues.solution_unlocked_hint,
       },
       shadow,
       perks: {
@@ -542,7 +543,13 @@ export class App {
       this.questEvent({ type: "shadow" });
     } else {
       const rec = this.save.problems[problem.id];
-      this.questEvent({ type: "win", maxHintLevel: rec?.maxHintLevel ?? outcome.maxHintLevel, attempts: rec?.attempts ?? outcome.attempts });
+      // 해설서를 보고 이긴 전투는 '힌트 없이'·'첫 시전' 퀘스트에 넣지 않는다(design.md §7.5, 단위 3-E4)
+      this.questEvent({
+        type: "win",
+        maxHintLevel: rec?.maxHintLevel ?? outcome.maxHintLevel,
+        attempts: rec?.attempts ?? outcome.attempts,
+        solutionViewed: rec?.solutionViewed ?? outcome.solutionViewed,
+      });
       if (outcome.timeBarrierFirstTry) this.save.flags[TIME_BARRIER_FLAG] = true;
       // 보스 보상 장신구(예: 지역 2 보스 → 길잡이 깃털)
       if (result.events.some((e) => e.type === "victory" && e.firstClear)) {

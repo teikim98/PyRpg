@@ -455,6 +455,8 @@ describe("전투", () => {
     // 9: 공통 대사를 전투 UI에 넘긴다
     expect(ctxSeen.companionLines?.fatalRecursion).toBe(content.commonDialogues.fatal_recursion);
     expect(ctxSeen.companionLines?.practiceSuggest).toBe(content.commonDialogues.practice_suggest);
+    expect(ctxSeen.companionLines?.solutionUnlockedHint).toBe(content.commonDialogues.solution_unlocked_hint);
+    expect(content.commonDialogues.solution_unlocked_hint).toHaveLength(2);
   });
 
   it("경과 시간(단위 3-E1): 전투 중 임시 저장에 elapsedMs를 싣고, 다음 전투에 priorElapsedMs로 넘긴다", async () => {

@@ -43,7 +43,7 @@ export interface BattleContext {
   player: { hp: number; maxHp: number };
   /** 저장된 작성 중 코드. 없으면 problem.starter */
   draft?: string;
-  /** 이 적에게 쓰러진 횟수. 3 이상이면 해설서를 열 수 있음(§5.3) */
+  /** 이 적에게 쓰러진 횟수. 3 이상이면 해설서를 열 수 있음(§5.3 쓰러짐 경로. 힌트 경로는 hintLevel·priorElapsedMs와 이번 전투로 판정) */
   knockouts: number;
   /** 이미 연 힌트 단계(재도전 시 이어짐) */
   hintLevel: HintLevel;
@@ -77,6 +77,8 @@ export interface BattleContext {
     fatalRecursion?: DialogueLine[];
     /** 오래 붙잡고 있을 때 연습 전투 제안(practice_suggest) */
     practiceSuggest?: DialogueLine[];
+    /** 힌트 경로로 해설서가 처음 열렸을 때(solution_unlocked_hint, design.md §5.3, 단위 3-E4) */
+    solutionUnlockedHint?: DialogueLine[];
   };
   /** 그림자 몬스터 전투(§7.6): 보상 50%, 해설서 없음 */
   shadow?: boolean;

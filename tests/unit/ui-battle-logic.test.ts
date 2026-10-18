@@ -7,9 +7,11 @@ import {
   castStageText,
   computeDamage,
   createActiveTimer,
+  detourThresholdMs,
   disclosureMode,
   hintShortCost,
   practiceThresholdMs,
+  solutionAccess,
   testsInScope,
   timeGaugePercent,
 } from "../../src/ui/battleLogic";
@@ -182,5 +184,52 @@ describe("createActiveTimer(단위 3-E1)", () => {
     timer.start();
     t -= 300;
     expect(timer.elapsed()).toBe(0);
+  });
+});
+
+describe("해설서 힌트 경로(단위 3-E4, design.md §5.3·§7.1)", () => {
+  const MIN = 60_000;
+  it("기준 시간 T = min(max(예상 × 2, 10), 20)분: 경계", () => {
+    const cases: [number, number][] = [
+      [3, 10],
+      [5, 10],
+      [8, 16],
+      [10, 20],
+      [12, 20],
+      [20, 20],
+    ];
+    for (const [est, t] of cases) expect(detourThresholdMs(est)).toBe(t * MIN);
+  });
+
+  const base = { knockouts: 0, hintLevel: 0 as const, failsAfterHint3: 0, elapsedMs: 0, estimatedMinutes: 5 };
+  it("힌트 3 전에는 지금처럼 쓰러짐 n/3, 쓰러짐 3회면 열림(힌트·시간과 상관없이)", () => {
+    expect(solutionAccess(base)).toMatchObject({ unlocked: false, via: null, label: "해설서 (0/3)", timeOnly: false });
+    expect(solutionAccess({ ...base, knockouts: 2, hintLevel: 2, failsAfterHint3: 5, elapsedMs: 99 * MIN }).label).toBe("해설서 (2/3)");
+    expect(solutionAccess({ ...base, knockouts: 3 })).toMatchObject({ unlocked: true, via: "knockout", label: "해설서" });
+    expect(solutionAccess({ ...base, knockouts: 7 }).via).toBe("knockout");
+    expect(solutionAccess(base).title).toContain("10분");
+  });
+  it("힌트 3 뒤: 실패 n/2 → 시간 m/T분 → 열림", () => {
+    const h3 = { ...base, hintLevel: 3 as const };
+    expect(solutionAccess(h3)).toMatchObject({ unlocked: false, label: "해설서 (실패 0/2)", timeOnly: false });
+    // 시간이 이미 넘었어도 실패가 모자라면 실패를 보여 준다
+    expect(solutionAccess({ ...h3, failsAfterHint3: 1, elapsedMs: 30 * MIN })).toMatchObject({ unlocked: false, label: "해설서 (실패 1/2)" });
+    expect(solutionAccess({ ...h3, failsAfterHint3: 2, elapsedMs: 9 * MIN + 59_999 })).toMatchObject({
+      unlocked: false,
+      label: "해설서 (시간 9/10분)",
+      timeOnly: true,
+    });
+    expect(solutionAccess({ ...h3, failsAfterHint3: 2, elapsedMs: 10 * MIN })).toMatchObject({ unlocked: true, via: "hint", label: "해설서" });
+    expect(solutionAccess({ ...h3, failsAfterHint3: 3, elapsedMs: 11 * MIN }).via).toBe("hint");
+  });
+  it("상한 20분: 예상 12분(보스 20분)도 20분이면 열림, 표시는 T에서 멈춤", () => {
+    const h3 = { ...base, hintLevel: 3 as const, failsAfterHint3: 2, estimatedMinutes: 12 };
+    expect(solutionAccess({ ...h3, elapsedMs: 19 * MIN }).label).toBe("해설서 (시간 19/20분)");
+    expect(solutionAccess({ ...h3, elapsedMs: 20 * MIN }).unlocked).toBe(true);
+    expect(solutionAccess({ ...h3, estimatedMinutes: 20, elapsedMs: 20 * MIN }).unlocked).toBe(true);
+    // 쓰러짐 경로가 먼저
+    expect(solutionAccess({ ...h3, knockouts: 3, elapsedMs: 0 }).via).toBe("knockout");
+    // 음수·이상한 값은 0으로
+    expect(solutionAccess({ ...h3, elapsedMs: -5 }).label).toBe("해설서 (시간 0/20분)");
   });
 });

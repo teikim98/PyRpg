@@ -21,6 +21,12 @@ async function shot(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: `${SCREENS}/${name}` });
 }
 
+/** 단위 3-E4 해설서 화면 기록(docs/phase3/screens/engine-e4-*.png) */
+async function shotE4(page: Page, name: string): Promise<void> {
+  await page.waitForTimeout(600);
+  await page.screenshot({ path: `docs/phase3/screens/engine-e4-${name}.png` });
+}
+
 // ───────────── 훅 읽기 ─────────────
 
 const where = (page: Page) => page.evaluate(() => (window as any).__pyrpg.where()) as Promise<{ x: number; y: number; facing: Facing; busy: boolean; modal: boolean }>;
@@ -581,7 +587,18 @@ test.describe("실패와 복구", () => {
     await expect(page.locator(".act-solution")).toBeEnabled();
     await page.locator(".act-solution").click();
     await page.locator(".confirm-yes").click();
+    // 설명 먼저(단위 3-E4): 코드는 [모범답안 코드 보기]를 눌러야 보이고, 보는 동안 에디터를 가린다
+    await expect(page.locator(".solution-explanation")).toBeVisible();
+    await expect(page.locator(".solution-code")).toBeHidden();
+    await shotE4(page, "knockout-explanation");
+    await page.locator(".solution-show-code").click();
     await expect(page.locator(".solution-code")).toHaveText(solution("P0101").trimEnd());
+    await expect(page.locator(".editor-cover")).toBeVisible();
+    await expect(page.locator(".act-cast")).toBeDisabled();
+    await shotE4(page, "knockout-code-covered");
+    // [문제] 탭으로 돌아가면 가림이 풀리고 바로 입력할 수 있다
+    await page.locator(".battle-tabs .tab").first().click();
+    await expect(page.locator(".editor-cover")).toBeHidden();
     await typeCode(page, solution("P0101"));
     await cast(page);
     await page.locator(".banner-ok").click();
@@ -590,6 +607,53 @@ test.describe("실패와 복구", () => {
     await page.locator(".reward-ok").click();
     await settle(page);
     expect((await save(page)).shadows.map((x: any) => x.concept)).toContain("scroll.convert");
+  });
+
+  test("해설서 힌트 경로(단위 3-E4): 힌트 3 + 누적 시간 → 이번 전투 실패 2번 → 누리 안내 → 설명 먼저 → 코드 보는 동안 에디터 가림", async ({ page }) => {
+    test.setTimeout(180_000);
+    await boot(page);
+    await settle(page);
+    const gate = await obj(page, "gate_well");
+    // P0101(예상 5분 → 기준 시간 10분)에 이미 10분을 썼고 힌트 3까지 연 기록
+    const rec = { attempts: 4, knockouts: 0, solved: false, maxHintLevel: 3, solutionViewed: false, elapsedTotalMs: 10 * 60_000 };
+    await seedAndReload(page, {
+      lessons: ["L1-1", "L1-2"],
+      removed: ["gate_well"],
+      at: { x: gate.x, y: gate.y - 1 },
+      flags: ["trigger.r01.t_prologue"],
+      patch: { problems: { P0101: rec } },
+    });
+    await bump(page, "m_P0101");
+    await settle(page, ".battle-modal");
+    const btn = page.locator(".act-solution");
+    await expect(btn).toHaveText("해설서 (실패 0/2)");
+    await expect(btn).toBeDisabled();
+    await typeCode(page, code("P0101", "wrong_a.py"));
+    await cast(page);
+    await expect(btn).toHaveText("해설서 (실패 1/2)");
+    await cast(page);
+    await expect(btn).toBeEnabled();
+    await expect(btn).toHaveText("해설서");
+    await expect(page.locator(".battle-msg .solution-unlock-note")).toContainText("해설서를 열 수 있어");
+    await shotE4(page, "hint-unlocked");
+    await btn.click();
+    await page.locator(".confirm-yes").click();
+    await expect(page.locator(".solution-explanation")).toBeVisible();
+    await expect(page.locator(".solution-code")).toBeHidden();
+    await shotE4(page, "hint-explanation");
+    await page.locator(".solution-show-code").click();
+    await expect(page.locator(".editor-cover")).toBeVisible();
+    await expect(page.locator(".act-cast")).toBeDisabled();
+    await shotE4(page, "hint-code-covered");
+    await page.locator(".solution-hide-code").click();
+    await expect(page.locator(".editor-cover")).toBeHidden();
+    await page.locator(".act-retreat").click();
+    await settle(page);
+    const s = await save(page);
+    expect(s.problems.P0101).toMatchObject({ solved: false, solutionViewed: true, maxHintLevel: 3, attempts: 6 });
+    expect(s.problems.P0101.elapsedTotalMs).toBeGreaterThan(10 * 60_000);
+    // 해설서를 본 개념은 그림자 칸 0
+    expect(s.shadows.find((x: any) => x.concept === "scroll.convert")).toMatchObject({ box: 0 });
   });
 
   test("무한루프: while True: pass → TLE, 후퇴 후 이동·메뉴가 반응, 다음 시전은 정상 채점", async ({ page }) => {
