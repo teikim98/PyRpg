@@ -49,6 +49,8 @@ export interface ProblemFile {
   midBoss?: boolean;
   phases?: BossPhase[];
   practice?: boolean;
+  /** 응용 전투(불리언, 결정 23 P-E13) */
+  applied?: boolean;
   timeLimitMs: number;
   budgetUnits?: number;
   /** 함수형 비교 옵션 */
@@ -174,6 +176,7 @@ function buildProblem(src: ContentSources, regionDir: string, regionId: string, 
   if (p.boss === true && p.midBoss === true) problem.midBoss = true;
   if (p.phases) problem.phases = p.phases;
   if (p.practice) problem.practice = true;
+  if (p.applied) problem.applied = true;
   if (p.budgetUnits !== undefined) problem.budgetUnits = p.budgetUnits;
   if (p.compare) problem.compare = p.compare;
   if (p.targetComplexity) problem.targetComplexity = p.targetComplexity;
