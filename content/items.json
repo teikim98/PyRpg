@@ -58,7 +58,7 @@
     "id": "hourglass-charm",
     "name": "모래시계 부적",
     "kind": "accessory",
-    "description": "보스의 시간 결계에서 시간 게이지에 목표 복잡도(예: O(N log N))를 보여 준다.",
+    "description": "보스의 시간 결계에서 시간 초과(TLE)가 한 번 확정되면 시간 게이지에 목표 복잡도(예: O(N log N))를 보여 준다. 한 번 보인 문제는 다음 전투에서도 처음부터 보인다.",
     "source": "지역 7 보스",
     "effect": { "type": "targetComplexity" }
   },

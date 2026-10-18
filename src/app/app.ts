@@ -28,12 +28,11 @@ import {
   applyPracticeOutcome,
   applyQuestEvent,
   awardTitles,
-  boardShadows,
   buyItem,
   completeLesson,
   currentStreak,
   DAILY_SHADOW_LIMIT,
-  dueShadows,
+  DAILY_SHADOW_MINUTES,
   EMBER_THRESHOLD,
   emptyRecord,
   ensureDailyQuests,
@@ -48,6 +47,7 @@ import {
   MAX_PROTECTIONS,
   maxHp,
   owned,
+  planShadows,
   purifiedShadows,
   questProgress,
   REPAIR_BATTLES,
@@ -55,8 +55,7 @@ import {
   restAtCampfire,
   returnCleared,
   settleOnLoad,
-  shadowProblem,
-  shadowsFoughtToday,
+  SHADOW_ANON_NAME,
   shopState,
   tintColor,
   TIME_BARRIER_FLAG,
@@ -68,6 +67,8 @@ import {
   WEEK_GOAL,
   weekDays,
   type BattleEvent,
+  type ShadowPlan,
+  type ShadowPlanItem,
   type QuestEvent,
   type QuestContext,
 } from "../systems";
@@ -79,6 +80,8 @@ import { arrivalSpot } from "./travel";
 
 /** 보조 캐릭터가 합류했는지(프롤로그 트리거의 joinCompanion) */
 export const COMPANION_FLAG = "companion.joined";
+/** 모래시계 부적이 이 문제의 목표 복잡도를 이미 공개했는가(design.md §7.3, 결정 23 P-E7). 키는 원래 문제 ID(그림자 변형 ID가 아님) */
+export const hourglassFlag = (problemId: string): string => `hourglass.revealed:${problemId}`;
 
 export interface AppDeps {
   content: GameContent;
@@ -421,21 +424,29 @@ export class App {
     await this.runBattle(problem, { object: o });
   }
 
-  /** 그림자 게시판에서 고른 그림자와 싸운다(design.md §7.6). 변형 문제를 돌려 쓰고 보상은 50% */
-  private async fightShadow(concept: string): Promise<void> {
-    const entry = this.save.shadows.find((s) => s.concept === concept);
-    if (!entry) return;
-    const original = this.allProblems().find((p) => p.id === entry.problemId) ?? this.allProblems().find((p) => p.concept === concept);
-    if (!original) {
-      this.deps.ui.hud.toast("이 그림자의 문제를 찾지 못했어.");
+  /**
+   * 그림자 게시판에서 고른 그림자와 싸운다(design.md §7.6). 게시판을 그린 하루 계획의 항목(낼 문제·예상 분)을 그대로 쓴다.
+   * 변형 문제를 돌려 쓰고 보상은 원래 문제 기준의 50%(보스는 일반 전투 기준)
+   */
+  private async fightShadow(concept: string, plan: ShadowPlan = this.shadowPlan()): Promise<void> {
+    const item = plan.items.find((it) => it.entry.concept === concept);
+    if (!item) {
+      this.deps.ui.hud.toast("이 그림자는 오늘 나타나지 않아.");
       return;
     }
-    await this.runBattle(shadowProblem(original, this.save.history), { shadow: true });
+    await this.runBattle(item.problem, { shadow: item });
   }
 
-  /** 전투 한 판: 전투 창 → 결과 적용 → 저장 → 보상·대사. object는 맵 몬스터(그림자전은 없음) */
-  private async runBattle(problem: Problem, opts: { object?: MapObjectDef; shadow?: boolean }): Promise<void> {
-    const shadow = opts.shadow === true;
+  /** 오늘의 그림자 하루 계획(게시판·출제·퀘스트가 같이 쓴다, src/systems/shadowBoard.ts planShadows) */
+  private shadowPlan(): ShadowPlan {
+    return planShadows(this.save, this.allProblems(), this.now());
+  }
+
+  /** 전투 한 판: 전투 창 → 결과 적용 → 저장 → 보상·대사. object는 맵 몬스터(그림자전은 없음), shadow는 그림자전의 계획 항목 */
+  private async runBattle(problem: Problem, opts: { object?: MapObjectDef; shadow?: ShadowPlanItem }): Promise<void> {
+    const shadowItem = opts.shadow;
+    const shadow = shadowItem !== undefined;
+    const shadowMinutes = shadowItem?.minutes;
     if (!this.deps.runner.isReady()) {
       this.deps.ui.hud.toast("마력을 모으는 중이야… 잠깐만!");
       await this.deps.runner.init();
@@ -466,7 +477,7 @@ export class App {
           // 탭을 숨길 때까지 쓴 시간(단위 3-E1). 새로고침해도 누적 시간이 남는다
           elapsedMs: progress.elapsedMs ?? 0,
         };
-        data = applyBattleOutcome(this.save, problem, provisional, this.now(), { shadow, maxHpBonus: fx.maxHpBonus }).save;
+        data = applyBattleOutcome(this.save, problem, provisional, this.now(), { shadow, shadowMinutes, maxHpBonus: fx.maxHpBonus }).save;
       }
       this.scheduleSave(data);
       if (now) void this.autosaver.flush();
@@ -498,19 +509,31 @@ export class App {
       },
       onVictory: (v) => {
         if (won) return;
-        won = this.applyBattle(problem, opts.object, v, shadow);
+        won = this.applyBattle(problem, opts.object, v, shadowItem);
         this.persist().catch((e) => console.error("승리 저장 실패", e));
       },
       companionLines: {
         fatalRecursion: this.deps.content.commonDialogues.fatal_recursion,
         ...this.practiceLines(),
         solutionUnlockedHint: this.deps.content.commonDialogues.solution_unlocked_hint,
+        hourglassReveal: this.deps.content.commonDialogues.hourglass_reveal,
       },
       shadow,
+      ...(shadowItem?.anonymous ? { shadowAnonymous: true } : {}),
       ...(practiceOffer ? { practiceOffer } : {}),
       perks: {
         freeHint2: fx.guideFeather,
         targetComplexity: fx.targetComplexity ? problem.targetComplexity : undefined,
+        // 모래시계 부적의 공개는 문제마다 유지한다(결정 23 P-E7). 그림자전의 변형도 원래 문제의 공개 상태를 쓴다
+        ...(fx.targetComplexity && problem.targetComplexity
+          ? {
+              targetRevealed: this.save.flags[hourglassFlag(this.originalProblemId(problem))] === true,
+              onTargetRevealed: () => {
+                this.save.flags[hourglassFlag(this.originalProblemId(problem))] = true;
+                saveDuringBattle(true);
+              },
+            }
+          : {}),
         // 메아리 고리: [예제 실행]에서 줄별 실행 횟수(docs/phase3/region06-spec.md §7.2)
         ...(fx.lineCounts ? { lineCounts: true } : {}),
         // 기록관의 안경: 해설 아래 코덱스 바로가기. 코덱스는 전투 창 위에 열리고, 닫으면 전투로 돌아간다
@@ -543,13 +566,13 @@ export class App {
       const r = this.save.problems[problem.id];
       if (r && !shadow) r.draft = outcome.finalCode;
     } else {
-      result = this.applyBattle(problem, opts.object, outcome, shadow);
+      result = this.applyBattle(problem, opts.object, outcome, shadowItem);
     }
     await this.persist();
     this.refreshHud();
     // [연습 전투] 버튼(결정 23 P-E5): 이 전투는 후퇴로 적용했고, 후퇴 대사 없이 바로 연습 전투를 연다
     const practice = outcome.startPractice && outcome.result === "retreat" && practiceOffer && "problem" in practiceOffer ? practiceOffer.problem : null;
-    await this.afterBattle(problem, opts.object, result.events, result.summary, shadow, practice !== null);
+    await this.afterBattle(problem, opts.object, result.events, result.summary, shadowItem, practice !== null);
     await this.flushNotices();
     if (practice) await this.runPracticeBattle(practice);
   }
@@ -591,8 +614,8 @@ export class App {
   /** 막힌 문제의 연습 상대(src/systems/practice.ts). ②의 '지금 걸어서 닿는가'는 지금 지역 맵에서 본다 */
   private findPracticeOffer(problem: Problem): PracticeOffer {
     const now = this.now();
-    // ①③의 변형은 그날 그림자 게시판에 오른 문제를 피한다
-    const avoid = new Set(boardShadows(this.save, now).map((s) => s.entry.problemId));
+    // ①③의 변형은 그날 그림자 하루 계획이 실제로 낼 원래 문제를 피한다(칸 3 이상은 대표 문제가 아닐 수 있다)
+    const avoid = new Set(planShadows(this.save, this.allProblems(), now).items.map((it) => it.original.id));
     const region = this.region;
     let reach: Set<string> | null = null;
     const canReach = (id: string) => {
@@ -622,8 +645,9 @@ export class App {
   }
 
   /** 전투 결과를 저장 데이터에 적용한다(저장은 부르는 쪽에서). 승리면 퀘스트·칭호·보상 아이템까지 */
-  private applyBattle(problem: Problem, o: MapObjectDef | undefined, outcome: BattleOutcome, shadow = false): ReturnType<typeof applyBattleOutcome> {
-    const result = applyBattleOutcome(this.save, problem, outcome, this.now(), { shadow, maxHpBonus: this.hpBonus() });
+  private applyBattle(problem: Problem, o: MapObjectDef | undefined, outcome: BattleOutcome, shadowItem?: ShadowPlanItem): ReturnType<typeof applyBattleOutcome> {
+    const shadow = shadowItem !== undefined;
+    const result = applyBattleOutcome(this.save, problem, outcome, this.now(), { shadow, shadowMinutes: shadowItem?.minutes, maxHpBonus: this.hpBonus() });
     this.save = result.save;
     if (outcome.result !== "victory") return result;
     if (o && !this.save.removedObjects.includes(o.id)) this.save.removedObjects.push(o.id);
@@ -657,15 +681,20 @@ export class App {
     o: MapObjectDef | undefined,
     events: BattleEvent[],
     summary: Parameters<UiServices["reward"]["show"]>[0],
-    shadow = false,
+    shadowItem?: ShadowPlanItem,
     /** [연습 전투]로 끝난 후퇴: 돌려세우기만 하고 후퇴 대사는 하지 않는다(바로 연습 전투가 열린다) */
     toPractice = false,
   ): Promise<void> {
     const ui = this.deps.ui;
+    const shadow = shadowItem !== undefined;
     for (const e of events) {
       if (e.type === "victory") {
         if (o) await this.world.removeObject(o.id, "purify");
-        await ui.reward.show(summary, problem);
+        if (shadowItem?.anonymous) {
+          // 이름 없는 그림자는 이긴 뒤에 정체를 밝힌다(design.md §7.6 칸 3 이상의 이름 숨김)
+          const r = this.revealShadow(problem, shadowItem);
+          await ui.reward.show({ ...summary, shadowNote: [r.note, summary.shadowNote].filter(Boolean).join(" / ") }, r.problem);
+        } else await ui.reward.show(summary, problem);
       }
     }
     for (const e of events) {
@@ -747,6 +776,8 @@ export class App {
         this.refreshHud();
         await this.deps.ui.board.openQuests({ quests: this.questPanelView(), streak: this.streakView() });
       },
+      // 메뉴에서 여는 상점(design.md §7.2, 단위 3-E5): 품목은 가 본 가장 먼 지역의 상점 기준(결정 23 P-E6)
+      openShop: () => this.openShop(this.farthestRegionOrder()),
       exportSave: async () => {
         await this.autosaver.flush();
         const { text, filename } = exportSave(this.save, this.now());
@@ -822,25 +853,51 @@ export class App {
   private async openBoard(): Promise<void> {
     this.ensureQuests();
     this.refreshHud();
-    const concept = await this.deps.ui.board.open(this.boardView(), this.names);
-    if (concept) await this.fightShadow(concept);
+    // 게시판에 보인 계획 그대로 싸운다(게시판을 연 채 새벽 4시를 넘겨도 고른 그림자의 문제는 같다)
+    const plan = this.shadowPlan();
+    const concept = await this.deps.ui.board.open(this.boardView(plan), this.names);
+    if (concept) await this.fightShadow(concept, plan);
   }
 
-  boardView(): BoardView {
-    const now = this.now();
+  /** 칸 3 이상의 이름 없는 그림자를 이긴 뒤 보상 화면에 보일 정체(주문서 이름과 원래 몬스터) */
+  private revealShadow(problem: Problem, item: ShadowPlanItem): { problem: Problem; note: string } {
+    const name = this.conceptName(item.entry.concept);
+    const enemy = item.original.enemy.name;
     return {
-      shadows: boardShadows(this.save, now).map((s) => ({
+      problem: { ...problem, title: `정체: ${name}`, enemy: { ...problem.enemy, name: `${enemy}의 그림자` } },
+      note: `이름 없는 그림자의 정체를 밝혔어: ${name} · ${enemy}`,
+    };
+  }
+
+  boardView(plan: ShadowPlan = this.shadowPlan()): BoardView {
+    const now = this.now();
+    const shown = (concept: string, anonymous: boolean) => (anonymous ? SHADOW_ANON_NAME : this.conceptName(concept));
+    return {
+      shadows: plan.items.map((s) => ({
         concept: s.entry.concept,
-        name: this.conceptName(s.entry.concept),
+        name: shown(s.entry.concept, s.anonymous),
         box: s.entry.box,
         due: s.entry.due,
         overdueDays: s.overdueDays,
         nextIntervalDays: s.nextIntervalDays,
         returning: s.returning,
+        anonymous: s.anonymous,
+        minutes: s.minutes,
+      })),
+      pending: plan.pending.map((s) => ({
+        concept: s.entry.concept,
+        name: shown(s.entry.concept, s.anonymous),
+        box: s.entry.box,
+        anonymous: s.anonymous,
+        reason: s.reason,
       })),
       waiting: waitingShadows(this.save, now),
-      foughtToday: shadowsFoughtToday(this.save.history, now),
+      foughtToday: plan.fought,
       dailyLimit: DAILY_SHADOW_LIMIT,
+      plannedMinutes: plan.plannedMinutes,
+      usedMinutes: plan.usedMinutes,
+      budgetMinutes: DAILY_SHADOW_MINUTES,
+      deferred: plan.deferred,
       quests: this.questPanelView(),
       streak: this.streakView(),
     };
@@ -883,13 +940,14 @@ export class App {
     return view;
   }
 
-  private async openShop(): Promise<void> {
+  /** 상점. regionOrder는 품목을 거르는 지역 순서(맵 상점은 지금 지역, 메뉴 상점은 가 본 가장 먼 지역) */
+  private async openShop(regionOrder = this.region.order): Promise<void> {
     await this.deps.ui.shop.open(
-      () => this.shopView(),
+      () => this.shopView(regionOrder),
       async (id) => {
         const item = this.item(id);
         if (!item) throw new Error("없는 물건이야");
-        this.save = buyItem(this.save, item, this.region.order);
+        this.save = buyItem(this.save, item, regionOrder);
         await this.persist();
         this.refreshHud();
         if (item.kind === "accessory") return `${item.name}${objectParticle(item.name)} 샀어! 메뉴의 장비에서 장착해 봐.`;
@@ -901,10 +959,9 @@ export class App {
     );
   }
 
-  shopView(): ShopView {
+  shopView(regionOrder = this.region.order): ShopView {
     const entries: ShopView["entries"] = [];
     // 지역 순서가 모자란 상점에는 그 품목이 아예 나오지 않는다(예: 메아리 고리는 지역 6 상점부터)
-    const regionOrder = this.region.order;
     for (const item of this.deps.content.items) {
       const state = shopState(this.save, item, regionOrder);
       if (!state) continue;
@@ -1009,7 +1066,8 @@ export class App {
   private questContext(): QuestContext {
     const s = this.save;
     return {
-      shadowDue: dueShadows(s, this.now()).length > 0,
+      // 그림자 퀘스트는 오늘 계획에 그림자가 있을 때만(대기만 있으면 퀘스트를 내지 않는다)
+      shadowDue: this.shadowPlan().items.length > 0,
       battleLeft: this.allProblems().some((p) => !p.practice && !s.problems[p.id]?.solved),
       lessonLeft: this.allLessons().some((l) => !s.lessonsCompleted.includes(l.id)),
       lessonDone: s.lessonsCompleted.length > 0,
@@ -1085,6 +1143,19 @@ export class App {
 
   private allProblems(): Problem[] {
     return this.deps.content.regions.flatMap((r) => r.problems);
+  }
+
+  /** 가 본 가장 먼 지역의 순서: 첫 대사(region.<id>.intro)를 본 지역과 지금 지역 가운데 가장 큰 것(결정 23 P-E6) */
+  farthestRegionOrder(): number {
+    let order = this.region.order;
+    for (const r of this.deps.content.regions) if (this.save.flags[`region.${r.id}.intro`] && r.order > order) order = r.order;
+    return order;
+  }
+
+  /** 그림자전·연습 전투의 변형 문제 → 원래 문제 ID(원래 문제면 그대로). 모래시계 부적 공개 플래그의 키 */
+  private originalProblemId(problem: Problem): string {
+    if (this.deps.content.regions.some((r) => r.problems.some((p) => p.id === problem.id))) return problem.id;
+    return this.allProblems().find((p) => p.variants?.some((v) => v.id === problem.id))?.id ?? problem.id;
   }
 
   private regionOrderOf(problem: Problem): number {

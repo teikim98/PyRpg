@@ -602,6 +602,72 @@ test.describe("battle", () => {
     expect(phases).toEqual(["all:1", "all:2", "all:2"]);
   });
 
+  test("hourglass charm (unit 3-E5): target hidden on entering phase 2, revealed with one Nuri line after the first TLE cast", async ({ page }) => {
+    await boot(page);
+    const reveal = [{ speaker: "companion", emotion: "surprised", text: "앗, 모래시계 부적이 반짝였어! 목표 복잡도가 떠올랐어." }];
+    const done = page.evaluate((lines) => (window as Win).__ui.battle("P0105", { targetComplexity: "O(1)", companionLines: { hourglassReveal: lines } }), reveal);
+    const target = page.locator(".time-gauge-target");
+    await expect(target).toBeHidden();
+    await typeInEditor(page, "a, b = map(int, input().split())\nt = 0\nfor x in range(a, b + 1):\nt += x\n");
+    await page.keyboard.press("Backspace");
+    await page.keyboard.type("print(t)");
+    await page.locator(".act-cast").click();
+    await expect(page.locator(".phase-label")).toHaveText("2페이즈 · 시간 결계");
+    await expect(page.locator(".time-gauge")).toBeVisible();
+    // 2페이즈에 들어온 직후: 게이지는 보이지만 목표는 숨김
+    await expect(target).toHaveCount(1);
+    await expect(target).toBeHidden();
+    // TLE가 아닌 실패(WA)로는 공개하지 않는다
+    await page.evaluate(() => (window as Win).__ui.fake.queueJudge({ verdict: "WA", actual: "0" }));
+    await page.locator(".act-cast").click();
+    await expect(page.locator(".battle-msg-details")).toContainText("오답(WA)");
+    await expect(target).toBeHidden();
+    await expect(page.locator(".hourglass-note")).toHaveCount(0);
+    // 시간 결계 TLE(실행기가 확정한 판정) → 공개 + 누리 한 줄
+    await page.locator(".act-cast").click();
+    await expect(page.locator(".time-gauge")).toHaveAttribute("data-percent", "100");
+    await expect(target).toBeVisible();
+    await expect(target).toHaveText("목표 O(1)");
+    await expect(page.locator(".battle-msg-text .hourglass-note")).toContainText("모래시계 부적이 반짝였어");
+    await expect(page.locator(".battle-msg")).toHaveAttribute("data-hourglass", "revealed");
+    expect(await page.evaluate(() => (window as Win).__ui.reveals)).toEqual(["P0105"]);
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: "docs/phase3/screens/engine-e5-charm-revealed.png" });
+    // 다음 TLE에서는 다시 말하지 않는다(공개는 한 번)
+    const hpBefore = await page.locator(".player-hp-text").textContent();
+    await page.locator(".act-cast").click();
+    await expect(page.locator(".player-hp-text")).not.toHaveText(hpBefore ?? "");
+    await expect(page.locator(".act-cast")).toBeEnabled();
+    await expect(page.locator(".battle-msg-text .counter")).toBeVisible();
+    await expect(page.locator(".hourglass-note")).toHaveCount(0);
+    await expect(target).toBeVisible();
+    expect(await page.evaluate(() => (window as Win).__ui.reveals)).toEqual(["P0105"]);
+    await page.evaluate(() => (window as Win).__ui.fake.queueJudge({ verdict: "AC", timeMs: 300 }));
+    await page.locator(".act-cast").click();
+    await page.locator(".banner-ok").click();
+    expect(await done).toMatchObject({ result: "victory" });
+  });
+
+  test("hourglass charm (unit 3-E5): once revealed for the problem, the target shows from the start of phase 2 in the next battle", async ({ page }) => {
+    await boot(page);
+    const done = page.evaluate(() => (window as Win).__ui.battle("P0105", { targetComplexity: "O(1)", targetRevealed: true }));
+    await typeInEditor(page, "a, b = map(int, input().split())\nt = 0\nfor x in range(a, b + 1):\nt += x\n");
+    await page.keyboard.press("Backspace");
+    await page.keyboard.type("print(t)");
+    await page.locator(".act-cast").click();
+    await expect(page.locator(".phase-label")).toHaveText("2페이즈 · 시간 결계");
+    await expect(page.locator(".time-gauge-target")).toBeVisible();
+    await expect(page.locator(".time-gauge-target")).toHaveText("목표 O(1)");
+    await page.locator(".act-cast").click();
+    await expect(page.locator(".time-gauge")).toHaveAttribute("data-percent", "100");
+    await expect(page.locator(".hourglass-note")).toHaveCount(0);
+    expect(await page.evaluate(() => (window as Win).__ui.reveals)).toEqual([]);
+    await page.evaluate(() => (window as Win).__ui.fake.queueJudge({ verdict: "AC", timeMs: 300 }));
+    await page.locator(".act-cast").click();
+    await page.locator(".banner-ok").click();
+    expect(await done).toMatchObject({ result: "victory" });
+  });
+
   test("practice suggestion (unit 3-E3): at the reference time T = min(max(est × 2, 10), 20) of cumulative time, then [연습 전투] retreats into practice", async ({ page }) => {
     await page.clock.install();
     await boot(page);

@@ -1,6 +1,7 @@
 // 시스템 화면 E2E(단위 3-1, design.md §7.2~§7.6): 실제 게임(/?e2e)에서 실제 키·클릭으로
 // 그림자 게시판 → 그림자전, 일일 퀘스트와 상자, 상점, 장비(망토·깃털), 칭호를 확인한다.
 // 단위 3-4: 기록관의 안경(Traceback 해설의 코덱스 바로가기, region04-spec.md §6. 단위 3-5부터 해설 위)
+// 단위 3-E5: 메뉴의 상점(가 본 가장 먼 지역 기준)
 // PW_PORT=4194 npx playwright test tests/e2e/systems.spec.ts
 import { mkdirSync, readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
@@ -324,6 +325,180 @@ test.describe.serial("시스템 화면(단위 3-1)", () => {
     await shot(page, "systems-titles.png");
     await closeAll(page);
     expect((await save(page)).activeTitle).toBe("first-spell");
+  });
+
+  test("메뉴의 '상점'(단위 3-E5): 가 본 가장 먼 지역의 상점 품목이 보이고, 하나를 산다", async ({ page }) => {
+    test.setTimeout(180_000);
+    await boot(page);
+    const gate = await obj(page, "gate_well");
+    const cur = await save(page);
+    // 에코 마을(지역 1)에 서 있지만 거울 호수(지역 6)까지 가 봤다(region.r06.intro, 결정 23 P-E6)
+    await seedAndReload(page, {
+      lessons: ["L1-1", "L1-2", "L1-3"],
+      removed: ["gate_well", "m_P0101", "m_P0106"],
+      at: { x: gate.x, y: gate.y - 1 },
+      flags: ["trigger.r01.t_prologue", "companion.joined", "region.r01.intro", "region.r06.intro"],
+      // 칭호 알림이 상점 화면을 가리지 않게 이미 받은 것으로
+      patch: { player: { ...cur.player, gold: 300, hp: 100 }, titles: ["first-spell"] },
+    });
+    await page.keyboard.press("KeyM");
+    await expect(page.locator(".menu-modal")).toBeVisible();
+    // '퀘스트' 바로 다음
+    const labels = await page.locator(".menu-list .menu-btn").allTextContents();
+    expect(labels.indexOf("상점")).toBe(labels.indexOf("퀘스트") + 1);
+    await page.locator(".menu-shop").click();
+    await expect(page.locator(".shop-modal")).toBeVisible();
+    await expect(page.locator(".shop-gold")).toHaveText("300 G");
+    // 지역 6 상점부터 파는 메아리 고리가 메뉴 상점에는 있다
+    const ring = page.locator('.shop-item[data-item="echo-ring"]');
+    await expect(ring).toBeVisible();
+    await page.locator('.shop-buy[data-buy="echo-ring"]').click();
+    await expect(page.locator(".shop-status")).toContainText("메아리 고리");
+    await expect(page.locator(".shop-gold")).toHaveText("100 G");
+    await expect(ring).toHaveAttribute("data-state", "owned");
+    await shot(page, "engine-e5-menu-shop.png");
+    await closeAll(page);
+    const s = await save(page);
+    expect(s.inventory["echo-ring"]).toBe(1);
+    expect(s.player.gold).toBe(100);
+
+    // 맵의 에코 마을 상점은 그 지역(1) 기준이라 메아리 고리가 없다
+    await interact(page, "shop_echo");
+    await settle(page, ".shop-modal");
+    await expect(page.locator(".shop-item").first()).toBeVisible();
+    await expect(page.locator('.shop-item[data-item="echo-ring"]')).toHaveCount(0);
+    await closeAll(page);
+  });
+});
+
+/** 기기 시간으로 n일 전(새벽 4시 경계) */
+function daysAgo(n: number): string {
+  const d = new Date();
+  if (d.getHours() < 4) d.setDate(d.getDate() - 1);
+  d.setDate(d.getDate() - n);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+const AT_BOARD = async (page: Page) => {
+  const gate = await obj(page, "gate_well");
+  return { x: gate.x, y: gate.y - 1 };
+};
+
+async function openBoard(page: Page): Promise<void> {
+  await interact(page, "board_shadow");
+  await settle(page, ".board-modal");
+}
+
+test.describe.serial("그림자 하루 계획(단위 3-E2)", () => {
+  test("게시판: 예산 문구·대기·이름 없는 그림자, 이긴 뒤 정체 공개", async ({ page }) => {
+    test.setTimeout(240_000);
+    await boot(page);
+    await seedAndReload(page, {
+      lessons: ["L1-1", "L1-2", "L1-3"],
+      removed: ["gate_well", "m_P0102", "m_P0104"],
+      at: await AT_BOARD(page),
+      flags: ["trigger.r01.t_prologue", "companion.joined"],
+      patch: {
+        shadows: [
+          // 칸 3: 같은 개념에서 이미 푼 P0102만 후보 → 그 변형, 이름 숨김
+          { concept: "scroll.arith", problemId: "P0102", box: 3, due: daysAgo(2), purified: false, createdAt: "2026-09-01T00:00:00.000Z" },
+          { concept: "scroll.quick_ear", problemId: "P0104", box: 1, due: daysAgo(1), purified: false, createdAt: "2026-09-02T00:00:00.000Z" },
+          // 대표 문제 P0101을 아직 못 이김 → 대기
+          { concept: "scroll.convert", problemId: "P0101", box: 1, due: daysAgo(1), purified: false, createdAt: "2026-09-03T00:00:00.000Z" },
+        ],
+        quests: { date: "today", ids: ["rest-1", "codex-run-1", "lesson-1"], progress: [0, 0, 0], claimed: [false, false, false], chest: false },
+      },
+    });
+    const before = await save(page);
+    await openBoard(page);
+    await expect(page.locator(".shadow-card")).toHaveCount(2);
+    const anon = page.locator(".shadow-card.is-anonymous");
+    await expect(anon).toHaveCount(1);
+    await expect(anon.locator(".shadow-name")).toHaveText("이름 없는 그림자");
+    await expect(anon).toContainText("칸 3");
+    await expect(anon).toContainText("약 5분");
+    await expect(page.locator(".shadow-card:not(.is-anonymous) .shadow-name")).toContainText("그림자 · ");
+    await expect(page.locator(".shadow-budget")).toHaveText("오늘 복습 예상 약 11분");
+    await expect(page.locator(".shadow-pending")).toHaveCount(1);
+    await expect(page.locator(".shadow-pending")).toContainText("원래 몬스터를 이긴 다음 날부터");
+    await shot(page, "engine-e2-board.png");
+
+    // 이름 없는 그림자와 싸운다: 적 이름·제목·시작 대사에 주문서·원래 몬스터가 없다
+    await anon.locator(".board-fight").click();
+    await settle(page, ".battle-modal");
+    await expect(page.locator(".battle.is-shadow")).toBeVisible();
+    await expect(page.locator(".enemy-name")).toHaveText("이름 없는 그림자");
+    await expect(page.locator(".battle-title")).toHaveText("이름 없는 그림자");
+    expect(await page.locator(".battle").getAttribute("data-problem")).toMatch(/^P0102-v\d$/);
+    await expect(page.locator(".act-solution")).toBeHidden();
+    await typeCode(page, solution("P0102"));
+    await cast(page);
+    await expect(page.locator(".battle-banner.is-victory")).toBeVisible();
+    await page.locator(".banner-ok").click();
+    await settle(page, ".reward-modal");
+    await expect(page.locator(".reward-xp .reward-value")).toHaveText("+50 XP");
+    await expect(page.locator(".reward-shadow")).toContainText("정체");
+    await expect(page.locator(".reward-title")).toContainText("의 그림자");
+    await page.locator(".reward-ok").click();
+    await settle(page);
+    const s = await save(page);
+    expect(s.player.xp).toBe(before.player.xp + 50);
+    expect(s.history.at(-1)).toMatchObject({ shadow: true, concept: "scroll.arith", budgetMinutes: 5 });
+
+    // 다시 열면 치른 것만 빠지고, 오늘 치른 분량이 보인다
+    await openBoard(page);
+    await expect(page.locator(".shadow-card")).toHaveCount(1);
+    await expect(page.locator(".shadow-card.is-anonymous")).toHaveCount(0);
+    await expect(page.locator(".shadow-budget")).toHaveText("오늘 복습 예상 약 6분 · 오늘 치른 그림자 약 5분");
+    await closeAll(page);
+  });
+
+  test("칸 3 보스 그림자: 이름 없는 그림자로 2페이즈(공통 대사·시간 결계)까지, 보상 50 XP·25골드", async ({ page }) => {
+    test.setTimeout(300_000);
+    await boot(page);
+    await seedAndReload(page, {
+      lessons: ["L1-1", "L1-2", "L1-3", "L1-4"],
+      removed: ["gate_well"],
+      at: await AT_BOARD(page),
+      flags: ["trigger.r01.t_prologue", "companion.joined", "region.r01.clear"],
+      patch: {
+        problems: { P0105: { attempts: 1, knockouts: 0, solved: true, solvedAt: "2026-09-20T09:00:00.000Z", maxHintLevel: 0, solutionViewed: false } },
+        shadows: [{ concept: "scroll.arith", problemId: "P0105", box: 3, due: daysAgo(1), purified: false, createdAt: "2026-09-01T00:00:00.000Z" }],
+        quests: { date: "today", ids: ["rest-1", "codex-run-1", "lesson-1"], progress: [0, 0, 0], claimed: [false, false, false], chest: false },
+      },
+    });
+    const before = await save(page);
+    await openBoard(page);
+    await expect(page.locator(".shadow-card.is-anonymous")).toHaveCount(1);
+    await expect(page.locator(".shadow-card")).toContainText("약 15분");
+    await expect(page.locator(".shadow-budget")).toHaveText("오늘 복습 예상 약 15분");
+    await page.locator(".board-fight").click();
+    await settle(page, ".battle-modal");
+    await expect(page.locator(".battle.is-shadow.is-boss")).toBeVisible();
+    await expect(page.locator(".enemy-name")).toHaveText("이름 없는 그림자");
+    await expect(page.locator(".phase-label")).toContainText("1페이즈");
+    expect(await page.locator(".battle").getAttribute("data-problem")).toMatch(/^P0105-v\d$/);
+    await typeCode(page, solution("P0105"));
+    await cast(page);
+    // 2페이즈: 원래 보스의 시간 결계 테스트, 공통 대사
+    await expect(page.locator(".phase-label")).toContainText("2페이즈", { timeout: 60_000 });
+    await expect(page.locator(".phase-intro").last()).toBeVisible();
+    await expect(page.locator(".battle-msg")).toContainText("그림자가 시간 결계를 펼쳤어");
+    await shot(page, "engine-e2-anon-boss.png");
+    await cast(page);
+    await expect(page.locator(".battle-banner.is-victory")).toBeVisible({ timeout: 120_000 });
+    await page.locator(".banner-ok").click();
+    await settle(page, ".reward-modal");
+    await expect(page.locator(".reward-xp .reward-value")).toHaveText("+50 XP");
+    await expect(page.locator(".reward-gold .reward-value")).toHaveText("+25 G");
+    await expect(page.locator(".reward-shadow")).toContainText("정체");
+    await page.locator(".reward-ok").click();
+    await settle(page);
+    const s = await save(page);
+    expect(s.player.xp).toBe(before.player.xp + 50);
+    expect(s.player.gold).toBe(before.player.gold + 25);
+    expect(s.shadows[0].box).toBe(4);
+    expect(s.history.at(-1)).toMatchObject({ shadow: true, concept: "scroll.arith", budgetMinutes: 15 });
   });
 });
 

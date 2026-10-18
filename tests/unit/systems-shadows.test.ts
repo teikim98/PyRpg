@@ -31,7 +31,8 @@ describe("shadow registration", () => {
     const base = [entry("c", 4, "2026-10-10")];
     const k = registerShadow(base, { concept: "c", problemId: "P9", trigger: "knockout" }, NOW);
     expect(k.shadows).toHaveLength(1);
-    expect(k.entry).toMatchObject({ box: 2, due: "2026-10-04", problemId: "Pc" });
+    // 다시 등록되면 대표 문제를 이번에 막힌 문제로 바꾼다(규칙 A-1, 단위 3-E2)
+    expect(k.entry).toMatchObject({ box: 2, due: "2026-10-04", problemId: "P9" });
     expect(k.change).toBe("demoted");
     const h = registerShadow(base, { concept: "c", problemId: "P9", trigger: "hint" }, NOW);
     expect(h.entry.box).toBe(3);
@@ -41,13 +42,14 @@ describe("shadow registration", () => {
     const z = registerShadow([entry("c", 0, "x")], { concept: "c", problemId: "P", trigger: "hint" }, NOW);
     expect(z.entry.box).toBe(0);
     expect(z.change).toBe("unchanged");
+    expect(z.entry.problemId).toBe("P");
     // 입력은 바뀌지 않음
     expect(base[0].box).toBe(4);
   });
   it("정화된 개념은 다시 활성화", () => {
     const r = registerShadow([entry("c", 5, "2026-12-01", { purified: true })], { concept: "c", problemId: "P", trigger: "hint" }, NOW);
     expect(r.change).toBe("reactivated");
-    expect(r.entry).toMatchObject({ purified: false, box: 1, due: "2026-10-02" });
+    expect(r.entry).toMatchObject({ purified: false, box: 1, due: "2026-10-02", problemId: "P" });
   });
 });
 
