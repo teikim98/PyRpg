@@ -1,6 +1,6 @@
 # PyRpg 진행 현황
 
-> 마지막 갱신: 2026-10-03. 작업을 이어서 시작할 때는 이 문서부터 읽습니다.
+> 마지막 갱신: 2026-10-18. 작업을 이어서 시작할 때는 이 문서부터 읽습니다. **다른 PC(회사 PC 등)에서 처음 이어서 할 때는 §7 '다른 PC에서 이어서 하기'부터** 따릅니다.
 > 프로젝트 지시 원문은 저장소 루트의 `첫 프롬프트.md`에 있습니다.
 
 ## 1. 현재 상태
@@ -10,10 +10,10 @@
 | Phase 0 리서치 | 완료 | [`research.md`](./research.md) |
 | Phase 1 기획서 | 승인됨(2026-10-01), `main`에 머지 | [`design.md`](./design.md) |
 | Phase 2 버티컬 슬라이스 | 완료(2026-10-01), 피드백 1차 반영, `main`에 머지 | 지역 1 '에코 마을' 전체 플레이 가능. 실행 방법은 [`README.md`](../README.md) |
-| Phase 3 콘텐츠 확장 | **진행 중**: 3-0·3-1, 지역 2·3·4·5 완료(`main`에 머지, push 대기). 지역 6 거울 호수 완료(`main`에 머지, push 대기). 다음은 지역 7 모래시계 사막 | 계획: [`phase3/plan.md`](./phase3/plan.md) |
+| Phase 3 콘텐츠 확장 | **진행 중**: 3-0·3-1, 지역 2~6 완료(`main`에 머지, 2026-10-18 원격에 push). 그래픽 개편 파일럿 완료(브랜치 `art-overhaul`, 사용자 확인 대기, 원격에도 있음). 기획 개선안(`docs/improvements/`)을 지역 6 기준으로 재정리(2026-10-18, 사용자 결정 대기). 다음은 개선안 결정 → 지역 7 모래시계 사막 | 계획: [`phase3/plan.md`](./phase3/plan.md), 개선안: [`improvements/README.md`](./improvements/README.md) |
 
 - Git: origin = https://github.com/teikim98/PyRpg. 클라우드 세션에서는 `claude/admiring-pasteur-98frg7` 브랜치에 커밋하고 push합니다. `main`에는 사용자가 요청할 때 머지합니다.
-- 로컬 PC(Windows 11) 세션에서는 작업 브랜치(`phase3-region4` 등)에 커밋만 하고 push하지 않습니다. 이 PC에는 git 사용자 정보가 없어서 커밋마다 `git -c user.name=Claude -c user.email=noreply@anthropic.com`을 씁니다(기존 커밋과 같은 작성자).
+- 로컬 PC(Windows 11) 세션에서는 작업 브랜치(`phase3-region4` 등)에 커밋합니다. push는 사용자가 요청할 때만 합니다(2026-10-18에는 이 PC에서 Claude의 `git push`가 막히지 않고 됐습니다). 이 PC에는 git 사용자 정보가 없어서 커밋마다 `git -c user.name=Claude -c user.email=noreply@anthropic.com`을 씁니다(기존 커밋과 같은 작성자).
 - 커밋 메시지는 `Phase 3 단위 N: ...`처럼 단계명으로 시작합니다.
 
 ## 2. 지금까지 한 일
@@ -170,16 +170,42 @@
 
 화면: [`phase3/screens/`](./phase3/screens/)의 `r06-*.png`, `systems-echo-ring.png`
 
+### 2026-10-18 로컬 PC 세션(원격 동기화, 기획 개선안 재정리)
+
+사용자가 회사 PC에서 올린 기획 개선안(`docs/improvements/`, 2026-10-15)을 받아 보니, 두 PC가 서로 모르는 채로 작업한 상태였습니다. 이 PC는 지역 4~6(2026-10-02~03)을 `main`에 머지해 두고 push하지 않았고, 회사 PC는 원격의 지역 3 상태(`1de6ef7`)에서 지역 4가 아직 브랜치에만 있다고 보고 개선안을 썼습니다. 사용자 요청: "꼬인 걸 전부 풀고, 이 PC 작업물을 베이스로 회사 PC에서 하드 리셋한 다음 진행할 수 있게 정리".
+
+| 작업 | 결과 |
+|---|---|
+| 원격 받기·합치기 | 원격의 2커밋(`d2ea1da` GCP 키 `.gitignore`, `30f0091` 개선안 6개 문서)을 로컬 `main`에 머지(충돌 없음) → `main` `3bb069d` push(이 PC 커밋 56개가 처음 원격에 올라감). `main`을 `art-overhaul`에 머지 |
+| 개선안 재정리 | 에이전트 4명이 01~04를 하나씩 맡아 `main` `3bb069d`와 대조. 파일:줄 인용 144곳 수정(①46, ②44, ③33, ④21), 각 문서 끝에 "2026-10-18 현재 기준 재정리" 절. 제가 핵심 주장 6개(보상 강제 규칙, 그림자 보스 보상, 부적 표시, P0602 `abs`, P0411 맞바꾸기, P0614 대사)를 직접 열어 확인 |
+| 지역 4~6 재확인 | 응용 전투 0개, 연습 몬스터 0개(필수 일반 44개 중 22개가 연습 상대 없음), 지역 5·6 필수 9 / 선택 3, 지역 3 역전 4건 그대로, 지역 4~6 새 정답 역전 4건(P0407, P0411, P0602, P0612), 보스 2페이즈 대사 3개가 풀이 방향을 말함. ②의 선행 지식 검사 프로토타입을 다시 만들어 지역 1~6 69문제에 돌림(저장소 밖) |
+| README 재정리 | [`improvements/README.md`](./improvements/README.md) 맨 앞에 "2026-10-18 현재 기준 재정리": 지금 상태 표, 원문 N1~N5·M1~M5를 대신하는 결정 R1~R9, 새 로드맵(묶음 A 콘텐츠 소급 → 묶음 B 선행 지식 검사 → 엔진 E1~E5 → 지역 7), 지역 7 명세 규칙 10개 |
+| 다른 PC 인수인계 | 이 문서 §7(백업 → 원격 상태로 맞추기 → 확인), §6에 회사 PC의 `gemini/` 등 저장소 밖 파일. `art-overhaul`도 원격에 push |
+
+**검증 결과(2026-10-18, 이 PC)**: 문서만 바꿈. `main`(이 브랜치): typecheck 통과 · 단위 테스트 421개 통과 · `npm run verify` 통과(콘텐츠 4913회 오류 0, 맵 6개, 아트 63개 재빌드 동일). `art-overhaul`(머지 전 같은 코드): typecheck 통과 · 단위 테스트 447개 통과 · `npm run verify` 통과. E2E는 코드 변경이 없어 돌리지 않음.
+
 ## 3. 다음에 할 일
 
 Phase 3 계획은 [`phase3/plan.md`](./phase3/plan.md)에 있습니다. 지역 하나를 끝낼 때마다 검증하고 다음 지역으로 넘어갑니다. 작업 방식은 저장소 루트의 [`CLAUDE.md`](../CLAUDE.md)에 정리했습니다.
 
-### 바로 다음(2026-10-03 기준)
+### 진행 중: 그래픽 개편(2026-10-03 시작, 브랜치 `art-overhaul`)
+
+- 사용자 요청: 걷기 애니메이션 추가, 전체 화풍을 Doloc Town(Steam, 2026-08 정식 출시한 횡스크롤 도트 농장 게임)에서 아이디어·화풍을 따와 바꾸기. 계획: [`art-overhaul/plan.md`](./art-overhaul/plan.md), 결정 16~19.
+- 지역 7 작업은 그래픽 개편 파일럿을 사용자가 확인한 뒤로 미룸.
+- **파일럿 완료(2026-10-03, 사용자 확인 대기)**: 엔진(16×24 캐릭터 6×4 시트와 옛 형식 호환, 걸음 사이에 이어지는 4프레임 걷기·발 디딜 때 1px·숨쉬기·깜빡임, 누리 반 박자 어긋남, 몬스터·보스·오브젝트 4프레임, 타일 애니메이션 `tileAnimations`, 색 보정·비네트·지역별 입자 `ambience`, 지붕 처마 겹침), 화풍 가이드 [`art-overhaul/style-guide.md`](./art-overhaul/style-guide.md)와 공통 팔레트 `tools/art/cozypal.py`, 주인공·누리·지역 1 NPC 16×24, 에코 마을 타일 24종과 물·꽃·가로등 애니메이션 프레임 5개(타일셋 93개), 마을 오브젝트 7종(다른 지역에도 공통), 지역 1 몬스터 6종·계단 미믹 4프레임, 누리 초상화 5종. 지역 2~6 타일·몬스터·NPC는 옛 그림 그대로(엔진이 옛 형식도 읽음).
+- 세션이 도중에 끊겨 다음 단계 에이전트 3개가 멈췄고, 각 worktree를 WIP 커밋으로 보존한 뒤 같은 worktree에서 이어서 끝냄.
+- 검증: typecheck · 단위 테스트 447개 · `npm run verify`(콘텐츠 4913회 오류 0, 맵 6개, 아트 재빌드 동일). 전체 E2E는 아직(확장 단계 끝에 모든 화면 재촬영과 함께). 미리보기: [`art-overhaul/`](./art-overhaul/)의 `r01-*.png`, `r1-monsters.png`, `portraits*.png`, `walk.gif`, `screens/engine-*.png`.
+- 남은 결정: 결정 20(풀 덤불·물가 경계). 화풍 가이드의 '풀 덤불이 길 경계로 넘어옴'은 이웃 칸을 모르는 단일 타일로는 그릴 수 없음.
+- 참고로 사용자가 회사에서 했다고 기억하는 그래픽 작업(10/02 18시쯤)은 이 PC와 GitHub 어디에도 커밋이 없음. GitHub에 있는 것은 클라우드 세션의 누리 초상화 '농장 생활 게임풍' 리디자인(`df385eb`, 한국 시간 10/02 01시쯤)까지.
+
+### 바로 다음(2026-10-18 기준)
 
 | 순서 | 할 일 | 내용 |
 |---|---|---|
-| 1 | push와 결정 15 | 사용자가 직접 `git push origin main`. 결정 15(P0411 시간 보정 테스트 기준) |
-| 2 | **단위 3-7: 지역 7 모래시계 사막** | design.md §6.2: 시간복잡도, Python 성능 습관(빠른 입력, list vs set), 정수론 기초(소수, 에라토스테네스의 체, GCD/LCM, 진법). 레슨 5, 일반 12, **보스 2**(중간 '모래 전갈' `x in list` → `set` / 최종 '모래시계 스핑크스' 소수 하나씩 판정 → 체). **할트 이름이 처음 등장**(2막 끝). 보상 장신구 '모래시계 부적'(시간 게이지에 목표 복잡도, items.json `hourglass-charm`, problem.json `targetComplexity`) |
+| 0 | 다른 PC 동기화 | 회사 PC는 §7 순서로 원격에 맞춤(사용자) |
+| 1 | 결정 | 기획 개선안 R1~R9([`improvements/README.md`](./improvements/README.md) "2026-10-18 현재 기준 재정리"), 결정 15(P0411 시간 보정 테스트 기준), 결정 20(풀 덤불·물가 경계)과 그래픽 개편 파일럿 확인 |
+| 1-1 | 개선안 적용(R 결정을 추천대로 정할 때) | 묶음 A(지역 1~6 콘텐츠 소급, `main`) → 묶음 B(선행 지식 검사) → 엔진 E1·E4·E3·E2·E5(`main`에서 엔진 브랜치, 그래픽 개편과 병행). 모두 지역 7 구현 전. 자세한 범위는 README 로드맵 |
+| 2 | **단위 3-7: 지역 7 모래시계 사막** | 아래 내용 + README "지역 7 명세에 바로 넣을 규칙" 10개(연습 몬스터, 응용 전투 2개, 필수 6·선택 6, 2페이즈 대사 규칙, 선행 지식, `try/except` 정식 소개, 고장 난 다리 등). design.md §6.2: 시간복잡도, Python 성능 습관(빠른 입력, list vs set), 정수론 기초(소수, 에라토스테네스의 체, GCD/LCM, 진법). 레슨 5, 일반 12, **보스 2**(중간 '모래 전갈' `x in list` → `set` / 최종 '모래시계 스핑크스' 소수 하나씩 판정 → 체). **할트 이름이 처음 등장**(2막 끝). 보상 장신구 '모래시계 부적'(시간 게이지에 목표 복잡도, items.json `hourglass-charm`, problem.json `targetComplexity`) |
 | 2-1 | 지역 7 명세 | 지역 6 명세 형식 그대로. 거울 호수 `warp_east`(openDialogue=to_be_continued 유지) → 지역 7, 지역 6 `to_be_continued`의 '준비 중' 문구를 사막으로 가는 대사로. 중간 보스는 지역 6에서 만든 `midBoss` 그대로 |
 | 2-2 | 실전 추천 후보 | research.md §2.5.2 지역 7: 프로그래머스 42577 전화번호 목록(Lv.2) 등, 백준 1920·10816·2164·11659. 프로그래머스는 이 PC에서 제목·레벨 확인 |
 | 3 | 이후 지역 | 지역 8 광산(스택·큐·덱·`heapq`) … design.md §6.2 순서 |
@@ -216,6 +242,13 @@ Phase 3 계획은 [`phase3/plan.md`](./phase3/plan.md)에 있습니다. 지역 �
 | 13 | 지역 5(`phase3-region5`)를 `main`에 머지 | | **머지함**(2026-10-03). push는 사용자가 직접 `git push origin main` |
 | 14 | 지역 6(`phase3-region6`)를 `main`에 머지 | | **머지함**(2026-10-03, 사용자 요청). push는 사용자가 직접 `git push origin main` |
 | 15 | P0411 시간 보정 테스트 기준(다시) | content.spec.ts `SLOW_HEADROOM` | **결정 필요**. 2026-10-03 이 PC에서 P0411 `slow.py`가 제한의 약 2.0~2.6배에 끝나서 결정 12의 '제한 × 2'도 경계에 걸림(전체 E2E·단독 실행 모두 실패한 적 있음). 게임 판정(제한을 두 번 넘으면 TLE)은 문제없음. 추천: P0411만 '제한 × 1.5'(게임에서 TLE가 확정되는지와 같은 뜻에 여유 0.5배) |
+| 16 | 그래픽 개편 해상도 | [art-overhaul/plan.md](./art-overhaul/plan.md) | **타일 16px 유지, 캐릭터 16×24**(2026-10-03, 추천안) |
+| 17 | 화면 연출 | art-overhaul/plan.md §3 | **색 보정·비네트, 떠다니는 입자, 타일 애니메이션**(2026-10-03). 설정에서 끄는 옵션은 넣지 않음 |
+| 18 | 그래픽 개편 진행 방식 | art-overhaul/plan.md §4 | **애니메이션 → 지역 1 파일럿 → 사용자 확인 → 확장**(2026-10-03, 추천안) |
+| 19 | 누리 초상화 | art-overhaul/plan.md §0 | **새 화풍으로 다시 그림**(2026-10-03) |
+| 20 | 풀 덤불·물가 경계 | art-overhaul/style-guide.md §4.2 | **결정 필요**. 추천: 엔진이 이웃 칸을 보고 경계 장식을 자동으로 얹기(맵 데이터 불변, 모든 지역에 한 번에 적용) |
+| 21 | 기획 개선안(`docs/improvements/`) 처리 방식 | improvements/README.md | **지역 6까지 끝난 지금 기준으로 다시 대조·정리한 뒤 결정**(2026-10-18, 추천안). 이 PC 작업물을 기준으로 원격을 맞추고 다른 PC는 §7로 하드 리셋 |
+| 22 | 개선안 결정 R1~R9(원문 N1~N5, M1~M5를 대신함) | improvements/README.md "2026-10-18 현재 기준 재정리" | **결정 필요**. 지역 7 명세 전에 정함. 추천은 README 표의 추천 열 |
 
 ## 5. 남은 미확인 항목(Phase 2 이후에 확인)
 
@@ -235,3 +268,57 @@ Phase 3 계획은 [`phase3/plan.md`](./phase3/plan.md)에 있습니다. 지역 �
 
 - 이전 PC 임시 폴더의 `verify_samples.py`는 저장소의 `tools/verify_samples.py`로 대체했으므로 더 이상 필요하지 않습니다.
 - 이번 세션의 리서치 원본(중간 저장 파일)과 기술 실험 스크립트(Vite + Pyodide 워커, Phaser + CodeMirror 키보드 실험 등)는 클라우드 세션의 임시 폴더에만 있어서 세션이 끝나면 사라집니다. 확인된 내용은 모두 research.md로 옮겼습니다. 실험 방법은 research.md §3의 각 '직접 측정' 설명에 남아 있으므로 Phase 2에서 다시 만들 수 있습니다.
+- **회사 PC의 `gemini/` 폴더**: Gemini 기획 검토의 원자료(호출 스크립트, 질문, 응답 원문, 대조 결과, 종합)입니다. 커밋하지 않았고 회사 PC에만 있습니다. 내용은 [`improvements/00-background.md`](./improvements/00-background.md) §3이 요약합니다. 같은 PC의 GCP 서비스 계정 키(`primeval-pen-506612-b4-*.json`)는 `.gitignore`로 막아 두었습니다.
+- **선행 지식 검사 프로토타입**: 개선안 ②의 `prereq_proto.py`(회사 PC 임시 폴더)와 2026-10-18 재실행본(이 PC 임시 폴더)은 둘 다 저장소 밖에 있습니다. 설계는 [`improvements/02-prerequisites.md`](./improvements/02-prerequisites.md) §4에 있어서 다시 만들 수 있습니다.
+- **Claude Code 자동 메모리**(`~/.claude/projects/.../memory/`)는 PC마다 따로 있습니다. 지켜야 할 규칙은 모두 `CLAUDE.md`와 이 문서에 있으므로 메모리가 없어도 됩니다.
+
+## 7. 다른 PC에서 이어서 하기
+
+2026-10-18 기준으로 **원격(GitHub)이 기준 상태**입니다. `main`(지역 1~6, 기획 개선안 재정리)과 `art-overhaul`(그래픽 개편 파일럿, `main` 전체를 포함)이 모두 원격에 있습니다. 다른 PC(회사 PC 등)의 저장소는 아래 순서로 원격에 맞춥니다. 그 PC에서만 한 작업이 있을 수 있으므로 **백업부터** 합니다.
+
+### 7.1 백업(아무것도 잃지 않게)
+
+저장소 폴더에서(Git Bash 기준):
+
+```bash
+git status --short                               # 커밋하지 않은 변경
+git stash list
+git worktree list                                # .claude/worktrees 아래 작업 공간
+git log --oneline --branches --not --remotes     # 원격에 없는 커밋
+```
+
+- 하나라도 나오면 다음을 합니다. worktree에 커밋하지 않은 변경이 있으면 그 worktree에서 먼저 WIP 커밋합니다(`git -C <worktree> add -A` 후 `git -C <worktree> -c user.name=Claude -c user.email=noreply@anthropic.com commit -m "WIP 회사 PC 백업"`).
+
+```bash
+git stash push -m "company-backup-2026-10-18"    # 추적 중인 파일의 변경만 보관(새 파일과 gemini/는 그대로 남음)
+git bundle create ../PyRpg-company-backup-2026-10-18.bundle --all   # 모든 브랜치·stash를 파일 하나로
+```
+
+- 나중에 백업에서 꺼낼 때는 `git fetch ../PyRpg-company-backup-2026-10-18.bundle '<브랜치>:backup/<브랜치>'`처럼 다른 이름으로 받아서 비교합니다.
+- `gemini/` 폴더와 GCP 키 파일은 git이 추적하지 않으므로 `git reset --hard`로 지워지지 않습니다. **`git clean`은 쓰지 않습니다.** 불안하면 저장소 밖으로 복사해 둡니다.
+
+### 7.2 원격 상태로 맞추기
+
+```bash
+git fetch origin --prune
+git switch main
+git reset --hard origin/main
+git switch -C art-overhaul origin/art-overhaul   # 그래픽 개편을 이어서 할 때(로컬 art-overhaul가 있으면 덮어씀. 7.1에서 백업함)
+```
+
+- **worktree 정리**: worktree마다 node_modules 연결을 먼저 끊고(PowerShell: `cmd /c rmdir <worktree>\node_modules`) `git worktree remove --force <worktree>`, 마지막에 `git worktree prune`. 연결을 끊지 않고 지우면 원본 node_modules가 지워질 수 있습니다.
+- **옛 로컬 브랜치**: 지역 4의 `worktree-wf_0fec6c21-6ac-*` 같은 브랜치는 이미 `main`에 들어 있습니다(지역 4는 `phase3-region4`로 머지됨). 7.1의 bundle에 남았으므로 `git branch -D`로 지워도 됩니다.
+- **줄바꿈**: `git ls-files --eol | grep -c "w/crlf"`가 0이 아니면 `git rm -r --cached -q . && git reset -q --hard HEAD`로 다시 체크아웃합니다(CRLF면 E2E가 엉뚱하게 실패).
+- 원격의 `claude/admiring-pasteur-98frg7`은 2026-10-01 클라우드 세션 브랜치이고 내용은 모두 `main`에 들어 있습니다. 쓰지 않습니다.
+
+### 7.3 확인
+
+- 이 문서 머리말이 "마지막 갱신: 2026-10-18"이고 §2의 마지막 세션이 "2026-10-18 로컬 PC 세션"인지 봅니다.
+- 의존성(`package.json`)은 2026-10-01 이후 바뀌지 않았습니다. node_modules가 있으면 그대로 쓰고, 없으면 `npm ci`. 검사에는 Python 3.11 이상이 필요합니다(`npm run verify`가 스스로 찾음). E2E를 돌리려면 `npx playwright install chromium`.
+- `npm run typecheck`, `npx vitest run`, `npm run verify`. 2026-10-18 이 PC 기준 기대값은 §2 마지막 세션에 적었습니다.
+
+### 7.4 그 PC에서 Claude Code를 쓸 때
+
+- `CLAUDE.md`의 '이 PC(Windows 11) 환경' 절은 이 PC(`C:\Users\teiki\...`) 기준입니다. Python 경로와 node_modules 연결의 원본 경로는 그 PC의 경로로 바꿔 씁니다.
+- 그래픽 개편 문서(`docs/art-overhaul/`)는 `art-overhaul` 브랜치에만 있습니다.
+- **앞으로 두 PC를 오갈 때**: 한쪽에서 작업을 끝내면 작업 브랜치를 push하고, 다른 쪽에서 시작할 때 `git fetch` 뒤 `git status -sb`로 앞서거나 뒤처진 커밋이 없는지 먼저 봅니다. 이번처럼 두 PC가 서로 모르는 채로 각자 커밋하면 문서가 옛 상태를 기준으로 쓰이게 됩니다(§2 2026-10-18 세션).
