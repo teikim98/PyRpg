@@ -633,6 +633,10 @@ test.describe("실패와 복구", () => {
     await page.locator(".menu-close").click();
     await expect(page.locator(".menu-modal")).toHaveCount(0);
     expect((await save(page)).problems.P0101.draft).toBe("while True: pass");
+    // 경과 시간(단위 3-E1): 실제 전투에서 후퇴해도 그 전투에 쓴 시간이 문제 기록에 남는다(TLE 두 번이라 몇 초 이상)
+    const afterRetreat = (await save(page)).problems.P0101.elapsedTotalMs;
+    expect(afterRetreat).toBeGreaterThanOrEqual(2_000);
+    expect(Number.isInteger(afterRetreat)).toBe(true);
 
     // 다시 붙으면 다음 시전은 정상 채점
     await bump(page, "m_P0101");
@@ -640,6 +644,11 @@ test.describe("실패와 복구", () => {
     expect(await editorText(page)).toBe("while True: pass");
     await winBattle(page, "P0101");
     expect((await obj(page, "m_P0101")).removed).toBe(true);
+    // 이긴 전투의 시간도 더해지고, 기록 로그에 그 전투의 시간이 남는다
+    const won = await save(page);
+    expect(won.problems.P0101.elapsedTotalMs).toBeGreaterThan(afterRetreat);
+    expect(won.history.at(-1)).toMatchObject({ problemId: "P0101", shadow: false });
+    expect(won.history.at(-1).elapsedMs).toBeGreaterThan(0);
   });
 
   test("치명적 재귀: 깊은 lru_cache → 누리의 특별 안내, 다음 시전 정상", async ({ page }) => {

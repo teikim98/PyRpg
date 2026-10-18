@@ -65,6 +65,45 @@ export function practiceThresholdMs(estimatedMinutes: number): number {
   return Math.max(estimatedMinutes * 2, 10) * 60_000;
 }
 
+/** 멈췄다 이어 셀 수 있는 경과 시간 타이머(단위 3-E1). 전투 화면은 탭이 보이는 동안만 센다(결정 23 P-E1) */
+export interface ActiveTimer {
+  /** 0부터 다시 세기 시작 */
+  start(): void;
+  /** 지금까지 센 시간을 쌓고 멈춤(이미 멈췄으면 그대로) */
+  pause(): void;
+  /** 멈춘 곳부터 이어 셈(이미 세는 중이면 그대로) */
+  resume(): void;
+  /** 지금까지 센 시간(ms) */
+  elapsed(): number;
+  readonly running: boolean;
+}
+
+/** now는 단조 시계(ms). 기본은 performance.now(Playwright의 page.clock도 이것을 바꾼다) */
+export function createActiveTimer(now: () => number = () => performance.now()): ActiveTimer {
+  let acc = 0;
+  let since: number | null = null;
+  return {
+    start() {
+      acc = 0;
+      since = now();
+    },
+    pause() {
+      if (since === null) return;
+      acc += Math.max(0, now() - since);
+      since = null;
+    },
+    resume() {
+      if (since === null) since = now();
+    },
+    elapsed() {
+      return acc + (since === null ? 0 : Math.max(0, now() - since));
+    },
+    get running() {
+      return since !== null;
+    },
+  };
+}
+
 /** 제한 시간 대비 가장 오래 걸린 테스트의 비율(%) */
 export function timeGaugePercent(result: Pick<JudgeResult, "tests" | "limitMs">): number {
   if (!result.limitMs || result.tests.length === 0) return 0;

@@ -47,6 +47,11 @@ export interface BattleContext {
   knockouts: number;
   /** 이미 연 힌트 단계(재도전 시 이어짐) */
   hintLevel: HintLevel;
+  /**
+   * 이 문제에 이전 전투들에서 쓴 누적 시간(ms, ProblemRecord.elapsedTotalMs, 단위 3-E1).
+   * 이번 전투 시간과 더해 기준 시간(design.md §7.1)과 비교한다. 그림자전은 0. 없으면 0
+   */
+  priorElapsedMs?: number;
   /** 지역 번호. 피드백 공개 수준(§7.1)에 쓴다 */
   regionOrder: number;
   traceback: TracebackRule[];
@@ -57,7 +62,7 @@ export interface BattleContext {
   /** 작성 중 코드가 바뀔 때(디바운스해서) 호출 */
   onDraft(code: string): void;
   /**
-   * 전투 도중 대가가 걸린 상태가 바뀔 때(힌트를 새 단계로 열었을 때, 해설서를 열었을 때, 반격을 받은 뒤).
+   * 전투 도중 대가가 걸린 상태가 바뀔 때(힌트를 새 단계로 열었을 때, 해설서를 열었을 때, 반격을 받은 뒤)와 탭이 숨겨질 때(경과 시간 저장).
    * 앱은 이것으로 '지금 후퇴했다면'의 결과를 임시 저장해서, 새로고침으로 힌트 대가·해설서·쓰러짐을 피하지 못하게 한다
    */
   onProgress?(state: BattleProgress): void;
@@ -108,6 +113,8 @@ export interface BattleProgress {
   maxHintLevel: HintLevel;
   solutionViewed: boolean;
   hp: number;
+  /** 이번 전투에서 지금까지 쓴 시간(ms, 탭이 보이는 동안만, 단위 3-E1). 없으면 0 */
+  elapsedMs?: number;
 }
 
 export interface BattleUI {

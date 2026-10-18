@@ -6,6 +6,7 @@ import {
   buildPublicFeedback,
   castStageText,
   computeDamage,
+  createActiveTimer,
   disclosureMode,
   hintShortCost,
   practiceThresholdMs,
@@ -147,5 +148,39 @@ describe("castStageText", () => {
     expect(castStageText({ kind: "test", index: 3, total: 7, phase: 1, retry: false }, false)).toBe("시험 3/7");
     expect(castStageText({ kind: "test", index: 1, total: 4, phase: 2, retry: false }, true)).toBe("2페이즈 · 시험 1/4");
     expect(castStageText({ kind: "test", index: 1, total: 4, phase: 2, retry: true }, true)).toBe("2페이즈 · 시험 1/4 · 한 번 더 재는 중");
+  });
+});
+
+describe("createActiveTimer(단위 3-E1)", () => {
+  it("멈춘 동안은 세지 않고, 이어 세면 쌓인다", () => {
+    let t = 1000;
+    const timer = createActiveTimer(() => t);
+    expect(timer.elapsed()).toBe(0);
+    expect(timer.running).toBe(false);
+    timer.start();
+    t += 500;
+    expect(timer.elapsed()).toBe(500);
+    timer.pause();
+    expect(timer.running).toBe(false);
+    t += 10_000; // 탭이 숨겨진 시간
+    expect(timer.elapsed()).toBe(500);
+    timer.pause(); // 두 번 멈춰도 그대로
+    timer.resume();
+    t += 250;
+    timer.resume(); // 세는 중에 다시 이어도 그대로
+    expect(timer.elapsed()).toBe(750);
+    timer.pause();
+    expect(timer.elapsed()).toBe(750);
+    // start는 0부터
+    timer.start();
+    t += 1;
+    expect(timer.elapsed()).toBe(1);
+  });
+  it("시계가 뒤로 가도 음수가 되지 않는다", () => {
+    let t = 1000;
+    const timer = createActiveTimer(() => t);
+    timer.start();
+    t -= 300;
+    expect(timer.elapsed()).toBe(0);
   });
 });

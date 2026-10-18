@@ -15,6 +15,11 @@ export interface ProblemRecord {
   solutionViewed: boolean;
   /** 마지막으로 작성하던 코드(전투를 떠나도 보존, §1 원칙 2) */
   draft?: string;
+  /**
+   * 처치 전까지 이 문제의 전투 창에서 쓴 시간의 합(ms, 탭이 보이는 동안만, 한 전투 상한 2시간, design.md §7.1 기준 시간).
+   * 그림자전은 더하지 않는다. 단위 3-E1에서 더한 선택 항목(없으면 0)
+   */
+  elapsedTotalMs?: number;
 }
 
 export interface ShadowEntry {
@@ -38,6 +43,8 @@ export interface AttemptLog {
   /** FSRS 전환 대비(§7.6): again | hard | good | easy */
   grade: "again" | "hard" | "good" | "easy";
   shadow: boolean;
+  /** 이 전투에서 쓴 시간(ms, 탭이 보이는 동안만, 상한 2시간). 0이면 생략. 단위 3-E1에서 더한 선택 항목 */
+  elapsedMs?: number;
 }
 
 export interface StreakState {
@@ -110,6 +117,7 @@ export interface BattleOutcome {
   solutionViewed: boolean;
   finalCode: string;
   hpLeft: number;
+  /** 이번 전투에서 쓴 시간(ms). 탭이 보이는 동안만 센다(단위 3-E1). 적용할 때 반올림하고 2시간에서 자른다 */
   elapsedMs: number;
   /** 보스 시간 결계 페이즈를 첫 시전에 통과했는가(칭호 '시간을 돌린 자', §7.4). 보스가 아니면 생략 */
   timeBarrierFirstTry?: boolean;

@@ -15,6 +15,7 @@ import {
   buildPublicFeedback,
   castStageText,
   computeDamage,
+  createActiveTimer,
   disclosureMode,
   firstFailed,
   formatRunOutput,
@@ -89,7 +90,10 @@ export function createBattleUI(env: UiEnv): BattleUI {
         let closed = false;
         // 승리·쓰러짐 배너가 뜬 뒤에는 버튼을 다시 켜지 않는다
         let ended = false;
-        const startedAt = Date.now();
+        // 경과 시간(단위 3-E1): 탭이 보이는 동안만 센다(결정 23 P-E1). 승리·쓰러짐 배너가 뜨면 멈춘다
+        const timer = createActiveTimer();
+        timer.start();
+        if (document.visibilityState === "hidden") timer.pause();
         const timers: number[] = [];
         const cleanups: (() => void)[] = [];
 
@@ -156,7 +160,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
         // 힌트·해설서·반격으로 바뀐 상태를 앱에 알린다(새로고침으로 대가·쓰러짐을 피하지 못하게 앱이 임시 저장)
         const reportProgress = () => {
           try {
-            ctx.onProgress?.({ attempts, maxHintLevel: hintLevel, solutionViewed, hp });
+            ctx.onProgress?.({ attempts, maxHintLevel: hintLevel, solutionViewed, hp, elapsedMs: Math.round(timer.elapsed()) });
           } catch (e) {
             console.error(e);
           }
@@ -606,6 +610,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
 
         const victory = () => {
           ended = true;
+          timer.pause();
           // 배너를 누르기 전에 새로고침해도 승리가 남도록 앱에 바로 알린다
           try {
             ctx.onVictory?.(outcomeOf("victory"));
@@ -620,6 +625,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
 
         const knockout = () => {
           ended = true;
+          timer.pause();
           say("worried", "으앗… 쓰러졌어. 코드는 그대로 남아 있으니까, 캠프파이어에서 쉬고 다시 오자.");
           setBusy(true);
           showBanner("쓰러졌다…", "마지막 캠프파이어로 돌아갑니다. 작성한 코드는 보존돼요.", "캠프파이어로", "is-knockout", () => finish("knockout"));
@@ -669,7 +675,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
           solutionViewed,
           finalCode: editor.getCode(),
           hpLeft: result === "knockout" ? 0 : hp,
-          elapsedMs: Date.now() - startedAt,
+          elapsedMs: Math.round(timer.elapsed()),
           ...(phases.length > 1 && result === "victory" ? { timeBarrierFirstTry: barrierFirstTry } : {}),
         });
 
@@ -707,6 +713,19 @@ export function createBattleUI(env: UiEnv): BattleUI {
         btnSolution.addEventListener("click", () => void openSolution());
         btnRetreat.addEventListener("click", () => finish("retreat"));
         btnPotion.addEventListener("click", usePotion);
+
+        // 탭을 숨기면 시간을 멈추고 지금까지를 임시 저장한다(탭을 닫거나 새로고침해도 시간이 남게). 다시 보이면 이어 센다
+        const onVisibility = () => {
+          if (closed || ended) return;
+          if (document.visibilityState === "hidden") {
+            timer.pause();
+            reportProgress();
+          } else {
+            timer.resume();
+          }
+        };
+        document.addEventListener("visibilitychange", onVisibility);
+        cleanups.push(() => document.removeEventListener("visibilitychange", onVisibility));
 
         // 시간 기반 우회 제안(design.md §7.1)
         if (!p.practice) {

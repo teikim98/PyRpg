@@ -464,6 +464,34 @@ test.describe("battle", () => {
     expect(out.elapsedMs).toBeGreaterThanOrEqual(600_000);
   });
 
+  test("elapsed time (unit 3-E1): counts only while the tab is visible, reports progress when hidden", async ({ page }) => {
+    await page.clock.install();
+    await boot(page);
+    const done = page.evaluate(() => (window as Win).__ui.battle("P0101"));
+    await expect(page.locator(".battle-modal")).toBeVisible();
+    await page.clock.fastForward("01:00");
+    const setHidden = (hidden: boolean) =>
+      page.evaluate((hidden) => {
+        if (hidden) Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" });
+        else delete (document as any).visibilityState;
+        document.dispatchEvent(new Event("visibilitychange"));
+      }, hidden);
+    await setHidden(true);
+    const hiddenAt = await page.evaluate(() => (window as Win).__ui.progresses.at(-1));
+    expect(hiddenAt).toMatchObject({ attempts: 0, maxHintLevel: 0, solutionViewed: false, hp: 100 });
+    expect(hiddenAt.elapsedMs).toBeGreaterThanOrEqual(60_000);
+    expect(hiddenAt.elapsedMs).toBeLessThan(65_000);
+    // 숨겨진 5분은 세지 않는다
+    await page.clock.fastForward("05:00");
+    await setHidden(false);
+    await page.clock.fastForward("01:00");
+    await page.locator(".act-retreat").click();
+    const out = await done;
+    expect(out.elapsedMs).toBeGreaterThanOrEqual(120_000);
+    expect(out.elapsedMs).toBeLessThan(130_000);
+    expect(Number.isInteger(out.elapsedMs)).toBe(true);
+  });
+
   test("RE with a problem diagnosis: diagnosis is the main text, the generic explanation folds behind [자세히]", async ({ page }) => {
     await boot(page);
     await page.evaluate(() => {

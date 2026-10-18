@@ -457,6 +457,33 @@ describe("전투", () => {
     expect(ctxSeen.companionLines?.practiceSuggest).toBe(content.commonDialogues.practice_suggest);
   });
 
+  it("경과 시간(단위 3-E1): 전투 중 임시 저장에 elapsedMs를 싣고, 다음 전투에 priorElapsedMs로 넘긴다", async () => {
+    const { h, store } = await battleHarness();
+    const priors: (number | undefined)[] = [];
+    let saved = false;
+    h.battle.open = async (ctx) => {
+      priors.push(ctx.priorElapsedMs);
+      // 탭이 숨겨질 때의 임시 저장(진행 상태는 그대로, 시간만)
+      ctx.onProgress?.({ attempts: 0, maxHintLevel: 0, solutionViewed: false, hp: 100, elapsedMs: 90_000 });
+      await vi.waitFor(() => expect(store.data!.problems.P0101?.elapsedTotalMs).toBe(90_000));
+      saved = true;
+      return { problemId: ctx.problem.id, result: "retreat", attempts: 0, maxHintLevel: 0, solutionViewed: false, finalCode: "x", hpLeft: 100, elapsedMs: 120_000 };
+    };
+    h.callbacks.onInteract(h.world.obj("m_P0101"));
+    await idle(h.app);
+    expect(saved).toBe(true);
+    // 임시 저장이 아니라 후퇴 결과(120초)가 한 번만 더해진다
+    expect(store.data!.problems.P0101.elapsedTotalMs).toBe(120_000);
+    h.battle.open = async (ctx) => {
+      priors.push(ctx.priorElapsedMs);
+      return { problemId: ctx.problem.id, result: "retreat", attempts: 0, maxHintLevel: 0, solutionViewed: false, finalCode: "x", hpLeft: 100, elapsedMs: 1_000 };
+    };
+    h.callbacks.onInteract(h.world.obj("m_P0101"));
+    await idle(h.app);
+    expect(priors).toEqual([0, 120_000]);
+    expect(store.data!.problems.P0101.elapsedTotalMs).toBe(121_000);
+  });
+
   it("보스 승리를 저장한 뒤 클리어 연출 전에 새로고침하면 다시 시작할 때 클리어 연출을 보여 준다", async () => {
     const content = makeContent(false);
     const store = new MemoryStore();

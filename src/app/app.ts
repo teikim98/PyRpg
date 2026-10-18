@@ -430,7 +430,7 @@ export class App {
     const level = levelFromXp(this.save.player.xp);
     const fx = this.effects();
     const potion = this.potionItem();
-    // 전투 도중의 자동 저장: 힌트·해설서·반격이 있었으면 '지금 후퇴(HP 0이면 쓰러짐)했다면'의 결과를 저장한다.
+    // 전투 도중의 자동 저장: 힌트·해설서·반격·탭 숨김이 있었으면 '지금 후퇴(HP 0이면 쓰러짐)했다면'의 결과를 저장한다.
     // 그러지 않으면 새로고침으로 힌트 대가·해설서(보상 0)·쓰러짐 기록을 지울 수 있다(§5.3, §7.6)
     let progress: BattleProgress | null = null;
     // AC 순간에 저장한 승리(배너를 누르기 전 새로고침 대비). 있으면 전투가 끝난 뒤 다시 적용하지 않는다
@@ -446,7 +446,8 @@ export class App {
           solutionViewed: progress.solutionViewed,
           finalCode: shadow ? "" : (this.save.problems[problem.id]?.draft ?? problem.starter),
           hpLeft: progress.hp,
-          elapsedMs: 0,
+          // 탭을 숨길 때까지 쓴 시간(단위 3-E1). 새로고침해도 누적 시간이 남는다
+          elapsedMs: progress.elapsedMs ?? 0,
         };
         data = applyBattleOutcome(this.save, problem, provisional, this.now(), { shadow, maxHpBonus: fx.maxHpBonus }).save;
       }
@@ -462,6 +463,7 @@ export class App {
       draft: shadow ? undefined : rec.draft,
       knockouts: shadow ? 0 : rec.knockouts,
       hintLevel: shadow ? 0 : rec.maxHintLevel,
+      priorElapsedMs: shadow ? 0 : (rec.elapsedTotalMs ?? 0),
       regionOrder: this.regionOrderOf(problem),
       traceback: this.deps.content.traceback,
       explain: explainError,
