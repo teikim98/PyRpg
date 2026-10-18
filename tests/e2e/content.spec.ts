@@ -405,7 +405,8 @@ for (const region of REGIONS) {
             perIterMs,
           };
         },
-        [pid, BUDGET_HEADROOM, SLOW_PROBE_STDIN[pid] ?? "1000000\n"] as [string, number, string],
+        // 비효율 답안에 줄 배수: 문제별 기준(SLOW_HEADROOM, 결정 15)이 있으면 그것을, 없으면 3배
+        [pid, SLOW_HEADROOM[pid] ?? BUDGET_HEADROOM, SLOW_PROBE_STDIN[pid] ?? "1000000\n"] as [string, number, string],
       );
       console.log(
         `${m.id} 보정: ref=${m.refMs.toFixed(1)} ms, budgetUnits=${m.budgetUnits}, 제한=${m.limitMs} ms, ` +
