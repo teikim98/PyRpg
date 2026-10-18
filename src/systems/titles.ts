@@ -43,7 +43,8 @@ export function titleMet(cond: TitleCondition, save: SaveData, regions: Pick<Reg
     case "shadowWins":
       return shadowWins(save) >= cond.count;
     case "persistence":
-      return recs.some((r) => r.solved && r.attempts >= cond.attempts);
+      // 해설서를 본 승리는 제외(design.md §7.4, 단위 3-E4). 이미 받은 칭호는 awardTitles가 회수하지 않는다
+      return recs.some((r) => r.solved && r.attempts >= cond.attempts && !r.solutionViewed);
     case "goodWeeks":
       return goodWeeks(save, cond.days) >= cond.weeks;
     case "regionClear":

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { HintLevel } from "../../src/contracts/state";
-import { applyBattleOutcome, lastStreakRepair, solutionFlag, STREAK_REPAIR_FLAG } from "../../src/systems/battle";
+import { applyBattleOutcome, battleElapsedMs, lastStreakRepair, MAX_BATTLE_ELAPSED_MS, solutionFlag, STREAK_REPAIR_FLAG } from "../../src/systems/battle";
 import { levelFromXp, maxHp, xpForLevel } from "../../src/systems/level";
 import { completeLesson, hudState, restAtCampfire, settleOnLoad } from "../../src/systems/progress";
 import { computeBattleReward, GUIDE_FEATHER_ID, hintPenalty } from "../../src/systems/rewards";
@@ -68,7 +68,7 @@ describe("applyBattleOutcome: victory", () => {
     expect(r.save.player).toMatchObject({ xp: 100, gold: 50, hp: 70 });
     expect(r.summary).toEqual({ xp: 100, gold: 50, penalty: 0, levelBefore: 1, levelAfter: 1, streakCounted: true });
     expect(r.save.streak.activeDays).toEqual(["2026-10-01"]);
-    expect(r.save.history).toEqual([{ at: NOW.toISOString(), problemId: "P0101", concept: "S1-io", grade: "easy", shadow: false }]);
+    expect(r.save.history).toEqual([{ at: NOW.toISOString(), problemId: "P0101", concept: "S1-io", grade: "easy", shadow: false, elapsedMs: 1000 }]);
     expect(r.save.shadows).toEqual([]);
     expect(r.events).toContainEqual({ type: "victory", problemId: "P0101", firstClear: true });
     expect(r.events).toContainEqual({ type: "streakCounted", date: "2026-10-01", streak: 1 });
@@ -213,6 +213,56 @@ describe("applyBattleOutcome: shadow battle", () => {
     expect(r.save.shadows).toEqual(s.shadows);
     expect(r.save.history).toEqual(s.history);
     expect(r.save.player.hp).toBe(30);
+  });
+});
+
+describe("경과 시간(단위 3-E1, design.md §7.1 기준 시간)", () => {
+  const MIN = 60_000;
+  it("한 전투 값: 반올림 정수, NaN·음수는 0, 상한 2시간", () => {
+    expect(battleElapsedMs(1234.6)).toBe(1235);
+    expect(battleElapsedMs(0)).toBe(0);
+    expect(battleElapsedMs(-5)).toBe(0);
+    expect(battleElapsedMs(Number.NaN)).toBe(0);
+    expect(battleElapsedMs(Number.POSITIVE_INFINITY)).toBe(MAX_BATTLE_ELAPSED_MS);
+    expect(MAX_BATTLE_ELAPSED_MS).toBe(2 * 60 * MIN);
+    expect(battleElapsedMs(3 * 60 * MIN)).toBe(MAX_BATTLE_ELAPSED_MS);
+  });
+  it("미해결이면 후퇴·쓰러짐·승리 모두 누적, 처치 뒤에는 더하지 않음", () => {
+    let s = newSave();
+    s = applyBattleOutcome(s, problem(), outcome({ result: "retreat", elapsedMs: 3 * MIN }), NOW).save;
+    expect(s.problems.P0101.elapsedTotalMs).toBe(3 * MIN);
+    // 후퇴는 기록 로그가 없다(지금 규칙 그대로)
+    expect(s.history).toEqual([]);
+    s = applyBattleOutcome(s, problem(), outcome({ result: "knockout", hpLeft: 0, elapsedMs: 4 * MIN + 0.4 }), NOW).save;
+    expect(s.problems.P0101.elapsedTotalMs).toBe(7 * MIN);
+    expect(s.history.at(-1)).toMatchObject({ grade: "again", elapsedMs: 4 * MIN });
+    s = applyBattleOutcome(s, problem(), outcome({ elapsedMs: 2 * MIN }), NOW).save;
+    expect(s.problems.P0101).toMatchObject({ solved: true, elapsedTotalMs: 9 * MIN });
+    expect(s.history.at(-1)).toMatchObject({ elapsedMs: 2 * MIN });
+    // 이미 처치한 문제를 다시 이겨도 누적은 그대로(기록 로그에는 남음)
+    const again = applyBattleOutcome(s, problem(), outcome({ elapsedMs: 5 * MIN }), NOW).save;
+    expect(again.problems.P0101.elapsedTotalMs).toBe(9 * MIN);
+    expect(again.history.at(-1)).toMatchObject({ elapsedMs: 5 * MIN });
+  });
+  it("값 자르기: 한 전투는 2시간까지, 0·음수·NaN이면 필드를 만들지 않고 로그에서도 생략", () => {
+    const r = applyBattleOutcome(newSave(), problem(), outcome({ result: "retreat", elapsedMs: 5 * 60 * MIN }), NOW).save;
+    expect(r.problems.P0101.elapsedTotalMs).toBe(MAX_BATTLE_ELAPSED_MS);
+    for (const bad of [0, -100, Number.NaN]) {
+      const k = applyBattleOutcome(newSave(), problem(), outcome({ result: "knockout", hpLeft: 0, elapsedMs: bad }), NOW).save;
+      expect(k.problems.P0101.elapsedTotalMs).toBeUndefined();
+      expect(k.history[0]).not.toHaveProperty("elapsedMs");
+    }
+  });
+  it("그림자전은 문제 기록의 누적을 바꾸지 않고, 기록 로그에는 elapsedMs를 남긴다", () => {
+    let s = applyBattleOutcome(newSave(), problem(), outcome({ result: "retreat", maxHintLevel: 2, elapsedMs: MIN }), at("2026-09-20")).save;
+    s.shadows[0] = { ...s.shadows[0], due: "2026-10-01" };
+    const before = structuredClone(s.problems.P0101);
+    const w = applyBattleOutcome(s, problem(), outcome({ elapsedMs: 2 * MIN }), NOW, { shadow: true }).save;
+    expect(w.problems.P0101).toEqual(before);
+    expect(w.history.at(-1)).toMatchObject({ shadow: true, elapsedMs: 2 * MIN });
+    const ret = applyBattleOutcome(s, problem(), outcome({ result: "retreat", elapsedMs: 2 * MIN }), NOW, { shadow: true }).save;
+    expect(ret.problems.P0101).toEqual(before);
+    expect(ret.history).toEqual(s.history);
   });
 });
 

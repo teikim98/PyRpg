@@ -12,6 +12,8 @@ const SPEC_REGION_DIALOGUES = [
 const SPEC_COMMON_DIALOGUES = [
   "need_scroll", "campfire_rest", "knockout", "solution_unlocked", "retreat", "practice_suggest",
   "shadow_registered", "level_up", "fatal_recursion",
+  // 단위 3-E4: 힌트 경로로 해설서가 열릴 때
+  "solution_unlocked_hint",
 ];
 const SPEC_PROBLEMS = ["P0101", "P0102", "P0103", "P0104", "P0105", "P0106", "P0107", "P0108", "P0109", "P0110"];
 const SPEC_SCROLLS = { "L1-1": "scroll.voice", "L1-2": "scroll.convert", "L1-3": "scroll.arith", "L1-4": "scroll.quick_ear" };

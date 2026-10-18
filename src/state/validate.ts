@@ -122,7 +122,7 @@ export function validateSave(raw: unknown): ValidationResult {
   c.strArr(d.titles, "titles");
 
   c.record(d.problems, "problems", (v, p) => {
-    if (!c.obj(v, p, { required: ["attempts", "knockouts", "solved", "maxHintLevel", "solutionViewed"], optional: ["solvedAt", "draft"] })) return;
+    if (!c.obj(v, p, { required: ["attempts", "knockouts", "solved", "maxHintLevel", "solutionViewed"], optional: ["solvedAt", "draft", "elapsedTotalMs"] })) return;
     c.int(v.attempts, `${p}.attempts`);
     c.int(v.knockouts, `${p}.knockouts`);
     c.bool(v.solved, `${p}.solved`);
@@ -130,6 +130,8 @@ export function validateSave(raw: unknown): ValidationResult {
     c.int(v.maxHintLevel, `${p}.maxHintLevel`, 0, 3);
     c.bool(v.solutionViewed, `${p}.solutionViewed`);
     if (v.draft !== undefined) c.str(v.draft, `${p}.draft`);
+    // 단위 3-E1에서 더한 선택 항목(옛 저장에는 없다)
+    if (v.elapsedTotalMs !== undefined) c.int(v.elapsedTotalMs, `${p}.elapsedTotalMs`);
   });
   c.record(d.flags, "flags", (v, p) => c.bool(v, p));
   c.record(d.inventory, "inventory", (v, p) => c.int(v, p));
@@ -163,12 +165,13 @@ export function validateSave(raw: unknown): ValidationResult {
   }
 
   c.arr(d.history, "history", (v, p) => {
-    if (!c.obj(v, p, { required: ["at", "problemId", "concept", "grade", "shadow"] })) return;
+    if (!c.obj(v, p, { required: ["at", "problemId", "concept", "grade", "shadow"], optional: ["elapsedMs"] })) return;
     c.iso(v.at, `${p}.at`);
     c.str(v.problemId, `${p}.problemId`, true);
     c.str(v.concept, `${p}.concept`, true);
     c.oneOf(v.grade, `${p}.grade`, GRADES);
     c.bool(v.shadow, `${p}.shadow`);
+    if (v.elapsedMs !== undefined) c.int(v.elapsedMs, `${p}.elapsedMs`);
   });
 
   if (d.quests !== undefined && c.obj(d.quests, "quests", { required: ["date", "ids", "progress", "claimed", "chest"] })) {

@@ -406,12 +406,162 @@ test.describe("battle", () => {
     await btn.click();
     await expect(page.locator(".confirm-msg")).toContainText("보상이 0");
     await page.locator(".confirm-yes").click();
-    await expect(page.locator(".solution-code")).toHaveText(SOLUTION_P0101);
+    // 설명 먼저(단위 3-E4): 코드는 숨긴 채 시작하고 에디터는 가리지 않는다
     await expect(page.locator(".solution-explanation")).toContainText("크기 제한이 없으므로");
+    await expect(page.locator(".solution-code")).toBeHidden();
+    await expect(page.locator(".editor-cover")).toBeHidden();
+    await page.locator(".solution-show-code").click();
+    await expect(page.locator(".solution-code")).toHaveText(SOLUTION_P0101);
+    await expect(page.locator(".editor-cover")).toBeVisible();
+    await expect(page.locator(".act-cast")).toBeDisabled();
     await page.locator(".battle-tabs .tab").first().click();
     await expect(page.locator(".battle-statement-view")).toBeVisible();
+    await expect(page.locator(".editor-cover")).toBeHidden();
+    await expect(page.locator(".act-cast")).toBeEnabled();
     await page.locator(".act-retreat").click();
     expect(await done).toMatchObject({ result: "retreat", solutionViewed: true });
+  });
+
+  test("solution book hint route (unit 3-E4): boss phase pass is not a failure, fatal is; the time condition unlocks as the clock runs", async ({ page }) => {
+    await page.clock.install();
+    await boot(page);
+    const done = page.evaluate(() => (window as Win).__ui.battle("P0105", { hintLevel: 3, hp: 300, maxHp: 300 }));
+    const btn = page.locator(".act-solution");
+    const castWith = async (spec: Record<string, unknown>) => {
+      await page.evaluate((s) => (window as Win).__ui.fake.queueJudge(s), spec);
+      await page.locator(".act-cast").click();
+      await expect(page.locator(".battle")).not.toHaveClass(/is-busy/);
+    };
+    await expect(btn).toHaveText("해설서 (실패 0/2)");
+    await expect(btn).toBeDisabled();
+    // 보스 1페이즈 통과는 실패가 아니다
+    await castWith({ verdict: "AC" });
+    await expect(page.locator(".phase-label")).toContainText("2페이즈");
+    await expect(btn).toHaveText("해설서 (실패 0/2)");
+    await castWith({ verdict: "TLE" });
+    await expect(btn).toHaveText("해설서 (실패 1/2)");
+    // fatal(실행기 재시작)도 실패로 센다
+    await castWith({ verdict: "RE", fatal: true });
+    // P0105는 예상 15분 → 기준 시간 min(30, 20) = 20분
+    await expect(btn).toHaveText("해설서 (시간 0/20분)");
+    await expect(btn).toBeDisabled();
+    await page.clock.fastForward("19:00");
+    await expect(btn).toHaveText("해설서 (시간 19/20분)");
+    await expect(btn).toBeDisabled();
+    await expect(page.locator(".solution-unlock-note")).toHaveCount(0);
+    await page.clock.fastForward("01:00");
+    await expect(btn).toBeEnabled();
+    await expect(btn).toHaveText("해설서");
+    await expect(page.locator(".battle-msg .solution-unlock-note")).toContainText("해설서");
+    await expect(page.locator(".battle-msg")).toHaveAttribute("data-solution-unlocked", "hint");
+    await page.locator(".act-retreat").click();
+    const out = await done;
+    expect(out).toMatchObject({ result: "retreat", solutionViewed: false, maxHintLevel: 3 });
+    expect(out.elapsedMs).toBeGreaterThanOrEqual(20 * 60_000);
+
+    // 다음 전투: 힌트 경로는 전투마다 다시 판정한다(결정 23 P-E2). 누적 시간은 넘었어도 이번 전투의 실패가 0
+    const again = page.evaluate((prior) => (window as Win).__ui.battle("P0105", { hintLevel: 3, priorElapsedMs: prior }), out.elapsedMs);
+    await expect(btn).toHaveText("해설서 (실패 0/2)");
+    await expect(btn).toBeDisabled();
+    await page.locator(".act-retreat").click();
+    await again;
+  });
+
+  test("solution book hint route (unit 3-E4): prior time + two failures after opening hint 3 in this battle", async ({ page }) => {
+    await boot(page);
+    const lines = [
+      { speaker: "companion", emotion: "happy", text: "{player}, 힌트 경로로 해설서가 열렸어!" },
+      { speaker: "companion", emotion: "neutral", text: "설명부터 읽어 봐." },
+    ];
+    const done = page.evaluate(
+      (lines) => (window as Win).__ui.battle("P0101", { hintLevel: 2, knockouts: 2, priorElapsedMs: 10 * 60_000, companionLines: { solutionUnlockedHint: lines } }),
+      lines,
+    );
+    const btn = page.locator(".act-solution");
+    await expect(btn).toHaveText("해설서 (2/3)");
+    // 힌트 3을 열기 전의 실패는 세지 않는다(결정 23 P-E3)
+    await typeInEditor(page, "a, b = input().split()\nprint(a + b)");
+    await page.locator(".act-cast").click();
+    await expect(page.locator(".counter")).toBeVisible();
+    await expect(page.locator(".battle")).not.toHaveClass(/is-busy/);
+    await expect(btn).toHaveText("해설서 (2/3)");
+    await page.locator(".act-hint-3").click();
+    await page.locator(".confirm-yes").click();
+    await expect(btn).toHaveText("해설서 (실패 0/2)");
+    await page.locator(".act-cast").click();
+    await expect(page.locator(".battle")).not.toHaveClass(/is-busy/);
+    await expect(btn).toHaveText("해설서 (실패 1/2)");
+    await expect(btn).toBeDisabled();
+    await page.locator(".act-cast").click();
+    await expect(page.locator(".battle")).not.toHaveClass(/is-busy/);
+    // 이전 전투 10분 + 실패 2번 → 바로 열림. 채점 결과(반격)는 지우지 않고 누리 대사를 아래에 붙인다
+    await expect(btn).toBeEnabled();
+    await expect(btn).toHaveText("해설서");
+    await expect(page.locator(".battle-msg .counter")).toBeVisible();
+    await expect(page.locator(".battle-msg .solution-unlock-note")).toContainText("하늘, 힌트 경로로 해설서가 열렸어!");
+    await expect(page.locator(".battle-msg .solution-unlock-note .nuri-line")).toHaveCount(2);
+    await btn.click();
+    await page.locator(".confirm-yes").click();
+    await expect(page.locator(".solution-explanation")).toBeVisible();
+    await page.locator(".act-retreat").click();
+    expect(await done).toMatchObject({ result: "retreat", solutionViewed: true, maxHintLevel: 3, attempts: 3 });
+  });
+
+  test("solution book (unit 3-E4): explanation first → code → editor covered → released by [코드 닫기] or the problem tab", async ({ page }) => {
+    await boot(page);
+    const done = page.evaluate(() => (window as Win).__ui.battle("P0101", { knockouts: 3 }));
+    await typeInEditor(page, "print(1)");
+    await page.locator(".act-solution").click();
+    await page.locator(".confirm-yes").click();
+    // 제목 → 보상 0 안내 → 설명 → [모범답안 코드 보기], 코드는 숨긴 채 시작
+    const order = await page.locator(".battle-solution-view").evaluate((el) => Array.from(el.children as HTMLCollectionOf<HTMLElement>, (c) => (c.hidden ? `(${c.className})` : c.className)));
+    expect(order).toEqual(["battle-title", "solution-note", "md solution-explanation", "solution-code-note", "btn solution-show-code", "(solution-code-box)"]);
+    await expect(page.locator(".solution-code")).toBeHidden();
+    await expect(page.locator(".editor-cover")).toBeHidden();
+    await expect(page.locator(".act-cast")).toBeEnabled();
+    const inert = () => page.locator(".battle-editor").evaluate((el) => el.hasAttribute("inert"));
+
+    await page.locator(".solution-show-code").click();
+    await expect(page.locator(".solution-code")).toHaveText(SOLUTION_P0101);
+    await expect(page.locator(".editor-cover")).toBeVisible();
+    await expect(page.locator(".editor-cover")).toContainText("에디터를 가려 둘게");
+    expect(await inert()).toBe(true);
+    await expect(page.locator(".act-cast")).toBeDisabled();
+    await expect(page.locator(".act-public")).toBeDisabled();
+    await expect(page.locator(".custom-run")).toBeDisabled();
+    // 코드는 복사할 수 없다(user-select: none, copy 이벤트 막기)
+    expect(await page.locator(".solution-code").evaluate((el) => getComputedStyle(el).userSelect)).toBe("none");
+    const prevented = await page.locator(".solution-code").evaluate((el) => {
+      const e = new Event("copy", { bubbles: true, cancelable: true });
+      el.dispatchEvent(e);
+      return e.defaultPrevented;
+    });
+    expect(prevented).toBe(true);
+
+    // [코드 닫기]로 해제
+    await page.locator(".solution-hide-code").click();
+    await expect(page.locator(".editor-cover")).toBeHidden();
+    await expect(page.locator(".solution-code")).toBeHidden();
+    await expect(page.locator(".solution-show-code")).toBeVisible();
+    expect(await inert()).toBe(false);
+    await expect(page.locator(".act-cast")).toBeEnabled();
+
+    // 다시 보고 [문제] 탭으로 해제 → 바로 입력할 수 있다
+    await page.locator(".solution-show-code").click();
+    await expect(page.locator(".editor-cover")).toBeVisible();
+    await page.locator(".battle-tabs .tab").first().click();
+    await expect(page.locator(".battle-statement-view")).toBeVisible();
+    await expect(page.locator(".editor-cover")).toBeHidden();
+    expect(await inert()).toBe(false);
+    // 해설서 탭으로 돌아가면 설명부터(코드는 닫혀 있다)
+    await page.locator(".battle-tabs .tab").nth(1).click();
+    await expect(page.locator(".solution-code")).toBeHidden();
+    await page.locator(".battle-tabs .tab").first().click();
+    await typeInEditor(page, SOLUTION_P0101);
+    await page.locator(".act-cast").click();
+    await expect(page.locator(".battle-banner")).toContainText("정화");
+    await page.locator(".banner-ok").click();
+    expect(await done).toMatchObject({ result: "victory", solutionViewed: true });
   });
 
   test("boss: phase 2 shows the time gauge and verdict-only feedback", async ({ page }) => {
@@ -462,6 +612,34 @@ test.describe("battle", () => {
     await page.locator(".act-retreat").click();
     const out = await done;
     expect(out.elapsedMs).toBeGreaterThanOrEqual(600_000);
+  });
+
+  test("elapsed time (unit 3-E1): counts only while the tab is visible, reports progress when hidden", async ({ page }) => {
+    await page.clock.install();
+    await boot(page);
+    const done = page.evaluate(() => (window as Win).__ui.battle("P0101"));
+    await expect(page.locator(".battle-modal")).toBeVisible();
+    await page.clock.fastForward("01:00");
+    const setHidden = (hidden: boolean) =>
+      page.evaluate((hidden) => {
+        if (hidden) Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" });
+        else delete (document as any).visibilityState;
+        document.dispatchEvent(new Event("visibilitychange"));
+      }, hidden);
+    await setHidden(true);
+    const hiddenAt = await page.evaluate(() => (window as Win).__ui.progresses.at(-1));
+    expect(hiddenAt).toMatchObject({ attempts: 0, maxHintLevel: 0, solutionViewed: false, hp: 100 });
+    expect(hiddenAt.elapsedMs).toBeGreaterThanOrEqual(60_000);
+    expect(hiddenAt.elapsedMs).toBeLessThan(65_000);
+    // 숨겨진 5분은 세지 않는다
+    await page.clock.fastForward("05:00");
+    await setHidden(false);
+    await page.clock.fastForward("01:00");
+    await page.locator(".act-retreat").click();
+    const out = await done;
+    expect(out.elapsedMs).toBeGreaterThanOrEqual(120_000);
+    expect(out.elapsedMs).toBeLessThan(130_000);
+    expect(Number.isInteger(out.elapsedMs)).toBe(true);
   });
 
   test("RE with a problem diagnosis: diagnosis is the main text, the generic explanation folds behind [자세히]", async ({ page }) => {

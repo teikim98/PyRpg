@@ -16,6 +16,10 @@
     { "speaker": "companion", "emotion": "serious", "text": "같은 버그에 세 번이나 쓰러졌네. 여기서 계속 맴도는 것보다 한 번 길을 보고 가는 게 나을 수도 있어." },
     { "speaker": "companion", "emotion": "neutral", "text": "해설서를 열 수 있게 됐어. 대신 이번 전투 보상은 없고, 이 주문은 그림자 몬스터로 나중에 다시 만나게 될 거야. 열지 말지는 네가 정해!" }
   ],
+  "solution_unlocked_hint": [
+    { "speaker": "companion", "emotion": "happy", "text": "힌트 3까지 보고도 이만큼 붙잡고 버텼네! 그 끈기, 진짜 멋져." },
+    { "speaker": "companion", "emotion": "neutral", "text": "이제 해설서를 열 수 있어. 설명부터 읽고 코드는 정말 필요할 때만 꺼내 봐. 대신 이번 보상은 없고 그림자 몬스터로 다시 만나게 돼. 고르는 건 너야!" }
+  ],
   "retreat": [
     { "speaker": "companion", "emotion": "neutral", "text": "좋아, 일단 물러나자! 써 둔 주문은 그대로 남아 있어." },
     { "speaker": "companion", "emotion": "happy", "text": "코덱스를 한 번 훑어보고 다시 오면 분명 보일 거야. 이 버그는 어디 안 가!" }

@@ -60,6 +60,11 @@ describe("validateSave", () => {
     ["flags 값", (s) => (s.flags.x = "yes"), "flags.x: true/false"],
     ["ISO 시각", (s) => (s.updatedAt = "어제"), "updatedAt: ISO"],
     ["배열 자리에 객체", (s) => (s.scrolls = {}), "scrolls: 배열"],
+    // 단위 3-E1 경과 시간
+    ["음수 누적 시간", (s) => (s.problems.P0101.elapsedTotalMs = -1), "problems.P0101.elapsedTotalMs: 0 이상"],
+    ["소수 누적 시간", (s) => (s.problems.P0101.elapsedTotalMs = 1.5), "problems.P0101.elapsedTotalMs: 정수"],
+    ["음수 전투 시간", (s) => (s.history[0].elapsedMs = -1), "history[0].elapsedMs: 0 이상"],
+    ["소수 전투 시간", (s) => (s.history[0].elapsedMs = 0.5), "history[0].elapsedMs: 정수"],
   ];
   for (const [name, mutate, msg] of broken) {
     it(`거부: ${name}`, () => {
@@ -70,6 +75,17 @@ describe("validateSave", () => {
       if (!r.ok) expect(r.errors.join("\n")).toContain(msg);
     });
   }
+  it("단위 3-E1 경과 시간 필드는 통과하고, 그 필드가 없는 옛 저장도 통과(가져오기 포함)", () => {
+    const s = richSave();
+    expect(s.problems.P0101.elapsedTotalMs).toBe(1000);
+    expect(s.history[0].elapsedMs).toBe(1000);
+    expect(validateSave(s).ok).toBe(true);
+    const old: any = structuredClone(s);
+    for (const r of Object.values(old.problems) as any[]) delete r.elapsedTotalMs;
+    for (const l of old.history) delete l.elapsedMs;
+    expect(validateSave(old).ok).toBe(true);
+    expect(importSave(JSON.stringify(old))).toEqual(old);
+  });
   it("객체가 아니면 거부", () => {
     expect(validateSave(null).ok).toBe(false);
     expect(validateSave([]).ok).toBe(false);
