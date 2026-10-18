@@ -118,7 +118,13 @@ export function createBattleUI(env: UiEnv): BattleUI {
 
         // ---------- 위: 적과 나 ----------
         const sprite = createSprite(p.enemy.sprite, p.boss ? 3 : 4, p.enemy.name);
-        const enemyName = h("div", { class: "enemy-name" }, ctx.shadow ? `${p.enemy.name}의 그림자` : practiceMode ? `${p.enemy.name} (연습)` : p.enemy.name);
+        // 칸 3 이상의 이름 없는 그림자(단위 3-E2)는 적 이름이 이미 감춰져 있으므로 "~의 그림자"를 붙이지 않는다
+        const anonymous = ctx.shadow === true && ctx.shadowAnonymous === true;
+        const enemyName = h(
+          "div",
+          { class: "enemy-name" },
+          anonymous ? p.enemy.name : ctx.shadow ? `${p.enemy.name}의 그림자` : practiceMode ? `${p.enemy.name} (연습)` : p.enemy.name,
+        );
         const phaseLabel = h("div", { class: "phase-label", hidden: !phases.length });
         const segs = h("div", { class: "enemy-hp", role: "meter", "aria-label": `${p.enemy.name} HP` });
         const hiddenInfo = h("span", { class: "enemy-hidden" });
@@ -920,7 +926,9 @@ export function createBattleUI(env: UiEnv): BattleUI {
         updateButtons();
         say(
           "neutral",
-          ctx.shadow
+          anonymous
+            ? `<strong>${escapeHtml(p.enemy.name)}</strong>${josa(p.enemy.name, "이/가")} 나타났어! 어떤 주문서의 그림자인지는 이긴 뒤에 알 수 있어. 예전에 이긴 적이 있는 개념이니까 떠올려 보자.${phases.length > 1 ? " 페이즈마다 한 번에 모든 테스트를 통과해야 해." : ""}`
+            : ctx.shadow
             ? `<strong>${escapeHtml(p.enemy.name)}의 그림자</strong>가 나타났어! 예전에 막혔던 개념이야. 이야기와 값은 달라도 같은 주문으로 이길 수 있어.`
             : practiceMode
             ? `<strong>${escapeHtml(p.enemy.name)}</strong> 연습 전투야! 전에 이긴 문제를 살짝 바꿨어. 반격도 보상도 없고 기록도 남지 않으니까 마음 편히 시험해 봐.`

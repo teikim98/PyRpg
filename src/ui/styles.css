@@ -2306,3 +2306,60 @@
   color: var(--muted);
   font-size: 0.9em;
 }
+
+/* E2 그림자 게시판(단위 3-E2): 예산 문구, 이름 없는 그림자, 대기 목록 */
+.pyrpg-ui .shadow-budget {
+  margin: 0 0 6px;
+  color: #c8b4ff;
+}
+
+.pyrpg-ui .shadow-budget-used {
+  color: var(--muted);
+}
+
+.pyrpg-ui .shadow-minutes {
+  color: var(--muted);
+}
+
+.pyrpg-ui .shadow-card.is-anonymous {
+  border-style: dashed;
+}
+
+.pyrpg-ui .shadow-card.is-anonymous .shadow-name {
+  color: #9b8fb8;
+  font-style: italic;
+}
+
+.pyrpg-ui .shadow-pending-head {
+  margin: 10px 0 4px;
+  color: var(--muted);
+  font-size: 0.95em;
+}
+
+.pyrpg-ui .shadow-pending-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pyrpg-ui .shadow-pending {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  padding: 4px 10px;
+  border: 1px dashed #5b3f80;
+  color: var(--muted);
+  opacity: 0.85;
+}
+
+.pyrpg-ui .shadow-pending-name {
+  color: #b9a8e0;
+}
+
+.pyrpg-ui .shadow-pending-why {
+  font-size: 0.9em;
+}

@@ -666,6 +666,83 @@ describe("시스템 화면(단위 3-1: 그림자 게시판·퀘스트·상점·�
     expect(seen!.foughtToday).toBe(1);
   });
 
+  it("하루 계획(단위 3-E2): 대표 문제를 못 이긴 그림자는 대기로만 보이고, 대기만 있으면 그림자 퀘스트를 내지 않는다", async () => {
+    const { h, store } = await sysHarness((s) => {
+      s.shadows = [{ concept: "scroll.convert", problemId: "P0101", box: 1, due: yesterday, purified: false, createdAt: "2026-09-01T00:00:00Z" }];
+      delete s.quests;
+    });
+    let seen: BoardView | null = null;
+    h.sys.board = async (v) => {
+      seen = v;
+      return null;
+    };
+    h.callbacks.onInteract(h.world.obj("board_shadow"));
+    await idle(h.app);
+    expect(seen!.shadows).toEqual([]);
+    expect(seen!.pending).toEqual([{ concept: "scroll.convert", name: expect.not.stringMatching(/scroll\./), box: 1, anonymous: false, reason: "unsolved" }]);
+    expect(seen!.plannedMinutes).toBe(0);
+    expect((h.app as unknown as { questContext(): { shadowDue: boolean } }).questContext().shadowDue).toBe(false);
+    expect(store.data!.quests!.ids).not.toContain("shadow-1");
+    // 고를 수 없는 그림자와는 싸우지 않는다
+    let opened = false;
+    h.battle.open = async (ctx) => {
+      opened = true;
+      return win(ctx);
+    };
+    await (h.app as unknown as { fightShadow(c: string): Promise<void> }).fightShadow("scroll.convert");
+    expect(opened).toBe(false);
+  });
+
+  it("칸 3 이상 보스 그림자(단위 3-E2): 게시판·전투는 이름 없는 그림자, 2페이즈까지, 보상 50 XP·25골드, 이긴 뒤 공개", async () => {
+    const { h, store, content } = await sysHarness((s) => {
+      s.problems.P0105 = { ...emptyRec(), solved: true, solvedAt: "2026-09-20T09:00:00.000Z" };
+      s.shadows = [{ concept: "scroll.arith", problemId: "P0105", box: 3, due: yesterday, purified: false, createdAt: "2026-09-01T00:00:00Z" }];
+      s.quests = { date: today, ids: ["rest-1", "anywin-2", "win-nohint-1"], progress: [0, 0, 0], claimed: [false, false, false], chest: false };
+    });
+    const boss = content.regions[0].problems.find((p) => p.id === "P0105")!;
+    let seen: BoardView | null = null;
+    h.sys.board = async (v) => {
+      seen = v;
+      return v.shadows[0].concept;
+    };
+    let ctxSeen!: BattleContext;
+    h.battle.open = async (ctx) => {
+      ctxSeen = ctx;
+      return win(ctx);
+    };
+    const rewards: { summary: { xp: number; gold: number; shadowNote?: string }; problem: { title: string; enemy: { name: string } } }[] = [];
+    (h.app as unknown as { deps: { ui: UiServices } }).deps.ui.reward.show = async (summary, problem) => void rewards.push({ summary, problem });
+    const gold0 = store.data!.player.gold;
+    const recommended0 = h.recommended.length;
+    h.callbacks.onInteract(h.world.obj("board_shadow"));
+    await idle(h.app);
+    expect(seen!.shadows).toHaveLength(1);
+    expect(seen!.shadows[0]).toMatchObject({ concept: "scroll.arith", name: "이름 없는 그림자", anonymous: true, minutes: boss.estimatedMinutes });
+    expect(seen!.plannedMinutes).toBe(boss.estimatedMinutes);
+    // 전투: 이름 숨김, 보스 2페이즈(원래 2페이즈 테스트·예산), 해설서·연습 제안 없음
+    expect(ctxSeen.shadow).toBe(true);
+    expect(ctxSeen.shadowAnonymous).toBe(true);
+    expect(ctxSeen.problem.enemy.name).toBe("이름 없는 그림자");
+    expect(ctxSeen.problem.title).toBe("이름 없는 그림자");
+    expect(ctxSeen.problem.id).toMatch(/^P0105-v\d$/);
+    expect(ctxSeen.problem.boss).toBe(true);
+    expect(ctxSeen.problem.budgetUnits).toBe(boss.budgetUnits);
+    expect(ctxSeen.problem.tests.filter((t) => t.phase === 2)).toEqual(boss.tests.filter((t) => t.phase === 2));
+    expect(ctxSeen.practiceOffer).toBeUndefined();
+    // 보상: 일반 전투 기준 50%
+    const s = store.data!;
+    expect(rewards).toHaveLength(1);
+    expect(rewards[0]!.summary).toMatchObject({ xp: 50, gold: 25 });
+    expect(s.player.gold).toBe(gold0 + 25);
+    // 이긴 뒤 공개: 원래 몬스터 이름과 주문서
+    expect(rewards[0]!.problem.enemy.name).toBe(`${boss.enemy.name}의 그림자`);
+    expect(rewards[0]!.summary.shadowNote).toContain(boss.enemy.name);
+    expect(s.history.at(-1)).toMatchObject({ shadow: true, concept: "scroll.arith", budgetMinutes: boss.estimatedMinutes });
+    expect(s.shadows[0].box).toBe(4);
+    // 그림자전은 지역 클리어 연출을 하지 않는다
+    expect(h.recommended).toHaveLength(recommended0);
+  });
+
   it("퀘스트 3개를 다 하면 상자(금화 + 회복약)", async () => {
     const { h, store, content } = await sysHarness((s) => {
       s.quests = { date: today, ids: ["rest-1", "anywin-2", "win-nohint-1"], progress: [0, 1, 0], claimed: [false, false, false], chest: false };
