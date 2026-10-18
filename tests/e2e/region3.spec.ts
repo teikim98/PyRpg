@@ -472,7 +472,7 @@ test.describe.serial("지역 3 고블린 동굴 전체 플레이", () => {
 
   test("거울 웅덩이: L3-4 → 횃불 사이 바위 틈을 지나 숨겨진 굴 → 상자·P0309 → P0308 오답(순회 중 remove) → 승리", async () => {
     test.setTimeout(400_000);
-    await lesson(page, "rune_L3-4", "x % 2 == 0", "scroll.comprehension");
+    await lesson(page, "rune_L3-4", "x > 2", "scroll.comprehension");
 
     const crack = caveCrack();
     const chest = await obj(page, "chest_hidden_pool");

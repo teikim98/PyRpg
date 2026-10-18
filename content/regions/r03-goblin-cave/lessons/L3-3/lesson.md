@@ -25,7 +25,7 @@ roll.shift();            // Python: roll.pop(0)
 
 > JS 습관대로 `roll.push(...)`라고 쓰면 `AttributeError`가 나. Python에서는 `append`!
 
-## 찾기와 세기, 합·최댓값·최솟값
+## 찾기와 세기, 합·최댓값·최솟값 복습
 
 ```python run
 coins = [3, 10, 7, 3, 2]

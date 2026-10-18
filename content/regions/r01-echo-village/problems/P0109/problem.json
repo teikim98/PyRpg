@@ -6,8 +6,9 @@
   "requires": ["scroll.convert"],
   "concept": "scroll.convert",
   "boss": false,
+  "practice": true,
   "timeLimitMs": 2000,
-  "estimatedMinutes": 6,
+  "estimatedMinutes": 5,
   "tests": [
     { "in": "3 5\n", "out": "False\nFalse\nTrue\n", "public": true, "note": "기본 동작" },
     { "in": "12 9\n", "out": "True\nFalse\nFalse\n", "public": true, "note": "자릿수가 다름" },

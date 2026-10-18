@@ -18,11 +18,11 @@
 
 | 레슨 | 주문서 ID | 주문서 이름 | 다루는 내용 | JS 비교 포인트 |
 |---|---|---|---|---|
-| L3-1 | `scroll.list` | 줄 세우기의 주문서 | list 만들기, 인덱싱, 음수 인덱스, `len`, `in`, `list(map(int, input().split()))` | JS 배열과 거의 같음. `arr[-1]`이 된다, `.length` → `len()` |
+| L3-1 | `scroll.list` | 줄 세우기의 주문서 | list 만들기, 인덱싱, 음수 인덱스, `len`, `in`, `list(map(int, input().split()))`, `sum`/`max`/`min` 첫 소개(예제는 평균 `sum(scores) / len(scores)`과 차이 `max - min`. P0302의 합·최댓값·최솟값 그대로 출력과 입력 변환은 보여 주지 않음) | JS 배열과 거의 같음. `arr[-1]`이 된다, `.length` → `len()`, `Math.max(...arr)` → `max(arr)` |
 | L3-2 | `scroll.slice` | 자르기의 주문서 | 슬라이싱 `[a:b:c]`, 끝 미포함, 복사 `arr[:]`, 뒤집기 `[::-1]` | `slice(a, b)`와 같지만 간격·음수가 됨. 슬라이스는 새 리스트 |
-| L3-3 | `scroll.methods` | 보물 정리의 주문서 | `append`/`pop`/`insert`/`remove`/`index`/`count`, `sort()` vs `sorted()`, `reverse()`, `sum`/`min`/`max` | `push` → `append`, `sort()`가 숫자를 숫자로 정렬(JS는 문자열 정렬이 기본), 제자리 수정은 `None`을 돌려줌 |
-| L3-4 | `scroll.comprehension` | 한 줄 주문서 | 리스트 컴프리헨션(조건 포함), `for x in arr` 순회 vs `for i in range(len(arr))`, `enumerate` 맛보기 | `arr.map(x => x*2)` ↔ `[x*2 for x in arr]`, `filter` ↔ `if` |
-| L3-5 | `scroll.grid` | 격자의 주문서 | 2차원 리스트 만들기·읽기·출력, `[[0]*m]*n` 별칭 함정, 행·열 순회 | JS의 `Array(n).fill([])` 함정과 같은 이야기 |
+| L3-3 | `scroll.methods` | 보물 정리의 주문서 | `append`/`pop`/`insert`/`remove`/`index`/`count`, `sort()` vs `sorted()`, `reverse()`, `sum`/`min`/`max` 복습(첫 소개는 L3-1) | `push` → `append`, `sort()`가 숫자를 숫자로 정렬(JS는 문자열 정렬이 기본), 제자리 수정은 `None`을 돌려줌 |
+| L3-4 | `scroll.comprehension` | 한 줄 주문서 | 리스트 컴프리헨션(조건 포함), `for x in arr` 순회 vs `for i in range(len(arr))`, `enumerate` 맛보기, 이중 반복 맛보기(`for a in [1, 2]:` 안에 `for b in [10, 20]:`. P0309의 `range(i + 1, …)`는 넣지 않음). 조건 예제는 P0308(짝수)과 다른 조건(`g > 3`, 음수 두 배), 미니 연습은 `x > 2` | `arr.map(x => x*2)` ↔ `[x*2 for x in arr]`, `filter` ↔ `if` |
+| L3-5 | `scroll.grid` | 격자의 주문서 | 2차원 리스트 만들기·읽기·출력, `[[0]*m]*n` 별칭 함정, 행·열 순회, 묶음 대입 `n, m = 3, 4` 한 문장(지역 1의 `a, b = map(…)`과 같은 모양. 지역 4 P0407도 이것으로 풀림) | JS의 `Array(n).fill([])` 함정과 같은 이야기 |
 
 ## 3. 문제(일반 10 + 보스 1)
 
@@ -30,9 +30,9 @@
 |---|---|---|---|---|---|---|
 | P0301 | 보물 줄의 끝 | stdin | 인덱싱, 음수 인덱스 | scroll.list | 동굴 입구 | 필수 |
 | P0302 | 금화 더미 합 | stdin | 한 줄 입력 → 리스트, `sum`/`max`/`min` | scroll.list | 동굴 입구 | 필수 |
-| P0303 | 빠진 보물 번호 | stdin | `in`으로 찾기(번호 1~30 중 빠진 것) | scroll.list | 동굴 입구 | 선택 |
+| P0303 | 빠진 보물 번호 | stdin | `in`으로 찾기(번호 1~30 중 빠진 것). 학습 시점이 L3-1이라 모범답안·힌트는 `append` 없이 `print(num, end=" ")` + `print()`로 출력 | scroll.list | 동굴 입구 | 선택 |
 | P0304 | 보물 자르기 | function | 슬라이싱(구간 꺼내기) | scroll.slice | 갈림 굴 | 필수 |
-| P0305 | 거꾸로 선반 | stdin | `[::-1]`, 간격 슬라이스 | scroll.slice | 갈림 굴 | 선택 |
+| P0305 | 거꾸로 선반 | stdin | `[::-1]`, 간격 슬라이스 | scroll.slice | 갈림 굴 | 선택·**연습**(`practice: true`, 2026-10-18) |
 | P0306 | 고블린 출석부 | stdin | `append`/`pop`/`remove` 명령 처리 | scroll.methods | 보물 창고 | 필수 |
 | P0307 | K번째 보물 | function | `sorted`로 정렬 후 K번째(1부터) | scroll.methods | 보물 창고 | 필수 |
 | P0308 | 짝수 보석만 | function | 컴프리헨션 + 조건 | scroll.comprehension | 거울 웅덩이 | 필수 |
