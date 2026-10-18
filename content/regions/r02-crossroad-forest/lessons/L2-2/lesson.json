@@ -4,7 +4,7 @@
   "scroll": {
     "id": "scroll.loop",
     "name": "되풀이의 주문서",
-    "summary": "`for i in range(시작, 끝, 간격):`으로 정해진 횟수만큼 반복한다. 끝 값은 포함하지 않으므로 1부터 n까지는 `range(1, n + 1)`, 거꾸로는 간격을 음수로. 누적은 `total += i`. `f\"{n} x {i}\"`로 출력 틀에 값을 끼운다."
+    "summary": "`for i in range(시작, 끝, 간격):`으로 정해진 횟수만큼 반복한다. 끝 값은 포함하지 않으므로 1부터 n까지는 `range(1, n + 1)`, 거꾸로는 간격을 음수로. 누적은 `total += i`. `f\"{i}번째 걸음\"`처럼 출력 틀에 값을 끼운다."
   },
   "exercise": {
     "kind": "blank",
