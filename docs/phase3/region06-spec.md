@@ -18,11 +18,11 @@
 
 | 레슨 | 주문서 ID | 주문서 이름 | 다루는 내용 | JS 비교 포인트 |
 |---|---|---|---|---|
-| L6-1 | `scroll.function` | 부름의 주문서 | `def`·`return`, 반환이 없으면 `None`, 일찍 `return`, 기본값 인자, 키워드 인자, 지역 변수와 전역(함수 안에서 바깥 변수 바꾸기는 지양, `global` 소개만), 도우미 함수로 나누기 | `function f(a, b = 1) {}` ↔ `def f(a, b=1):`. `undefined` 대신 `None`. 화살표 함수는 L6-3의 `lambda` |
+| L6-1 | `scroll.function` | 부름의 주문서 | `def`·`return`, 반환이 없으면 `None`, 일찍 `return`, 기본값 인자, 키워드 인자, 지역 변수와 전역(함수 안에서 바깥 변수 바꾸기는 지양, `global` 소개만), 도우미 함수로 나누기, 내장 함수 `abs`(P0602가 씀. 맵에서 L6-2 비석은 P0602 뒤라 L6-1에 둠) | `function f(a, b = 1) {}` ↔ `def f(a, b=1):`. `undefined` 대신 `None`. 화살표 함수는 L6-3의 `lambda` |
 | L6-2 | `scroll.unpack` | 펼침의 주문서 | 언패킹 복습과 `*`(`first, *rest = arr`, `print(*arr)`, `f(*args)`), `enumerate(arr, 1)`, `zip(a, b)`(짧은 쪽에 맞춤), `map(int, …)`의 정체(지연 객체, `list()`로 펼침), `sum`/`min`/`max`/`any`/`all`과 `key=` 맛보기 | 스프레드 `...arr` ↔ `*arr`, `arr.entries()` ↔ `enumerate`, JS에는 내장 `zip`이 없음, `arr.some`/`every` ↔ `any`/`all` |
 | L6-3 | `scroll.sort` | 줄 세움의 주문서 | `lambda`, `sorted(arr)`(새 리스트) vs `arr.sort()`(제자리, `None` 반환), `key=`, `reverse=True`, 다중 키 튜플 `key=lambda x: (-x[1], x[0])`, 숫자는 `-` 트릭·문자열은 안 됨(안정 정렬로 두 번 정렬하는 방법), `min`/`max`의 `key` | `arr.sort((a, b) => a - b)`의 비교 함수 대신 `key` 함수. JS `sort`는 기본이 문자열 비교라는 함정 |
-| L6-4 | `scroll.recursion` | 되울림의 주문서 | 재귀 함수, 기저 조건, 팩토리얼·자릿수 합, 분할(반으로 나눠 풀기, 하노이 맛보기), 기저 조건이 없으면 `RecursionError`(`try/except`로 보여 줌), 브라우저와 실제 시험의 재귀 한도는 다름(design.md §9.5) | JS도 재귀는 같고 호출 스택 한도(`Maximum call stack size exceeded`)만 다름 |
-| L6-5 | `scroll.memo` | 기억의 주문서 | 피보나치 재귀의 호출 횟수 폭발(호출 횟수 세어 보기), dict 메모(`memo = {}`), `from functools import lru_cache` / `cache`, **`@lru_cache`는 기본 `maxsize=128`이라 `@lru_cache(maxsize=None)`이나 `@cache`를 쓴다**, 메모는 '필요한 값만' 저장하므로 아주 큰 n에도 쓸 수 있음(크기 n 리스트는 못 만듦), 메아리 고리 안내(§7) | JS에서 `Map`으로 직접 메모하던 것과 같음. 데코레이터 `@`는 JS에 아직 없음(함수를 감싸는 함수로 설명) |
+| L6-4 | `scroll.recursion` | 되울림의 주문서 | 재귀 함수, 기저 조건, 팩토리얼·자릿수 합, 분할(반으로 나눠 풀기, 하노이 맛보기), 함수 안의 함수(`solution` 안의 재귀 도우미가 바깥 이름을 읽고 `total = [0]`처럼 리스트·dict 칸을 고침. P0610·P0612가 쓰는 모양. 예제는 두 문제의 정답과 다른 것), 기저 조건이 없으면 `RecursionError`(`try/except`로 보여 줌), 브라우저와 실제 시험의 재귀 한도는 다름(design.md §9.5) | JS도 재귀는 같고 호출 스택 한도(`Maximum call stack size exceeded`)만 다름 |
+| L6-5 | `scroll.memo` | 기억의 주문서 | 피보나치 재귀의 호출 횟수 폭발(호출 횟수 세어 보기), dict 메모(`memo = {}`), `from functools import lru_cache` / `cache`, **`@lru_cache`는 기본 `maxsize=128`이라 `@lru_cache(maxsize=None)`이나 `@cache`를 쓴다**, 메모는 '필요한 값만' 저장하므로 아주 큰 n에도 쓸 수 있음(크기 n 리스트는 못 만듦), 메아리 고리 안내(§7), `solution` 안에 `memo`와 도우미를 함께 둬도 됨 | JS에서 `Map`으로 직접 메모하던 것과 같음. 데코레이터 `@`는 JS에 아직 없음(함수를 감싸는 함수로 설명) |
 
 - 레슨마다 run 블록 2개 이상과 빈칸 연습 1개, `js compare` 블록 1개 이상(지역 1~5와 같은 형식).
 - 재귀 run 블록은 깊이 300 이하만 씁니다. `lru_cache`를 쓰는 블록은 깊이 200 이하(Pyodide에서 C 코드를 거치는 재귀는 깊이 약 380에서 런타임이 죽음, design.md §9.5). `RecursionError`를 보여 주는 블록은 `try/except RecursionError`로 감싸고 Pyodide에서도 안전한지(런타임이 죽지 않는지) 콘텐츠 스모크로 확인합니다.

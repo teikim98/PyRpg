@@ -76,6 +76,37 @@ def hanoi(n, start, via, goal):
 hanoi(2, "A", "B", "C")
 ```
 
+## 함수 안의 함수
+
+재귀 도우미 함수는 `solution` **안에** 만들어도 돼. 그러면 `solution`이 받은 리스트를 인자로 일일이 넘기지 않아도 안쪽 함수가 바로 읽을 수 있어. 다만 안쪽 함수에서 바깥 값을 **고칠** 때는 이름에 새로 담지 말고 리스트(나 dict)의 **칸**을 바꿔. `total += nums[i]`처럼 이름에 새로 담으면 부름의 비석에서 본 `UnboundLocalError`가 나거든.
+
+```python run
+def solution(nums):
+    total = [0]                  # 고칠 값은 리스트 칸에 담아 둠
+
+    def visit(i):                # solution 안에 만든 도우미 함수
+        if i == len(nums):       # 바깥 nums를 그대로 읽음
+            return
+        if nums[i] > 0:
+            total[0] += nums[i]  # 이름이 아니라 칸을 고침
+        visit(i + 1)
+
+    visit(0)
+    return total[0]
+
+print(solution([3, -1, 4, -1, 5]))   # 3 + 4 + 5 = 12
+print(solution([-2, -8]))            # 0
+```
+
+```js compare
+function solution(nums) {
+  let total = 0;
+  function visit(i) {        // 함수 안의 함수(클로저)는 JS와 같아
+    total += nums[i];        // JS는 바깥 let을 바로 바꿀 수 있지만,
+  }                          // Python은 이렇게 쓰면 UnboundLocalError → total = [0]의 칸을 고쳐
+}
+```
+
 ## 기저 조건을 빠뜨리면: `RecursionError`
 
 기저 조건이 없거나 문제가 작아지지 않으면 함수가 끝없이 자기를 불러. Python은 일정 깊이(기본 약 1000)에서 `RecursionError`를 내고 멈춰. 아래 블록은 에러를 보려고 `try`/`except`로 감쌌어.
