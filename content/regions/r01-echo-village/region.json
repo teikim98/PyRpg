@@ -5,11 +5,11 @@
   "introDialogue": "region_intro",
   "clearDialogue": "region_clear",
   "recommended": [
-    { "site": "programmers", "id": 12932, "title": "자연수 뒤집어 배열로 만들기", "level": "Lv.1" },
-    { "site": "programmers", "id": 68935, "title": "3진법 뒤집기", "level": "Lv.1" },
+    { "site": "programmers", "id": 120830, "title": "양꼬치", "level": "Lv.0" },
+    { "site": "programmers", "id": 120806, "title": "두 수의 나눗셈", "level": "Lv.0" },
     { "site": "boj", "id": 1000, "title": "A+B", "level": "B5" },
-    { "site": "boj", "id": 15552, "title": "빠른 A+B", "level": "미확인" },
-    { "site": "boj", "id": 11720, "title": "숫자의 합", "level": "B4" },
-    { "site": "boj", "id": 2745, "title": "진법 변환", "level": "B2" }
+    { "site": "boj", "id": 1001, "title": "A-B", "level": "B5" },
+    { "site": "boj", "id": 10869, "title": "사칙연산", "level": "B5" },
+    { "site": "boj", "id": 2588, "title": "곱셈", "level": "B3" }
   ]
 }
