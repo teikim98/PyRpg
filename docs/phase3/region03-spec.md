@@ -32,7 +32,7 @@
 | P0302 | 금화 더미 합 | stdin | 한 줄 입력 → 리스트, `sum`/`max`/`min` | scroll.list | 동굴 입구 | 필수 |
 | P0303 | 빠진 보물 번호 | stdin | `in`으로 찾기(번호 1~30 중 빠진 것). 학습 시점이 L3-1이라 모범답안·힌트는 `append` 없이 `print(num, end=" ")` + `print()`로 출력 | scroll.list | 동굴 입구 | 선택 |
 | P0304 | 보물 자르기 | function | 슬라이싱(구간 꺼내기) | scroll.slice | 갈림 굴 | 필수 |
-| P0305 | 거꾸로 선반 | stdin | `[::-1]`, 간격 슬라이스 | scroll.slice | 갈림 굴 | 선택 |
+| P0305 | 거꾸로 선반 | stdin | `[::-1]`, 간격 슬라이스 | scroll.slice | 갈림 굴 | 선택·**연습**(`practice: true`, 2026-10-18) |
 | P0306 | 고블린 출석부 | stdin | `append`/`pop`/`remove` 명령 처리 | scroll.methods | 보물 창고 | 필수 |
 | P0307 | K번째 보물 | function | `sorted`로 정렬 후 K번째(1부터) | scroll.methods | 보물 창고 | 필수 |
 | P0308 | 짝수 보석만 | function | 컴프리헨션 + 조건 | scroll.comprehension | 거울 웅덩이 | 필수 |

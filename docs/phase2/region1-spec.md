@@ -32,7 +32,7 @@
 |---|---|---|---|---|---|---|---|
 | P0101 | 금화 두 자루 | stdin | 형변환 | scroll.convert | 광장 | 필수 | monster_type_slime |
 | P0106 | 날짜 각인 | stdin | `print`의 `sep` | scroll.convert | 광장 | 필수 | monster_sep_sprite |
-| P0109 | 저울 판정 | stdin | 비교 연산자와 `bool` | scroll.convert | 광장 | 선택 | monster_type_slime |
+| P0109 | 저울 판정 | stdin | 비교 연산자와 `bool` | scroll.convert | 광장 | 선택·**연습**(`practice: true`, 예상 5분, 2026-10-18) | monster_type_slime |
 | P0102 | 공평한 분배 | stdin | `//`, `%` | scroll.arith | 상점 거리 | 필수 | monster_remainder_bat |
 | P0103 | 몇 번 때려야 할까 | function | 올림 나눗셈 | scroll.arith | 상점 거리 | 필수 | monster_iron_mole |
 | P0108 | 시계탑의 초 | function | `//`·`%`로 초 → 시·분·초 | scroll.arith | 상점 거리 | 선택 | monster_clock_beetle |

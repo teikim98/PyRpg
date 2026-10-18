@@ -33,7 +33,7 @@
 | P0402 | 거울 제목 | function | `[::-1]`로 회문 판별(대소문자 그대로, `True`/`False` 반환) | scroll.string | 정문 홀 | 필수 |
 | P0403 | 모음 갉아먹는 벌레 | stdin | `for c in s` + `in "aeiou"`로 모음 개수 | scroll.string | 정문 홀 | 선택 |
 | P0404 | 낡은 제목 정리 | function | `strip`/`lower`/`replace` 연쇄(앞뒤 공백 제거, 소문자, `_` → 공백) | scroll.strmethods | 열람실 | 필수 |
-| P0405 | 주문어 찾기 | stdin | `find`(처음 위치, 없으면 -1)와 `count`(겹치지 않는 개수). 위치는 0부터 세고(지문에 **0번** 굵게), 답이 0인 숨김 테스트를 둠(공개 테스트는 추가하지 않음, 결정 P-A3) | scroll.strmethods | 열람실 | 선택 |
+| P0405 | 주문어 찾기 | stdin | `find`(처음 위치, 없으면 -1)와 `count`(겹치지 않는 개수). 위치는 0부터 세고(지문에 **0번** 굵게), 답이 0인 숨김 테스트를 둠(공개 테스트는 추가하지 않음, 결정 P-A3) | scroll.strmethods | 열람실 | 선택·**연습**(`practice: true`, 2026-10-18) |
 | P0406 | 거꾸로 꽂힌 단어들 | stdin | `split` → 단어 순서 뒤집기 → `" ".join` | scroll.splitjoin | 서고 미로 | 필수 |
 | P0407 | 대출 장부 | function | f-string 서식: 이름과 권수·연체료를 `"{name}: {n:03d}권 {fee:.2f}골드"` 같은 정해진 형식의 문자열 리스트로 반환 | scroll.splitjoin | 서고 미로 | 필수 |
 | P0408 | 글자 수 세기 | stdin | `ord(c) - ord("a")`, `[0] * 26`, `print(*cnt)`(백준 10808 유형의 오리지널) | scroll.ascii | 필사실 | 필수 |
