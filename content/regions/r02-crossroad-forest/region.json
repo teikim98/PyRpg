@@ -10,7 +10,7 @@
     { "site": "programmers", "id": 12928, "title": "약수의 합", "level": "Lv.1" },
     { "site": "programmers", "id": 12943, "title": "콜라츠 추측", "level": "Lv.1" },
     { "site": "boj", "id": 2753, "title": "윤년", "level": "B5" },
-    { "site": "boj", "id": 2884, "title": "알람 시계", "level": "미확인" },
+    { "site": "boj", "id": 2884, "title": "알람 시계", "level": "B3" },
     { "site": "boj", "id": 1110, "title": "더하기 사이클", "level": "B1" }
   ]
 }

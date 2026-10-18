@@ -6,6 +6,7 @@
   "requires": ["scroll.dict"],
   "concept": "scroll.dict",
   "boss": false,
+  "practice": true,
   "timeLimitMs": 2000,
   "estimatedMinutes": 7,
   "tests": [

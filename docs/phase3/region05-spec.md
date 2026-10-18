@@ -32,7 +32,7 @@
 |---|---|---|---|---|---|---|
 | P0501 | 뒤바뀐 좌표 | stdin | 언패킹, 맞바꾸기, 좌표 쌍 출력 | scroll.tuple | 해안 시장 | 필수 |
 | P0502 | 가장 싸고 가장 비싼 | function | 여러 값 반환 `return (lo, hi)`(튜플 비교) | scroll.tuple | 해안 시장 | 필수 |
-| P0503 | 시세표 조회 | stdin | dict 만들기 + 질문마다 `get`(없으면 정해진 문구) | scroll.dict | 상인 길드 | 선택 |
+| P0503 | 시세표 조회 | stdin | dict 만들기 + 질문마다 `get`(없으면 정해진 문구) | scroll.dict | 상인 길드 | 선택·**연습**(`practice: true`, 2026-10-18) |
 | P0504 | 단어 장부 | function | dict로 세기, 처음 나온 순서대로 `(단어, 수)` 리스트 반환 | scroll.dict | 상인 길드 | 필수 |
 | P0505 | 이름과 번호표 | stdin | 양방향 dict(이름 → 번호, 번호 → 이름. 백준 1620 유형의 오리지널) | scroll.dict | 상인 길드 | 선택 |
 | P0506 | 같은 화물 두 번 | function | set으로 처음 중복된 값 찾기(없으면 -1) | scroll.set | 창고 거리 | 필수 |

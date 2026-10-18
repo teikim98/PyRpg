@@ -19,9 +19,9 @@
 | 레슨 | 주문서 ID | 주문서 이름 | 다루는 내용 | JS 비교 포인트 |
 |---|---|---|---|---|
 | L2-1 | `scroll.branch` | 갈림길의 주문서 | `if`/`elif`/`else`, 들여쓰기 블록, 비교 연산자 연쇄(`0 < x < 10`), `and`/`or`/`not` | `{}` 대신 들여쓰기, `else if` → `elif`, `&&`/`||`/`!` → `and`/`or`/`not`, `===`가 없음 |
-| L2-2 | `scroll.loop` | 되풀이의 주문서 | `for`와 `range(start, stop, step)`, 끝 값 미포함, 역순 | `for (let i = 0; i < n; i++)` ↔ `for i in range(n)` |
+| L2-2 | `scroll.loop` | 되풀이의 주문서 | `for`와 `range(start, stop, step)`, 끝 값 미포함, 역순, 누적 `+=`, f-string(예제는 P0204의 곱셈 출력과 다른 주제: 걸음 수·남은 거리) | `for (let i = 0; i < n; i++)` ↔ `for i in range(n)` |
 | L2-3 | `scroll.while` | 멈춤의 주문서 | `while`, `break`, `continue`, 무한루프 주의(게임의 시간 결계와 연결) | JS와 거의 같음. `do-while`이 없음 |
-| L2-4 | `scroll.gather` | 모음의 주문서 | 반복으로 N줄 입력 받기(`for _ in range(n): input()`), 누적합·최댓값 패턴, `_` 변수 관례 | `readline` 반복이 백준식 입력의 기본 |
+| L2-4 | `scroll.gather` | 모음의 주문서 | 반복으로 N줄 입력 받기(`for _ in range(n): input()`), 누적합·최댓값 패턴, `_` 변수 관례. 예제의 `for token in data.split():`은 "조각을 하나씩 꺼내는 `for`"라고 한 문장만 안내(자세한 순회는 L3-4) | `readline` 반복이 백준식 입력의 기본 |
 
 ## 3. 문제(일반 9 + 보스 1)
 

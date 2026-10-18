@@ -4,7 +4,7 @@
   "scroll": {
     "id": "scroll.splitjoin",
     "name": "엮고 푸는 주문서",
-    "summary": "`s.split()`은 공백 기준(빈 조각 없음), `s.split(\",\")`는 구분자 기준. `\"구분자\".join(리스트)`는 문자열 리스트만(숫자는 `map(str, ...)`). 글자를 고칠 땐 `list(s)`로 풀어 고치고 `\"\".join`으로 엮기. f-string `f\"{x}\"`, 서식 `{x:.2f}`, `{n:>5}`, `{n:03d}`."
+    "summary": "`s.split()`은 공백 기준(빈 조각 없음), `s.split(\",\")`는 구분자 기준. `\"구분자\".join(리스트)`는 문자열 리스트만(숫자는 `map(str, ...)`). 글자를 고칠 땐 `list(s)`로 풀어 고치고 `\"\".join`으로 엮기. 두 칸 맞바꾸기는 `arr[0], arr[1] = arr[1], arr[0]`처럼 한 줄(오른쪽을 먼저 계산하고 나눠 담기). f-string `f\"{x}\"`, 서식 `{x:.2f}`, `{n:03d}`."
   },
   "exercise": {
     "kind": "blank",

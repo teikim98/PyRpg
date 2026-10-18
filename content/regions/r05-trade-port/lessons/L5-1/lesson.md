@@ -63,7 +63,7 @@ for (const [name, price] of pairs) { }  // ← Python: for name, price in pairs:
 
 ## 여러 값 돌려주기
 
-함수가 `return lo, hi`처럼 쉼표로 값을 늘어놓으면 튜플 하나를 돌려주는 거야. 받는 쪽에서 바로 풀면 돼.
+함수가 `return lo, hi`처럼 쉼표로 값을 늘어놓으면 튜플 하나를 돌려주는 거야. 받는 쪽에서 바로 풀면 돼. `def`로 함수를 만드는 법은 거울 호수에서 자세히 배워. 지금은 `def solution(...)` 틀에서 봐 온 그대로, `return` 뒤에 쓴 값이 함수를 부른 곳으로 돌아간다는 것만 알면 돼.
 
 ```python run
 def cheapest_and_dearest(prices):

@@ -12,6 +12,6 @@
     { "site": "programmers", "id": 12945, "title": "피보나치 수", "level": "Lv.2" },
     { "site": "boj", "id": 10870, "title": "피보나치 수 5", "level": "B2" },
     { "site": "boj", "id": 1181, "title": "단어 정렬", "level": "S5" },
-    { "site": "boj", "id": 10825, "title": "국영수", "level": "미확인" }
+    { "site": "boj", "id": 10825, "title": "국영수", "level": "S4" }
   ]
 }

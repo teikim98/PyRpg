@@ -6,6 +6,7 @@
   "requires": ["scroll.slice"],
   "concept": "scroll.slice",
   "boss": false,
+  "practice": true,
   "timeLimitMs": 2000,
   "estimatedMinutes": 6,
   "tests": [

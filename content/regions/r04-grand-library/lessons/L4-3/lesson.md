@@ -50,6 +50,15 @@ s = "".join(arr)
 print(s)                   # Book
 ```
 
+리스트 두 칸을 **맞바꾸는** 것도 한 줄이면 돼. 고블린 동굴에서 본 `n, m = 3, 4`와 같은 모양이야. 파이썬은 `=` 오른쪽을 먼저 다 계산해 두고, 그 값들을 왼쪽 칸에 차례로 나눠 담아. 그래서 한쪽 값이 덮여서 사라질 걱정이 없어.
+
+```python run
+arr = list("dog")
+arr[0], arr[2] = arr[2], arr[0]    # 오른쪽 ('g', 'd')을 먼저 계산 → 0번 칸에 'g', 2번 칸에 'd'
+print(arr)                         # ['g', 'o', 'd']
+print("".join(arr))                # god
+```
+
 > 매번 `s = s[:i] + c + s[i + 1:]`로 새 문자열을 만들면 한 글자 고칠 때마다 문자열 전체를 베껴 써. 고칠 게 많다면 이 방법이 훨씬 빨라. 어디서 꼭 쓸 일이 생길 거야!
 
 ## f-string: 서식 맞추기
@@ -57,22 +66,22 @@ print(s)                   # Book
 문자열 앞에 `f`를 붙이면 `{}` 안에 변수나 식을 넣을 수 있어. JS의 템플릿 리터럴 `${}`랑 같아. `{}` 안에 `:`를 붙이면 서식도 정할 수 있어.
 
 ```python run
-name = "nuri"
-n = 7
-fee = 2.5
-print(f"{name}: {n}권")
-print(f"{fee:.2f}골드")      # 소수점 아래 둘째 자리까지
-print(f"[{n:>5}]")           # 5칸 오른쪽 정렬
-print(f"[{n:<5}]")           # 5칸 왼쪽 정렬
-print(f"{n:03d}번")          # 3자리, 빈자리는 0
-print(f"{n * 2 + 1}")        # 식도 OK
+room = "north"
+shelf = 7
+height = 1.5
+print(f"{room} 서가 {shelf}칸")
+print(f"높이 {height:.2f}m")     # 소수점 아래 둘째 자리까지
+print(f"서가-{shelf:03d}")       # 3자리, 빈자리는 0
+print(f"{shelf * 2 + 1}")        # 식도 OK
 ```
 
 ```js compare
-`${name}: ${n}권`;               // ← Python: f"{name}: {n}권"
-fee.toFixed(2);                  // ← Python: f"{fee:.2f}"
-String(n).padStart(3, "0");      // ← Python: f"{n:03d}"
+`${room} 서가 ${shelf}칸`;          // ← Python: f"{room} 서가 {shelf}칸"
+height.toFixed(2);                  // ← Python: f"{height:.2f}"
+String(shelf).padStart(3, "0");     // ← Python: f"{shelf:03d}"
 ```
+
+> 칸 너비를 맞춰 줄 세우는 `{x:>5}`(5칸 오른쪽 정렬)·`{x:<5}`(왼쪽 정렬) 같은 서식도 있어. 표처럼 줄을 맞출 때 꺼내 쓰면 돼.
 
 ## 미니 연습
 

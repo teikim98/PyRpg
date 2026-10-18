@@ -143,6 +143,14 @@ describe("content loader: region r01", () => {
   });
 });
 
+describe("content loader: practice monsters", () => {
+  it("practice: true is exactly P0109, P0305, P0405, P0503 and none is a boss (design.md §6.2, 단위 3-A)", () => {
+    const practice = content.regions.flatMap((r) => r.problems).filter((p) => p.practice);
+    expect(practice.map((p) => p.id).sort()).toEqual(["P0109", "P0305", "P0405", "P0503"]);
+    for (const p of practice) expect(p.boss, p.id).toBe(false);
+  });
+});
+
 describe("content loader: companion", () => {
   it("loads profile and traceback rules", () => {
     expect(content.companion).toEqual({ name: "누리", portrait: "portrait_nuri" });

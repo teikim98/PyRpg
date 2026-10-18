@@ -111,7 +111,7 @@ describe("content loader: region r06", () => {
   it("recommended: programmers 12915, 68936, 12946, 12945 first, then BOJ 10870, 1181, 10825", () => {
     expect(r06.recommended.map((r) => `${r.site}:${r.id}:${r.level}`)).toEqual([
       "programmers:12915:Lv.1", "programmers:68936:Lv.2", "programmers:12946:Lv.2", "programmers:12945:Lv.2",
-      "boj:10870:B2", "boj:1181:S5", "boj:10825:미확인",
+      "boj:10870:B2", "boj:1181:S5", "boj:10825:S4",
     ]);
   });
 

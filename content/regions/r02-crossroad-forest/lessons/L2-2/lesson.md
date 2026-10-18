@@ -62,14 +62,13 @@ print("1부터 10까지 합:", total)
 문자열 앞에 `f`를 붙이고 중괄호 `{}` 안에 변수나 식을 넣으면, 그 자리에 값이 들어가. JS의 템플릿 리터럴이랑 똑같아.
 
 ```python run
-n = 3
 for i in range(1, 4):
-    print(f"{n} x {i} = {n * i}")
+    print(f"{i}번째 걸음, 남은 거리 {10 - i}")
 ```
 
 ```js compare
-console.log(`${n} x ${i} = ${n * i}`);
-// Python: print(f"{n} x {i} = {n * i}")  ← 백틱 대신 f"...", ${} 대신 {}
+console.log(`${i}번째 걸음, 남은 거리 ${10 - i}`);
+// Python: print(f"{i}번째 걸음, 남은 거리 {10 - i}")  ← 백틱 대신 f"...", ${} 대신 {}
 ```
 
 ## 미니 연습
