@@ -1,0 +1,13 @@
+{
+  "id": "L1-2",
+  "title": "L1-2 픽스처",
+  "scroll": {
+    "id": "scroll.branch",
+    "name": "L1-2 주문서",
+    "summary": "L1-2 요약"
+  },
+  "introduces": [
+    "if",
+    "op:%"
+  ]
+}

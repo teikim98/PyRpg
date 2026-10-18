@@ -1,0 +1,18 @@
+{
+  "id": "L1-1",
+  "title": "L1-1 픽스처",
+  "scroll": {
+    "id": "scroll.voice",
+    "name": "L1-1 주문서",
+    "summary": "L1-1 요약"
+  },
+  "introduces": [
+    "call:print",
+    "call:input",
+    "call:int",
+    "method:split",
+    "unpack-assign",
+    "kwarg:end",
+    "call:len"
+  ]
+}

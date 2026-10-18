@@ -1,0 +1,12 @@
+{
+  "id": "P0101",
+  "requires": [
+    "scroll.voice"
+  ],
+  "boss": false,
+  "hints": [
+    "`{}` 안에 값을 넣는 건 나중에 배워. `____.split()`으로 나눠 봐.",
+    "`s.____()`처럼 메서드를 불러.",
+    "```python\nif a:\n    print(a)\n```"
+  ]
+}

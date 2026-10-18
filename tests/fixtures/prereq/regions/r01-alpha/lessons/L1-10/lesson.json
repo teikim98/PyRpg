@@ -1,0 +1,21 @@
+{
+  "id": "L1-10",
+  "title": "L1-10 픽스처",
+  "scroll": {
+    "id": "scroll.loop",
+    "name": "L1-10 주문서",
+    "summary": "L1-10 요약"
+  },
+  "introduces": [
+    "for",
+    "call:range",
+    "augassign"
+  ],
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸",
+    "code": "for i in ___(3):\n    print(i)\n",
+    "expectedOutput": "0\n1\n2\n",
+    "answer": "range"
+  }
+}

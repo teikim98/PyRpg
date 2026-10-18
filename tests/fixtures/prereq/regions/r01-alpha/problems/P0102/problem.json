@@ -1,0 +1,19 @@
+{
+  "id": "P0102",
+  "requires": [
+    "scroll.voice",
+    "scroll.branch"
+  ],
+  "boss": false,
+  "hints": [
+    "힌트 1",
+    "힌트 2",
+    "힌트 3"
+  ],
+  "prereqExceptions": [
+    {
+      "tag": "call:abs",
+      "reason": "지문에서 직접 소개함"
+    }
+  ]
+}

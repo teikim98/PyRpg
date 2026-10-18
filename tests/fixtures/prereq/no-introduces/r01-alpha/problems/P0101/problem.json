@@ -1,0 +1,12 @@
+{
+  "id": "P0101",
+  "requires": [
+    "scroll.voice"
+  ],
+  "boss": false,
+  "hints": [
+    "힌트 1",
+    "힌트 2",
+    "힌트 3"
+  ]
+}
