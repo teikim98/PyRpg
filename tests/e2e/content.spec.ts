@@ -38,11 +38,12 @@ const SLOW_PROBE_STDIN: Record<string, string> = {
 /** 시간 결계 보정 기준(§9.6 2단계): 제한은 모범답안의 3배 이상, 비효율 답안은 제한의 3배 이상 */
 const BUDGET_HEADROOM = 3;
 /**
- * 비효율 답안 쪽 기준을 문제별로 낮춘 것(사용자 결정 12, 2026-10-03).
+ * 비효율 답안 쪽 기준을 문제별로 낮춘 것(사용자 결정 12, 2026-10-03 → 결정 15, 2026-10-18).
  * P0411은 함수 밖 문자열 `+=`까지 인정하느라 slow.py와의 간격이 좁아서(이 PC에서 1.1~1.4배),
- * 게임 판정과 같은 '제한 × 2'(TLE 재확인 기준, design.md §9.6 4단계)로 본다.
+ * '제한 × 2'에서도 slow.py가 제한의 약 2.0~2.6배에 끝나 경계에 걸렸다. 게임에서 TLE가 확정되는지
+ * (제한을 넘는지)와 같은 뜻에 여유 0.5배를 둔 '제한 × 1.5'로 본다.
  */
-const SLOW_HEADROOM: Record<string, number> = { P0411: 2 };
+const SLOW_HEADROOM: Record<string, number> = { P0411: 1.5 };
 
 let page: Page;
 
