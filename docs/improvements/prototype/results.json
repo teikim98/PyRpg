@@ -1,0 +1,401 @@
+[
+ [
+  "r02-crossroad-forest",
+  "오류",
+  "레슨",
+  "L2-4/lesson.md:35",
+  "for-iter(→L3-4)"
+ ],
+ [
+  "r02-crossroad-forest",
+  "오류",
+  "레슨",
+  "L2-4/lesson.md:48",
+  "for-iter(→L3-4)"
+ ],
+ [
+  "r03-goblin-cave",
+  "오류",
+  "레슨",
+  "L3-5/lesson.md:24",
+  "tuple-assign(→L5-1)"
+ ],
+ [
+  "r03-goblin-cave",
+  "오류",
+  "레슨",
+  "L3-5/lesson.md:36",
+  "tuple-assign(→L5-1)"
+ ],
+ [
+  "r03-goblin-cave",
+  "오류",
+  "레슨",
+  "L3-5 미니 연습",
+  "tuple-assign(→L5-1)"
+ ],
+ [
+  "r04-grand-library",
+  "오류",
+  "레슨",
+  "L4-1/lesson.md:69",
+  "try(→없음)"
+ ],
+ [
+  "r05-trade-port",
+  "오류",
+  "레슨",
+  "L5-1/lesson.md:25",
+  "try(→없음)"
+ ],
+ [
+  "r05-trade-port",
+  "오류",
+  "레슨",
+  "L5-1/lesson.md:69",
+  "def(→L6-1), return(→L6-1)"
+ ],
+ [
+  "r05-trade-port",
+  "오류",
+  "레슨",
+  "L5-2/lesson.md:32",
+  "try(→없음)"
+ ],
+ [
+  "r05-trade-port",
+  "오류",
+  "레슨",
+  "L5-3/lesson.md:34",
+  "try(→없음)"
+ ],
+ [
+  "r05-trade-port",
+  "오류",
+  "레슨",
+  "L5-4/lesson.md:68",
+  "try(→없음)"
+ ],
+ [
+  "r05-trade-port",
+  "오류",
+  "레슨",
+  "L5-5/lesson.md:33",
+  "try(→없음)"
+ ],
+ [
+  "r06-mirror-lake",
+  "오류",
+  "레슨",
+  "L6-3/lesson.md:64",
+  "try(→없음)"
+ ],
+ [
+  "r06-mirror-lake",
+  "오류",
+  "레슨",
+  "L6-4/lesson.md:84",
+  "try(→없음)"
+ ],
+ [
+  "r01-echo-village",
+  "정보",
+  "복제",
+  "P0101/solution.py:1",
+  "L1-2/lesson.md:59 와 같은 조각(노드 18)"
+ ],
+ [
+  "r01-echo-village",
+  "정보",
+  "복제",
+  "P0102/solution.py:1",
+  "L1-2/lesson.md:59 와 같은 조각(노드 18)"
+ ],
+ [
+  "r01-echo-village",
+  "경고",
+  "비효율 답안",
+  "P0105/slow.py",
+  "augassign@4, call:range@3, for@3"
+ ],
+ [
+  "r01-echo-village",
+  "정보",
+  "복제",
+  "P0105/solution.py:1",
+  "L1-2/lesson.md:59 와 같은 조각(노드 18)"
+ ],
+ [
+  "r01-echo-village",
+  "정보",
+  "복제",
+  "P0109/solution.py:1",
+  "L1-2/lesson.md:59 와 같은 조각(노드 18)"
+ ],
+ [
+  "r01-echo-village",
+  "정보",
+  "복제",
+  "P0110/solution.py:3",
+  "L1-2/lesson.md:59 와 같은 조각(노드 18)"
+ ],
+ [
+  "r02-crossroad-forest",
+  "정보",
+  "복제",
+  "P0204/solution.py:1",
+  "L1-2/lesson.md:59 와 같은 조각(노드 18)"
+ ],
+ [
+  "r02-crossroad-forest",
+  "정보",
+  "복제",
+  "P0204/solution.py:3",
+  "L2-2/lesson.md:67 와 같은 조각(노드 20)"
+ ],
+ [
+  "r02-crossroad-forest",
+  "정보",
+  "복제",
+  "P0205/solution.py:1",
+  "L1-2/lesson.md:59 와 같은 조각(노드 18)"
+ ],
+ [
+  "r02-crossroad-forest",
+  "정보",
+  "복제",
+  "P0209/solution.py:9",
+  "L2-4/lesson.md:55 와 같은 조각(노드 17)"
+ ],
+ [
+  "r03-goblin-cave",
+  "오류",
+  "정답",
+  "P0302/solution.py (학습 시점 L3-1)",
+  "call:max@6(→L3-3), call:min@7(→L3-3), call:sum@5(→L3-3)"
+ ],
+ [
+  "r03-goblin-cave",
+  "경고",
+  "힌트",
+  "P0302 힌트 3",
+  "call:min(→L3-3), call:sum(→L3-3)"
+ ],
+ [
+  "r03-goblin-cave",
+  "오류",
+  "정답",
+  "P0303/solution.py (학습 시점 L3-1)",
+  "method:append@9(→L3-3)"
+ ],
+ [
+  "r03-goblin-cave",
+  "오류",
+  "정답",
+  "P0309/solution.py (학습 시점 L3-4)",
+  "nested-loop@4(→L3-5)"
+ ],
+ [
+  "r03-goblin-cave",
+  "경고",
+  "힌트",
+  "P0309 힌트 3",
+  "nested-loop(→L3-5)"
+ ],
+ [
+  "r04-grand-library",
+  "오류",
+  "정답",
+  "P0407/solution.py (학습 시점 L4-3)",
+  "tuple-assign@4(→L5-1)"
+ ],
+ [
+  "r04-grand-library",
+  "경고",
+  "힌트",
+  "P0407 힌트 1",
+  "dict-literal(→L5-2)"
+ ],
+ [
+  "r04-grand-library",
+  "경고",
+  "힌트",
+  "P0407 힌트 3",
+  "tuple-assign(→L5-1)"
+ ],
+ [
+  "r04-grand-library",
+  "정보",
+  "복제",
+  "P0408/solution.py:6",
+  "L4-4/lesson.md:29 와 같은 조각(노드 23)"
+ ],
+ [
+  "r04-grand-library",
+  "정보",
+  "복제",
+  "P0408/solution.py:7",
+  "L4-4/lesson.md:30 와 같은 조각(노드 18)"
+ ],
+ [
+  "r04-grand-library",
+  "경고",
+  "힌트",
+  "P0410 힌트 2",
+  "method:swapcase(→없음)"
+ ],
+ [
+  "r04-grand-library",
+  "오류",
+  "정답",
+  "P0411/solution.py (학습 시점 L4-4)",
+  "subscript-unpack@14(→없음)"
+ ],
+ [
+  "r04-grand-library",
+  "경고",
+  "힌트",
+  "P0411 힌트 2",
+  "subscript-unpack(→없음)"
+ ],
+ [
+  "r04-grand-library",
+  "경고",
+  "힌트",
+  "P0411 힌트 3",
+  "subscript-unpack(→없음)"
+ ],
+ [
+  "r05-trade-port",
+  "정보",
+  "복제",
+  "P0501/solution.py:7",
+  "L1-2/lesson.md:59 와 같은 조각(노드 18)"
+ ],
+ [
+  "r05-trade-port",
+  "정보",
+  "복제",
+  "P0501/solution.py:9",
+  "L5-1/lesson.md:49 와 같은 조각(노드 13)"
+ ],
+ [
+  "r05-trade-port",
+  "정보",
+  "복제",
+  "P0502/solution.py:3",
+  "L5-4/lesson.md:43 와 같은 조각(노드 12)"
+ ],
+ [
+  "r05-trade-port",
+  "정보",
+  "복제",
+  "P0502/solution.py:8",
+  "L5-1/lesson.md:49 와 같은 조각(노드 13)"
+ ],
+ [
+  "r05-trade-port",
+  "정보",
+  "복제",
+  "P0504/solution.py:3",
+  "L5-2/lesson.md:74 와 같은 조각(노드 23)"
+ ],
+ [
+  "r05-trade-port",
+  "정보",
+  "복제",
+  "P0504/solution.py:4",
+  "L5-2/lesson.md:75 와 같은 조각(노드 18)"
+ ],
+ [
+  "r05-trade-port",
+  "정보",
+  "복제",
+  "P0505/solution.py:4",
+  "L1-2/lesson.md:59 와 같은 조각(노드 18)"
+ ],
+ [
+  "r05-trade-port",
+  "정보",
+  "복제",
+  "P0507/solution.py:4",
+  "L1-2/lesson.md:59 와 같은 조각(노드 18)"
+ ],
+ [
+  "r05-trade-port",
+  "정보",
+  "복제",
+  "P0510/solution.py:9",
+  "L5-4/lesson.md:72 와 같은 조각(노드 12)"
+ ],
+ [
+  "r05-trade-port",
+  "정보",
+  "복제",
+  "P0512/solution.py:14",
+  "L5-5/lesson.md:39 와 같은 조각(노드 19)"
+ ],
+ [
+  "r06-mirror-lake",
+  "오류",
+  "정답",
+  "P0602/solution.py (학습 시점 L6-1)",
+  "call:abs@6(→없음)"
+ ],
+ [
+  "r06-mirror-lake",
+  "경고",
+  "힌트",
+  "P0602 힌트 2",
+  "call:abs(→없음)"
+ ],
+ [
+  "r06-mirror-lake",
+  "정보",
+  "복제",
+  "P0602/solution.py:12",
+  "L1-2/lesson.md:59 와 같은 조각(노드 18)"
+ ],
+ [
+  "r06-mirror-lake",
+  "정보",
+  "복제",
+  "P0611/solution.py:16",
+  "L5-1/lesson.md:52 와 같은 조각(노드 17)"
+ ],
+ [
+  "r06-mirror-lake",
+  "오류",
+  "정답",
+  "P0612/solution.py (학습 시점 L6-5)",
+  "nested-def@4(→없음)"
+ ],
+ [
+  "r06-mirror-lake",
+  "경고",
+  "힌트",
+  "P0612 힌트 3",
+  "nested-def(→없음)"
+ ],
+ [
+  "r06-mirror-lake",
+  "정보",
+  "복제",
+  "P0612/solution.py:7",
+  "L6-5/lesson.md:39 와 같은 조각(노드 14)"
+ ],
+ [
+  "r06-mirror-lake",
+  "정보",
+  "복제",
+  "P0613/solution.py:4",
+  "L1-2/lesson.md:59 와 같은 조각(노드 18)"
+ ],
+ [
+  "r06-mirror-lake",
+  "정보",
+  "복제",
+  "P0614/solution.py:10",
+  "L6-5/lesson.md:39 와 같은 조각(노드 14)"
+ ]
+]

@@ -1,0 +1,175 @@
+{
+ "L1-1": [
+  "call:input",
+  "call:print",
+  "kwarg:end",
+  "kwarg:sep"
+ ],
+ "L1-2": [
+  "call:float",
+  "call:int",
+  "call:len",
+  "call:map",
+  "call:str",
+  "call:type",
+  "method:split",
+  "unpack-assign"
+ ],
+ "L1-3": [
+  "api:sys.set_int_max_str_digits",
+  "import:sys",
+  "op:%",
+  "op:**",
+  "op:/",
+  "op://"
+ ],
+ "L1-4": [
+  "api:sys.stdin.readline",
+  "call:repr",
+  "method:rstrip",
+  "method:strip"
+ ],
+ "L2-1": [
+  "and",
+  "chain-compare",
+  "elif",
+  "if",
+  "not",
+  "or"
+ ],
+ "L2-2": [
+  "augassign",
+  "call:range",
+  "for",
+  "fstring"
+ ],
+ "L2-3": [
+  "break",
+  "continue",
+  "while"
+ ],
+ "L2-4": [],
+ "L3-1": [
+  "call:list",
+  "in",
+  "list-literal",
+  "neg-index",
+  "not-in",
+  "starred-call",
+  "subscript",
+  "subscript-store"
+ ],
+ "L3-2": [
+  "slice",
+  "slice-step"
+ ],
+ "L3-3": [
+  "call:max",
+  "call:min",
+  "call:sorted",
+  "call:sum",
+  "kwarg:reverse",
+  "method:append",
+  "method:count",
+  "method:index",
+  "method:insert",
+  "method:pop",
+  "method:remove",
+  "method:reverse",
+  "method:sort"
+ ],
+ "L3-4": [
+  "call:enumerate",
+  "comp-if",
+  "for-iter",
+  "listcomp",
+  "unpack-for"
+ ],
+ "L3-5": [
+  "list-mult",
+  "nested-loop"
+ ],
+ "L4-1": [],
+ "L4-2": [
+  "method:endswith",
+  "method:find",
+  "method:isalpha",
+  "method:isdigit",
+  "method:isupper",
+  "method:lower",
+  "method:replace",
+  "method:startswith",
+  "method:upper"
+ ],
+ "L4-3": [
+  "fstring-format",
+  "method:join"
+ ],
+ "L4-4": [
+  "call:chr",
+  "call:ord",
+  "method:islower"
+ ],
+ "L5-1": [
+  "tuple-assign",
+  "tuple-literal"
+ ],
+ "L5-2": [
+  "del",
+  "dict-literal",
+  "method:get",
+  "method:items",
+  "method:keys",
+  "method:values"
+ ],
+ "L5-3": [
+  "call:set",
+  "method:add",
+  "method:discard",
+  "op:&",
+  "op:|",
+  "set-literal"
+ ],
+ "L5-4": [
+  "api:collections.Counter",
+  "api:collections.defaultdict",
+  "call:dict",
+  "import:collections",
+  "method:elements",
+  "method:most_common"
+ ],
+ "L5-5": [
+  "api:collections.deque",
+  "method:appendleft",
+  "method:popleft",
+  "method:rotate"
+ ],
+ "L6-1": [
+  "def",
+  "def-default",
+  "global",
+  "kwarg-user",
+  "return"
+ ],
+ "L6-2": [
+  "call:all",
+  "call:any",
+  "call:zip",
+  "kwarg:key",
+  "starred-assign"
+ ],
+ "L6-3": [
+  "lambda"
+ ],
+ "L6-4": [
+  "api:sys.setrecursionlimit",
+  "recursion"
+ ],
+ "L6-5": [
+  "api:functools.cache",
+  "api:functools.lru_cache",
+  "decorator",
+  "import:functools",
+  "kwarg:maxsize"
+ ]
+}
