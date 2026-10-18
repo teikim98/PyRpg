@@ -6,6 +6,7 @@
   "requires": ["scroll.sort"],
   "concept": "scroll.sort",
   "boss": false,
+  "practice": true,
   "timeLimitMs": 2000,
   "estimatedMinutes": 7,
   "tests": [
