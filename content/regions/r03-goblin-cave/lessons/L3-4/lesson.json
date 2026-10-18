@@ -6,6 +6,7 @@
     "name": "한 줄 주문서",
     "summary": "`for x in arr:`로 값을 바로 꺼내고, 칸 번호가 필요하면 `range(len(arr))`나 `enumerate`. `for` 안에 `for`를 넣으면 바깥 값 하나마다 안쪽이 한 바퀴씩 돈다. `[식 for x in arr]`은 JS의 map, `[x for x in arr if 조건]`은 filter. 도는 중인 리스트에서 지우지 말고 새 리스트를 만든다."
   },
+  "introduces": ["call:enumerate", "comp-if", "listcomp", "nested-loop", "unpack-for"],
   "exercise": {
     "kind": "blank",
     "prompt": "빈칸에 조건을 채워서 2보다 큰 값만 골라 제곱한 `[9, 16]`이 출력되게 해 봐.",
