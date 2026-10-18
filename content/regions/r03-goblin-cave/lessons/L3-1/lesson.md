@@ -64,6 +64,26 @@ print(*nums)                         # * 를 붙이면 공백으로 풀어서 �
 - 실제 문제에서는 `list(map(int, input().split()))`이라고 써.
 - `print(*nums)`는 `print(3, 1, 4, 1, 5)`와 같아. 리스트를 백준 출력 모양(공백 구분)으로 낼 때 아주 자주 써.
 
+## 한 번에 계산하기: `sum`, `max`, `min`
+
+리스트를 통째로 넘기면 한 번에 계산해 주는 내장 함수도 있어. `sum`은 합, `max`는 가장 큰 값, `min`은 가장 작은 값이야. 반복문을 돌리지 않아도 평균이나 차이가 바로 나와.
+
+```python run
+scores = [70, 85, 60]
+average = sum(scores) / len(scores)    # 평균 = 합 ÷ 개수
+print(average)
+gap = max(scores) - min(scores)        # 가장 큰 값과 가장 작은 값의 차이
+print(gap)
+```
+
+```js compare
+Math.max(...scores);                   // 85  ← Python: max(scores)
+Math.min(...scores);                   // 60  ← Python: min(scores)
+scores.reduce((a, b) => a + b, 0);     // 215 ← Python: sum(scores)
+```
+
+- `/`로 나누면 결과가 실수(`float`)라서 평균이 `71.66666666666667`처럼 길게 나와. 정수 몫만 필요하면 `//`를 써.
+
 ## 미니 연습
 
 `arr`의 **맨 끝** 값이 출력되도록 빈칸을 채워 봐. 길이를 몰라도 되는 번호가 있었지?
