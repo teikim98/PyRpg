@@ -10,7 +10,6 @@ import {
   detourThresholdMs,
   disclosureMode,
   hintShortCost,
-  practiceThresholdMs,
   solutionAccess,
   testsInScope,
   timeGaugePercent,
@@ -100,9 +99,11 @@ describe("misc", () => {
   it("hint costs: level 1 free", () => {
     expect([1, 2, 3].map((l) => hintShortCost(l as 1 | 2 | 3))).toEqual(["무료", "−25%", "−50%"]);
   });
-  it("practice threshold is max(est × 2, 10) minutes", () => {
-    expect(practiceThresholdMs(3)).toBe(10 * 60_000);
-    expect(practiceThresholdMs(15)).toBe(30 * 60_000);
+  it("연습 제안도 해설서와 같은 기준 시간 min(max(예상 × 2, 10), 20)분(결정 23 P-D1, 단위 3-E3)", () => {
+    expect(detourThresholdMs(3)).toBe(10 * 60_000);
+    expect(detourThresholdMs(8)).toBe(16 * 60_000);
+    // 예전 연습 제안 기준(max(예상 × 2, 10))이면 30분이었다
+    expect(detourThresholdMs(15)).toBe(20 * 60_000);
   });
   it("time gauge is worst test time relative to limit", () => {
     const r = result([t(0, "AC"), { ...t(1, "AC"), timeMs: 40 }]);

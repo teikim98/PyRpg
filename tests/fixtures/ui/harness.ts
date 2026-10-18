@@ -2,7 +2,7 @@
 import type { DiagnosisRule, Problem, TracebackRule } from "../../../src/contracts/content";
 import type { JudgeResult, PyError } from "../../../src/contracts/runner";
 import type { BattleOutcome, HintLevel, RewardSummary } from "../../../src/contracts/state";
-import type { BattleContext, BattleProgress, HudState, MenuActions, NameContext } from "../../../src/contracts/ui";
+import type { BattleContext, BattleProgress, HudState, MenuActions, NameContext, PracticeOffer } from "../../../src/contracts/ui";
 import { createUi } from "../../../src/ui";
 import { FakeRunner } from "./fakeRunner";
 import { L12, P0101, companion, dialogueLines, lessons, problems, recommended, traceback } from "./problems";
@@ -39,6 +39,29 @@ export interface BattleOverrides {
   /** 이전 전투들에서 쓴 누적 시간(ms, 단위 3-E1) */
   priorElapsedMs?: number;
   shadow?: boolean;
+  /**
+   * 연습 상대(단위 3-E3). variant·warmup은 sourceId 문제(하네스 고정 데이터)를 id만 바꿔 연습 문제로 쓴다.
+   * monster는 이름만. none은 상대 없음
+   */
+  practiceOffer?: { kind: PracticeOffer["kind"]; sourceId?: string; name?: string; applied?: boolean };
+  /** 연습 전투 모드(단위 3-E3) */
+  practice?: boolean;
+  /** 가진 회복약 수(HP 30 회복) */
+  potions?: number;
+  /** 고정 데이터 문제를 고쳐서 연다(예: { practice: true }로 연습 몬스터) */
+  patch?: Partial<Problem>;
+}
+
+/** 하네스용 연습 상대 */
+function harnessOffer(o: NonNullable<BattleOverrides["practiceOffer"]>): PracticeOffer {
+  if (o.kind === "none") return o.applied ? { kind: "none", applied: true } : { kind: "none" };
+  const src = problems[o.sourceId ?? "P0103"];
+  const name = o.name ?? src.enemy.name;
+  if (o.kind === "monster") return { kind: "monster", problemId: o.sourceId ?? "P0103", name };
+  const problem = { ...src, id: `${src.id}-v1`, title: `${src.title}(변형)` };
+  return o.kind === "variant"
+    ? { kind: "variant", sourceId: src.id, name, problem }
+    : { kind: "warmup", sourceId: src.id, name, problem, ...(o.applied ? { applied: true } : {}) };
 }
 
 export function mountHarness(game: HTMLElement) {
@@ -93,7 +116,7 @@ export function mountHarness(game: HTMLElement) {
     codex: () => record("codex", ui.codex.open(lessons, fake, names)),
     battle: (id: string, o: BattleOverrides = {}): Promise<BattleOutcome> => {
       const ctx: BattleContext = {
-        problem: problems[id],
+        problem: o.patch ? { ...problems[id], ...o.patch } : problems[id],
         runner: fake,
         companion,
         names,
@@ -103,6 +126,9 @@ export function mountHarness(game: HTMLElement) {
         hintLevel: o.hintLevel ?? 0,
         ...(o.priorElapsedMs !== undefined ? { priorElapsedMs: o.priorElapsedMs } : {}),
         ...(o.shadow ? { shadow: true } : {}),
+        ...(o.practiceOffer ? { practiceOffer: harnessOffer(o.practiceOffer) } : {}),
+        ...(o.practice ? { practice: true } : {}),
+        ...(o.potions ? { potions: { count: o.potions, heal: 30, name: "회복약" } } : {}),
         regionOrder: o.regionOrder ?? 1,
         traceback,
         explain: fakeExplain,

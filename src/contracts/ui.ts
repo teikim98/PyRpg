@@ -75,13 +75,36 @@ export interface BattleContext {
   companionLines?: {
     /** 실행기가 죽었다 살아났을 때(fatal_recursion) */
     fatalRecursion?: DialogueLine[];
-    /** 오래 붙잡고 있을 때 연습 전투 제안(practice_suggest) */
+    /**
+     * 연습 제안(design.md §6.2 연습 상대, §7.1 시간 기반 우회, 단위 3-E3). practiceOffer의 종류에 따라 하나를 쓴다.
+     * 문장 안의 {target}은 상대 이름(PracticeOffer.name)으로 바꾼다.
+     * practiceSuggest: ① 같은 개념의 이미 푼 문제 변형으로 연습 전투(practice_suggest)
+     */
     practiceSuggest?: DialogueLine[];
+    /** ② 지금 걸어서 닿는 같은 주문서의 연습 몬스터 이름(practice_suggest_monster) */
+    practiceSuggestMonster?: DialogueLine[];
+    /** ③ 가장 최근에 푼 문제의 변형으로 몸풀기(개념이 다르다고 밝힘, practice_suggest_warmup) */
+    practiceSuggestWarmup?: DialogueLine[];
+    /** ③ 응용 전투의 몸풀기(주문서·개념을 말하지 않음, practice_suggest_applied) */
+    practiceSuggestApplied?: DialogueLine[];
+    /** ④ 상대가 없을 때: 코덱스의 레슨 예제와 힌트 1(practice_suggest_none) */
+    practiceSuggestNone?: DialogueLine[];
     /** 힌트 경로로 해설서가 처음 열렸을 때(solution_unlocked_hint, design.md §5.3, 단위 3-E4) */
     solutionUnlockedHint?: DialogueLine[];
   };
-  /** 그림자 몬스터 전투(§7.6): 보상 50%, 해설서 없음 */
+  /** 그림자 몬스터 전투(§7.6): 보상 50%, 해설서 없음, 연습 제안 없음 */
   shadow?: boolean;
+  /**
+   * 막혔을 때 제안할 연습 상대(design.md §6.2, src/systems/practice.ts findPracticeOffer). 앱이 전투를 열 때 찾아서 넘긴다.
+   * 전투 화면은 누적 시간(priorElapsedMs + 이번 전투) ≥ 기준 시간이거나 이 문제에서 쓰러진 적이 있으면(knockouts ≥ 1, 시작 직후) 보여 준다.
+   * 그림자전·연습 전투·연습 몬스터(problem.practice) 전투에서는 넘기지 않고, 넘겨도 쓰지 않는다
+   */
+  practiceOffer?: PracticeOffer;
+  /**
+   * 연습 전투(design.md §7.1 "'연습 몬스터'와 '연습 전투'는 다릅니다"): 반격·보상·기록 없음, 해설서·회복약·연습 제안 없음,
+   * 힌트는 대가 없이 열리고 빈 틀(draft 없음)에서 시작한다
+   */
+  practice?: boolean;
   /** 장신구 효과(§7.3) */
   perks?: {
     /** 길잡이 깃털: 힌트 2단계 대가 없음(그림자 등록은 그대로) */
@@ -108,6 +131,19 @@ export interface BattleContext {
   /** 회복약 하나를 쓴 순간(앱이 인벤토리에서 뺀다) */
   onUsePotion?(): void;
 }
+
+/**
+ * 연습 상대(design.md §6.2, 처음 찾은 것 하나).
+ * variant: ① 같은 개념(없으면 같은 requires)의 이미 푼 다른 문제 변형으로 여는 연습 전투
+ * monster: ② 같은 지역·같은 주문서의 미해결 연습 몬스터(숨겨지지 않았고 지금 위치에서 걸어서 닿음). 이름만 안내
+ * warmup: ③ 가장 최근에 푼 문제의 변형으로 여는 몸풀기 연습 전투(applied면 응용 전투의 몸풀기)
+ * none: ④ 상대 없음. 코덱스의 레슨 예제와 힌트 1을 안내
+ */
+export type PracticeOffer =
+  | { kind: "variant"; sourceId: string; name: string; problem: Problem }
+  | { kind: "monster"; problemId: string; name: string }
+  | { kind: "warmup"; sourceId: string; name: string; problem: Problem; applied?: boolean }
+  | { kind: "none"; applied?: boolean };
 
 export interface BattleProgress {
   /** 이번 전투에서 [시전] 횟수 */
