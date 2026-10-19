@@ -165,9 +165,12 @@ describe("content loader: region r01", () => {
 });
 
 describe("content loader: practice monsters", () => {
-  it("practice: true is exactly P0109, P0305, P0405, P0503 (단위 3-A) + P0403, P0508, P0607 (단위 3-E3, 결정 23 P-E10) and none is a boss", () => {
+  it("practice: true is exactly P0109, P0305, P0405, P0503 (단위 3-A) + P0403, P0508, P0607 (단위 3-E3, 결정 23 P-E10) + 지역 7 주문서마다 1개(region07-spec.md §3) and none is a boss", () => {
     const practice = content.regions.flatMap((r) => r.problems).filter((p) => p.practice);
-    expect(practice.map((p) => p.id).sort()).toEqual(["P0109", "P0305", "P0403", "P0405", "P0503", "P0508", "P0607"]);
+    expect(practice.map((p) => p.id).sort()).toEqual([
+      "P0109", "P0305", "P0403", "P0405", "P0503", "P0508", "P0607",
+      "P0701", "P0703", "P0705", "P0708", "P0710",
+    ]);
     for (const p of practice) expect(p.boss, p.id).toBe(false);
   });
 });
@@ -231,8 +234,9 @@ describe("buildContent", () => {
     expect("applied" in ps.find((p) => p.id === "P0101")!).toBe(false);
     const off = { ...src.json, [key]: { ...(src.json[key] as object), applied: false } };
     expect("applied" in buildContent({ json: off, text: src.text }).regions[0].problems.find((p) => p.id === "P0110")!).toBe(false);
-    // 지금 콘텐츠에는 응용 전투가 없다(지역 7부터)
-    expect(content.regions.flatMap((r) => r.problems).filter((p) => p.applied)).toEqual([]);
+    // 응용 전투는 지역 7부터: 통합형 P0712(200 XP), 판별형 P0713(300 XP)(region07-spec.md §4)
+    const applied = content.regions.flatMap((r) => r.problems).filter((p) => p.applied);
+    expect(applied.map((p) => [p.id, p.reward.xp])).toEqual([["P0712", 200], ["P0713", 300]]);
   });
 
   it("reports which file is missing", () => {

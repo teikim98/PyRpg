@@ -906,17 +906,21 @@ test.describe.serial("지역 6 거울 호수 전체 플레이", () => {
     expect(await said(page)).toEqual([]);
     expect((await save(page)).location.regionId).toBe("r06");
 
-    // 보스가 있던 칸을 지나 섬 동쪽 나루: 지역 7이 아직 없으므로 '준비 중' 안내(to_be_continued)만 나오고 호수에 남는다
+    // 보스가 있던 칸을 지나 섬 동쪽 나루: 지역 7 모래시계 사막의 spawn_west로 이어진다
+    // (처음 건널 때 누리의 연결 대사 → 지역 첫 대사 → spawn 옆 트리거. 대사 문구 검사는 지역 7 E2E에서)
     await walkTo(page, boss.x, boss.y);
     const gate = await obj(page, "warp_east");
     expect({ x: gate.x, y: gate.y }).toEqual({ x: 105, y: 11 });
     const n = (await said(page)).length;
     await interact(page, "warp_east");
     const endTexts = await readAll(page);
-    expect((await said(page)).slice(n)).toEqual(["to_be_continued"]);
-    expect(endTexts.join(" ")).toContain("준비 중");
-    await expect(page.locator(".hud-region")).toHaveText("거울 호수");
-    expect((await save(page)).location.regionId).toBe("r06");
+    expect((await said(page)).slice(n)).toEqual(["to_be_continued", "region_intro", "desert_intro"]);
+    expect(endTexts.join(" ")).not.toContain("준비 중");
+    await expect(page.locator(".hud-region")).toHaveText("모래시계 사막");
+    const st = await page.evaluate(() => (window as any).__pyrpg.state());
+    expect(st.save.location.regionId).toBe("r07");
+    const spawn = await obj(page, "spawn_west");
+    expect(Math.abs(st.pos.x - spawn.x) + Math.abs(st.pos.y - spawn.y)).toBeLessThanOrEqual(1);
   });
 });
 
