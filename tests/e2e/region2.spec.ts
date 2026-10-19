@@ -341,7 +341,8 @@ test.describe.serial("지역 2 갈림길 숲 전체 플레이", () => {
 
     await interact(page, "campfire_entrance");
     await settle(page);
-    expect((await said(page)).at(-1)).toBe("campfire_rest");
+    // 일일 퀘스트(캠프파이어에서 쉬기 등) 보상으로 레벨이 오르면 끝에 level_up이 붙을 수 있다(날짜마다 다름)
+    expect((await said(page)).filter((d) => d !== "level_up").at(-1)).toBe("campfire_rest");
     const s = await save(page);
     expect(s.lastCampfire.regionId).toBe("r02");
     // 승리로 레벨이 올라 최대 HP가 늘었을 수 있다. 쉬면 가득
@@ -418,7 +419,8 @@ test.describe.serial("지역 2 갈림길 숲 전체 플레이", () => {
     await lesson(page, "rune_L2-4", "n");
     await interact(page, "campfire_stream");
     await settle(page);
-    expect((await said(page)).at(-1)).toBe("campfire_rest");
+    // 일일 퀘스트(캠프파이어에서 쉬기 등) 보상으로 레벨이 오르면 끝에 level_up이 붙을 수 있다(날짜마다 다름)
+    expect((await said(page)).filter((d) => d !== "level_up").at(-1)).toBe("campfire_rest");
     expect((await save(page)).lastCampfire.regionId).toBe("r02");
   });
 
