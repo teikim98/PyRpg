@@ -11,3 +11,5 @@ export * from "./items";
 export * from "./titles";
 export * from "./shadowBoard";
 export * from "./practice";
+export * from "./puzzle";
+export * from "./complexity";
