@@ -236,12 +236,13 @@ Phase 3 계획은 [`phase3/plan.md`](./phase3/plan.md)에 있습니다. 지역 �
 - 검증: typecheck · 단위 테스트 447개 · `npm run verify`(콘텐츠 4913회 오류 0, 맵 6개, 아트 재빌드 동일). 전체 E2E는 아직(확장 단계 끝에 모든 화면 재촬영과 함께). 미리보기: [`art-overhaul/`](./art-overhaul/)의 `r01-*.png`, `r1-monsters.png`, `portraits*.png`, `walk.gif`, `screens/engine-*.png`.
 - 남은 결정: 결정 20(풀 덤불·물가 경계). 화풍 가이드의 '풀 덤불이 길 경계로 넘어옴'은 이웃 칸을 모르는 단일 타일로는 그릴 수 없음.
 - 참고로 사용자가 회사에서 했다고 기억하는 그래픽 작업(10/02 18시쯤)은 이 PC와 GitHub 어디에도 커밋이 없음. GitHub에 있는 것은 클라우드 세션의 누리 초상화 '농장 생활 게임풍' 리디자인(`df385eb`, 한국 시간 10/02 01시쯤)까지.
+- 2026-10-19 회사 PC를 원격에 맞추면서 그 PC의 `main`에서 push되지 않은 '아트 리뉴얼 단위 0~5'(warm 화풍, 2026-10-02 09:19~11:31 KST, 커밋 37개)와 지역 4 warm 아트 worktree 브랜치를 찾음. 결정 28에 따라 쓰지 않고 bundle로 보존(§6).
 
 ### 바로 다음(2026-10-18 기준)
 
 | 순서 | 할 일 | 내용 |
 |---|---|---|
-| 0 | 다른 PC 동기화 | 회사 PC는 §7 순서로 원격에 맞춤(사용자) |
+| 0 | 다른 PC 동기화 | 회사 PC: 2026-10-19 백업(bundle)·`main` 리셋·로컬 `art-overhaul` 생성 완료. 옛 worktree 6개 제거와 CRLF 다시 체크아웃은 사용자가 직접 실행(§7.2) |
 | 1 | 결정 | §4 결정 24~27(이번 세션에서 새로 생김, 모두 추천안 있음), 결정 20(풀 덤불·물가 경계)과 그래픽 개편 파일럿 확인 |
 | 1-1 | 개선안 적용 | **완료**(2026-10-18~19). 3-D·3-A·3-B·3-E1~E5 모두 `main`. 지역 7 명세에 넘길 것은 계획 §10과 §11(#20·#27·#28) |
 | 2 | **단위 3-7: 지역 7 모래시계 사막** | 아래 내용 + README "지역 7 명세에 바로 넣을 규칙" 10개(연습 몬스터, 응용 전투 2개, 필수 6·선택 6, 2페이즈 대사 규칙, 선행 지식, `try/except` 정식 소개, 고장 난 다리 등). design.md §6.2: 시간복잡도, Python 성능 습관(빠른 입력, list vs set), 정수론 기초(소수, 에라토스테네스의 체, GCD/LCM, 진법). 레슨 5, 일반 12, **보스 2**(중간 '모래 전갈' `x in list` → `set` / 최종 '모래시계 스핑크스' 소수 하나씩 판정 → 체). **할트 이름이 처음 등장**(2막 끝). 보상 장신구 '모래시계 부적'(시간 게이지에 목표 복잡도, items.json `hourglass-charm`, problem.json `targetComplexity`) |
@@ -293,6 +294,7 @@ Phase 3 계획은 [`phase3/plan.md`](./phase3/plan.md)에 있습니다. 지역 �
 | 25 | 보스 직전 표지판 대사의 풀이 방향(지역 6 `sign_mirror_bridge`, `sign_echo_shoal`) | improvements-plan.md §11 #20 | **결정 필요**. 추천: 지역 7 명세 규칙에 "보스 직전 표지판도 풀이 방향을 말하지 않음"을 넣고 지역 6 표지 2개도 고침 |
 | 26 | 연습 몬스터 배치 규칙 예외(P0403·P0508·P0607은 첫 필수 몬스터 뒤, 지역 1~3 후보도 모두 뒤) | improvements-plan.md §11 #24·#25 | **결정 필요**. 추천: 지금 지정 유지, 지역 1~3은 더 지정하지 않음(지역 1~6은 경고만, 지역 7부터 검사기가 지킴) |
 | 27 | 지역 7 변형 규칙에 "보스 변형 지문에 2페이즈 입력 범위도 적는다" | improvements-plan.md §11 #27 | **결정 필요**. 추천: 넣음(지금은 엔진의 공통 안내 문장으로 막음) |
+| 28 | 그래픽 개편 화풍 기준 | art-overhaul/plan.md | **원격 `art-overhaul`의 화풍(코지)을 따름**(2026-10-19). 회사 PC에만 있던 'warm 화풍' 아트 리뉴얼(2026-10-02)은 쓰지 않고 bundle로만 보존(§6) |
 
 ## 5. 남은 미확인 항목(Phase 2 이후에 확인)
 
@@ -313,6 +315,7 @@ Phase 3 계획은 [`phase3/plan.md`](./phase3/plan.md)에 있습니다. 지역 �
 - 이전 PC 임시 폴더의 `verify_samples.py`는 저장소의 `tools/verify_samples.py`로 대체했으므로 더 이상 필요하지 않습니다.
 - 이번 세션의 리서치 원본(중간 저장 파일)과 기술 실험 스크립트(Vite + Pyodide 워커, Phaser + CodeMirror 키보드 실험 등)는 클라우드 세션의 임시 폴더에만 있어서 세션이 끝나면 사라집니다. 확인된 내용은 모두 research.md로 옮겼습니다. 실험 방법은 research.md §3의 각 '직접 측정' 설명에 남아 있으므로 Phase 2에서 다시 만들 수 있습니다.
 - **회사 PC의 `gemini/` 폴더**: Gemini 기획 검토의 원자료(호출 스크립트, 질문, 응답 원문, 대조 결과, 종합)입니다. 커밋하지 않았고 회사 PC에만 있습니다. 내용은 [`improvements/00-background.md`](./improvements/00-background.md) §3이 요약합니다. 같은 PC의 GCP 서비스 계정 키(`primeval-pen-506612-b4-*.json`)는 `.gitignore`로 막아 두었습니다.
+- **회사 PC 백업 bundle**: 저장소 폴더 바로 위의 `PyRpg-company-backup-2026-10-19.bundle`(2026-10-19). 리셋 전 회사 PC `main`(`backup/local-main-20261019`, warm 화풍 아트 리뉴얼)과 지역 4 worktree 브랜치 8개(WIP 포함), 화풍 시안 soft·rich가 들어 있습니다. 꺼낼 때는 §7.1처럼 `git fetch <bundle> '<브랜치>:backup/<브랜치>'`.
 - **선행 지식 검사 프로토타입**: 2026-10-18 재실행본은 저장소의 [`improvements/prototype/`](./improvements/prototype/)로 옮겼습니다. 회사 PC 임시 폴더의 원본 `prereq_proto.py`는 더 필요하지 않습니다.
 - **Claude Code 자동 메모리**(`~/.claude/projects/.../memory/`)는 PC마다 따로 있습니다. 지켜야 할 규칙은 모두 `CLAUDE.md`와 이 문서에 있으므로 메모리가 없어도 됩니다.
 
