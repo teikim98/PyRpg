@@ -4,8 +4,6 @@
   "kind": "function",
   "entry": "solution",
   "statement": "statement.md",
-  "starter": "starter.py",
-  "solution": "solution.py",
   "timeLimitMs": 2000,
   "tests": [
     {"args": "(13,)", "expect": "True", "public": true, "note": "기본 동작: 소수 번호의 돌"},
