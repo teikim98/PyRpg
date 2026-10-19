@@ -1,6 +1,6 @@
 # PyRpg 진행 현황
 
-> 마지막 갱신: 2026-10-19(회사 PC 세션: 원격 동기화, 결정 20·24~31, 단위 3-7 지역 7. §2 마지막 세션). 그 전 세션 요약은 [`work-summary-2026-10-18.md`](./work-summary-2026-10-18.md). 작업을 이어서 시작할 때는 이 문서부터 읽습니다. **다른 PC(회사 PC 등)에서 처음 이어서 할 때는 §7 '다른 PC에서 이어서 하기'부터** 따릅니다.
+> 마지막 갱신: 2026-10-19(회사 PC 세션: 원격 동기화, 결정 20·24~32, 단위 3-7 지역 7, 그래픽 개편 `main` 머지. §2 마지막 세션). 그 전 세션 요약은 [`work-summary-2026-10-18.md`](./work-summary-2026-10-18.md). 작업을 이어서 시작할 때는 이 문서부터 읽습니다. **다른 PC(회사 PC 등)에서 처음 이어서 할 때는 §7 '다른 PC에서 이어서 하기'부터** 따릅니다.
 > 프로젝트 지시 원문은 저장소 루트의 `첫 프롬프트.md`에 있습니다.
 
 ## 1. 현재 상태
@@ -10,7 +10,7 @@
 | Phase 0 리서치 | 완료 | [`research.md`](./research.md) |
 | Phase 1 기획서 | 승인됨(2026-10-01), `main`에 머지 | [`design.md`](./design.md) |
 | Phase 2 버티컬 슬라이스 | 완료(2026-10-01), 피드백 1차 반영, `main`에 머지 | 지역 1 '에코 마을' 전체 플레이 가능. 실행 방법은 [`README.md`](../README.md) |
-| Phase 3 콘텐츠 확장 | **진행 중**: 3-0·3-1, 지역 2~6 완료, 기획 개선안 적용 단위 3-D·3-A·3-B·3-E1~E5 완료(2026-10-18~19). **단위 3-7 지역 7 모래시계 사막 구현·통합 완료, 검증 중**(2026-10-19, 브랜치 `phase3-region7`). 그래픽 개편은 파일럿 완료와 경계 장식(결정 20, 브랜치 `art-overhaul-edges`, 머지 전). 다음은 지역 8 광산 명세 | 계획: [`phase3/plan.md`](./phase3/plan.md), 개선안 적용: [`phase3/improvements-plan.md`](./phase3/improvements-plan.md) |
+| Phase 3 콘텐츠 확장 | **진행 중**: 3-0·3-1, 지역 2~6 완료, 기획 개선안 적용 단위 3-D·3-A·3-B·3-E1~E5 완료(2026-10-18~19). **단위 3-7 지역 7 모래시계 사막 완료**(2026-10-19, `main` 머지). **그래픽 개편(코지 화풍 지역 1, 경계 장식)을 `main`에 머지**(2026-10-19, 결정 32). 지역 2~7은 아직 옛 화풍. 다음은 지역 8 광산 명세 | 계획: [`phase3/plan.md`](./phase3/plan.md), 개선안 적용: [`phase3/improvements-plan.md`](./phase3/improvements-plan.md) |
 
 - Git: origin = https://github.com/teikim98/PyRpg. 클라우드 세션에서는 `claude/admiring-pasteur-98frg7` 브랜치에 커밋하고 push합니다. `main`에는 사용자가 요청할 때 머지합니다.
 - 로컬 PC(Windows 11) 세션에서는 작업 브랜치(`phase3-region4` 등)에 커밋합니다. push는 사용자가 요청할 때만 합니다(2026-10-18에는 이 PC에서 Claude의 `git push`가 막히지 않고 됐습니다). 이 PC에는 git 사용자 정보가 없어서 커밋마다 `git -c user.name=Claude -c user.email=noreply@anthropic.com`을 씁니다(기존 커밋과 같은 작성자).
@@ -232,7 +232,7 @@
 | 원격 동기화 | 로컬 `main`을 bundle로 백업한 뒤 `origin/main`으로 리셋, 옛 worktree 6개 제거, CRLF 368개를 LF로 다시 체크아웃, 로컬 `art-overhaul` 생성. 확인: typecheck · 단위 516 · verify 4918회 오류 0. warm 화풍은 결정 28로 폐기 |
 | 결정 | 20(경계 장식 자동), 24(보스 변형 첫 문장의 보스 이름), 25(보스 직전 표지판의 풀이 방향), 26, 27, 28(화풍은 원격 `art-overhaul`), 29(지역 7 아트는 지금 형식), 30(복잡도 예측 정답 공개 시점), 31(고장 난 다리는 필수 경로). 모두 추천안 |
 | 결정 24·25 | 에이전트 1명(`phase3-decisions-24-25`). 보스 변형 8문장(P0311 v2 포함)과 지역 6 표지판 2개. 변형 title은 칸 3 이상 그림자 화면에서 엔진이 덮어써 보이지 않음(`shadowBoard.ts:239`). 단위 516 · verify 오류 0 · 지역 6 E2E 10개 통과. `main` 머지 `5fd9f40` |
-| 결정 20 경계 장식 | 에이전트 1명(`art-overhaul-edges`, `art-overhaul` 위). manifest `edgeDecor`(타일마다 지형 분류)와 조각 44개(`assets/tiles/edges.png`), 순수 함수 `src/game/edgeDecor.ts`, 바닥과 물체 사이 깊이에 겹쳐 그림. 맵 데이터 불변. 단위 542 → 559, verify 오류 0, 새 E2E 11개 통과. 비교: [`art-overhaul/edges-before-after.png`](./art-overhaul/edges-before-after.png). 어두운 물(지역 3 웅덩이)의 물거품 선이 테두리처럼 또렷함. **머지 전(사용자 확인 대기)** |
+| 결정 20 경계 장식 | 에이전트 1명(`art-overhaul-edges`, `art-overhaul` 위). manifest `edgeDecor`(타일마다 지형 분류)와 조각 44개(`assets/tiles/edges.png`), 순수 함수 `src/game/edgeDecor.ts`, 바닥과 물체 사이 깊이에 겹쳐 그림. 맵 데이터 불변. 단위 542 → 559, verify 오류 0, 새 E2E 11개 통과. 비교: [`art-overhaul/edges-before-after.png`](./art-overhaul/edges-before-after.png). 어두운 물(지역 3 웅덩이)의 물거품 선이 테두리처럼 또렷함 → 물거품을 옅고 듬성하게, 어두운 물(동굴 웅덩이·호수)에는 옅은 물가 묶음 `shore_dark`를 따로 두고 `art-overhaul`에 머지(`af0d7ff`) |
 | 3-7 명세 | [`phase3/region07-spec.md`](./phase3/region07-spec.md). 계약(`Puzzle`, `complexityChoices`), 뼈대(대사 ID 27, 레슨 5와 `introduces`) |
 | 3-7 병렬 구현 | 에이전트 6명(레슨·대사 / P0701~P0706 / P0708~P0713·Z0701 / 보스 2 / 맵·아트 / 시스템)이 각자의 worktree에서 작업, `phase3-region7`에 머지(충돌 없음). 구현 때 바꾼 것: P0709 n ≤ 200만(10^6에서는 하나씩 판정이 Pyodide 제한의 약 1.1배), P0712 빈 결과 `없음`(gcd(0, 0) = 0이라 조건 ③을 가를 수 없음), P0707 `input()` 풀이 인정, `EOFError`·실수 `TypeError` 해설 규칙은 기존 규칙과 메시지가 같아 추가하지 않음, 복잡도 예측은 고른 답이 아니라 맞았는지만 플래그로 저장(`flags`가 참/거짓만 담음) |
 | 3-7 통합 | 단위 테스트 기대값(연습 몬스터 목록, 응용 전투, 복잡도 예측 지역 1~6), 지역 6 E2E 동쪽 문 → 지역 7, Z0701 `puzzle.json`의 쓰이지 않는 필드 정리, 명세 반영 |
@@ -243,11 +243,23 @@
 
 **검증 결과(2026-10-19, 이 PC, 통합 직후 단독 실행)**: typecheck 통과 · 단위 테스트 **543개** · `npm run verify` 콘텐츠 실행 **6252회** 오류 0 · 경고 8(지역 1~6 기존), 선행 지식 오류 0 · 경고 2(지역 1~6 기존) · 예외 2, 맵 7개 OK, 아트 75개 재빌드 동일. 전체 E2E **261개 통과 · 1 건너뜀**(측정 spec, 45.1분, 검증 브랜치).
 
+**그래픽 개편 머지(결정 32)**: 에이전트 1명이 `art-merge-main` 브랜치(`art-overhaul` 위)에서 `main`(지역 7, 결정 24·25)을 합쳤습니다.
+
+| 작업 | 결과 |
+|---|---|
+| 충돌 해결(`7a94e86`) | `tools/art/build.py`(경계 장식과 사막 아트 import 모두), `assets/manifest.json`(overworld 타일 순서 = 지역 타일 103종 → 타일 애니메이션 프레임 5종, 지역 7 `map.tmj` 타일 번호 그대로), 아트 재빌드, `content/regions/r02~r07` `map.tmj`를 `tools/maps/build_r0N.py`로 재생성(타일셋 머리만 바뀜), `loader.ts`(ambience와 puzzles 모두), `WorldScene.ts` import |
+| 합친 뒤 고친 것 | 지역 7 `region.json`에 ambience(기본 색 보정 + 모래 먼지 입자, 사막 전용 색 보정은 화풍 통일 때), 경계 장식 manifest에 지역 7 사막 타일 분류(오아시스 물은 밝은 물, 숨겨진 틈 `sandstone_gap`은 벽), 하네스 `?map=r07`, 옛 아트를 전제로 쓴 월드 E2E 3개(옛 시트 걷기는 `?sheet=old`로 코드가 그린 옛 시트, 몬스터 제자리는 지역 1 4프레임·지역 7 2프레임, 타일 애니메이션은 지역 1 실제 물) |
+| 화면 | [`art-overhaul/screens/`](./art-overhaul/screens/)의 `merge-r01*.png`, `merge-r07-*.png`(오아시스·협곡·나루·제단·다리 퍼즐 전후), `edges-r07-*.png` |
+
+- 전체 E2E 도중 PC가 재부팅되어(지역 3 spec 실행 중, 그때까지 실패 없음) 새 포트에서 처음부터 다시 돌렸습니다. 재부팅 전 실행이 덮어쓴 기존 스크린샷과 재실행이 덮어쓴 스크린샷(92장)은 의도한 화면이 아니라 되돌렸습니다.
+
+**검증 결과(2026-10-19, `art-merge-main`, 머지 직전)**: typecheck 통과 · 단위 테스트 **587개** · `npm run verify` 콘텐츠 실행 **6252회** 오류 0 · 경고 8, 선행 지식 오류 0 · 경고 2 · 예외 2, 아트 manifest 76개 재빌드 동일. 전체 E2E **282개 통과 · 1 건너뜀**(측정 spec, 40.5분).
+
 ## 3. 다음에 할 일
 
 Phase 3 계획은 [`phase3/plan.md`](./phase3/plan.md)에 있습니다. 지역 하나를 끝낼 때마다 검증하고 다음 지역으로 넘어갑니다. 작업 방식은 저장소 루트의 [`CLAUDE.md`](../CLAUDE.md)에 정리했습니다.
 
-### 진행 중: 그래픽 개편(2026-10-03 시작, 브랜치 `art-overhaul`)
+### 그래픽 개편(2026-10-03 시작, 브랜치 `art-overhaul`, 2026-10-19 `main`에 머지)
 
 - 사용자 요청: 걷기 애니메이션 추가, 전체 화풍을 Doloc Town(Steam, 2026-08 정식 출시한 횡스크롤 도트 농장 게임)에서 아이디어·화풍을 따와 바꾸기. 계획: [`art-overhaul/plan.md`](./art-overhaul/plan.md), 결정 16~19.
 - 지역 7 작업은 그래픽 개편 파일럿을 사용자가 확인한 뒤로 미룸.
@@ -263,7 +275,7 @@ Phase 3 계획은 [`phase3/plan.md`](./phase3/plan.md)에 있습니다. 지역 �
 | 순서 | 할 일 | 내용 |
 |---|---|---|
 | 0 | 지역 7 마무리 | **완료**: `main` 머지·push(`d2196e2`, 2026-10-19). 에이전트 worktree 폴더 삭제는 사용자가 직접(junction은 끊어 둠) |
-| 1 | 그래픽 개편 머지(결정 32) | ① 경계 장식 물거품 다듬기 → `art-overhaul`에 머지(진행 중) ② `art-overhaul`에 `main`(지역 7)을 합쳐 충돌 해결(아트 재빌드, `map.tmj` 머리 재생성, 옛 그림을 전제로 한 E2E 3개 수정) ③ typecheck·단위·verify·전체 E2E ④ `main`에 머지·push |
+| 1 | 그래픽 개편 머지(결정 32) | **완료**: 경계 장식 → `art-overhaul`, `main`(지역 7) 합치기·충돌 해결(`art-merge-main`), 전체 검사 통과, `main` 머지·push(2026-10-19). 에이전트 worktree 폴더 삭제는 사용자가 직접 |
 | 2 | **단위 3-8: 지역 8 광산** | design.md §6.2: 스택, 큐, 덱, 우선순위 큐(`heapq`). 레슨 4, 일반 12(필수 7 · 선택 5, 응용 1/1, 연습 4), 보스 1(광맥 웜: `list.pop(0)` → `deque`, 매번 정렬 → `heapq`). **막 시작 지역**이라 첫 구역에 마을 거점(design.md §6.3). 실전 시계(design.md §7.1)와 지역 8 이후 장신구 후보, 한 번에 통과한 개념의 그림자 등록(개선안 M3)은 지역 8 명세 전에 결정 |
 | 3 | 화풍 통일(다음 과제) | 결정 32 머지 뒤 지역 2~7을 코지 화풍으로 다시 그림(결정 18·28·29·32) |
 | 4 | 다듬기(틈날 때) | 아래 '알려진 한계'. 숲 아트, 그림자 실루엣이 원래 몬스터 모양이라 정체 단서가 됨(결정 24 작업에서 발견), 실제 OS 한글 입력기 확인(사용자), Firefox |
@@ -318,7 +330,7 @@ Phase 3 계획은 [`phase3/plan.md`](./phase3/plan.md)에 있습니다. 지역 �
 | 29 | 지역 7 아트 형식 | [phase3/region07-spec.md](./phase3/region07-spec.md) §11 | **`main`의 지금 형식(16×16, 2프레임)으로 그림**(2026-10-19, 추천안). 그래픽 개편 확장 때 지역 2~6과 함께 원격 `art-overhaul` 화풍으로 다시 그림 |
 | 30 | 복잡도 예측 질문의 정답 공개 시점 | region07-spec.md §9.2 | **2페이즈 통과 뒤 보상 창 또는 모래시계 부적의 목표 공개 때**(2026-10-19, 추천안). 고른 직후에는 맞았는지 말하지 않음 |
 | 31 | 고장 난 다리 위치 | region07-spec.md §6, §9.1 | **필수 경로(구역 4 → 5)**(2026-10-19, 추천안). 전투 수·필수 시간 합계에는 넣지 않음 |
-| 32 | 그래픽 개편(`art-overhaul`)을 `main`에 머지 | [art-overhaul/plan.md](./art-overhaul/plan.md) | **머지해서 코지 화풍을 `main`의 새 기준으로**(2026-10-19, 결정 18의 파일럿 확인을 겸함). 이번에는 경계 장식 → `art-overhaul`, `main`(지역 7) → `art-overhaul` 충돌 해결, 검사 통과 뒤 `main`에 머지까지. 지역 2~7을 코지 화풍으로 통일하는 확장은 다음 과제 |
+| 32 | 그래픽 개편(`art-overhaul`)을 `main`에 머지 | [art-overhaul/plan.md](./art-overhaul/plan.md) | **머지해서 코지 화풍을 `main`의 새 기준으로**(2026-10-19, 결정 18의 파일럿 확인을 겸함). 이번에는 경계 장식 → `art-overhaul`, `main`(지역 7) → `art-overhaul` 충돌 해결, 검사 통과 뒤 `main`에 머지까지. 지역 2~7을 코지 화풍으로 통일하는 확장은 다음 과제. **머지·push 완료**(2026-10-19, 사용자 요청) |
 
 ## 5. 남은 미확인 항목(Phase 2 이후에 확인)
 
