@@ -1,0 +1,43 @@
+{
+  "id": "Z0704",
+  "title": "수학 다리",
+  "kind": "function",
+  "entry": "solution",
+  "statement": "statement.md",
+  "timeLimitMs": 2000,
+  "tests": [
+    {
+      "args": "(7,)",
+      "expect": "True",
+      "public": true
+    },
+    {
+      "args": "(49,)",
+      "expect": "False",
+      "note": "경계: 완전제곱수"
+    },
+    {
+      "args": "(1,)",
+      "expect": "False",
+      "note": "경계"
+    },
+    {
+      "args": "(2,)",
+      "expect": "True"
+    },
+    {
+      "args": "(9,)",
+      "expect": "False"
+    }
+  ],
+  "hints": [
+    "49에서 반복이 어디까지 도는지 따라가 봐.",
+    "7 × 7 = 49인데 7은 확인했을까?",
+    "`while i * i <= n:`"
+  ],
+  "source": {
+    "problem": "P0701",
+    "wrong": "wrong_a.py"
+  },
+  "solvedDialogue": "bridge_fixed"
+}
