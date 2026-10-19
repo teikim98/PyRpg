@@ -1,0 +1,128 @@
+{
+  "id": "P0714",
+  "title": "[보스] 모래시계 스핑크스",
+  "kind": "stdin",
+  "enemy": {"name": "모래시계 스핑크스", "sprite": "boss_hourglass_sphinx", "attack": 40},
+  "requires": ["scroll.stream", "scroll.complexity", "scroll.lookup", "scroll.sieve", "scroll.remainder"],
+  "concept": "scroll.sieve",
+  "boss": true,
+  "phases": [
+    {
+      "phase": 1,
+      "name": "정확성",
+      "intro": "모래시계 스핑크스가 수수께끼를 냈어! 수들 가운데 소수가 몇 개인지, 그 합은 얼마인지 두 줄로 답하래. 지금은 수가 100개 이하, 크기는 10000 이하야. 0과 1, 49 같은 제곱수를 조심해!"
+    },
+    {
+      "phase": 2,
+      "name": "시간 결계",
+      "stopOnTle": true,
+      "intro": "으악, 시간 결계야! 수가 100개에서 20만 개로 늘고, 크기도 10000에서 100만까지 커졌어. 1페이즈 방법으로 이 수수께끼도 제시간에 풀 수 있을까?"
+    }
+  ],
+  "timeLimitMs": 2000,
+  "budgetUnits": 10,
+  "targetComplexity": "O(M log log M + Q)",
+  "complexityChoices": ["O(Q × M)", "O(Q√M)", "O(M log log M + Q)"],
+  "estimatedMinutes": 20,
+  "tests": [
+    {"in": "8\n2 3 4 9 11 1 0 13\n", "out": "4\n29\n", "public": true, "phase": 1, "note": "기본 동작"},
+    {"in": "1\n0\n", "out": "0\n0\n", "phase": 1, "note": "경계: Q = 1, 수가 0 하나"},
+    {"in": "3\n0 1 2\n", "out": "1\n2\n", "phase": 1, "note": "경계: 0·1·2(가장 작은 소수는 2)"},
+    {"in": "5\n49 7 25 48 47\n", "out": "2\n54\n", "phase": 1, "note": "경계: 가장 큰 수가 소수의 제곱 49"},
+    {"in": "4\n9409 97 9407 9408\n", "out": "1\n97\n", "phase": 1, "note": "경계: 가장 큰 수가 소수의 제곱 9409 = 97 × 97"},
+    {"in": "6\n4 6 8 9 10 10000\n", "out": "0\n0\n", "phase": 1, "note": "모두 합성수(답은 0과 0)"},
+    {"in": "7\n7 7 7 1 1 9973 9973\n", "out": "5\n19967\n", "phase": 1, "note": "같은 수가 여러 번(나온 만큼 셈)"},
+    {"in": "100\n2 6857 3354 5224 9973 6002 7513 9381 4813 0 2022 912 3707 7364 7207 857 1572 1 8786 1542 1070 3345 2470 8072 1869 6583 34 2620 6288 3048 6269 7349 2415 6789 6946 4849 2795 6666 1734 10000 2052 2601 5005 4178 7383 7074 8066 8934 6042 8245 9683 2647 3210 537 7865 9409 3847 1006 609 8150 338 9111 294 7928 1478 6591 8596 695 8525 1206 6065 2422 8417 2946 9367 1453 8227 9158 9617 9898 316 6436 1123 5715 7162 7185 1206 9866 7125 5506 395 1221 1653 7564 7879 9313 4474 4584 5484 6852\n", "out": "13\n60276\n", "phase": 1, "note": "경계: Q = 100, 수 ≤ 10,000(9973, 10000, 0, 1 포함)"},
+    {"gen": "gen_big.py", "genArg": "wide", "phase": 2, "note": "경계: Q = 200,000, 20만 이상의 소수 전부와 두 소수의 곱 전부(서로 다른 값 약 6만 7천 개)"},
+    {"gen": "gen_big.py", "genArg": "dense", "phase": 2, "note": "경계: Q = 200,000, 50만 이상의 큰 소수만(가장 큰 수 999983)"},
+    {"gen": "gen_big.py", "genArg": "mixed", "phase": 2, "note": "경계: Q = 200,000, 큰 소수와 두 소수의 곱에 0·1·2·4·1,000,000이 섞임"}
+  ],
+  "accepted": [
+    {
+      "file": "alt_slice.py",
+      "title": "슬라이스 대입으로 지우는 체"
+    },
+    {
+      "file": "alt_fixed.py",
+      "title": "체를 처음부터 1,000,001칸으로"
+    }
+  ],
+  "variants": [
+    {
+      "id": "P0714-v1",
+      "title": "그림자 별의 수수께끼",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"in": "6\n5 1 6 17 21 2\n", "out": "3\n24\n", "public": true, "note": "기본 동작"},
+        {"in": "1\n1\n", "out": "0\n0\n", "note": "경계: 수가 1 하나"},
+        {"in": "3\n121 11 120\n", "out": "1\n11\n", "note": "경계: 가장 큰 수가 소수의 제곱 121"},
+        {"in": "4\n10000 9999 9998 9973\n", "out": "1\n9973\n", "note": "경계: 10,000 근처"}
+      ]
+    },
+    {
+      "id": "P0714-v2",
+      "title": "멈춘 모래알 세기",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"in": "5\n29 30 31 0 1\n", "out": "2\n60\n", "public": true, "note": "기본 동작"},
+        {"in": "2\n2 2\n", "out": "2\n4\n", "note": "경계: 가장 작은 소수 2가 두 번"},
+        {"in": "4\n361 19 18 1\n", "out": "1\n19\n", "note": "경계: 가장 큰 수가 소수의 제곱 361과 1"},
+        {"in": "5\n4 6 8 9 1\n", "out": "0\n0\n", "note": "모두 소수가 아님"}
+      ]
+    }
+  ],
+  "wrong": [
+    {
+      "file": "slow.py",
+      "title": "수마다 √n까지 나눠 보는 판정(비효율 답안)",
+      "slow": true,
+      "expectFail": {"9": "TLE", "10": "TLE", "11": "TLE"},
+      "diagnosis": {
+        "when": {"verdict": "TLE"},
+        "text": "답은 맞았지만 너무 느려! 수마다 2부터 √n까지 나눠 보면 수 하나에 1000번 가까이 돌아. 20만 개면 2억 번이야. 판정 결과를 dict에 기억해 둬도 서로 다른 수가 수만 개라 크게 줄지 않아. 대신 입력의 가장 큰 수 m까지 **에라토스테네스의 체**를 한 번 만들어 두면(O(m log log m)), 수마다 `is_prime[x]`를 한 번 보는 것으로 끝나(O(Q))."
+      }
+    },
+    {
+      "file": "wrong_count.py",
+      "title": "소수의 합 없이 개수만 출력",
+      "expectFail": {"1": "WA", "2": "WA", "3": "WA", "4": "WA", "5": "WA", "6": "WA", "7": "WA", "8": "WA", "9": "WA", "10": "WA", "11": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA", "outputMatches": "^\\d+\\s*$"},
+        "text": "답이 한 줄뿐이야. 스핑크스는 두 줄을 원해: 첫째 줄에 소수의 **개수**, 둘째 줄에 소수의 **합**. 개수를 셀 때 합도 함께 더해 두고 `print`를 두 번 해."
+      }
+    },
+    {
+      "file": "wrong_small.py",
+      "title": "체를 [True] * m으로 만들어 m번 칸이 없음",
+      "expectFail": {"1": "RE", "2": "RE", "3": "RE", "4": "RE", "5": "RE", "6": "RE", "7": "RE", "8": "RE", "9": "RE", "10": "RE", "11": "RE"},
+      "diagnosis": {
+        "when": {"exception": "IndexError"},
+        "text": "체의 칸이 모자라! `[True] * m`은 0번부터 m − 1번까지라 가장 큰 수 m의 칸이 없어. 칸 번호가 곧 수니까 `[True] * (m + 1)`로 m번 칸까지 만들어(수가 0이나 1뿐이어도 1번 칸이 있게). 수가 1,000,000 이하라는 걸 알고 있으니 처음부터 `[True] * 1000001`로 잡아도 돼."
+      }
+    },
+    {
+      "file": "wrong_lt.py",
+      "title": "체를 i * i < m까지만 돌림",
+      "expectFail": {"4": "WA", "5": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA", "onlyHiddenFail": true},
+        "text": "예제는 맞았는데 숨은 시험에서 49나 9409 같은 수를 소수로 셌어. 체에서 배수를 지우는 i는 `i * i <= m`까지 돌아야 해. `<`로 두면 m이 딱 소수의 제곱(7 × 7 = 49)일 때 7이 지우러 오지 않아서 49가 소수로 남아."
+      }
+    },
+    {
+      "file": "wrong_one.py",
+      "title": "1을 소수로 셈",
+      "expectFail": {"1": "WA", "3": "WA", "7": "WA", "8": "WA", "11": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA", "onlyHiddenFail": false},
+        "text": "소수가 아닌 수를 소수로 셌어. 소수는 2 이상이라 0과 1은 소수가 아니야. 체를 만들면 `is_prime[0]`과 `is_prime[1]`을 꼭 `False`로 바꿔 둬. 수마다 나눠 보는 판정이라면 `i * i <= n`까지 나눠 보는지도 확인해(`<`면 4, 9, 49 같은 제곱수를 소수로 봐)."
+      }
+    }
+  ],
+  "hints": [
+    "수마다 처음부터 나눠 보고 있다면, 같은 일을 20만 번 되풀이하는 셈이야. 한 번에 여러 수의 답을 미리 정해 둘 수는 없을까?",
+    "에라토스테네스의 체로 입력의 가장 큰 수 m까지 '소수 표'를 한 번 만들어 두면, 수마다 `is_prime[x]`를 한 번 보는 것으로 끝나. 체를 만드는 데 O(m log log m), 20만 개를 보는 데 O(Q)야. 칸 번호가 곧 수라서 크기는 `m + 1`, `is_prime[0]`과 `is_prime[1]`은 `False`, 배수를 지우는 i는 `i * i <= m`까지. 입력은 `sys.stdin.read().split()`으로 한 번에.",
+    "```python\nimport sys\n\ndata = sys.stdin.read().split()\nq = int(data[0])\nnums = [int(x) for x in data[1:q + 1]]\nm = max(max(nums), 2)\nis_prime = [True] * (m + 1)\nis_prime[0] = False\nis_prime[1] = False\ni = 2\nwhile i * i <= m:\n    if is_prime[i]:\n        for j in range(____, m + 1, i):\n            is_prime[j] = False\n    i += 1\ncount = 0\ntotal = 0\nfor x in nums:\n    if ____:\n        count += 1\n        total += x\nprint(count)\nprint(total)\n```"
+  ],
+  "reward": {"xp": 1000, "gold": 500}
+}
