@@ -8,6 +8,11 @@ content/ 아래 데이터를 읽어서 아래를 확인한다. 하나라도 실�
 - 변형 문제(plan.md §5.1): 필드·statement 파일, 공개 1+/숨김 3+, 변형 ID 중복, 테스트 형식·4300자리,
   원래 모범답안 전부 AC, wrong_*.py는 변형마다 하나 이상 실패, 보스 slow.py는 전부 AC(시간 결계 없음)
 - 레슨: 주문서 ID, 빈칸 연습 정답 실행 결과, ```python run 블록이 에러 없이 실행되는지
+- 보스 목표 복잡도(design.md §5.3, region07-spec.md §9.2): 지역 7부터 모든 보스(중간 보스 포함)에 targetComplexity와
+  complexityChoices(서로 다른 문자열 3개, targetComplexity 포함) 필수. 지역 1~6 보스에는 요구하지 않음
+- 고장 난 다리 퍼즐(design.md §5.4, region07-spec.md §9.1, puzzles/<ID>/): 필드·파일, 공개 1+/숨김 3+, solution.py 전부 AC,
+  starter.py는 하나 이상 실패, source의 문제·오답 파일이 있고 starter.py와 차이가 작음(같은 버그), solvedDialogue가 지역 대사에 있음,
+  맵 door의 puzzle 참조. 선행 지식 검사는 tools/prereq.py가 solution.py를 source 문제의 학습 시점으로 본다
 - 선행 지식(tools/prereq.py): 레슨 introduces와 학습 시점으로 모범답안·레슨 코드는 오류, 힌트·보스 slow.py는 경고(파싱만)
 - 대사: region1-spec.md §5, region02-spec.md §5, region03-spec.md §5, region04-spec.md §5, region05-spec.md §5의 ID,
   대사 줄 형식
@@ -82,6 +87,12 @@ REQUIRED_REGION_DIALOGUES = {
         "midboss_defeated", "sign_reeds", "chest_hidden_reeds", "sign_echo_shoal", "boss_intro", "boss_defeated",
         "east_gate_locked", "to_be_continued", "region_clear",
     ],
+    # docs/phase3/region07-spec.md §10
+    "r07": [
+        "region_intro", "desert_intro", "npc_caravan_guide", "npc_hourglass_keeper", "sign_canyon", "chest_hidden_canyon",
+        "sign_bazaar_gate", "midboss_intro", "midboss_defeated", "bridge_broken", "bridge_fixed", "sign_altar",
+        "boss_intro", "boss_defeated", "east_gate_locked", "to_be_continued", "region_clear",
+    ],
 }
 # 명세가 문구를 고정한 대사(맵과 대사가 어긋나지 않도록). region05-spec.md §4: 숨겨진 길의 표지
 REQUIRED_DIALOGUE_PHRASES = {
@@ -93,6 +104,11 @@ REQUIRED_DIALOGUE_PHRASES = {
     "r06": {
         "npc_lake_keeper": "조약돌 더미 바로 북쪽의 갈대",
         "sign_reeds": "조약돌 더미 바로 북쪽의 갈대",
+    },
+    # region07-spec.md §6
+    "r07": {
+        "npc_caravan_guide": "낙타 해골 바로 북쪽의 사암 벽",
+        "sign_canyon": "낙타 해골 바로 북쪽의 사암 벽",
     },
 }
 REQUIRED_COMMON_DIALOGUES = [
@@ -109,6 +125,14 @@ PRACTICE_TARGET_DIALOGUES = ["practice_suggest", "practice_suggest_monster", "pr
 APPLIED_REWARDS = {"integrated": {"xp": 200, "gold": 100}, "discriminating": {"xp": 300, "gold": 100}}
 # 응용 전투·연습 몬스터 배치 규칙이 오류가 되는 첫 지역(design.md §6.2: 지역 1~6은 경고)
 PRACTICE_RULES_FROM_REGION = 7
+# 보스 targetComplexity·complexityChoices가 필수가 되는 첫 지역(design.md §5.3, region07-spec.md §9.2)
+COMPLEXITY_RULES_FROM_REGION = 7
+# 고장 난 다리 퍼즐(design.md §5.4, region07-spec.md §9.1, src/content/loader.ts PuzzleFile)
+PUZZLE_KEYS = {"id", "title", "kind", "entry", "statement", "timeLimitMs", "tests", "hints", "source", "solvedDialogue"}
+PUZZLE_TEST_KEYS = {"in", "out", "args", "expect", "public", "note"}
+# starter.py와 source 오답의 '다른 줄'(빈 줄·주석 줄을 뺀 뒤 더한 줄 + 지운 줄) 허용치: 이 수와 긴 쪽 줄 수의 30% 가운데 큰 값
+PUZZLE_SOURCE_MIN_CHANGED = 4
+PUZZLE_SOURCE_CHANGED_RATIO = 0.3
 # region1-spec.md §2, §3
 REQUIRED_REGION_CONTENT = {
     "r01": {
@@ -177,6 +201,12 @@ PENDING_SPRITES = {
     "r06": {
         "monster_call_frog", "monster_zip_eel", "monster_lambda_heron", "monster_nesting_lily", "monster_memo_moth",
         "boss_mirror_twins", "boss_lake_echo", "npc_lake_keeper",
+    },
+    # region07-spec.md §7
+    "r07": {
+        "monster_sand_stream", "monster_dune_snail", "monster_mirage_lizard", "monster_sieve_urn", "monster_sundial_crab",
+        "monster_caravan_ghost", "monster_dust_devil", "boss_sand_scorpion", "boss_hourglass_sphinx", "obj_bridge_broken",
+        "npc_caravan_guide", "npc_hourglass_keeper",
     },
 }
 # 맵 오브젝트 종류별 필수 props(src/contracts/world.ts)
@@ -571,6 +601,7 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
             rep.error(where, f"reward {p['reward']} != {want_reward}(design.md §7.1~7.2)")
     if p["timeLimitMs"] <= 0 or p["estimatedMinutes"] <= 0:
         rep.error(where, "timeLimitMs/estimatedMinutes는 양수")
+    check_complexity(rep, where, p, region_order)
 
     # 테스트
     tests = p["tests"]
@@ -834,6 +865,31 @@ def check_problem(rep, runner, pool, region_id, folder, scrolls, sprites, region
     return p
 
 
+def check_complexity(rep, where, p, region_order):
+    """보스 목표 복잡도와 복잡도 예측 질문의 선택지(design.md §5.3, §11.1, region07-spec.md §9.2).
+    지역 7부터 모든 보스(중간 보스 포함)에 targetComplexity와 complexityChoices 필수. complexityChoices는 보스에만,
+    서로 다른 비어 있지 않은 문자열 3개이고 targetComplexity가 그 가운데 하나(src/systems/complexity.ts validComplexityChoices와 같은 규칙)."""
+    tc = p.get("targetComplexity")
+    choices = p.get("complexityChoices")
+    if tc is not None and (not isinstance(tc, str) or not tc.strip()):
+        rep.error(where, "targetComplexity는 비어 있지 않은 문자열")
+        tc = None
+    if p.get("boss") is True and region_order >= COMPLEXITY_RULES_FROM_REGION:
+        if tc is None:
+            rep.error(where, f"지역 {COMPLEXITY_RULES_FROM_REGION}부터 보스(중간 보스 포함)는 targetComplexity 필수(design.md §5.3)")
+        if choices is None:
+            rep.error(where, f"지역 {COMPLEXITY_RULES_FROM_REGION}부터 보스는 complexityChoices(선택지 3개) 필수(region07-spec.md §9.2)")
+    if choices is None:
+        return
+    if p.get("boss") is not True:
+        rep.error(where, "complexityChoices는 보스에만(복잡도 예측 질문, design.md §5.3)")
+    elif not isinstance(choices, list) or len(choices) != 3 or \
+            not all(isinstance(c, str) and c.strip() for c in choices) or len(set(choices)) != 3:
+        rep.error(where, f"complexityChoices는 서로 다른 비어 있지 않은 문자열 3개: {choices!r}")
+    elif tc is not None and tc not in choices:
+        rep.error(where, f"targetComplexity {tc!r}가 complexityChoices {choices}에 없음")
+
+
 VARIANT_KEYS = {"id", "title", "statement", "tests"}
 VARIANT_TEST_KEYS = {"in", "out", "args", "expect", "public", "note"}
 VARIANT_IDS = {}  # 변형 ID → 문제 위치(전체에서 겹치면 안 됨)
@@ -924,6 +980,187 @@ def check_variants(rep, p, where, folder, files, judge, check_test_format, accep
                 rep.error(f"{vw} {f}", "오답이 변형의 모든 테스트를 통과함(오답을 잡는 테스트를 넣을 것)")
             else:
                 rep.info(f"{vw} {f:<12} fails={got}")
+
+
+# ---------------------------------------------------------------- 고장 난 다리 퍼즐
+
+def code_lines(src):
+    """차이를 셀 줄: 끝 공백을 지우고 빈 줄과 주석만 있는 줄을 뺀다."""
+    out = []
+    for line in src.replace("\r\n", "\n").split("\n"):
+        t = line.rstrip()
+        if t.strip() and not t.strip().startswith("#"):
+            out.append(t)
+    return out
+
+
+def changed_lines(a, b):
+    """두 코드의 다른 줄 수(difflib.ndiff에서 더한 줄 + 지운 줄)."""
+    import difflib
+    return sum(1 for d in difflib.ndiff(code_lines(a), code_lines(b)) if d[:2] in ("+ ", "- "))
+
+
+def check_puzzle(rep, runner, pool, region_id, region_order, region_folder, zid, problems, dialogues):
+    """퍼즐 하나(region07-spec.md §9.1). 문제 형식(design.md §11.1)의 부분집합 + source + solvedDialogue. 검사한 데이터(dict)를 돌려준다."""
+    folder = os.path.join(region_folder, "puzzles", zid)
+    where = f"{region_id}/{zid}"
+    z = load_json(rep, os.path.join(folder, "puzzle.json"))
+    if not isinstance(z, dict):
+        if z is not None:
+            rep.error(where, "puzzle.json은 객체")
+        return None
+    files = set(os.listdir(folder))
+    for f in ("puzzle.json", "starter.py", "solution.py"):
+        if f not in files:
+            rep.error(where, f"필수 파일 없음: {f}")
+    if set(z) - PUZZLE_KEYS:
+        rep.error(where, f"모르는 필드 {sorted(set(z) - PUZZLE_KEYS)}(허용: {sorted(PUZZLE_KEYS)})")
+    if z.get("id") != zid:
+        rep.error(where, f"id {z.get('id')!r}가 폴더 이름과 다름")
+    if not re.fullmatch(rf"Z{region_order:02d}\d\d", zid):
+        rep.error(where, f"퍼즐 ID 형식이 Z{region_order:02d}NN이 아님")
+    for key, typ in (("title", str), ("kind", str), ("statement", str), ("timeLimitMs", int), ("tests", list),
+                     ("hints", list), ("source", dict)):
+        if not isinstance(z.get(key), typ):
+            rep.error(where, f"{key} 필드가 없거나 형식이 {typ.__name__}이 아님")
+            return None
+    kind = z["kind"]
+    if kind not in ("stdin", "function"):
+        rep.error(where, f"kind {kind!r}")
+        return None
+    entry = z.get("entry", "solution")
+    if kind == "stdin" and "entry" in z:
+        rep.error(where, "entry는 함수형에만")
+    if not z["title"].strip():
+        rep.error(where, "title이 비어 있음")
+    if z["timeLimitMs"] <= 0:
+        rep.error(where, "timeLimitMs는 양수")
+    st = z["statement"].replace("./", "", 1) if z["statement"].startswith("./") else z["statement"]
+    if not st.endswith(".md") or st not in files:
+        rep.error(where, f"statement {z['statement']!r}가 퍼즐 폴더의 .md 파일이 아님")
+    if len(z["hints"]) != 3 or not all(isinstance(h, str) and h.strip() for h in z["hints"]):
+        rep.error(where, "hints는 비어 있지 않은 문자열 3개여야 함")
+    for i, h in enumerate(z["hints"]):
+        if isinstance(h, str) and inline_code_lines(h) >= 2:
+            rep.error(where, f"힌트 {i + 1}: 여러 줄 코드는 ```python 펜스 블록으로 쓸 것")
+
+    # 풀었을 때 대사: 지역 대사에 있어야 한다
+    sd = z.get("solvedDialogue")
+    if not isinstance(sd, str) or not sd:
+        rep.error(where, "solvedDialogue(풀었을 때 재생할 지역 대사 ID)가 없음")
+    elif sd not in dialogues:
+        rep.error(where, f"solvedDialogue={sd!r}가 {region_id}/dialogue.json에 없음")
+
+    # 버그를 가져온 문제와 오답 파일(design.md §5.4)
+    src = z["source"]
+    src_problem, src_wrong = src.get("problem"), src.get("wrong")
+    wrong_path = None
+    if set(src) != {"problem", "wrong"} or not isinstance(src_problem, str) or not isinstance(src_wrong, str):
+        rep.error(where, f"source는 {{problem, wrong}} 문자열: {src!r}")
+    elif src_problem not in problems:
+        rep.error(where, f"source.problem {src_problem!r}가 이 지역 문제에 없음")
+    else:
+        sp = problems[src_problem]
+        wrong_path = os.path.join(region_folder, "problems", src_problem, src_wrong)
+        if not re.fullmatch(r"wrong_[A-Za-z0-9_]+\.py", src_wrong) or not os.path.exists(wrong_path):
+            rep.error(where, f"source.wrong {src_wrong!r}가 {src_problem}의 오답 파일(wrong_*.py)이 아님")
+            wrong_path = None
+        elif src_wrong not in [w.get("file") for w in sp.get("wrong", []) if isinstance(w, dict)]:
+            rep.error(where, f"source.wrong {src_wrong!r}가 {src_problem} problem.json의 wrong[]에 없음")
+        if sp.get("kind") != kind:
+            rep.error(where, f"kind {kind!r}가 source 문제 {src_problem}의 kind {sp.get('kind')!r}와 다름")
+
+    # 테스트: 공개 1+, 숨김 3+, gen·phase 없음
+    tests = z["tests"]
+    good_tests = []
+    for i, t in enumerate(tests):
+        tw = f"{where} 테스트 {test_label(i)}"
+        if not isinstance(t, dict):
+            rep.error(tw, "테스트는 객체")
+            continue
+        if set(t) - PUZZLE_TEST_KEYS:
+            rep.error(tw, f"퍼즐 테스트에 쓰지 않는 필드 {sorted(set(t) - PUZZLE_TEST_KEYS)}(gen·phase 없음)")
+            continue
+        if kind == "stdin":
+            if not isinstance(t.get("in"), str) or not isinstance(t.get("out"), str):
+                rep.error(tw, "stdin형 테스트는 in/out 문자열")
+                continue
+            if not t["in"].endswith("\n"):
+                rep.error(tw, "in은 개행으로 끝나야 함")
+        else:
+            try:
+                if not isinstance(ast.literal_eval(t.get("args")), tuple):
+                    rep.error(tw, f"args {t.get('args')!r}가 튜플이 아님(인자 하나면 '(x,)')")
+                    continue
+                ast.literal_eval(t.get("expect"))
+            except (ValueError, SyntaxError, TypeError):
+                rep.error(tw, "함수형 테스트는 args/expect를 Python 리터럴 문자열로")
+                continue
+        good_tests.append(t)
+    publics = [t for t in tests if isinstance(t, dict) and t.get("public")]
+    hiddens = [t for t in tests if isinstance(t, dict) and not t.get("public")]
+    if len(publics) < 1 or len(hiddens) < 3:
+        rep.error(where, f"공개 {len(publics)}개, 숨김 {len(hiddens)}개(공개 1+, 숨김 3+ 필요)")
+    if len(good_tests) != len(tests):
+        return z
+
+    limit = z["timeLimitMs"] / 1000
+
+    def judge(code_file):
+        path = os.path.join(folder, code_file)
+        jobs = []
+        for t in tests:
+            if kind == "stdin":
+                jobs.append(pool.submit(runner.run, path, "stdin", stdin=t["in"], expect=t["out"], timeout=limit))
+            else:
+                jobs.append(pool.submit(runner.run, path, "function", entry=entry, args=t["args"], expect=t["expect"],
+                                        timeout=limit))
+        return [j.result() for j in jobs]
+
+    if "solution.py" in files:
+        res = judge("solution.py")
+        bad = {i + 1: r["verdict"] for i, r in enumerate(res) if r["verdict"] != "AC"}
+        if bad:
+            rep.error(where, f"solution.py(고친 코드)가 실패: {bad} {[(r['error_type'], r['error_message']) for r in res if r['verdict'] == 'RE'][:1]}")
+        else:
+            rep.info(f"{where} solution.py  OK  {len(res)}/{len(res)} AC")
+    if "starter.py" in files:
+        starter = read_text(os.path.join(folder, "starter.py"))
+        try:
+            tree = compile(starter, "starter.py", "exec", ast.PyCF_ONLY_AST)
+            if kind == "function" and not any(isinstance(n, ast.FunctionDef) and n.name == entry for n in tree.body):
+                rep.error(where, f"starter.py에 def {entry}(...)가 없음")
+        except SyntaxError as e:
+            rep.error(where, f"starter.py 문법 오류 {e}(버그 수정 퍼즐의 시작 코드는 실행되는 코드)")
+        res = judge("starter.py")
+        fails = {i + 1: r["verdict"] for i, r in enumerate(res) if r["verdict"] != "AC"}
+        if not fails:
+            rep.error(where, "starter.py(버그가 든 시작 코드)가 모든 테스트를 통과함. 버그가 드러나는 테스트를 넣을 것(design.md §5.4)")
+        else:
+            rep.info(f"{where} starter.py fails={fails}")
+        if wrong_path:
+            n = changed_lines(read_text(wrong_path), starter)
+            size = max(len(code_lines(read_text(wrong_path))), len(code_lines(starter)))
+            allowed = max(PUZZLE_SOURCE_MIN_CHANGED, int(size * PUZZLE_SOURCE_CHANGED_RATIO))
+            if n > allowed:
+                rep.error(where, f"starter.py가 source 오답 {src_problem}/{src_wrong}와 {n}줄 다름(허용 {allowed}줄). "
+                                 "같은 버그를 담을 것(design.md §5.4)")
+            else:
+                rep.info(f"{where} starter.py ↔ {src_problem}/{src_wrong} 다른 줄 {n}")
+    return z
+
+
+def check_puzzles(rep, runner, pool, region_id, region_order, region_folder, problems, dialogues):
+    """지역의 퍼즐 폴더 전부 → {퍼즐 ID: 데이터}."""
+    out = {}
+    zdir = os.path.join(region_folder, "puzzles")
+    for zid in sorted(os.listdir(zdir)) if os.path.isdir(zdir) else []:
+        if not os.path.isdir(os.path.join(zdir, zid)):
+            continue
+        z = check_puzzle(rep, runner, pool, region_id, region_order, region_folder, zid, problems, dialogues)
+        if z is not None:
+            out[zid] = z
+    return out
 
 
 # ---------------------------------------------------------------- 레슨
@@ -1031,7 +1268,7 @@ def tiled_props(obj):
     return props
 
 
-def check_map(rep, region_id, map_path, problems, lessons, dialogues, scrolls, sprites, items):
+def check_map(rep, region_id, map_path, problems, lessons, dialogues, scrolls, sprites, items, puzzles=None):
     where = f"{region_id}/map.tmj"
     m = load_json(rep, map_path)
     if m is None:
@@ -1072,6 +1309,12 @@ def check_map(rep, region_id, map_path, problems, lessons, dialogues, scrolls, s
                 rep.error(ow, f"problem={props.get('problem')!r} 문제가 없음")
         if otype == "chest" and "item" in props and props["item"] not in items:
             rep.error(ow, f"item={props['item']!r} 아이템이 items.json에 없음")
+        # 고장 난 다리(region07-spec.md §9.1): door의 puzzle은 이 지역의 퍼즐
+        if "puzzle" in props:
+            if otype != "door":
+                rep.error(ow, "puzzle 속성은 door에만")
+            elif props["puzzle"] not in (puzzles or {}):
+                rep.error(ow, f"puzzle={props['puzzle']!r} 퍼즐이 {region_id}/puzzles/에 없음")
         if otype == "rune" and "lesson" not in props:
             rep.error(ow, "rune에 lesson 없음")
         if otype in ("sign", "npc") and "dialogue" not in props:
@@ -1092,6 +1335,10 @@ def check_map(rep, region_id, map_path, problems, lessons, dialogues, scrolls, s
     for lid in lessons:
         if lid not in placed_lessons:
             rep.error(where, f"레슨 {lid}의 비석이 맵에 없음")
+    placed_puzzles = {p.get("puzzle") for t, p in ids.values() if t == "door"}
+    for zid in puzzles or {}:
+        if zid not in placed_puzzles:
+            rep.error(where, f"퍼즐 {zid}의 door(puzzle={zid})가 맵에 없음")
     if not any(t == "spawn" for t, _ in ids.values()):
         rep.error(where, "spawn 오브젝트가 없음")
 
@@ -1299,6 +1546,7 @@ def check_region(rep, runner, pool, folder, sprites, common_dialogues, items):
         if not set(problems[m]["requires"]) < set(scrolls):
             rep.error(rid, f"중간 보스 {m}의 requires는 지역 주문서의 일부여야 함")
     check_practice_applied(rep, rid, order, problems, scrolls)
+    puzzles = check_puzzles(rep, runner, pool, rid, order, folder, problems, dialogues)
 
     # 명세(region1-spec.md)와 대조
     spec = REQUIRED_REGION_CONTENT.get(rid)
@@ -1319,7 +1567,7 @@ def check_region(rep, runner, pool, folder, sprites, common_dialogues, items):
     # 맵(월드 담당이 만든다. 없으면 건너뜀)
     map_path = os.path.join(folder, "map.tmj")
     if os.path.exists(map_path):
-        check_map(rep, rid, map_path, problems, lessons, {**common_dialogues, **dialogues}, scrolls, sprites, items)
+        check_map(rep, rid, map_path, problems, lessons, {**common_dialogues, **dialogues}, scrolls, sprites, items, puzzles)
     else:
         rep.warn(rid, "map.tmj가 없어서 맵 오브젝트 참조 검사를 건너뜀")
 

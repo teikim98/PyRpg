@@ -25,10 +25,10 @@
    "name": "overworld",
    "image": "../../../assets/tiles/overworld.png",
    "imagewidth": 128,
-   "imageheight": 192,
+   "imageheight": 224,
    "tilewidth": 16,
    "tileheight": 16,
-   "tilecount": 93,
+   "tilecount": 108,
    "columns": 8,
    "margin": 0,
    "spacing": 0,
@@ -1003,29 +1003,7 @@
     },
     {
      "id": 88,
-     "type": "water_a1",
-     "properties": [
-      {
-       "name": "blocking",
-       "type": "bool",
-       "value": true
-      }
-     ]
-    },
-    {
-     "id": 89,
-     "type": "water_a2",
-     "properties": [
-      {
-       "name": "blocking",
-       "type": "bool",
-       "value": true
-      }
-     ]
-    },
-    {
-     "id": 90,
-     "type": "grass_flower_a1",
+     "type": "desert_sand",
      "properties": [
       {
        "name": "blocking",
@@ -1035,8 +1013,30 @@
      ]
     },
     {
+     "id": 89,
+     "type": "desert_path",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 90,
+     "type": "desert_dune",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
      "id": 91,
-     "type": "flower_bed_a1",
+     "type": "sandstone_wall",
      "properties": [
       {
        "name": "blocking",
@@ -1047,6 +1047,171 @@
     },
     {
      "id": 92,
+     "type": "sandstone_gap",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 93,
+     "type": "camel_skull",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 94,
+     "type": "oasis_water",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 95,
+     "type": "palm_tree",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 96,
+     "type": "cactus",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 97,
+     "type": "ruin_pillar",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 98,
+     "type": "star_floor",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 99,
+     "type": "sand_canal",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 100,
+     "type": "canal_bridge",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 101,
+     "type": "altar_floor",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 102,
+     "type": "buried_hourglass",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 103,
+     "type": "water_a1",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 104,
+     "type": "water_a2",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 105,
+     "type": "grass_flower_a1",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 106,
+     "type": "flower_bed_a1",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 107,
      "type": "lamp_post_a1",
      "properties": [
       {
@@ -1657,6 +1822,16 @@
        "name": "openDialogue",
        "type": "string",
        "value": "to_be_continued"
+      },
+      {
+       "name": "target",
+       "type": "string",
+       "value": "r07"
+      },
+      {
+       "name": "targetSpawn",
+       "type": "string",
+       "value": "spawn_west"
       }
      ]
     },

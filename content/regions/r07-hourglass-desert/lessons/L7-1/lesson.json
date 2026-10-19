@@ -1,0 +1,22 @@
+{
+  "id": "L7-1",
+  "title": "흘림의 주문: 끝까지 읽기와 try/except",
+  "scroll": {
+    "id": "scroll.stream",
+    "name": "흘림의 주문서",
+    "summary": "줄 수를 모르는 입력은 끝까지 읽는다. `sys.stdin.read()`는 남은 입력 전체를 문자열 하나로 주고, 인자 없는 `.split()`은 공백·줄바꿈으로 자르며 빈 조각을 버린다(`split(\"\\n\")`은 끝에 `''`이 생겨 `int('')`가 ValueError). `for line in sys.stdin:`은 한 줄씩(끝 `\\n` 포함). `try:` 아래에서 에러가 나면 이름이 맞는 `except ValueError:`로 가서 이어 간다. `except`는 여러 개 둘 수 있고, 이름 없는 `except:`는 오타까지 삼키니 피한다. `input()`은 끝에서 `EOFError`: `while True` + `try` + `except EOFError: break`. `readline()`은 끝에서 `''`."
+  },
+  "introduces": [
+    "api:sys.stdin",
+    "api:sys.stdin.read",
+    "try"
+  ],
+  "exercise": {
+    "kind": "blank",
+    "prompt": "입력이 끝나면 반복을 멈추도록 빈칸에 받을 에러의 이름을 채워 봐. 입력 `4`, `9`, `2`에서 가장 큰 수 `9`가 나와야 해.",
+    "code": "best = 0\nwhile True:\n    try:\n        n = int(input())\n    except ___:\n        break\n    if n > best:\n        best = n\nprint(best)\n",
+    "stdin": "4\n9\n2\n",
+    "expectedOutput": "9\n",
+    "answer": "EOFError"
+  }
+}

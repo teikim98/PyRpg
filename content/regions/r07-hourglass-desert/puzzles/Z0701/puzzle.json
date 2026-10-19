@@ -1,0 +1,26 @@
+{
+  "id": "Z0701",
+  "title": "부서진 수로 다리",
+  "kind": "function",
+  "entry": "solution",
+  "statement": "statement.md",
+  "timeLimitMs": 2000,
+  "tests": [
+    {"args": "(13,)", "expect": "True", "public": true, "note": "기본 동작: 소수 번호의 돌"},
+    {"args": "(49,)", "expect": "False", "public": true, "note": "경계: 무너진 49번 돌(7 × 7)"},
+    {"args": "(4,)", "expect": "False", "note": "경계: 가장 작은 완전제곱수(2 × 2)"},
+    {"args": "(2,)", "expect": "True", "note": "경계: 가장 작은 소수"},
+    {"args": "(1,)", "expect": "False", "note": "경계: 1은 소수가 아님"},
+    {"args": "(97,)", "expect": "True", "note": "두 자리 소수"},
+    {"args": "(961,)", "expect": "False", "note": "완전제곱수(31 × 31)"},
+    {"args": "(999002449,)", "expect": "False", "note": "경계: 큰 완전제곱수(31607 × 31607)"},
+    {"args": "(999999937,)", "expect": "True", "note": "경계: 10억 이하에서 가장 큰 소수"}
+  ],
+  "hints": [
+    "시작 코드는 거의 맞아. 49번 돌에서 `i`가 2, 3, 4, …로 커질 때 어디까지 나눠 보고 멈추는지 한 단계씩 따라가 봐.",
+    "`i = 7`이면 `i * i`가 49로 `n`과 딱 같아져. 그런데 `while i * i < n`은 같을 때 멈춰서 7로 나눠 보지 못해. 비교 기호 하나만 바꾸면 돼.",
+    "`while i * i < n:`을 `while i * i <= n:`으로 고치면 49 = 7 × 7, 961 = 31 × 31 같은 완전제곱수도 7, 31로 나눠 보고 걸러 내."
+  ],
+  "source": {"problem": "P0708", "wrong": "wrong_a.py"},
+  "solvedDialogue": "bridge_fixed"
+}

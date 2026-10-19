@@ -584,7 +584,20 @@ def load_regions(regions_dir):
             data = _json(os.path.join(pf, "problem.json"))
             if isinstance(data, dict):
                 problems.append({"rid": rid, "id": pid, "folder": pf, "data": data})
-        out.append({"rid": rid, "folder": folder, "lessons": lessons, "problems": problems})
+        # 고장 난 다리 퍼즐(region07-spec.md §9.1): solution.py를 문제처럼 검사하고, 학습 시점은 source 문제와 같게
+        # (data에 source 문제의 requires를 넣는다. 시작 코드 starter.py의 태그는 문제와 같이 허용)
+        by_id = {p["id"]: p["data"] for p in problems}
+        puzzles = []
+        zdir = os.path.join(folder, "puzzles")
+        for zid in sorted(os.listdir(zdir) if os.path.isdir(zdir) else []):
+            zf = os.path.join(zdir, zid)
+            data = _json(os.path.join(zf, "puzzle.json"))
+            if not isinstance(data, dict):
+                continue
+            src = data.get("source") if isinstance(data.get("source"), dict) else {}
+            requires = (by_id.get(src.get("problem")) or {}).get("requires") or []
+            puzzles.append({"rid": rid, "id": zid, "folder": zf, "data": {"requires": requires, "hints": data.get("hints") or []}})
+        out.append({"rid": rid, "folder": folder, "lessons": lessons, "problems": problems, "puzzles": puzzles})
     return out
 
 
@@ -821,7 +834,7 @@ class _Checker:
             for les in reg["lessons"]:
                 self.check_lesson(les, known)
                 known |= set(self.intro[les["id"]])
-            for prob in reg["problems"]:
+            for prob in reg["problems"] + reg.get("puzzles", []):
                 self.check_problem(prob, reg["lessons"], prior)
         return True
 

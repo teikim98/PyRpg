@@ -21,6 +21,7 @@ import {
   overheadTileIndices,
 } from "./grid";
 import { computeEdgeLayers, countEdgePieces, resolveEdgeDecor } from "./edgeDecor";
+import { isStaticObject, objectSpriteKey } from "./objectSprite";
 import { makeSpriteCanvas, makeTilesetCanvas } from "./placeholders";
 import { type PhaserTileAnimData, type ResolvedTileAnimation, countAnimatedCells, phaserTileData, resolveTileAnimations } from "./tileAnim";
 import { type ParsedMap, parseTiledMap } from "./tiled";
@@ -40,19 +41,9 @@ const VALID_FACINGS: readonly Facing[] = ["up", "down", "left", "right"];
 const tilesetKey = (name: string) => `tileset:${name}`;
 const EDGE_KEY = "edgeDecor";
 
-/** 오브젝트 종류별 기본 스프라이트(논리 이름) */
-const TYPE_SPRITE: Partial<Record<MapObjectDef["type"], string>> = {
-  sign: "obj_sign",
-  chest: "obj_chest",
-  door: "obj_door",
-  campfire: "obj_campfire",
-  rune: "obj_rune",
-  warp: "obj_door",
-  board: "obj_board",
-  shop: "obj_shop",
-};
 /** 닫힘/열림 두 프레임이라 제자리 애니메이션을 하지 않는 스프라이트 */
-const STATIC_SPRITES = new Set(["obj_chest", "obj_door"]);
+// obj_bridge_broken: 고장 난 다리(region07-spec.md §7, 정지 그림). door에 그린 그림은 objectSprite.ts isStaticObject로도 멈춘다
+const STATIC_SPRITES = new Set(["obj_chest", "obj_door", "obj_bridge_broken"]);
 
 function isCharacterSprite(key: string): boolean {
   return key === "player" || key === "nuri" || key.startsWith("npc_");
@@ -417,14 +408,8 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private spriteFor(def: MapObjectDef): string | null {
-    let key: string | undefined;
-    if (def.type === "trigger" || def.type === "spawn") return null;
-    if (def.type === "monster") {
-      const problem = this.region?.problems?.find((p) => p.id === def.props.problem);
-      key = problem?.enemy?.sprite;
-    }
-    key ??= typeof def.props.sprite === "string" ? def.props.sprite : undefined;
-    key ??= def.type === "monster" ? "monster_type_slime" : def.type === "npc" ? "npc_villager" : TYPE_SPRITE[def.type];
+    // door의 sprite 속성(예: 고장 난 다리)은 manifest에 있을 때만 쓴다(src/game/objectSprite.ts)
+    const key = objectSpriteKey(def, this.region?.problems, (name) => name in manifest.sprites);
     if (!key) return null;
     if (!this.textures.exists(key)) this.ensureSprite(key);
     return key;
@@ -448,7 +433,7 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
     const idle = `${key}:idle`;
-    if (this.anims.exists(idle)) {
+    if (!isStaticObject(def, key) && this.anims.exists(idle)) {
       s.anims.play(idle);
       // 같은 종류가 한꺼번에 움직이지 않도록 시작 프레임을 엇갈리게
       const n = this.idleFrames(key);

@@ -1,0 +1,93 @@
+{
+  "id": "P0711",
+  "title": "눈금 바꾸기",
+  "kind": "function",
+  "entry": "solution",
+  "enemy": {"name": "그림자 바늘 게", "sprite": "monster_sundial_crab", "attack": 20},
+  "requires": ["scroll.remainder"],
+  "concept": "scroll.remainder",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 9,
+  "tests": [
+    {"args": "('1011', 2, 8)", "expect": "'13'", "public": true, "note": "기본 동작"},
+    {"args": "('0', 10, 2)", "expect": "'0'", "note": "경계: 값이 0"},
+    {"args": "('FF', 16, 2)", "expect": "'11111111'", "note": "16진법 → 2진법"},
+    {"args": "('255', 10, 16)", "expect": "'FF'", "note": "10 이상인 숫자는 글자로"},
+    {"args": "('A', 11, 10)", "expect": "'10'", "note": "11진법의 A"},
+    {"args": "('1', 2, 16)", "expect": "'1'", "note": "경계: 한 자리"},
+    {"args": "('12', 3, 3)", "expect": "'12'", "note": "같은 진법"},
+    {"args": "('7B', 16, 7)", "expect": "'234'", "note": "16진법 → 7진법"},
+    {"args": "('1000', 10, 12)", "expect": "'6B4'", "note": "12진법(가운데 자리가 B)"},
+    {"args": "('DE0B6B3A7640000', 16, 10)", "expect": "'1000000000000000000'", "note": "경계: 가장 큰 값(10^18)"},
+    {"args": "('1000000000000000000', 10, 16)", "expect": "'DE0B6B3A7640000'", "note": "경계: 가장 큰 값을 16진법으로"},
+    {"args": "('1000000000000000000', 10, 2)", "expect": "'110111100000101101101011001110100111011001000000000000000000'", "note": "경계: 가장 긴 결과(2진법 60자리)"}
+  ],
+  "variants": [
+    {
+      "id": "P0711-v1",
+      "title": "별 지도의 눈금",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"args": "('120', 3, 10)", "expect": "'15'", "public": true, "note": "기본 동작"},
+        {"args": "('0', 5, 9)", "expect": "'0'", "note": "경계: 값이 0"},
+        {"args": "('3E8', 16, 12)", "expect": "'6B4'", "note": "10 이상인 숫자"},
+        {"args": "('777', 8, 2)", "expect": "'111111111'", "note": "8진법 → 2진법"},
+        {"args": "('1000000000000000000', 10, 16)", "expect": "'DE0B6B3A7640000'", "note": "경계: 가장 큰 값"}
+      ]
+    },
+    {
+      "id": "P0711-v2",
+      "title": "시장 저울의 눈금",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"args": "('44', 5, 4)", "expect": "'120'", "public": true, "note": "기본 동작"},
+        {"args": "('0', 12, 2)", "expect": "'0'", "note": "경계: 값이 0"},
+        {"args": "('C3', 16, 10)", "expect": "'195'", "note": "16진법 → 10진법"},
+        {"args": "('314', 10, 16)", "expect": "'13A'", "note": "10 이상인 숫자"},
+        {"args": "('DE0B6B3A7640000', 16, 10)", "expect": "'1000000000000000000'", "note": "경계: 가장 큰 값"}
+      ]
+    }
+  ],
+  "extraDiagnoses": [
+    {
+      "when": {"verdict": "WA", "outputMatches": "^''$", "onlyHiddenFail": false},
+      "text": "아직 빈 문자열 그대로야. 먼저 `int(s, k)`로 `s`를 보통 정수로 읽고, 그 정수를 `b`로 계속 나누면서 나머지를 모아 봐. `'1011'`(2진법)은 11이고, 11을 8진법으로 쓰면 `'13'`이야."
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_zero.py",
+      "title": "값이 0이면 빈 문자열을 돌려줌",
+      "expectFail": {"2": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA", "outputMatches": "^''$", "onlyHiddenFail": true},
+        "text": "값이 0일 때 빈 문자열이 나왔어. `while value > 0:`은 0에서 한 번도 돌지 않아서 모은 자리가 하나도 없거든. 반복 전에 `if value == 0: return \"0\"`으로 따로 처리하자. 0은 어느 진법으로 써도 `\"0\"`이야."
+      }
+    },
+    {
+      "file": "wrong_noreverse.py",
+      "title": "나머지를 모은 순서 그대로 이어 붙임(뒤집지 않음)",
+      "expectFail": {"1": "WA", "5": "WA", "7": "WA", "8": "WA", "9": "WA", "10": "WA", "11": "WA", "12": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA", "onlyHiddenFail": false},
+        "text": "11을 8진법으로 바꿨는데 `'31'`처럼 거꾸로 나왔다면, 나머지를 모은 순서 그대로 붙인 거야. `divmod(value, b)`의 나머지는 **가장 낮은 자리부터** 나와(11 = 1 × 8 + 3이라 3이 먼저). 다 모은 다음 `out[::-1]`로 뒤집어서 이어 붙이자."
+      }
+    },
+    {
+      "file": "wrong_digit.py",
+      "title": "10 이상인 나머지를 str(r)로 붙임",
+      "expectFail": {"4": "WA", "9": "WA", "11": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA", "onlyHiddenFail": true},
+        "text": "255를 16진법으로 바꾸면 `'FF'`인데 `'1515'`처럼 나왔다면, 나머지 15를 `str(15)`로 두 글자 `'15'`로 붙인 거야. 한 자리에는 글자 하나만 들어가야 해. `\"0123456789ABCDEF\"[r]`처럼 나머지를 칸 번호로 써서 글자 하나로 바꾸자."
+      }
+    }
+  ],
+  "hints": [
+    "두 단계로 나눠 봐. `k`진법 문자열을 먼저 보통 정수로 읽고, 그 정수를 `b`진법으로 다시 적는 거야. 읽는 쪽은 Python이 한 번에 해 주는 방법이 있었지?",
+    "`int(s, k)`로 정수를 얻고, `divmod(value, b)`로 몫과 나머지를 되풀이해 구해. 나머지는 **낮은 자리부터** 나오니 모은 뒤 뒤집어야 하고, 10 이상인 나머지는 `\"0123456789ABCDEF\"[r]`로 글자 하나로 바꿔. 값이 0이면 반복이 돌지 않으니 `\"0\"`을 따로 돌려줘.",
+    "```python\nDIGITS = \"0123456789ABCDEF\"\n\n\ndef solution(s, k, b):\n    value = int(s, k)\n    if value == 0:\n        return ____\n    out = []\n    while value > 0:\n        value, r = divmod(value, b)\n        out.append(DIGITS[r])\n    return \"\".join(____)\n```"
+  ],
+  "reward": {"xp": 100, "gold": 50}
+}

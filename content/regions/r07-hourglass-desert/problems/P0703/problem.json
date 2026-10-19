@@ -1,0 +1,85 @@
+{
+  "id": "P0703",
+  "title": "두 겹 모래시계",
+  "kind": "function",
+  "entry": "solution",
+  "enemy": {"name": "겹껍데기 달팽이", "sprite": "monster_dune_snail", "attack": 20},
+  "requires": ["scroll.complexity"],
+  "concept": "scroll.complexity",
+  "boss": false,
+  "practice": true,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 5,
+  "tests": [
+    {"args": "(4,)", "expect": "6", "public": true, "note": "기본 동작"},
+    {"args": "(1,)", "expect": "0", "note": "경계: n = 1(안쪽 반복이 한 번도 돌지 않음)"},
+    {"args": "(2,)", "expect": "1", "note": "n = 2"},
+    {"args": "(10,)", "expect": "45", "note": "n = 10"},
+    {"args": "(1000,)", "expect": "499500", "note": "n = 1000(그대로 돌려도 끝나는 크기)"},
+    {"args": "(100000,)", "expect": "4999950000", "note": "n = 100,000(그대로 돌리면 50억 번)"},
+    {"args": "(999999999,)", "expect": "499999998500000001", "note": "실수로 나누면 끝자리가 틀어지는 큰 n"},
+    {"args": "(1000000000,)", "expect": "499999999500000000", "note": "경계: n = 10억"}
+  ],
+  "variants": [
+    {
+      "id": "P0703-v1",
+      "title": "오아시스 악수 인사",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"args": "(5,)", "expect": "10", "public": true, "note": "기본 동작"},
+        {"args": "(1,)", "expect": "0", "note": "경계: 한 명"},
+        {"args": "(987654321,)", "expect": "487730528401158360", "note": "큰 n(실수로 나누면 틀어짐)"},
+        {"args": "(30,)", "expect": "435", "note": "n = 30"}
+      ]
+    },
+    {
+      "id": "P0703-v2",
+      "title": "야영지 말뚝 밧줄",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"args": "(3,)", "expect": "3", "public": true, "note": "기본 동작"},
+        {"args": "(2,)", "expect": "1", "note": "경계: 말뚝 둘"},
+        {"args": "(999999999,)", "expect": "499999998500000001", "note": "경계: 아주 큰 n"},
+        {"args": "(7,)", "expect": "21", "note": "n = 7"}
+      ]
+    }
+  ],
+  "extraDiagnoses": [
+    {"when": {"verdict": "WA", "outputMatches": "^0$"}, "text": "아직 `0` 그대로야. `i = 0`일 때 안쪽 줄이 몇 번 도는지, `i = 1`일 때는 몇 번인지 차례로 적어 보면 규칙이 보여."}
+  ],
+  "wrong": [
+    {
+      "file": "wrong_loop.py",
+      "title": "주문을 그대로 돌려서 셈(O(N²))",
+      "expectFail": {"6": "TLE", "7": "TLE", "8": "TLE"},
+      "diagnosis": {
+        "when": {"verdict": "TLE"},
+        "text": "작은 `n`은 맞는데 큰 `n`에서 모래시계가 다 떨어졌어! 이중 반복을 그대로 돌리면 약 `n² / 2`번이라, `n = 10만`이면 50억 번이야. Python은 1초에 대략 천만 번 안팎이니 끝나지 않아. `i`마다 안쪽 반복이 몇 번 도는지 적어 보고, 그 합을 `n`의 식 하나로 나타내 봐."
+      }
+    },
+    {
+      "file": "wrong_div.py",
+      "title": "/로 나눠 실수(float)가 됨",
+      "expectFail": {"7": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA", "outputMatches": "e\\+|\\.\\d"},
+        "text": "식은 맞는데 아주 큰 `n`에서 끝자리가 틀어졌어. `/`로 나누면 결과가 실수(`float`)가 되는데, 실수는 큰 수의 모든 자리를 정확히 담지 못해. `n * (n - 1)`은 늘 짝수라서 정수 나눗셈 `//`로 딱 나누어떨어져."
+      }
+    },
+    {
+      "file": "wrong_plus.py",
+      "title": "n * (n + 1) // 2(i와 j가 같은 경우까지 셈)",
+      "expectFail": {"1": "WA", "2": "WA", "3": "WA", "4": "WA", "5": "WA", "6": "WA", "7": "WA", "8": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA"},
+        "text": "조금씩 많이 셌어. 안쪽 반복은 `range(i + 1, n)`이라 `j`가 `i + 1`부터 시작해. `i = 0`일 때 `n - 1`번, `i = 1`일 때 `n - 2`번, …, 마지막엔 0번이야. `1 + 2 + … + n`이 아니라 `0 + 1 + … + (n - 1)`의 합이지."
+      }
+    }
+  ],
+  "hints": [
+    "직접 돌리지 말고 세어 보자. `i = 0`일 때 안쪽 줄은 몇 번 돌까? `i = 1`일 때는? 마지막 `i = n - 1`일 때는?",
+    "`(n - 1) + (n - 2) + … + 1 + 0`이야. 1부터 `m`까지의 합은 `m * (m + 1) // 2`였지? 여기에 `m = n - 1`을 넣어 봐. 나눗셈은 실수가 되지 않게 `//`로.",
+    "```python\ndef solution(n):\n    return n * (____) // 2\n```"
+  ],
+  "reward": {"xp": 100, "gold": 50}
+}

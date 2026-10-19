@@ -1,0 +1,20 @@
+{
+  "id": "L7-3",
+  "title": "찾음의 주문: set과 dict로 빨리 찾기",
+  "scroll": {
+    "id": "scroll.lookup",
+    "name": "찾음의 주문서",
+    "summary": "list의 `x in arr`는 앞에서부터 훑어서 O(N), set·dict의 `in`은 해시(번호표)로 바로 찾아 평균 O(1). Q번 찾으면 list는 O(N × Q), set은 O(N + Q). set은 반복 밖에서 한 번만 만든다(반복 안의 `set(arr)`은 매번 O(N)). 본 것은 `seen = set()`에 `add`, 개수는 `d[x] = d.get(x, 0) + 1`. 집합 내포 `{식 for x in arr}`, dict 내포 `{키: 값 for x in arr}`. 빈 `{}`는 dict, 빈 set은 `set()`."
+  },
+  "introduces": [
+    "dictcomp",
+    "setcomp"
+  ],
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 낱말 하나를 채워서 집합 내포를 완성해 봐. 대소문자만 다른 이름은 같은 이름이라, 서로 다른 이름은 `3`개야.",
+    "code": "names = [\"Sand\", \"sand\", \"SUN\", \"sun\", \"Dune\"]\nunique = {name.lower() ___ name in names}\nprint(len(unique))\n",
+    "expectedOutput": "3\n",
+    "answer": "for"
+  }
+}
