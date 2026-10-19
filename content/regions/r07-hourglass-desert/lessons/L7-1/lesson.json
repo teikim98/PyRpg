@@ -6,5 +6,9 @@
     "name": "흘림의 주문서",
     "summary": "(임시 요약: 콘텐츠 담당이 채움)"
   },
-  "introduces": []
+  "introduces": [
+    "api:sys.stdin",
+    "api:sys.stdin.read",
+    "try"
+  ]
 }
