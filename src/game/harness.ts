@@ -1,5 +1,5 @@
-// dev/world.html용 하네스: 지역 맵을 직접 불러 월드만 띄운다(기본 지역 1, ?map=r02면 지역 2, ?map=r03이면 지역 3.
-// ?sheet=new·?tileanim=test·?fx=off는 harnessOptions 참고).
+// dev/world.html용 하네스: 지역 맵을 직접 불러 월드만 띄운다(기본 지역 1, ?map=r02~r06이면 그 지역.
+// ?sheet=new·?tileanim=test·?fx=off·?edges=off는 harnessOptions 참고).
 // window.__world = 컨트롤러, window.__events = 콜백 기록(E2E에서 읽는다).
 import mapRaw from "../../content/regions/r01-echo-village/map.tmj?raw";
 import mapRawR02 from "../../content/regions/r02-crossroad-forest/map.tmj?raw";
@@ -7,6 +7,12 @@ import mapRawR03 from "../../content/regions/r03-goblin-cave/map.tmj?raw";
 import regionR01 from "../../content/regions/r01-echo-village/region.json";
 import regionR02 from "../../content/regions/r02-crossroad-forest/region.json";
 import regionR03 from "../../content/regions/r03-goblin-cave/region.json";
+import mapRawR04 from "../../content/regions/r04-grand-library/map.tmj?raw";
+import mapRawR05 from "../../content/regions/r05-trade-port/map.tmj?raw";
+import mapRawR06 from "../../content/regions/r06-mirror-lake/map.tmj?raw";
+import regionR04 from "../../content/regions/r04-grand-library/region.json";
+import regionR05 from "../../content/regions/r05-trade-port/region.json";
+import regionR06 from "../../content/regions/r06-mirror-lake/region.json";
 import type { Problem, Region, RegionAmbience } from "../contracts/content";
 import type { MapObjectDef, WorldController, WorldOptions } from "../contracts/world";
 import { createWorld } from "./index";
@@ -69,7 +75,20 @@ const ENEMY_SPRITES_R03: Record<string, string> = {
   P0311: "boss_goblin_chief",
 };
 
-type HarnessMap = "r01" | "r02" | "r03";
+/** 지역 4~6은 problem.json의 enemy.sprite를 그대로 쓴다(그래픽 확인용) */
+const PROBLEM_JSON = import.meta.glob<{ id: string; enemy?: { sprite?: string } }>(
+  "../../content/regions/r0[456]-*/problems/*/problem.json",
+  { eager: true, import: "default" },
+);
+function enemySprites(dir: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [path, p] of Object.entries(PROBLEM_JSON)) {
+    if (path.includes(`/${dir}/`) && p.enemy?.sprite) out[p.id] = p.enemy.sprite;
+  }
+  return out;
+}
+
+type HarnessMap = "r01" | "r02" | "r03" | "r04" | "r05" | "r06";
 const HARNESS_MAPS: Record<
   HarnessMap,
   { raw: string; sprites: Record<string, string>; name: string; order: number; ambience?: RegionAmbience }
@@ -77,6 +96,9 @@ const HARNESS_MAPS: Record<
   r01: { raw: mapRaw, sprites: ENEMY_SPRITES, name: "에코 마을", order: 1, ambience: regionR01.ambience },
   r02: { raw: mapRawR02, sprites: ENEMY_SPRITES_R02, name: "갈림길 숲", order: 2, ambience: regionR02.ambience },
   r03: { raw: mapRawR03, sprites: ENEMY_SPRITES_R03, name: "고블린 동굴", order: 3, ambience: regionR03.ambience },
+  r04: { raw: mapRawR04, sprites: enemySprites("r04-grand-library"), name: regionR04.name, order: 4, ambience: regionR04.ambience },
+  r05: { raw: mapRawR05, sprites: enemySprites("r05-trade-port"), name: regionR05.name, order: 5, ambience: regionR05.ambience },
+  r06: { raw: mapRawR06, sprites: enemySprites("r06-mirror-lake"), name: regionR06.name, order: 6, ambience: regionR06.ambience },
 };
 
 export function buildHarnessRegion(which: HarnessMap = "r01"): Region {
@@ -95,6 +117,7 @@ export function buildHarnessRegion(which: HarnessMap = "r01"): Region {
  * - ?sheet=new: 플레이어·누리·NPC를 코드로 그린 새 형식(16×24, 6×4) 시트로, 몬스터·보스는 4프레임으로
  * - ?tileanim=test: 물 타일을 [water, path] 2프레임(4fps)으로 바꿔 보이게
  * - ?fx=off: 화면 연출을 끈 채로 시작
+ * - ?edges=off: 경계 장식(결정 20)을 그리지 않음(전후 비교용)
  */
 export function harnessOptions(search: string): WorldOptions {
   const q = new URLSearchParams(search);
@@ -111,6 +134,7 @@ export function harnessOptions(search: string): WorldOptions {
   }
   if (q.get("tileanim") === "test") options.tileAnimations = { water: { frames: ["water", "path"], fps: 4 } };
   if (q.get("fx") === "off") options.ambience = false;
+  if (q.get("edges") === "off") options.edgeDecor = false;
   return options;
 }
 
@@ -134,7 +158,7 @@ export async function startWorldHarness(): Promise<void> {
     onMenu: () => log({ type: "menu" }),
   }, harnessOptions(location.search));
   const param = new URLSearchParams(location.search).get("map");
-  const region = buildHarnessRegion(param === "r02" || param === "r03" ? param : "r01");
+  const region = buildHarnessRegion(param && param in HARNESS_MAPS ? (param as HarnessMap) : "r01");
   const spawn = parseTiledMap(region.map).objects.find((o) => o.type === "spawn");
   world.setCompanionVisible(true);
   await world.loadRegion(region, { x: spawn?.x ?? 1, y: spawn?.y ?? 1, facing: "down" }, new Set());

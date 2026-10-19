@@ -88,6 +88,8 @@ export interface WorldInspect {
   objects: Record<string, { key: string; frame: number; frames: number; depth: number }>;
   /** 적용된 타일 애니메이션: 지금 보이는 타일 인덱스와 맵에서 그 타일이 칠해진 칸 수 */
   tileAnimations: { name: string; frames: number[]; current: number; cells: number }[];
+  /** 경계 장식(결정 20): 겹친 레이어 수, 조각이 얹힌 칸 수, 조각 이름별 칸 수 */
+  edges: { layers: number; cells: number; pieces: Record<string, number> };
   ambience: { grade: string; particles: string; particleCount: number; filters: boolean; enabled: boolean };
   /** Phaser가 잰 실제 FPS */
   fps: number;
@@ -103,6 +105,8 @@ export interface WorldOptions {
   tileAnimations?: Record<string, { frames: string[]; fps: number }>;
   /** false면 화면 연출을 끈 채로 시작 */
   ambience?: boolean;
+  /** false면 경계 장식을 그리지 않는다(전후 비교용) */
+  edgeDecor?: boolean;
 }
 
 export interface WorldFactory {

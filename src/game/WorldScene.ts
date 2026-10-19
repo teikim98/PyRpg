@@ -20,6 +20,7 @@ import {
   keyAction,
   overheadTileIndices,
 } from "./grid";
+import { computeEdgeLayers, countEdgePieces, resolveEdgeDecor } from "./edgeDecor";
 import { makeSpriteCanvas, makeTilesetCanvas } from "./placeholders";
 import { type PhaserTileAnimData, type ResolvedTileAnimation, countAnimatedCells, phaserTileData, resolveTileAnimations } from "./tileAnim";
 import { type ParsedMap, parseTiledMap } from "./tiled";
@@ -30,11 +31,14 @@ const TILE = manifest.tileSize;
 /** 몬스터·오브젝트 제자리 애니메이션: 2프레임이면 2fps, 4프레임이면 4fps(둘 다 한 주기 1초) */
 const IDLE_CYCLE_MS = 1000;
 const DEPTH_BASE = 10;
+/** 경계 장식 레이어(바닥 0 위, 물체 1 아래). 겹치는 조각은 0.01씩 위로 */
+const EDGE_DEPTH = 0.5;
 /** 지붕 등 캐릭터 위에 그리는 타일 레이어(캐릭터 10+y보다 위, 정화 연출 900·입자 950보다 아래) */
 const OVERHEAD_DEPTH = 800;
 const VALID_FACINGS: readonly Facing[] = ["up", "down", "left", "right"];
 
 const tilesetKey = (name: string) => `tileset:${name}`;
+const EDGE_KEY = "edgeDecor";
 
 /** 오브젝트 종류별 기본 스프라이트(논리 이름) */
 const TYPE_SPRITE: Partial<Record<MapObjectDef["type"], string>> = {
@@ -101,6 +105,7 @@ export class WorldScene extends Phaser.Scene {
   private tileAnims: ResolvedTileAnimation[] = [];
   private tileAnimData: Record<number, PhaserTileAnimData> = {};
   private tileset: Phaser.Tilemaps.Tileset | null = null;
+  private edgeInfo: WorldInspect["edges"] = { layers: 0, cells: 0, pieces: {} };
   private pos: Pos = { x: 0, y: 0 };
   private nuriPos: Pos = { x: 0, y: 0 };
   private facing: Facing = "down";
@@ -147,6 +152,7 @@ export class WorldScene extends Phaser.Scene {
     for (const [name, sp] of Object.entries(manifest.sprites)) {
       if (has(sp.file)) this.load.spritesheet(name, base + sp.file, { frameWidth: sp.frameWidth, frameHeight: sp.frameHeight });
     }
+    if (manifest.edgeDecor && has(manifest.edgeDecor.file)) this.load.image(EDGE_KEY, base + manifest.edgeDecor.file);
   }
 
   create(): void {
@@ -296,6 +302,7 @@ export class WorldScene extends Phaser.Scene {
       layer.setDepth(depth);
       this.layers.push(layer);
     }
+    this.setupEdgeDecor(map, tileset, parsed, ts.tiles);
     // 지붕처럼 캐릭터 머리를 덮어야 하는 타일만 캐릭터 위 레이어에 한 번 더 그린다
     const overhead = overheadTileIndices(ts);
     if (overhead.size) {
@@ -350,6 +357,44 @@ export class WorldScene extends Phaser.Scene {
     tileset.tileData = data;
   }
 
+  /**
+   * 경계 장식(결정 20): ground 레이어의 이웃 칸 분류를 보고 조각을 바닥 위·물체 아래 레이어에 얹는다.
+   * 보이는 것만 바꾼다(충돌 격자·오브젝트는 parsed에서 따로 만든다). 조각 시트가 없으면(옛 에셋) 건너뛴다.
+   */
+  private setupEdgeDecor(map: Phaser.Tilemaps.Tilemap, tileset: Phaser.Tilemaps.Tileset, parsed: ParsedMap, tiles: string[]): void {
+    this.edgeInfo = { layers: 0, cells: 0, pieces: {} };
+    const def = manifest.edgeDecor;
+    if (!def || this.options.edgeDecor === false) return;
+    if (!this.textureOk(EDGE_KEY, def.columns * TILE, TILE)) {
+      console.warn(`[world] edgeDecor: ${def.file} 이미지가 없어 경계 장식을 건너뜀`);
+      return;
+    }
+    const problems: string[] = [];
+    const decor = resolveEdgeDecor(def, tiles, problems);
+    if (problems.length) console.warn(`[world] edgeDecor: ${problems.join("; ")}`);
+    if (!decor) return;
+    // 타일 번호(gid)가 겹치지 않게 지형 타일셋 뒤에 붙인다
+    const firstgid = tileset.firstgid + tileset.total;
+    const edges = map.addTilesetImage("edgeDecor", EDGE_KEY, TILE, TILE, 0, 0, firstgid);
+    if (!edges) return;
+    const layers = computeEdgeLayers(parsed.ground, parsed.width, parsed.height, decor).map((l) =>
+      l.map((p) => (p < edges.total ? p : -1)),
+    );
+    const covered = new Set<number>();
+    layers.forEach((data, k) => {
+      const layer = map.createBlankLayer(`edges${k}`, edges, 0, 0, parsed.width, parsed.height, TILE, TILE);
+      if (!layer) return;
+      for (let i = 0; i < data.length; i++) {
+        if (data[i] < 0) continue;
+        layer.putTileAt(firstgid + data[i], i % parsed.width, Math.floor(i / parsed.width));
+        covered.add(i);
+      }
+      layer.setDepth(EDGE_DEPTH + k * 0.01);
+      this.layers.push(layer);
+    });
+    this.edgeInfo = { layers: layers.length, cells: covered.size, pieces: countEdgePieces(layers, decor.pieceNames) };
+  }
+
   private clearRegion(): void {
     this.stopMovement();
     for (const s of this.sprites.values()) s.destroy();
@@ -363,6 +408,7 @@ export class WorldScene extends Phaser.Scene {
     this.tileset = null;
     this.tileAnims = [];
     this.tileAnimData = {};
+    this.edgeInfo = { layers: 0, cells: 0, pieces: {} };
     this.region = null;
     this.parsed = null;
     // 연출 도중에 지역이 바뀌면 기다리던 쪽이 멈추지 않도록 바로 끝낸다
@@ -872,6 +918,7 @@ export class WorldScene extends Phaser.Scene {
       npcs,
       objects,
       tileAnimations,
+      edges: { ...this.edgeInfo, pieces: { ...this.edgeInfo.pieces } },
       ambience: this.fx.info(),
       fps: Math.round(this.game.loop.actualFps * 10) / 10,
       camera: { x: cam.worldView.x, y: cam.worldView.y, width: cam.width, height: cam.height },
