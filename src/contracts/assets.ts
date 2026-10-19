@@ -6,6 +6,8 @@
 // - 타일 애니메이션(선택): tileAnimations = { "water": { "frames": ["water", "water_a1", "water_a2"], "fps": 3 } }.
 //   키는 맵에 칠하는 타일 이름(= frames[0]). 나머지 프레임 타일은 타일셋 tiles 끝에 추가한다(맵 데이터는 그대로).
 //   같은 이름의 타일은 맵 어디서나 같은 순간에 같은 프레임을 보인다.
+// - 경계 장식(선택): edgeDecor = { file, columns, pieces, terrain, rules }. 타일셋과 따로인 조각 시트(16×16, 배경 투명).
+//   엔진이 ground 레이어의 이웃 칸 분류를 보고 바닥 위·물체 아래에 얹는다(맵 데이터·충돌 불변, 결정 20).
 // - 캐릭터(player, nuri, npc_*)
 //   · 새 형식: 16×24 프레임(frameWidth 16, frameHeight 24), 가로 6열 × 세로 4행 = 96×96 이미지.
 //     행 = 아래·왼쪽·오른쪽·위, 열 = 0 서기, 1 왼발, 2 서기, 3 오른발, 4 숨쉬기, 5 눈 깜빡임. 프레임 번호 = 행 × 6 + 열.
@@ -31,6 +33,32 @@ export interface TileAnimationDef {
   fps: number;
 }
 
+/** 경계 장식 방향: 넘어오는 이웃이 이 칸의 어느 쪽에 있는가(대각선은 양옆 두 칸이 아닐 때만) */
+export type EdgeDir = "n" | "s" | "w" | "e" | "nw" | "ne" | "sw" | "se";
+
+/** 경계 장식 규칙 하나: onto 분류 칸의 이웃이 from 분류면 `${pieces}_${방향}` 조각을 얹는다 */
+export interface EdgeRuleDef {
+  from: string[];
+  onto: string[];
+  pieces: string;
+}
+
+/**
+ * 경계 장식(결정 20). 엔진이 맵을 그릴 때 ground 레이어 이웃 칸의 분류를 보고 조각을 바닥 위·물체 아래에 얹는다.
+ * 보이는 것만 바꾸고 맵 데이터·충돌·상호작용은 그대로다. 조각 그림: tools/art/edge_tiles.py
+ */
+export interface EdgeDecorDef {
+  /** 조각 시트(16×16, 가로 columns칸, pieces 순서) */
+  file: string;
+  columns: number;
+  /** 조각 이름(`<묶음>_<방향>`) */
+  pieces: string[];
+  /** 지형 타일 이름 → 분류. 없는 타일은 경계 장식에 관여하지 않는다 */
+  terrain: Record<string, string>;
+  /** 그리는 순서(뒤 규칙이 위에 그려진다) */
+  rules: EdgeRuleDef[];
+}
+
 export interface AssetManifest {
   tileSize: number;
   tilesets: Record<
@@ -49,7 +77,9 @@ export interface AssetManifest {
   >;
   /** 타일 이름 → 애니메이션(선택. 모든 타일셋에 같은 이름으로 적용) */
   tileAnimations?: Record<string, TileAnimationDef>;
-  sprites: Record<string, SpriteAsset>;
+  /** 경계 장식(선택. overworld 타일셋 기준) */
+  edgeDecor?: EdgeDecorDef;
+  sprites:Record<string, SpriteAsset>;
   portraits: Record<string, { file: string; size: number }>;
 }
 
