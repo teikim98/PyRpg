@@ -1407,6 +1407,6 @@ describe("고장 난 다리 퍼즐과 복잡도 예측 질문(region07-spec.md �
     h.callbacks.onInteract(h.world.obj("m_P9901"));
     await idle(h.app);
     expect(q).toBeUndefined();
-    for (const r of makeContent(false).regions) for (const p of r.problems) expect(p.complexityChoices, p.id).toBeUndefined();
+    for (const r of makeContent(false).regions.filter((r) => r.order < 7)) for (const p of r.problems) expect(p.complexityChoices, p.id).toBeUndefined();
   });
 });
