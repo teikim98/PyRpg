@@ -1,0 +1,102 @@
+{
+  "id": "P0712",
+  "title": "낙타 대상의 짐",
+  "kind": "stdin",
+  "enemy": {"name": "낙타 유령", "sprite": "monster_caravan_ghost", "attack": 25},
+  "requires": ["scroll.stream", "scroll.complexity", "scroll.lookup", "scroll.sieve", "scroll.remainder"],
+  "concept": "scroll.stream",
+  "boss": false,
+  "applied": true,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 15,
+  "tests": [
+    {"in": "salt 12\nsilk 18\nspice 3kg\nsalt 20\ndates 24\n", "out": "6\n", "public": true, "note": "기본 동작(깨진 줄, 다시 나온 이름)"},
+    {"in": "rope 0\nwater 0\n", "out": "없음\n", "note": "경계: 무게가 모두 0이라 남은 짐이 없음"},
+    {"in": "tea ??\nfig 1.5\n", "out": "없음\n", "note": "경계: 모두 깨진 줄"},
+    {"in": "gold 1000000000000\n", "out": "1000000000000\n", "note": "경계: 짐 하나, 가장 큰 무게"},
+    {"in": "amber 9\namber 4\nbrass 6\n", "out": "3\n", "note": "다시 나온 이름은 처음 것만"},
+    {"in": "bag 0\nnut 14\noil 21\n", "out": "7\n", "note": "무게 0인 짐이 섞임"},
+    {"in": "fig 7\nyam 9\n", "out": "1\n", "note": "서로소인 두 무게"},
+    {"in": "jar 600000000000\npot 400000000000\nbox 1000000000000\n", "out": "200000000000\n", "note": "큰 무게 셋"},
+    {"gen": "gen_big.py", "genArg": "mixed", "note": "경계: 줄 10만 개(깨진 줄·다시 나온 이름·무게 0이 섞임)"}
+  ],
+  "variants": [
+    {
+      "id": "P0712-v1",
+      "title": "오아시스 물자 장부",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"in": "water 30\nrice 45\nrice 50\nfig ?\nsalt 75\n", "out": "15\n", "public": true, "note": "기본 동작"},
+        {"in": "bean 0\n", "out": "없음\n", "note": "경계: 남은 물자가 없음"},
+        {"in": "tin 8\ncopper 12\ntin 3\n", "out": "4\n", "note": "다시 나온 이름"},
+        {"in": "iron 1000000000000\nlead 0\nzinc 250000000000\n", "out": "250000000000\n", "note": "경계: 큰 무게"}
+      ]
+    },
+    {
+      "id": "P0712-v2",
+      "title": "순례자의 등짐",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"in": "cloth 16\ncloth 9\nhide 24\nwool 4o\n", "out": "8\n", "public": true, "note": "기본 동작"},
+        {"in": "nut 0\nseed 0\nroot 0\n", "out": "없음\n", "note": "경계: 무게가 모두 0"},
+        {"in": "honey 1.0\nmilk 35\n", "out": "35\n", "note": "소수점이 있는 무게는 깨진 줄"},
+        {"in": "date 13\n", "out": "13\n", "note": "경계: 등짐 하나"},
+        {"in": "a 6\nb 10\nc 15\n", "out": "1\n", "note": "셋을 함께 나누는 수는 1뿐"}
+      ]
+    }
+  ],
+  "extraDiagnoses": [
+    {
+      "when": {"verdict": "WA", "outputMatches": "^$"},
+      "text": "아직 아무것도 출력하지 않았어. 줄 수를 모르니 `for line in sys.stdin:`으로 입력이 끝날 때까지 한 줄씩 읽고, 마지막에 답을 `print`해 줘."
+    },
+    {
+      "when": {"verdict": "TLE"},
+      "text": "답은 맞을 것 같은데 줄 10만 개에서 시간이 다 됐어. 이름을 이미 봤는지 확인할 때 list에 `in`을 쓰면 볼 때마다 처음부터 끝까지 훑어서 O(N²)이 돼. 본 이름은 set에 담자. set의 `in`은 평균 O(1)이야."
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_broken.py",
+      "title": "깨진 줄을 거르지 않고 int()로 바로 읽음",
+      "expectFail": {"1": "RE", "3": "RE", "9": "RE"},
+      "diagnosis": {
+        "when": {"exception": "ValueError"},
+        "text": "`3kg`처럼 정수가 아닌 무게에서 `int()`가 `ValueError`를 내고 주문이 멈췄어. 깨진 줄은 미리 알 수 없으니 읽어 보고 실패하면 건너뛰자. `try:` 안에서 `int(w)`를 하고, `except ValueError:`에서 `continue`. 예외 이름을 꼭 적어야 다른 실수까지 삼키지 않아."
+      }
+    },
+    {
+      "file": "wrong_empty.py",
+      "title": "남은 짐이 없을 때 weights[0]을 읽음",
+      "expectFail": {"2": "RE", "3": "RE"},
+      "diagnosis": {
+        "when": {"exception": "IndexError"},
+        "text": "남은 짐이 하나도 없을 때 `weights[0]`을 읽어서 `IndexError`가 났어. 이럴 땐 `없음`을 출력해야 해. 리스트가 비었는지 먼저 확인하거나, 묶음 무게를 `g = 0`에서 시작해 `g = math.gcd(g, weight)`로 누적하면 첫 짐을 따로 다룰 필요도 없어(`gcd(0, x)`는 `x`)."
+      }
+    },
+    {
+      "file": "wrong_zero.py",
+      "title": "무게가 0인 짐을 빼지 않음",
+      "expectFail": {"2": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA", "outputMatches": "^0\\s*$"},
+        "text": "`0`이 나왔어. 무게가 0인 짐은 빈 자루라 빼기로 했으니, 짐이 모두 0이면 남은 짐이 없어서 `없음`이어야 해. 리스트에 담기 전에 `if weight == 0: continue`로 거르자."
+      }
+    },
+    {
+      "file": "wrong_dup.py",
+      "title": "다시 나온 이름의 짐도 셈",
+      "expectFail": {"1": "WA", "5": "WA", "9": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA"},
+        "text": "예제에서 `salt`가 두 번 나와. 두 번째 `salt 20`은 겹쳐 적은 기록이라 세면 안 되는데, 같이 세서 묶음 무게가 작아졌어. 본 이름을 `seen = set()`에 담고, 이미 있으면 건너뛰자."
+      }
+    }
+  ],
+  "hints": [
+    "줄마다 세 가지를 차례로 걸러 내고, 남은 무게를 하나씩 합쳐 가며 '모두를 나누는 가장 큰 수'를 갱신해 봐. 입력이 몇 줄인지 모르니 끝날 때까지 읽는 방법도 필요해.",
+    "줄은 `for line in sys.stdin:`으로 끝까지 읽어. 깨진 줄은 `try:`/`except ValueError:`로 건너뛰고, 다시 나온 이름은 본 이름을 담는 set으로 거르고, 묶음 무게는 `g = math.gcd(g, weight)`로 누적해. `g`를 0에서 시작하면 `gcd(0, x)`가 `x`라서 첫 짐도 같은 식으로 처리돼.",
+    "```python\nimport sys\nimport math\n\nseen = set()\ng = 0\nfor line in sys.stdin:\n    name, w = line.split()\n    try:\n        weight = int(w)\n    except ValueError:\n        continue\n    if name in seen:\n        continue\n    seen.add(name)\n    if weight == 0:\n        continue\n    g = ____\n\nif g == 0:\n    print(____)\nelse:\n    print(g)\n```"
+  ],
+  "reward": {"xp": 200, "gold": 100}
+}

@@ -1,0 +1,103 @@
+{
+  "id": "P0713",
+  "title": "사막 별자리 암호",
+  "kind": "function",
+  "entry": "solution",
+  "enemy": {"name": "별 먼지 회오리", "sprite": "monster_dust_devil", "attack": 25},
+  "requires": ["scroll.stream", "scroll.complexity", "scroll.lookup", "scroll.sieve", "scroll.remainder"],
+  "concept": "scroll.sieve",
+  "boss": false,
+  "applied": true,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 15,
+  "tests": [
+    {"args": "(1046, 3)", "expect": "2", "public": true, "note": "기본 동작(1102202 → 11, 22, 2)"},
+    {"args": "(1, 3)", "expect": "0", "note": "경계: 가장 작은 n(조각 1은 소수가 아님)"},
+    {"args": "(2, 3)", "expect": "1", "note": "조각 하나가 소수"},
+    {"args": "(700, 7)", "expect": "2", "note": "끝이 0(2020 → 2, 2)"},
+    {"args": "(98765, 3)", "expect": "1", "note": "0이 연달아 나옴(12000110222)"},
+    {"args": "(8191, 3)", "expect": "2", "note": "조각 1이 여럿(102020101)"},
+    {"args": "(47, 6)", "expect": "0", "note": "6진수로 읽으면 소수지만 10진수 115는 합성수"},
+    {"args": "(888888, 8)", "expect": "2", "note": "8진법(3310070 → 331, 7)"},
+    {"args": "(999983, 9)", "expect": "0", "note": "9진법 한 조각(1783642)"},
+    {"args": "(1000000, 10)", "expect": "0", "note": "경계: 가장 큰 n, k = 10"},
+    {"args": "(531440, 3)", "expect": "0", "note": "경계: 12자리 조각 하나(222222222222)"},
+    {"args": "(996997, 3)", "expect": "1", "note": "경계: 13자리 소수 조각(1212122121211)"}
+  ],
+  "variants": [
+    {
+      "id": "P0713-v1",
+      "title": "모래 언덕 등불 신호",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"args": "(1652, 3)", "expect": "1", "public": true, "note": "기본 동작(2021012 → 2, 21, 12)"},
+        {"args": "(10, 3)", "expect": "0", "note": "경계: 조각이 모두 1"},
+        {"args": "(2000, 3)", "expect": "2", "note": "0이 연달아 나옴"},
+        {"args": "(4, 3)", "expect": "1", "note": "조각 11은 10진수로 열하나"},
+        {"args": "(994966, 3)", "expect": "0", "note": "경계: 13자리 조각"}
+      ]
+    },
+    {
+      "id": "P0713-v2",
+      "title": "오아시스 물결 무늬",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"args": "(7987, 4)", "expect": "2", "public": true, "note": "기본 동작(1330303 → 133, 3, 3)"},
+        {"args": "(1, 9)", "expect": "0", "note": "경계: 가장 작은 n"},
+        {"args": "(65, 5)", "expect": "1", "note": "끝이 0"},
+        {"args": "(3, 4)", "expect": "1", "note": "한 자리 조각"},
+        {"args": "(863096, 3)", "expect": "0", "note": "경계: 13자리 조각"}
+      ]
+    }
+  ],
+  "extraDiagnoses": [
+    {
+      "when": {"verdict": "WA", "outputMatches": "^0$", "onlyHiddenFail": false},
+      "text": "아직 `0` 그대로야. 1046을 3진법으로 쓰면 `1102202`이고, 0으로 나누면 `11`, `22`, `2`야. 이 조각을 10진수로 읽어서 소수인 것(11과 2)을 세면 2가 나와야 해."
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_empty.py",
+      "title": "0이 연달아 있거나 끝에 있을 때 생기는 빈 조각을 int('')로 읽음",
+      "expectFail": {"4": "RE", "5": "RE", "8": "RE", "10": "RE"},
+      "diagnosis": {
+        "when": {"exception": "ValueError"},
+        "text": "`int('')`에서 `ValueError`가 났어. `\"2020\".split(\"0\")`은 `['2', '2', '']`처럼 0이 맨 끝에 있거나 연달아 있으면 **빈 조각**을 만들어. 빈 조각은 별자리가 아니니 `if piece:`로 건너뛰고 읽자."
+      }
+    },
+    {
+      "file": "wrong_sieve.py",
+      "title": "가장 큰 조각까지 소수 표를 미리 만듦",
+      "expectFail": {"11": "RE", "12": "RE"},
+      "diagnosis": {
+        "when": {"verdict": "RE"},
+        "text": "조각이 아주 클 수 있어. 3진법 13자리 조각을 10진수로 읽으면 1조가 넘는데, 그만큼 칸이 있는 표는 만들 수 없어(메모리가 수 TB). 표를 미리 만드는 방법이 맞는지 다시 생각해 봐. 조각은 기껏해야 몇 개뿐이니, 조각마다 √까지 나눠 보는 판정이면 충분해."
+      }
+    },
+    {
+      "file": "wrong_one.py",
+      "title": "조각 1을 소수로 셈",
+      "expectFail": {"2": "WA", "6": "WA", "10": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA", "onlyHiddenFail": true},
+        "text": "예제는 맞았는데 숨은 석판에서 많이 셌어. 혹시 조각 `1`을 소수로 셌어? 1은 소수가 아니야. 1은 나눠 보는 반복이 한 번도 돌지 않아서 그대로 `True`가 되니, 판정 함수 맨 앞에서 `if x < 2: return False`로 걸러 내자."
+      }
+    },
+    {
+      "file": "wrong_basek.py",
+      "title": "조각을 k진수로 읽음",
+      "expectFail": {"1": "WA", "7": "WA", "8": "WA", "9": "WA", "12": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA", "onlyHiddenFail": false},
+        "text": "조각을 `int(piece, k)`처럼 k진수로 읽었어? 이 암호는 조각을 **10진수로** 읽어. 예제의 조각 `11`은 3진수로 읽으면 4지만, 10진수로 읽으면 소수인 11이야. 그냥 `int(piece)`로 읽자."
+      }
+    }
+  ],
+  "hints": [
+    "조각이 얼마나 커질 수 있는지, 그리고 몇 개나 나오는지 먼저 어림해 봐.",
+    "조각은 최대 10^12를 넘어서 표를 미리 만들 수 없어. 조각마다 √까지 나눠 보는 판정이 맞아. k진법 문자열은 `divmod(n, k)`의 나머지를 모아 뒤집어 만들고, `split(\"0\")`이 만든 빈 조각은 건너뛰어.",
+    "```python\ndef is_prime(x):\n    if x < 2:\n        return False\n    i = 2\n    while i * i <= x:\n        if x % i == 0:\n            return False\n        i += 1\n    return True\n\n\ndef solution(n, k):\n    digits = []\n    while n > 0:\n        n, r = divmod(n, k)\n        digits.append(str(r))\n    s = \"\".join(digits[::-1])\n\n    count = 0\n    for piece in s.split(\"0\"):\n        if ____ and is_prime(int(piece)):\n            count += 1\n    return count\n```"
+  ],
+  "reward": {"xp": 300, "gold": 100}
+}
