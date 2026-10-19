@@ -45,6 +45,7 @@
 | 초상화 | 64×64 | 64×64 그대로(그림만 새 화풍) |
 | 타일 애니메이션 | 없음 | manifest `tileAnimations`: `{ "water": { "frames": ["water", "water_a1", "water_a2"], "fps": 3 } }`. 애니메이션 프레임 타일은 타일셋 **끝에 추가**(기존 순서·이름 불변, 맵 데이터 그대로) |
 | 화면 연출 | 없음 | 카메라 필터(색 보정 ColorMatrix + 비네트), 지역별 분위기: `region.json`의 선택 필드 `ambience`(`grade`: 색 보정 프리셋 이름, `particles`: `sparkle`·`dust`·`leaves`·`spray`·`mist` 등). 전투·대화 화면(DOM)은 그대로 위에 뜸 |
+| 경계 장식(결정 20) | 없음(타일 한 칸은 이웃을 몰라 풀 덤불·물가 경계를 못 그림) | manifest `edgeDecor`(조각 시트 `tiles/edges.png` + 타일 분류 `terrain` + 규칙 `rules`). 엔진이 ground 레이어 이웃 칸의 분류를 보고 조각(풀 덤불·물가·갑판 그늘·벽 발치 그늘)을 바닥 위·물체 아래 레이어에 얹음. 맵 데이터·충돌 불변, 지역 1~6 공통. 자세한 규칙은 style-guide.md §4.2 |
 | 깊이(겹침) | 16×16 | 16×24 캐릭터의 머리가 위 칸 오브젝트·벽과 겹칠 때 y 기준 정렬이 맞는지(머리가 지붕 위로 올라오지 않게) |
 
 - `src/contracts/assets.ts` 주석, `tools/art/check.py`, 단위 테스트를 새 계약에 맞춥니다.
