@@ -1,0 +1,90 @@
+{
+  "id": "P0709",
+  "title": "모래 별의 짝",
+  "kind": "function",
+  "entry": "solution",
+  "enemy": {"name": "별모래 항아리", "sprite": "monster_sieve_urn", "attack": 20},
+  "requires": ["scroll.sieve"],
+  "concept": "scroll.sieve",
+  "boss": false,
+  "timeLimitMs": 2000,
+  "estimatedMinutes": 9,
+  "tests": [
+    {"args": "(12,)", "expect": "1", "public": true, "note": "기본 동작(5 + 7)"},
+    {"args": "(4,)", "expect": "1", "note": "경계: 가장 작은 n(2 + 2)"},
+    {"args": "(6,)", "expect": "1", "note": "같은 소수 두 개(3 + 3)"},
+    {"args": "(10,)", "expect": "2", "note": "3 + 7과 5 + 5"},
+    {"args": "(30,)", "expect": "3", "note": "7 + 23, 11 + 19, 13 + 17"},
+    {"args": "(100,)", "expect": "6", "note": "n = 100"},
+    {"args": "(1000,)", "expect": "28", "note": "n = 1000"},
+    {"args": "(65536,)", "expect": "435", "note": "n = 65536"},
+    {"args": "(999990,)", "expect": "11143", "note": "큰 n(하나씩 판정하면 시간 초과)"},
+    {"args": "(1000000,)", "expect": "5402", "note": "경계: 가장 큰 n"}
+  ],
+  "variants": [
+    {
+      "id": "P0709-v1",
+      "title": "쌍둥이 별무리",
+      "statement": "variants/v1.md",
+      "tests": [
+        {"args": "(20,)", "expect": "2", "public": true, "note": "기본 동작(3 + 17, 7 + 13)"},
+        {"args": "(4,)", "expect": "1", "note": "경계: 가장 작은 n"},
+        {"args": "(14,)", "expect": "2", "note": "3 + 11과 7 + 7"},
+        {"args": "(999998,)", "expect": "4206", "note": "경계: 큰 n"}
+      ]
+    },
+    {
+      "id": "P0709-v2",
+      "title": "모래 두 무더기",
+      "statement": "variants/v2.md",
+      "tests": [
+        {"args": "(36,)", "expect": "4", "public": true, "note": "기본 동작"},
+        {"args": "(6,)", "expect": "1", "note": "경계: 3 + 3 하나뿐"},
+        {"args": "(38,)", "expect": "2", "note": "7 + 31과 19 + 19"},
+        {"args": "(64,)", "expect": "5", "note": "n = 64"},
+        {"args": "(1000000,)", "expect": "5402", "note": "경계: 가장 큰 n"}
+      ]
+    }
+  ],
+  "extraDiagnoses": [
+    {
+      "when": {"verdict": "WA", "outputMatches": "^0$", "onlyHiddenFail": false},
+      "text": "아직 `0` 그대로야. `p`를 2부터 `n // 2`까지 훑으면서, `p`와 `n - p`가 **둘 다** 소수일 때마다 하나씩 세어 봐. 12라면 5 + 7 하나가 나와야 해."
+    }
+  ],
+  "wrong": [
+    {
+      "file": "wrong_each.py",
+      "title": "수마다 하나씩 나눠 보며 판정",
+      "expectFail": {"9": "TLE", "10": "TLE"},
+      "diagnosis": {
+        "when": {"verdict": "TLE"},
+        "text": "답은 맞는데 시간이 다 됐어! `p`마다 `p`와 `n - p`를 처음부터 나눠 보면, n이 100만일 때 판정을 수십만 번 되풀이해. 이번엔 **에라토스테네스의 체**로 `n`까지의 소수 표를 한 번만 만들고, 판정은 `is_prime[p]`처럼 표를 읽기만 하자. 표를 만드는 데 드는 일은 판정을 수십만 번 하는 것보다 훨씬 적어."
+      }
+    },
+    {
+      "file": "wrong_order.py",
+      "title": "p를 n - 2까지 훑어 같은 짝을 두 번 셈",
+      "expectFail": {"1": "WA", "4": "WA", "5": "WA", "6": "WA", "7": "WA", "8": "WA", "9": "WA", "10": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA", "onlyHiddenFail": false},
+        "text": "12에서 2가 나왔다면 `5 + 7`과 `7 + 5`를 따로 센 거야. 이 문제는 `p ≤ q`인 짝만 세니까 순서만 다른 짝은 하나야. `p`는 2부터 `n // 2`까지만 훑으면 `q = n - p`가 언제나 `p` 이상이 돼."
+      }
+    },
+    {
+      "file": "wrong_half.py",
+      "title": "range(2, n // 2)로 p = q인 짝을 빠뜨림",
+      "expectFail": {"2": "WA", "3": "WA", "4": "WA"},
+      "diagnosis": {
+        "when": {"verdict": "WA", "onlyHiddenFail": true},
+        "text": "예제는 맞았는데 4 = 2 + 2나 10 = 5 + 5처럼 **같은 소수 두 개**인 짝을 빠뜨렸어. `range(2, n // 2)`는 `n // 2` 바로 앞에서 멈춰. `p = q = n // 2`까지 보려면 `range(2, n // 2 + 1)`이야."
+      }
+    }
+  ],
+  "hints": [
+    "`p`를 2부터 `n // 2`까지 훑으면서 `p`와 `n - p`가 둘 다 소수인지 보면 돼. 그런데 매번 하나씩 나눠 보면 같은 일을 수십만 번 되풀이해. 소수인지 아닌지를 한꺼번에 미리 정해 둘 수는 없을까?",
+    "에라토스테네스의 체로 `n`까지의 소수 표 `is_prime`을 한 번 만들어 둬: `[True] * (n + 1)`에서 0과 1을 지우고, 아직 남은 `i`마다 `i * i`부터 `i`씩 건너뛰며 지워. 그다음 `p`를 `range(2, n // 2 + 1)`로 훑으며 `is_prime[p] and is_prime[n - p]`면 하나 세.",
+    "```python\ndef solution(n):\n    is_prime = [True] * (n + 1)\n    is_prime[0] = False\n    is_prime[1] = False\n    i = 2\n    while i * i <= n:\n        if is_prime[i]:\n            for j in range(____, n + 1, i):\n                is_prime[j] = False\n        i += 1\n\n    count = 0\n    for p in range(2, ____):\n        if is_prime[p] and is_prime[n - p]:\n            count += 1\n    return count\n```"
+  ],
+  "reward": {"xp": 100, "gold": 50}
+}
