@@ -247,6 +247,19 @@ export interface Region {
   puzzles?: Puzzle[];
   dialogues: DialogueMap;
   recommended: RecommendedProblem[];
+  /** 화면 분위기(색 보정·떠다니는 입자). 없으면 기본(dusty_teal, 입자 없음) */
+  ambience?: RegionAmbience;
+}
+
+/**
+ * region.json의 ambience(docs/art-overhaul/plan.md §3). 이름 목록은 src/game/ambience.ts의
+ * GRADE_NAMES·PARTICLE_KINDS(tools/verify_content.py가 같은 목록으로 검사)
+ */
+export interface RegionAmbience {
+  /** 색 보정·비네트 프리셋: dusty_teal, forest, cave, library, harbor, lake */
+  grade?: string;
+  /** 떠다니는 입자: none, sparkle, dust, leaves, spray, mist */
+  particles?: string;
 }
 
 export interface CompanionProfile {

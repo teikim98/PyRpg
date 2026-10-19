@@ -183,6 +183,14 @@ export function drawTile(c: Ctx, name: string, ox: number, oy: number): void {
       for (const [x, y] of [[3, 2], [11, 6], [6, 13], [14, 11]]) rect(c, ox + x, oy + y, 1, 1, "#4e4760");
       return;
   }
+  // 타일 애니메이션 프레임(예: water_a1): 원래 타일 + 위치가 바뀌는 밝은 점
+  const anim = /^(.+)_a(\d+)$/.exec(name);
+  if (anim) {
+    drawTile(c, anim[1], ox, oy);
+    const n = Number(anim[2]);
+    rect(c, ox + ((3 + n * 5) % 13), oy + ((5 + n * 4) % 13), 3, 1, "#ffffff");
+    return;
+  }
   rect(c, ox, oy, 16, 16, hashColor(name));
   rect(c, ox, oy, 8, 8, "#000000");
   rect(c, ox + 8, oy + 8, 8, 8, "#000000");
@@ -340,17 +348,98 @@ function drawObject(c: Ctx, name: string, frame: number, ox: number): void {
   rect(c, ox + 6, 6, 4, 4, f ? "#ffffff" : "#000000");
 }
 
-/** 스프라이트 시트 캔버스(가로로 프레임 나열)와 프레임 수 */
-export function makeSpriteCanvas(name: string, frameWidth: number, frameHeight: number): { canvas: HTMLCanvasElement; frames: number } {
+/**
+ * 새 형식 캐릭터 한 프레임(16×24, 머리 큰 2.5등신). 엔진 확인용 자리 표시 그림이다.
+ * dir = 행(아래·왼쪽·오른쪽·위), col = 0 서기, 1 왼발, 2 서기, 3 오른발, 4 숨쉬기, 5 눈 깜빡임
+ */
+function drawCharacterTall(c: Ctx, name: string, dir: number, col: number, ox: number, oy: number): void {
+  const pal = CHARACTER_COLORS[name] ?? { body: hashColor(name), hair: "#3b2a1a" };
+  const skin = "#f3d2b3";
+  const line = "#2a2238";
+  const leg = "#3b3b4f";
+  const sink = col === 4 ? 1 : 0; // 숨쉬기: 머리·몸이 1px 내려앉음
+  // 다리(아래 4줄). 왼발·오른발 프레임에서 한쪽 다리를 들고 다른 쪽을 내딛는다
+  const lift = (side: 0 | 1) => (col === 1 && side === 0) || (col === 3 && side === 1);
+  for (const side of [0, 1] as const) {
+    const lx = ox + (side === 0 ? 5 : 9);
+    const up = lift(side) ? 1 : 0;
+    const spread = (col === 1 || col === 3) && dir !== 0 && dir !== 3 ? (lift(side) ? -1 : 1) * (dir === 1 ? -1 : 1) : 0;
+    rect(c, lx + spread, oy + 20, 2, 4 - up, leg);
+    rect(c, lx + spread, oy + 23 - up, 2, 1, "#241c2c");
+  }
+  // 몸
+  rect(c, ox + 4, oy + 14 + sink, 8, 6 - sink, pal.body);
+  rect(c, ox + 4, oy + 19, 8, 1, line);
+  // 팔(걷기에서 앞뒤로)
+  const swing = col === 1 ? 1 : col === 3 ? -1 : 0;
+  rect(c, ox + 3, oy + 15 + sink + Math.max(0, swing), 1, 4, pal.body);
+  rect(c, ox + 12, oy + 15 + sink + Math.max(0, -swing), 1, 4, pal.body);
+  // 머리(12×12)
+  const hy = oy + 2 + sink;
+  rect(c, ox + 2, hy + 1, 12, 11, skin);
+  rect(c, ox + 3, hy, 10, 1, skin);
+  rect(c, ox + 2, hy, 12, 4, pal.hair);
+  rect(c, ox + 1, hy + 2, 1, 8, line);
+  rect(c, ox + 14, hy + 2, 1, 8, line);
+  rect(c, ox + 3, hy + 12, 10, 1, line);
+  if (name === "nuri") rect(c, ox + 12, hy - 2 < oy ? oy : hy - 2, 2, 2, "#f6d55c");
+  const eyeY = hy + 7;
+  const eye = (x: number) => (col === 5 ? rect(c, x, eyeY + 1, 2, 1, line) : rect(c, x, eyeY, 1, 2, line));
+  if (dir === 0) {
+    eye(ox + 5);
+    eye(ox + 10);
+    rect(c, ox + 4, eyeY + 2, 1, 1, "#e8a0a0");
+    rect(c, ox + 11, eyeY + 2, 1, 1, "#e8a0a0");
+  } else if (dir === 1) {
+    eye(ox + 4);
+    rect(c, ox + 9, hy, 5, 9, pal.hair);
+  } else if (dir === 2) {
+    eye(ox + 11);
+    rect(c, ox + 2, hy, 5, 9, pal.hair);
+  } else {
+    rect(c, ox + 2, hy, 12, 11, pal.hair);
+  }
+}
+
+/** 4프레임 제자리(몬스터·보스) 자리 표시: 2프레임 그림에 높이 변화를 더한다 */
+function drawIdle4(c: Ctx, name: string, frame: number, ox: number): void {
+  if (name.startsWith("boss_")) drawBoss(c, frame, ox);
+  else if (name.startsWith("monster_")) drawMonster(c, name, frame, ox);
+  else drawObject(c, name, frame, ox);
+  // 프레임 번호를 위쪽 점으로 표시(애니메이션 확인용)
+  rect(c, ox + 1 + frame * 2, 0, 1, 1, "#ffffff");
+}
+
+export interface SpriteSheetCanvas {
+  canvas: HTMLCanvasElement;
+  frames: number;
+  /** 가로 프레임 수(프레임 i는 (i % columns, ⌊i / columns⌋) 칸) */
+  columns: number;
+}
+
+/**
+ * 스프라이트 시트 캔버스와 프레임 수.
+ * - 캐릭터: 프레임이 세로로 길면(16×24) 새 형식 6열 × 4행, 아니면 옛 형식 가로 8프레임
+ * - 그 밖: idleFrames(기본 2)개를 가로로
+ */
+export function makeSpriteCanvas(name: string, frameWidth: number, frameHeight: number, idleFrames = 2): SpriteSheetCanvas {
   const isCharacter = name === "player" || name === "nuri" || name.startsWith("npc_");
-  const frames = isCharacter ? 8 : 2;
+  if (isCharacter && frameHeight > frameWidth) {
+    const [canvas, c] = newCanvas(frameWidth * 6, frameHeight * 4);
+    for (let row = 0; row < 4; row++) {
+      for (let col = 0; col < 6; col++) drawCharacterTall(c, name, row, col, col * frameWidth, row * frameHeight);
+    }
+    return { canvas, frames: 24, columns: 6 };
+  }
+  const frames = isCharacter ? 8 : idleFrames;
   const [canvas, c] = newCanvas(frameWidth * frames, frameHeight);
   for (let i = 0; i < frames; i++) {
     const ox = i * frameWidth;
     if (isCharacter) drawCharacter(c, name, i, ox);
+    else if (frames > 2) drawIdle4(c, name, i, ox);
     else if (name.startsWith("boss_")) drawBoss(c, i, ox);
     else if (name.startsWith("monster_")) drawMonster(c, name, i, ox);
     else drawObject(c, name, i, ox);
   }
-  return { canvas, frames };
+  return { canvas, frames, columns: frames };
 }

@@ -4,6 +4,7 @@
   "name": "에코 마을",
   "introDialogue": "region_intro",
   "clearDialogue": "region_clear",
+  "ambience": { "grade": "dusty_teal", "particles": "sparkle" },
   "recommended": [
     { "site": "programmers", "id": 120830, "title": "양꼬치", "level": "Lv.0" },
     { "site": "programmers", "id": 120806, "title": "두 수의 나눗셈", "level": "Lv.0" },

@@ -14,7 +14,11 @@ export function computeViewport(width: number, height: number): { zoom: number; 
 
 /** manifest가 가리키는 지형·스프라이트 파일 목록(assets/ 기준 상대 경로) */
 export function manifestImageFiles(): string[] {
-  return [...Object.values(manifest.tilesets).map((t) => t.file), ...Object.values(manifest.sprites).map((s) => s.file)];
+  return [
+    ...Object.values(manifest.tilesets).map((t) => t.file),
+    ...(manifest.edgeDecor ? [manifest.edgeDecor.file] : []),
+    ...Object.values(manifest.sprites).map((s) => s.file),
+  ];
 }
 
 /**

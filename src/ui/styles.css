@@ -371,7 +371,7 @@
 }
 
 .pyrpg-ui .sprite.is-animated {
-  animation: ui-sprite-idle 0.8s steps(2) infinite;
+  animation: ui-sprite-idle var(--idle-dur, 0.8s) steps(var(--frames, 2)) infinite;
 }
 
 .pyrpg-ui .sprite.is-fallback {
@@ -1756,7 +1756,7 @@
 
 @keyframes ui-sprite-idle {
   to {
-    background-position: calc(var(--frame-w) * -2) 0;
+    background-position: calc(var(--frame-w) * var(--frames, 2) * -1) 0;
   }
 }
 

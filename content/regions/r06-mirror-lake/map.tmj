@@ -25,10 +25,10 @@
    "name": "overworld",
    "image": "../../../assets/tiles/overworld.png",
    "imagewidth": 128,
-   "imageheight": 208,
+   "imageheight": 224,
    "tilewidth": 16,
    "tileheight": 16,
-   "tilecount": 103,
+   "tilecount": 108,
    "columns": 8,
    "margin": 0,
    "spacing": 0,
@@ -1158,6 +1158,61 @@
     {
      "id": 102,
      "type": "buried_hourglass",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 103,
+     "type": "water_a1",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 104,
+     "type": "water_a2",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 105,
+     "type": "grass_flower_a1",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 106,
+     "type": "flower_bed_a1",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 107,
+     "type": "lamp_post_a1",
      "properties": [
       {
        "name": "blocking",

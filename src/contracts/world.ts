@@ -54,9 +54,64 @@ export interface WorldController {
   getObjects(): MapObjectDef[];
   /** 꾸미기 아이템의 색(§7.2). null이면 원래 색. 구현이 없으면 무시 */
   setTint?(target: "player" | "companion", color: number | null): void;
+  /** 화면 연출(색 보정·비네트·입자)을 켜고 끈다(성능 측정·디버그용). 구현이 없으면 무시 */
+  setAmbienceEnabled?(on: boolean): void;
+  /** 지금 그려지는 상태(애니메이션 프레임·연출). E2E·디버그용, 가볍다 */
+  inspect?(): WorldInspect;
+}
+
+/** 캐릭터 시트 형식: 새 16×24 6열×4행 / 옛 16×16 가로 8프레임 */
+export type CharacterSheetLayout = "grid6x4" | "legacy8";
+
+export interface CharacterInspect {
+  /** 시트의 프레임 번호 */
+  frame: number;
+  /** 새 시트 기준 열(0 서기, 1 왼발, 2 서기, 3 오른발, 4 숨쉬기, 5 깜빡임) */
+  col: number;
+  /** 몸을 올린 높이(px) */
+  bob: number;
+  facing: Facing;
+  mode: "idle" | "walk" | "bump";
+  layout: CharacterSheetLayout;
+  depth: number;
+  /** 스프라이트 위치(월드 px, 기준점 = 발 아래 가운데) */
+  x: number;
+  y: number;
+}
+
+export interface WorldInspect {
+  player: CharacterInspect;
+  nuri: CharacterInspect;
+  /** 맵 위 캐릭터 NPC(오브젝트 ID → 상태) */
+  npcs: Record<string, CharacterInspect>;
+  /** 그 밖의 오브젝트 스프라이트(몬스터·보스·비석 등): 지금 프레임과 시트의 프레임 수 */
+  objects: Record<string, { key: string; frame: number; frames: number; depth: number }>;
+  /** 적용된 타일 애니메이션: 지금 보이는 타일 인덱스와 맵에서 그 타일이 칠해진 칸 수 */
+  tileAnimations: { name: string; frames: number[]; current: number; cells: number }[];
+  /** 경계 장식(결정 20): 겹친 레이어 수, 조각이 얹힌 칸 수, 조각 이름별 칸 수 */
+  edges: { layers: number; cells: number; pieces: Record<string, number> };
+  ambience: { grade: string; particles: string; particleCount: number; filters: boolean; enabled: boolean };
+  /** Phaser가 잰 실제 FPS */
+  fps: number;
+  /** 카메라 왼쪽 위(월드 px)와 화면 크기(게임 px). 화면 좌표 = (월드 - 카메라) × 줌 */
+  camera: { x: number; y: number; width: number; height: number };
+}
+
+/** 월드를 만들 때 고를 수 있는 것(전부 선택, 주로 테스트용) */
+export interface WorldOptions {
+  /** 이 스프라이트는 파일 대신 코드로 그린 새 형식 시험 시트를 쓴다(캐릭터 16×24 6열×4행, 그 밖 4프레임) */
+  testSheets?: string[];
+  /** 이 스프라이트는 파일 대신 코드로 그린 옛 형식 시트를 쓴다(캐릭터 16×16 가로 8프레임, 그 밖 2프레임) */
+  legacySheets?: string[];
+  /** manifest.tileAnimations 대신 쓸 타일 애니메이션 */
+  tileAnimations?: Record<string, { frames: string[]; fps: number }>;
+  /** false면 화면 연출을 끈 채로 시작 */
+  ambience?: boolean;
+  /** false면 경계 장식을 그리지 않는다(전후 비교용) */
+  edgeDecor?: boolean;
 }
 
 export interface WorldFactory {
   /** parent 요소 안에 Phaser 게임을 만든다 */
-  create(parent: HTMLElement, callbacks: WorldCallbacks): Promise<WorldController>;
+  create(parent: HTMLElement, callbacks: WorldCallbacks, options?: WorldOptions): Promise<WorldController>;
 }

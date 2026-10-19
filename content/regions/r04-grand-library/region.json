@@ -4,6 +4,7 @@
   "name": "무너진 대도서관",
   "introDialogue": "region_intro",
   "clearDialogue": "region_clear",
+  "ambience": { "grade": "library", "particles": "dust" },
   "recommended": [
     { "site": "programmers", "id": 12926, "title": "시저 암호", "level": "Lv.1" },
     { "site": "programmers", "id": 72410, "title": "신규 아이디 추천", "level": "Lv.1" },

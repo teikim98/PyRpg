@@ -82,8 +82,13 @@ export function createSprite(name: string, scale: number, label: string): HTMLEl
       el.replaceChildren();
       el.style.backgroundImage = `url("${url}")`;
       el.style.backgroundSize = `${probe.naturalWidth * scale}px ${probe.naturalHeight * scale}px`;
-      // 첫 줄의 프레임 2개로 제자리 애니메이션
-      if (frames >= 2) el.classList.add("is-animated");
+      // 첫 줄의 프레임(2개 또는 그래픽 개편의 4개)으로 제자리 애니메이션. 2프레임은 0.4초, 4프레임은 0.25초 간격
+      if (frames >= 2) {
+        const n = frames >= 4 ? 4 : 2;
+        el.style.setProperty("--frames", String(n));
+        el.style.setProperty("--idle-dur", n === 4 ? "1s" : "0.8s");
+        el.classList.add("is-animated");
+      }
     };
     probe.src = url;
   }

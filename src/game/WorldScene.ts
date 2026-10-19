@@ -4,10 +4,12 @@ import * as Phaser from "phaser";
 import { manifest } from "../contracts/assets";
 import type { Region } from "../contracts/content";
 import type { Facing } from "../contracts/state";
-import type { MapObjectDef, WorldCallbacks } from "../contracts/world";
+import type { CharacterInspect, MapObjectDef, WorldCallbacks, WorldInspect, WorldOptions } from "../contracts/world";
+import { resolveAmbience } from "./ambience";
+import { AmbienceFx } from "./ambienceFx";
+import { type AnimSample, CharacterAnimator, type SheetLayout, detectSheetLayout, sheetFrame } from "./charAnim";
 import {
   DIRS,
-  FACING_ROW,
   OPPOSITE,
   ObjectIndex,
   buildCollisionGrid,
@@ -16,19 +18,28 @@ import {
   isActivatableElement,
   isEditableElement,
   keyAction,
+  overheadTileIndices,
 } from "./grid";
+import { computeEdgeLayers, countEdgePieces, resolveEdgeDecor } from "./edgeDecor";
 import { isStaticObject, objectSpriteKey } from "./objectSprite";
 import { makeSpriteCanvas, makeTilesetCanvas } from "./placeholders";
+import { type PhaserTileAnimData, type ResolvedTileAnimation, countAnimatedCells, phaserTileData, resolveTileAnimations } from "./tileAnim";
 import { type ParsedMap, parseTiledMap } from "./tiled";
 
 /** 한 칸 이동 시간(ms) */
 export const STEP_MS = 135;
 const TILE = manifest.tileSize;
-const IDLE_FPS = 2;
-const WALK_FPS = 8;
+/** 몬스터·오브젝트 제자리 애니메이션: 2프레임이면 2fps, 4프레임이면 4fps(둘 다 한 주기 1초) */
+const IDLE_CYCLE_MS = 1000;
 const DEPTH_BASE = 10;
+/** 경계 장식 레이어(바닥 0 위, 물체 1 아래). 겹치는 조각은 0.01씩 위로 */
+const EDGE_DEPTH = 0.5;
+/** 지붕 등 캐릭터 위에 그리는 타일 레이어(캐릭터 10+y보다 위, 정화 연출 900·입자 950보다 아래) */
+const OVERHEAD_DEPTH = 800;
+const VALID_FACINGS: readonly Facing[] = ["up", "down", "left", "right"];
 
 const tilesetKey = (name: string) => `tileset:${name}`;
+const EDGE_KEY = "edgeDecor";
 
 /** 닫힘/열림 두 프레임이라 제자리 애니메이션을 하지 않는 스프라이트 */
 // obj_bridge_broken: 고장 난 다리(region07-spec.md §7, 정지 그림). door에 그린 그림은 objectSprite.ts isStaticObject로도 멈춘다
@@ -41,6 +52,20 @@ function isCharacterSprite(key: string): boolean {
 interface Pos {
   x: number;
   y: number;
+}
+
+/** 걷는 캐릭터 스프라이트 하나(플레이어·누리·NPC) */
+interface CharacterView {
+  sprite: Phaser.GameObjects.Sprite;
+  anim: CharacterAnimator;
+  /** 마지막으로 그린 프레임·높이(같으면 다시 설정하지 않는다) */
+  frame: number;
+  bob: number;
+}
+
+/** 맵 위 NPC: 원래 바라보던 방향(말을 건 뒤 플레이어가 움직이면 돌아간다) */
+interface NpcView extends CharacterView {
+  home: Facing;
 }
 
 export class WorldScene extends Phaser.Scene {
@@ -62,6 +87,16 @@ export class WorldScene extends Phaser.Scene {
 
   private player!: Phaser.GameObjects.Sprite;
   private nuri!: Phaser.GameObjects.Sprite;
+  private playerView!: CharacterView;
+  private nuriView!: CharacterView;
+  private npcs = new Map<string, NpcView>();
+  /** 말을 건 뒤 플레이어 쪽으로 돌아선 NPC */
+  private turnedNpc: string | null = null;
+  private fx!: AmbienceFx;
+  private tileAnims: ResolvedTileAnimation[] = [];
+  private tileAnimData: Record<number, PhaserTileAnimData> = {};
+  private tileset: Phaser.Tilemaps.Tileset | null = null;
+  private edgeInfo: WorldInspect["edges"] = { layers: 0, cells: 0, pieces: {} };
   private pos: Pos = { x: 0, y: 0 };
   private nuriPos: Pos = { x: 0, y: 0 };
   private facing: Facing = "down";
@@ -82,12 +117,19 @@ export class WorldScene extends Phaser.Scene {
 
   /** 실제로 있는 이미지 파일(null이면 전부 시도) */
   private available: ReadonlySet<string> | null;
+  private options: WorldOptions;
 
-  constructor(callbacks: WorldCallbacks, onReady: () => void, available: ReadonlySet<string> | null = null) {
+  constructor(
+    callbacks: WorldCallbacks,
+    onReady: () => void,
+    available: ReadonlySet<string> | null = null,
+    options: WorldOptions = {},
+  ) {
     super({ key: "world" });
     this.callbacks = callbacks;
     this.onReady = onReady;
     this.available = available;
+    this.options = options;
   }
 
   // ── 로딩 ───────────────────────────────────────────────────────────
@@ -101,6 +143,7 @@ export class WorldScene extends Phaser.Scene {
     for (const [name, sp] of Object.entries(manifest.sprites)) {
       if (has(sp.file)) this.load.spritesheet(name, base + sp.file, { frameWidth: sp.frameWidth, frameHeight: sp.frameHeight });
     }
+    if (manifest.edgeDecor && has(manifest.edgeDecor.file)) this.load.image(EDGE_KEY, base + manifest.edgeDecor.file);
   }
 
   create(): void {
@@ -112,11 +155,18 @@ export class WorldScene extends Phaser.Scene {
       }
     }
     for (const name of Object.keys(manifest.sprites)) this.ensureSprite(name);
+    for (const name of this.options.testSheets ?? []) if (!manifest.sprites[name]) this.ensureSprite(name);
+    for (const name of this.options.legacySheets ?? []) if (!manifest.sprites[name]) this.ensureSprite(name);
 
     this.player = this.add.sprite(0, 0, "player", 0).setOrigin(0.5, 1).setVisible(false);
     this.nuri = this.add.sprite(0, 0, "nuri", 0).setOrigin(0.5, 1).setVisible(false);
+    this.playerView = { sprite: this.player, anim: new CharacterAnimator("down", 0, 0), frame: -1, bob: 0 };
+    // 누리는 반 박자(반 걸음) 어긋나게 걷는다
+    this.nuriView = { sprite: this.nuri, anim: new CharacterAnimator("down", 3, 1), frame: -1, bob: 0 };
     this.cameras.main.setRoundPixels(true);
     this.cameras.main.setBackgroundColor("#1b1f2a");
+    this.fx = new AmbienceFx(this);
+    if (this.options.ambience === false) this.fx.setEnabled(false);
     this.attachDomInput();
     this.events.once(Phaser.Scenes.Events.DESTROY, () => this.detachDom?.());
     this.game.events.once(Phaser.Core.Events.DESTROY, () => this.detachDom?.());
@@ -133,14 +183,28 @@ export class WorldScene extends Phaser.Scene {
     if (this.textures.exists(key)) this.textures.remove(key);
   }
 
-  /** 스프라이트 텍스처가 없으면 자리 표시용으로 만들고, 애니메이션을 등록한다 */
+  /**
+   * 스프라이트 텍스처가 없으면 자리 표시용으로 만들고, 애니메이션을 등록한다.
+   * options.testSheets에 있으면 파일 대신 코드로 그린 새 형식 시트(캐릭터 16×24 6×4, 그 밖 4프레임)를,
+   * options.legacySheets에 있으면 옛 형식 시트(캐릭터 16×16 가로 8프레임, 그 밖 2프레임)를 쓴다.
+   */
   private ensureSprite(name: string): void {
-    const def = manifest.sprites[name] ?? { frameWidth: name.startsWith("boss_") ? 32 : 16, frameHeight: name.startsWith("boss_") ? 32 : 16 };
-    if (!this.textureOk(name, def.frameWidth, def.frameHeight) || this.textures.get(name).frameTotal <= 1) {
+    const big = name.startsWith("boss_") ? 32 : 16;
+    const test = this.options.testSheets?.includes(name) ?? false;
+    const legacy = !test && (this.options.legacySheets?.includes(name) ?? false);
+    const def = test
+      ? { frameWidth: big, frameHeight: isCharacterSprite(name) ? 24 : big }
+      : legacy
+        ? { frameWidth: big, frameHeight: big }
+        : (manifest.sprites[name] ?? { frameWidth: big, frameHeight: big });
+    if (test || legacy || !this.textureOk(name, def.frameWidth, def.frameHeight) || this.textures.get(name).frameTotal <= 1) {
       this.replaceTexture(name);
-      const { canvas, frames } = makeSpriteCanvas(name, def.frameWidth, def.frameHeight);
+      const { canvas, frames, columns } = makeSpriteCanvas(name, def.frameWidth, def.frameHeight, test ? 4 : 2);
       const tex = this.textures.addCanvas(name, canvas)!;
-      for (let i = 0; i < frames; i++) tex.add(i, 0, i * def.frameWidth, 0, def.frameWidth, def.frameHeight);
+      for (let i = 0; i < frames; i++) {
+        tex.add(i, 0, (i % columns) * def.frameWidth, Math.floor(i / columns) * def.frameHeight, def.frameWidth, def.frameHeight);
+      }
+      if (this.anims.exists(`${name}:idle`)) this.anims.remove(`${name}:idle`);
     }
     this.createAnims(name);
   }
@@ -149,34 +213,62 @@ export class WorldScene extends Phaser.Scene {
     return Math.max(1, this.textures.get(key).frameTotal - 1);
   }
 
-  private frame(key: string, i: number): number {
-    return i % this.frameCount(key);
+  /** 캐릭터 시트 형식(실제 텍스처의 프레임 크기·수로 판별) */
+  private sheetLayout(key: string): SheetLayout {
+    const tex = this.textures.get(key);
+    const f = tex.get(0);
+    return detectSheetLayout(f.width, f.height, this.frameCount(key));
+  }
+
+  /** 제자리 애니메이션 프레임 수: 4프레임 이상이면 4, 아니면 2(1프레임 시트는 같은 프레임 반복) */
+  private idleFrames(key: string): number {
+    return this.frameCount(key) >= 4 ? 4 : 2;
   }
 
   private createAnims(key: string): void {
-    if (isCharacterSprite(key)) {
-      for (const dir of Object.keys(FACING_ROW) as Facing[]) {
-        const k = `${key}:walk:${dir}`;
-        if (this.anims.exists(k)) continue;
-        const row = FACING_ROW[dir] * 2;
-        this.anims.create({
-          key: k,
-          frames: [{ key, frame: this.frame(key, row + 1) }, { key, frame: this.frame(key, row) }],
-          frameRate: WALK_FPS,
-          repeat: -1,
-        });
-      }
-    } else if (!STATIC_SPRITES.has(key)) {
-      const k = `${key}:idle`;
-      if (!this.anims.exists(k)) {
-        this.anims.create({
-          key: k,
-          frames: [{ key, frame: this.frame(key, 0) }, { key, frame: this.frame(key, 1) }],
-          frameRate: IDLE_FPS,
-          repeat: -1,
-        });
-      }
+    if (isCharacterSprite(key) || STATIC_SPRITES.has(key)) return;
+    const k = `${key}:idle`;
+    if (this.anims.exists(k)) return;
+    const n = this.idleFrames(key);
+    const count = this.frameCount(key);
+    this.anims.create({
+      key: k,
+      frames: Array.from({ length: n }, (_, i) => ({ key, frame: i % count })),
+      frameRate: (n * 1000) / IDLE_CYCLE_MS,
+      repeat: -1,
+    });
+  }
+
+  /** 캐릭터 스프라이트에 애니메이션 상태를 그린다(바뀐 경우만) */
+  private drawCharacter(view: CharacterView, s: AnimSample): void {
+    const key = view.sprite.texture.key;
+    const frame = sheetFrame(this.sheetLayout(key), this.frameCount(key), s.facing, s.col);
+    if (frame !== view.frame) {
+      view.sprite.setFrame(frame);
+      view.frame = frame;
+      view.bob = -1;
     }
+    if (s.bob !== view.bob) {
+      // 기준점(발 아래)을 아래로 내리면 그림이 위로 올라간다. 위치·깊이·카메라는 그대로
+      const h = view.sprite.frame.height || 1;
+      view.sprite.setOrigin(0.5, (h + s.bob) / h);
+      view.bob = s.bob;
+    }
+  }
+
+  private characterInfo(view: CharacterView): CharacterInspect {
+    const s = view.anim.sample(this.time.now);
+    return {
+      frame: view.frame,
+      col: s.col,
+      bob: view.bob,
+      facing: view.anim.facing,
+      mode: view.anim.state,
+      layout: this.sheetLayout(view.sprite.texture.key),
+      depth: view.sprite.depth,
+      x: view.sprite.x,
+      y: view.sprite.y,
+    };
   }
 
   // ── 지역 ───────────────────────────────────────────────────────────
@@ -195,6 +287,8 @@ export class WorldScene extends Phaser.Scene {
     const tileset = map.addTilesetImage(parsed.tileset, tilesetKey(parsed.tileset), TILE, TILE, 0, 0, 0);
     if (!tileset) throw new Error(`tileset ${parsed.tileset} could not be created`);
     this.tilemap = map;
+    this.tileset = tileset;
+    this.setupTileAnimations(tileset, ts.tiles);
     for (const [name, data, depth] of [["ground", parsed.ground, 0], ["deco", parsed.deco, 1]] as const) {
       const layer = map.createBlankLayer(name, tileset, 0, 0, parsed.width, parsed.height, TILE, TILE);
       if (!layer) continue;
@@ -203,6 +297,21 @@ export class WorldScene extends Phaser.Scene {
       }
       layer.setDepth(depth);
       this.layers.push(layer);
+    }
+    this.setupEdgeDecor(map, tileset, parsed, ts.tiles);
+    // 지붕처럼 캐릭터 머리를 덮어야 하는 타일만 캐릭터 위 레이어에 한 번 더 그린다
+    const overhead = overheadTileIndices(ts);
+    if (overhead.size) {
+      const layer = map.createBlankLayer("overhead", tileset, 0, 0, parsed.width, parsed.height, TILE, TILE);
+      if (layer) {
+        for (const data of [parsed.ground, parsed.deco]) {
+          for (let i = 0; i < data.length; i++) {
+            if (overhead.has(data[i])) layer.putTileAt(data[i], i % parsed.width, Math.floor(i / parsed.width));
+          }
+        }
+        layer.setDepth(OVERHEAD_DEPTH);
+        this.layers.push(layer);
+      }
     }
 
     for (const def of this.defs) {
@@ -217,16 +326,85 @@ export class WorldScene extends Phaser.Scene {
     this.nuri.setVisible(this.companionVisible);
     this.teleport(spawn.x, spawn.y, spawn.facing);
     cam.startFollow(this.player, true);
+
+    const problems: string[] = [];
+    this.fx.apply(resolveAmbience(region.ambience, problems), region.id);
+    if (problems.length) console.warn(`[world] ${region.id} ambience: ${problems.join("; ")}`);
+  }
+
+  /**
+   * manifest.tileAnimations(또는 options.tileAnimations)를 타일셋에 붙인다. Phaser TilemapLayer가 그릴 때
+   * tileData[id].animation으로 프레임을 고르므로 맵 데이터는 그대로이고 매 프레임 할 일이 없다.
+   */
+  private setupTileAnimations(tileset: Phaser.Tilemaps.Tileset, tiles: string[]): void {
+    const problems: string[] = [];
+    const anims = resolveTileAnimations(this.options.tileAnimations ?? manifest.tileAnimations, tiles, problems).filter((a) => {
+      // 타일셋 이미지에 프레임 타일이 아직 없으면(옛 PNG) 그 칸이 비어 보이므로 쓰지 않는다
+      const ok = a.frames.every((f) => f < tileset.total);
+      if (!ok) problems.push(`${a.name}: 타일셋 이미지(${tileset.total}칸)에 프레임 타일이 없음`);
+      return ok;
+    });
+    if (problems.length) console.warn(`[world] tileAnimations: ${problems.join("; ")}`);
+    this.tileAnims = anims;
+    this.tileAnimData = phaserTileData(anims);
+    if (!anims.length) return;
+    const data = (tileset.tileData ?? {}) as Record<number, object>;
+    for (const [id, d] of Object.entries(this.tileAnimData)) data[Number(id)] = { ...data[Number(id)], ...d };
+    tileset.tileData = data;
+  }
+
+  /**
+   * 경계 장식(결정 20): ground 레이어의 이웃 칸 분류를 보고 조각을 바닥 위·물체 아래 레이어에 얹는다.
+   * 보이는 것만 바꾼다(충돌 격자·오브젝트는 parsed에서 따로 만든다). 조각 시트가 없으면(옛 에셋) 건너뛴다.
+   */
+  private setupEdgeDecor(map: Phaser.Tilemaps.Tilemap, tileset: Phaser.Tilemaps.Tileset, parsed: ParsedMap, tiles: string[]): void {
+    this.edgeInfo = { layers: 0, cells: 0, pieces: {} };
+    const def = manifest.edgeDecor;
+    if (!def || this.options.edgeDecor === false) return;
+    if (!this.textureOk(EDGE_KEY, def.columns * TILE, TILE)) {
+      console.warn(`[world] edgeDecor: ${def.file} 이미지가 없어 경계 장식을 건너뜀`);
+      return;
+    }
+    const problems: string[] = [];
+    const decor = resolveEdgeDecor(def, tiles, problems);
+    if (problems.length) console.warn(`[world] edgeDecor: ${problems.join("; ")}`);
+    if (!decor) return;
+    // 타일 번호(gid)가 겹치지 않게 지형 타일셋 뒤에 붙인다
+    const firstgid = tileset.firstgid + tileset.total;
+    const edges = map.addTilesetImage("edgeDecor", EDGE_KEY, TILE, TILE, 0, 0, firstgid);
+    if (!edges) return;
+    const layers = computeEdgeLayers(parsed.ground, parsed.width, parsed.height, decor).map((l) =>
+      l.map((p) => (p < edges.total ? p : -1)),
+    );
+    const covered = new Set<number>();
+    layers.forEach((data, k) => {
+      const layer = map.createBlankLayer(`edges${k}`, edges, 0, 0, parsed.width, parsed.height, TILE, TILE);
+      if (!layer) return;
+      for (let i = 0; i < data.length; i++) {
+        if (data[i] < 0) continue;
+        layer.putTileAt(firstgid + data[i], i % parsed.width, Math.floor(i / parsed.width));
+        covered.add(i);
+      }
+      layer.setDepth(EDGE_DEPTH + k * 0.01);
+      this.layers.push(layer);
+    });
+    this.edgeInfo = { layers: layers.length, cells: covered.size, pieces: countEdgePieces(layers, decor.pieceNames) };
   }
 
   private clearRegion(): void {
     this.stopMovement();
     for (const s of this.sprites.values()) s.destroy();
     this.sprites.clear();
+    this.npcs.clear();
+    this.turnedNpc = null;
     for (const l of this.layers) l.destroy();
     this.layers = [];
     this.tilemap?.destroy();
     this.tilemap = null;
+    this.tileset = null;
+    this.tileAnims = [];
+    this.tileAnimData = {};
+    this.edgeInfo = { layers: 0, cells: 0, pieces: {} };
     this.region = null;
     this.parsed = null;
     // 연출 도중에 지역이 바뀌면 기다리던 쪽이 멈추지 않도록 바로 끝낸다
@@ -247,13 +425,25 @@ export class WorldScene extends Phaser.Scene {
     if (!key) return;
     const s = this.add.sprite(def.x * TILE + TILE / 2, (def.y + 1) * TILE, key, 0).setOrigin(0.5, 1);
     s.setDepth(DEPTH_BASE + def.y + 1);
+    this.sprites.set(def.id, s);
+    if (isCharacterSprite(key)) {
+      // 맵 위 NPC: 서서 숨쉬고 가끔 깜빡인다(옛 시트는 서기 프레임 그대로). 말을 걸면 플레이어 쪽을 본다
+      const prop = def.props.facing;
+      const home = typeof prop === "string" && (VALID_FACINGS as readonly string[]).includes(prop) ? (prop as Facing) : "down";
+      const anim = new CharacterAnimator(home, def.x * 7 + def.y * 13, 0);
+      anim.stop(this.time.now - ((def.x * 389 + def.y * 211) % 1500), home, true);
+      const view: NpcView = { sprite: s, anim, frame: -1, bob: 0, home };
+      this.npcs.set(def.id, view);
+      this.drawCharacter(view, anim.sample(this.time.now));
+      return;
+    }
     const idle = `${key}:idle`;
     if (!isStaticObject(def, key) && this.anims.exists(idle)) {
       s.anims.play(idle);
-      // 같은 종류가 한꺼번에 깜빡이지 않도록 시작 프레임을 엇갈리게
-      s.anims.setProgress((def.x * 7 + def.y * 3) % 2 ? 0.5 : 0);
+      // 같은 종류가 한꺼번에 움직이지 않도록 시작 프레임을 엇갈리게
+      const n = this.idleFrames(key);
+      s.anims.setProgress(((def.x * 7 + def.y * 3) % n) / n);
     }
-    this.sprites.set(def.id, s);
   }
 
   // ── 입력(DOM) ──────────────────────────────────────────────────────
@@ -369,8 +559,24 @@ export class WorldScene extends Phaser.Scene {
   }
 
   // ── 이동 ───────────────────────────────────────────────────────────
-  update(): void {
-    if (!this.moving) this.tryStep();
+  update(_time: number, delta: number): void {
+    if (!this.moving) {
+      this.tryStep();
+      // 막힌 칸을 향한 키를 떼면 제자리걸음을 멈춘다
+      if (this.playerView.anim.state === "bump" && (!this.held.length || !this.inputEnabled)) {
+        this.playerView.anim.stop(this.time.now);
+      }
+    }
+    this.animate(delta);
+  }
+
+  /** 캐릭터 프레임·화면 연출을 시간에 맞춰 갱신한다 */
+  private animate(delta: number): void {
+    const now = this.time.now;
+    this.drawCharacter(this.playerView, this.playerView.anim.sample(now));
+    if (this.nuri.visible) this.drawCharacter(this.nuriView, this.nuriView.anim.sample(now));
+    for (const npc of this.npcs.values()) this.drawCharacter(npc, npc.anim.sample(now));
+    this.fx.update(now, delta);
   }
 
   private blocked(x: number, y: number): boolean {
@@ -389,27 +595,37 @@ export class WorldScene extends Phaser.Scene {
     const ny = this.pos.y + dy;
     const blocker = this.index.blockerAt(nx, ny);
     if (blocker) {
-      this.setIdleFrames();
       // 몬스터는 접촉만으로 상호작용(심볼 인카운터, design.md §5.1)
       if (blocker.type === "monster" && this.bumpLatch !== blocker.id && !this.removing.has(blocker.id)) {
+        this.setIdleFrames();
         this.bumpLatch = blocker.id;
         this.safe(() => this.callbacks.onInteract({ ...blocker, props: { ...blocker.props } }));
+      } else {
+        this.bumpInPlace();
       }
       return;
     }
     if (this.blocked(nx, ny)) {
-      this.setIdleFrames();
+      this.bumpInPlace();
       return;
     }
     this.bumpLatch = null;
     this.startMove(nx, ny);
   }
 
+  /** 막힌 쪽으로 키를 누름: 그 방향으로 돌아서고, 누르고 있으면 제자리걸음(누리는 서 있음) */
+  private bumpInPlace(): void {
+    const now = this.time.now;
+    this.playerView.anim.bump(this.facing, now);
+    this.nuriView.anim.stop(now, this.nuriFacing);
+  }
+
   private startMove(nx: number, ny: number): void {
     this.moving = true;
     const from = { ...this.pos };
     const dir = this.facing;
-    this.player.anims.play(`player:walk:${dir}`, true);
+    const now = this.time.now;
+    this.playerView.anim.beginStep(dir, now, STEP_MS);
     const pTween = this.tweens.add({
       targets: this.player,
       x: nx * TILE + TILE / 2,
@@ -423,7 +639,8 @@ export class WorldScene extends Phaser.Scene {
     // 누리는 플레이어가 있던 칸으로 따라온다(뱀 따라가기)
     const nDir = facingFromDelta(from.x - this.nuriPos.x, from.y - this.nuriPos.y);
     if (nDir) {
-      this.nuri.anims.play(`nuri:walk:${nDir}`, true);
+      // 같은 걸음 번호 + 반 박자 위상차(nuriView의 phaseOffset)
+      this.nuriView.anim.beginStep(nDir, now, STEP_MS, this.playerView.anim.stepIndex);
       this.nuriFacing = nDir;
       this.moveTweens.push(
         this.tweens.add({
@@ -462,6 +679,7 @@ export class WorldScene extends Phaser.Scene {
     this.nuri.setPosition(this.nuriPos.x * TILE + TILE / 2, (this.nuriPos.y + 1) * TILE);
     this.nuri.setDepth(DEPTH_BASE + this.nuriPos.y + 1 + 0.1);
     const facing = this.facing;
+    this.restoreTurnedNpc();
     this.safe(() => this.callbacks.onMoved({ x, y, facing }));
     // 이동 도중 메뉴 등으로 입력이 꺼졌으면 앱이 바빠서 트리거를 받지 못하므로, 입력이 다시 켜질 때 발동한다
     if (this.inputEnabled) this.fireTriggers(x, y);
@@ -507,12 +725,31 @@ export class WorldScene extends Phaser.Scene {
     return { x: cx, y: cy };
   }
 
+  /** 플레이어·누리를 서기(→ 잠시 뒤 숨쉬기·깜빡임)로 */
   private setIdleFrames(): void {
     if (!this.player) return;
-    this.player.anims.stop();
-    this.player.setFrame(this.frame("player", FACING_ROW[this.facing] * 2));
-    this.nuri.anims.stop();
-    this.nuri.setFrame(this.frame("nuri", FACING_ROW[this.nuriFacing] * 2));
+    const now = this.time.now;
+    this.playerView.anim.stop(now, this.facing);
+    this.nuriView.anim.stop(now, this.nuriFacing);
+    this.drawCharacter(this.playerView, this.playerView.anim.sample(now));
+    this.drawCharacter(this.nuriView, this.nuriView.anim.sample(now));
+  }
+
+  /** 말을 건 NPC가 플레이어 쪽을 본다 */
+  private turnNpcToPlayer(id: string): void {
+    const npc = this.npcs.get(id);
+    if (!npc) return;
+    this.restoreTurnedNpc();
+    npc.anim.stop(this.time.now, OPPOSITE[this.facing]);
+    this.drawCharacter(npc, npc.anim.sample(this.time.now));
+    this.turnedNpc = id;
+  }
+
+  /** 플레이어가 한 칸 움직이면 NPC는 원래 방향으로 돌아간다 */
+  private restoreTurnedNpc(): void {
+    const npc = this.turnedNpc ? this.npcs.get(this.turnedNpc) : undefined;
+    this.turnedNpc = null;
+    if (npc) npc.anim.stop(this.time.now, npc.home);
   }
 
   private stopMovement(): void {
@@ -530,6 +767,7 @@ export class WorldScene extends Phaser.Scene {
     const [dx, dy] = DIRS[this.facing];
     const target = this.index.blockerAt(this.pos.x + dx, this.pos.y + dy);
     if (target && !this.removing.has(target.id)) {
+      if (target.type === "npc") this.turnNpcToPlayer(target.id);
       this.safe(() => this.callbacks.onInteract({ ...target, props: { ...target.props } }));
     }
   }
@@ -566,6 +804,9 @@ export class WorldScene extends Phaser.Scene {
       this.removed.add(id);
       return Promise.resolve();
     }
+    // NPC라면 사라지는 동안 더 움직이지 않게
+    this.npcs.delete(id);
+    if (this.turnedNpc === id) this.turnedNpc = null;
     const finish = () => {
       this.removed.add(id);
       this.index.remove(id);
@@ -639,5 +880,38 @@ export class WorldScene extends Phaser.Scene {
 
   getObjects(): MapObjectDef[] {
     return this.defs.map((d) => ({ ...d, props: { ...d.props } }));
+  }
+
+  setAmbienceEnabled(on: boolean): void {
+    this.fx.setEnabled(on);
+  }
+
+  inspect(): WorldInspect {
+    const cam = this.cameras.main;
+    const npcs: WorldInspect["npcs"] = {};
+    for (const [id, v] of this.npcs) npcs[id] = this.characterInfo(v);
+    const objects: WorldInspect["objects"] = {};
+    for (const [id, s] of this.sprites) {
+      if (this.npcs.has(id)) continue;
+      objects[id] = { key: s.texture.key, frame: Number(s.frame.name), frames: this.frameCount(s.texture.key), depth: s.depth };
+    }
+    const elapsed = this.layers[0]?.timeElapsed ?? 0;
+    const tileAnimations = this.tileAnims.map((a) => ({
+      name: a.name,
+      frames: [...a.frames],
+      current: this.tileset?.getAnimatedTileId(a.frames[0], elapsed) ?? a.frames[0],
+      cells: countAnimatedCells(this.parsed ? [this.parsed.ground, this.parsed.deco] : [], { [a.frames[0]]: this.tileAnimData[a.frames[0]] }),
+    }));
+    return {
+      player: this.characterInfo(this.playerView),
+      nuri: this.characterInfo(this.nuriView),
+      npcs,
+      objects,
+      tileAnimations,
+      edges: { ...this.edgeInfo, pieces: { ...this.edgeInfo.pieces } },
+      ambience: this.fx.info(),
+      fps: Math.round(this.game.loop.actualFps * 10) / 10,
+      camera: { x: cam.worldView.x, y: cam.worldView.y, width: cam.width, height: cam.height },
+    };
   }
 }

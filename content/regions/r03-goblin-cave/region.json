@@ -4,6 +4,7 @@
   "name": "고블린 동굴",
   "introDialogue": "region_intro",
   "clearDialogue": "region_clear",
+  "ambience": { "grade": "cave", "particles": "dust" },
   "recommended": [
     { "site": "programmers", "id": 42748, "title": "K번째수", "level": "Lv.1" },
     { "site": "programmers", "id": 68644, "title": "두 개 뽑아서 더하기", "level": "Lv.1" },

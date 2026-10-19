@@ -4,6 +4,7 @@
   "name": "거울 호수",
   "introDialogue": "region_intro",
   "clearDialogue": "region_clear",
+  "ambience": { "grade": "lake", "particles": "mist" },
   "recommended": [
     { "site": "programmers", "id": 12915, "title": "문자열 내 마음대로 정렬하기", "level": "Lv.1" },
     { "site": "programmers", "id": 68936, "title": "쿼드압축 후 개수 세기", "level": "Lv.2" },
