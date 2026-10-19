@@ -1,14 +1,21 @@
 {
   "id": "L7-4",
-  "title": "(임시) 체의 주문서",
+  "title": "체의 주문: 소수와 에라토스테네스의 체",
   "scroll": {
     "id": "scroll.sieve",
     "name": "체의 주문서",
-    "summary": "(임시 요약: 콘텐츠 담당이 채움)"
+    "summary": "소수는 1과 자기 자신으로만 나누어떨어지는 2 이상의 정수(1은 소수 아님). 하나씩 판정은 약수의 짝을 이용해 `while i * i <= n:`까지만 나눠 보는 O(√N). 끝 조건이 `<`이면 49 같은 완전제곱수를 소수로 본다. `import math` 후 `math.isqrt(n)`은 정수 제곱근(내림), `math.sqrt`는 실수라 큰 수에서 어긋날 수 있다. 판정할 수가 많으면 에라토스테네스의 체: `is_prime = [True] * (n + 1)`, 0·1은 False, 남은 소수 i의 배수를 `range(i * i, n + 1, i)`로 지움. 한 번 만들면 판정은 `is_prime[x]`로 O(1). 체는 메모리 때문에 10^7 안팎까지, 그보다 큰 수는 √N 판정."
   },
   "introduces": [
     "api:math.isqrt",
     "api:math.sqrt",
     "import:math"
-  ]
+  ],
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 배수를 지울 때 건너뛰는 간격을 채워서 50 이하의 소수 개수 `15`를 구해 봐.",
+    "code": "n = 50\nis_prime = [True] * (n + 1)\nis_prime[0] = False\nis_prime[1] = False\ni = 2\nwhile i * i <= n:\n    if is_prime[i]:\n        for j in range(i * i, n + 1, ___):\n            is_prime[j] = False\n    i += 1\nprint(is_prime.count(True))\n",
+    "expectedOutput": "15\n",
+    "answer": "i"
+  }
 }
