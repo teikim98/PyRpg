@@ -5,6 +5,10 @@ import { expect, test, type Page } from "@playwright/test";
 // window.__world / __events 타입은 src/game/harness.ts의 전역 선언을 쓴다
 import type { Facing } from "../../src/contracts/state";
 
+const manifest = JSON.parse(readFileSync("assets/manifest.json", "utf-8")) as {
+  tileAnimations?: Record<string, { frames: string[]; fps: number }>;
+};
+
 /** region1-spec.md §4의 오브젝트 ID와 종류 */
 const SPEC_OBJECTS: Record<string, string> = {
   spawn: "spawn",
@@ -391,7 +395,10 @@ test.describe("world animation and ambience (art overhaul)", () => {
   });
 
   test("old 16×16 sheet keeps working and no longer freezes between steps", async ({ page }) => {
+    // 지금 플레이어 그림은 새 형식이라, 옛 형식(16×16 가로 8프레임)은 코드로 그린 시트로 확인한다(?sheet=old)
     await bootWith(page, "?fx=off");
+    expect((await inspect(page)).player.layout).toBe("grid6x4");
+    await bootWith(page, "?sheet=old&fx=off");
     expect((await inspect(page)).player.layout).toBe("legacy8");
     await teleport(page, 5, 25, "right");
     await startSampling(page);
@@ -467,17 +474,44 @@ test.describe("world animation and ambience (art overhaul)", () => {
     expect(frames.m_P0105.size).toBe(4);
     expect(frames.chest_shop).toEqual(new Set([0]));
 
+    // 지금 그림: 지역 1 몬스터는 새 화풍 4프레임
     await bootWith(page, "?fx=off");
     frames = await seen();
     objs = (await inspect(page)).objects;
-    expect(objs.m_P0101.frames).toBe(2);
-    expect(frames.m_P0101).toEqual(new Set([0, 1]));
+    expect(objs.m_P0101.frames).toBe(4);
+    expect(frames.m_P0101).toEqual(new Set([0, 1, 2, 3]));
+    expect(frames.chest_shop).toEqual(new Set([0]));
+
+    // 옛 형식 그림(지역 2~7은 아직 2프레임): 2프레임만 돈다
+    await bootWith(page, "?map=r07&fx=off");
+    frames = await seen();
+    objs = (await inspect(page)).objects;
+    expect(objs.m_P0701.key).toBe("monster_sand_stream");
+    expect(objs.m_P0701.frames).toBe(2);
+    expect(frames.m_P0701).toEqual(new Set([0, 1]));
+    expect(objs.m_P0707.key).toBe("boss_sand_scorpion");
+    expect(frames.m_P0707).toEqual(new Set([0, 1]));
   });
 
   test("tileAnimations swap the painted tile over time without touching map data", async ({ page }) => {
+    // manifest tileAnimations(지역 1 물·꽃·가로등): 지역 1에 있는 것은 칸이 있고, 그린 타일이 프레임을 돈다
     await bootWith(page, "?fx=off");
-    // 지금 manifest에는 tileAnimations가 없다(아트 담당이 추가)
-    expect((await inspect(page)).tileAnimations).toEqual([]);
+    const objects = await page.evaluate(() => window.__world!.getObjects());
+    const anims = (await inspect(page)).tileAnimations;
+    expect(anims.map((a) => a.name).sort()).toEqual(Object.keys(manifest.tileAnimations ?? {}).sort());
+    for (const a of anims) {
+      expect(a.frames, a.name).toHaveLength(manifest.tileAnimations![a.name].frames.length);
+      expect(a.cells, a.name).toBeGreaterThan(0);
+    }
+    const realWater = new Set<number>();
+    for (let i = 0; i < 16; i++) {
+      realWater.add((await inspect(page)).tileAnimations.find((a) => a.name === "water")!.current);
+      await page.waitForTimeout(90);
+    }
+    expect(realWater).toEqual(new Set(anims.find((a) => a.name === "water")!.frames));
+    // 맵 데이터(오브젝트)는 그대로
+    expect(await page.evaluate(() => window.__world!.getObjects())).toEqual(objects);
+
     await bootWith(page, "?tileanim=test&fx=off");
     const water = (await inspect(page)).tileAnimations[0];
     expect(water.name).toBe("water");

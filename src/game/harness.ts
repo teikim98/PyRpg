@@ -1,5 +1,5 @@
 // dev/world.html용 하네스: 지역 맵을 직접 불러 월드만 띄운다(기본 지역 1, ?map=r02~r07이면 그 지역.
-// ?sheet=new·?tileanim=test·?fx=off·?edges=off는 harnessOptions 참고).
+// ?sheet=new·?sheet=old·?tileanim=test·?fx=off·?edges=off는 harnessOptions 참고).
 // window.__world = 컨트롤러, window.__events = 콜백 기록(E2E에서 읽는다).
 import mapRaw from "../../content/regions/r01-echo-village/map.tmj?raw";
 import mapRawR02 from "../../content/regions/r02-crossroad-forest/map.tmj?raw";
@@ -118,6 +118,7 @@ export function buildHarnessRegion(which: HarnessMap = "r01"): Region {
 /**
  * URL로 고르는 시험 옵션(E2E·눈으로 확인용)
  * - ?sheet=new: 플레이어·누리·NPC를 코드로 그린 새 형식(16×24, 6×4) 시트로, 몬스터·보스는 4프레임으로
+ * - ?sheet=old: 플레이어·누리를 코드로 그린 옛 형식(16×16, 가로 8프레임) 시트로(옛 시트를 읽는지 확인용)
  * - ?tileanim=test: 물 타일을 [water, path] 2프레임(4fps)으로 바꿔 보이게
  * - ?fx=off: 화면 연출을 끈 채로 시작
  * - ?edges=off: 경계 장식(결정 20)을 그리지 않음(전후 비교용)
@@ -135,6 +136,7 @@ export function harnessOptions(search: string): WorldOptions {
       ...new Set(Object.values(HARNESS_MAPS).flatMap((m) => Object.values(m.sprites))),
     ];
   }
+  if (q.get("sheet") === "old") options.legacySheets = ["player", "nuri"];
   if (q.get("tileanim") === "test") options.tileAnimations = { water: { frames: ["water", "path"], fps: 4 } };
   if (q.get("fx") === "off") options.ambience = false;
   if (q.get("edges") === "off") options.edgeDecor = false;

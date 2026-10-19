@@ -101,6 +101,8 @@ export interface WorldInspect {
 export interface WorldOptions {
   /** 이 스프라이트는 파일 대신 코드로 그린 새 형식 시험 시트를 쓴다(캐릭터 16×24 6열×4행, 그 밖 4프레임) */
   testSheets?: string[];
+  /** 이 스프라이트는 파일 대신 코드로 그린 옛 형식 시트를 쓴다(캐릭터 16×16 가로 8프레임, 그 밖 2프레임) */
+  legacySheets?: string[];
   /** manifest.tileAnimations 대신 쓸 타일 애니메이션 */
   tileAnimations?: Record<string, { frames: string[]; fps: number }>;
   /** false면 화면 연출을 끈 채로 시작 */

@@ -156,6 +156,7 @@ export class WorldScene extends Phaser.Scene {
     }
     for (const name of Object.keys(manifest.sprites)) this.ensureSprite(name);
     for (const name of this.options.testSheets ?? []) if (!manifest.sprites[name]) this.ensureSprite(name);
+    for (const name of this.options.legacySheets ?? []) if (!manifest.sprites[name]) this.ensureSprite(name);
 
     this.player = this.add.sprite(0, 0, "player", 0).setOrigin(0.5, 1).setVisible(false);
     this.nuri = this.add.sprite(0, 0, "nuri", 0).setOrigin(0.5, 1).setVisible(false);
@@ -184,15 +185,19 @@ export class WorldScene extends Phaser.Scene {
 
   /**
    * 스프라이트 텍스처가 없으면 자리 표시용으로 만들고, 애니메이션을 등록한다.
-   * options.testSheets에 있으면 파일 대신 코드로 그린 새 형식 시트(캐릭터 16×24 6×4, 그 밖 4프레임)를 쓴다.
+   * options.testSheets에 있으면 파일 대신 코드로 그린 새 형식 시트(캐릭터 16×24 6×4, 그 밖 4프레임)를,
+   * options.legacySheets에 있으면 옛 형식 시트(캐릭터 16×16 가로 8프레임, 그 밖 2프레임)를 쓴다.
    */
   private ensureSprite(name: string): void {
     const big = name.startsWith("boss_") ? 32 : 16;
     const test = this.options.testSheets?.includes(name) ?? false;
+    const legacy = !test && (this.options.legacySheets?.includes(name) ?? false);
     const def = test
       ? { frameWidth: big, frameHeight: isCharacterSprite(name) ? 24 : big }
-      : (manifest.sprites[name] ?? { frameWidth: big, frameHeight: big });
-    if (test || !this.textureOk(name, def.frameWidth, def.frameHeight) || this.textures.get(name).frameTotal <= 1) {
+      : legacy
+        ? { frameWidth: big, frameHeight: big }
+        : (manifest.sprites[name] ?? { frameWidth: big, frameHeight: big });
+    if (test || legacy || !this.textureOk(name, def.frameWidth, def.frameHeight) || this.textures.get(name).frameTotal <= 1) {
       this.replaceTexture(name);
       const { canvas, frames, columns } = makeSpriteCanvas(name, def.frameWidth, def.frameHeight, test ? 4 : 2);
       const tex = this.textures.addCanvas(name, canvas)!;
