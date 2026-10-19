@@ -293,6 +293,12 @@
       "floating_pages": "ground",
       "port_cobble": "ground",
       "lake_shore": "ground",
+      "desert_sand": "ground",
+      "desert_path": "ground",
+      "desert_dune": "ground",
+      "star_floor": "ground",
+      "altar_floor": "ground",
+      "canal_bridge": "ground",
       "dock_plank": "deck",
       "ship_deck": "deck",
       "lake_bridge": "deck",
@@ -305,6 +311,7 @@
       "lake_water": "water_dark",
       "mirror_water": "water",
       "lake_stepping_stone": "water_dark",
+      "oasis_water": "water",
       "house_wall": "wall",
       "house_window": "wall",
       "house_door": "wall",
@@ -321,7 +328,10 @@
       "lib_wall_top": "wall",
       "bookshelf": "wall",
       "shelf_gap": "wall",
-      "lighthouse_wall": "wall"
+      "lighthouse_wall": "wall",
+      "sandstone_wall": "wall",
+      "sandstone_gap": "wall",
+      "ruin_pillar": "wall"
     },
     "rules": [
       {

@@ -1,4 +1,4 @@
-// 경계 장식(결정 20, src/game/edgeDecor.ts): dev/world.html 하네스에서 지역 1~6을 그려
+// 경계 장식(결정 20, src/game/edgeDecor.ts): dev/world.html 하네스에서 지역 1~7을 그려
 // 조각 레이어가 생기는지, 장식을 켜도 충돌(물가에서 멈춤)이 그대로인지 확인하고 전후 화면을 남긴다.
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
@@ -14,6 +14,8 @@ const SCENES: { map: string; dir: string; at: [number, number]; sets: string[] }
   { map: "r04", dir: "r04-grand-library", at: [48, 12], sets: ["wall"] },
   { map: "r05", dir: "r05-trade-port", at: [78, 8], sets: ["shore", "deck"] },
   { map: "r06", dir: "r06-mirror-lake", at: [39, 12], sets: ["island", "mist", "shore", "shore_dark"] },
+  // 지역 7(옛 형식 아트): 신기루 시장의 오아시스와 사암 벽
+  { map: "r07", dir: "r07-hourglass-desert", at: [51, 10], sets: ["shore", "wall"] },
 ];
 
 async function bootWith(page: Page, query: string): Promise<void> {
@@ -49,7 +51,7 @@ function cellAboveWater(dir: string): [number, number] {
   const taken = new Set(
     map.layers.flatMap((l) => l.objects ?? []).map((o) => Math.floor(o.y / 16) * map.width + Math.floor(o.x / 16)),
   );
-  const water = new Set(["water", "harbor_water", "lake_water", "cave_pool", "stream"]);
+  const water = new Set(["water", "harbor_water", "lake_water", "cave_pool", "stream", "oasis_water"]);
   for (let y = 0; y + 1 < map.height; y++) {
     for (let x = 0; x < map.width; x++) {
       const i = y * map.width + x;

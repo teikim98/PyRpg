@@ -1,4 +1,4 @@
-// dev/world.html용 하네스: 지역 맵을 직접 불러 월드만 띄운다(기본 지역 1, ?map=r02~r06이면 그 지역.
+// dev/world.html용 하네스: 지역 맵을 직접 불러 월드만 띄운다(기본 지역 1, ?map=r02~r07이면 그 지역.
 // ?sheet=new·?tileanim=test·?fx=off·?edges=off는 harnessOptions 참고).
 // window.__world = 컨트롤러, window.__events = 콜백 기록(E2E에서 읽는다).
 import mapRaw from "../../content/regions/r01-echo-village/map.tmj?raw";
@@ -13,6 +13,8 @@ import mapRawR06 from "../../content/regions/r06-mirror-lake/map.tmj?raw";
 import regionR04 from "../../content/regions/r04-grand-library/region.json";
 import regionR05 from "../../content/regions/r05-trade-port/region.json";
 import regionR06 from "../../content/regions/r06-mirror-lake/region.json";
+import mapRawR07 from "../../content/regions/r07-hourglass-desert/map.tmj?raw";
+import regionR07 from "../../content/regions/r07-hourglass-desert/region.json";
 import type { Problem, Region, RegionAmbience } from "../contracts/content";
 import type { MapObjectDef, WorldController, WorldOptions } from "../contracts/world";
 import { createWorld } from "./index";
@@ -75,9 +77,9 @@ const ENEMY_SPRITES_R03: Record<string, string> = {
   P0311: "boss_goblin_chief",
 };
 
-/** 지역 4~6은 problem.json의 enemy.sprite를 그대로 쓴다(그래픽 확인용) */
+/** 지역 4~7은 problem.json의 enemy.sprite를 그대로 쓴다(그래픽 확인용) */
 const PROBLEM_JSON = import.meta.glob<{ id: string; enemy?: { sprite?: string } }>(
-  "../../content/regions/r0[456]-*/problems/*/problem.json",
+  "../../content/regions/r0[4-7]-*/problems/*/problem.json",
   { eager: true, import: "default" },
 );
 function enemySprites(dir: string): Record<string, string> {
@@ -88,7 +90,7 @@ function enemySprites(dir: string): Record<string, string> {
   return out;
 }
 
-type HarnessMap = "r01" | "r02" | "r03" | "r04" | "r05" | "r06";
+type HarnessMap = "r01" | "r02" | "r03" | "r04" | "r05" | "r06" | "r07";
 const HARNESS_MAPS: Record<
   HarnessMap,
   { raw: string; sprites: Record<string, string>; name: string; order: number; ambience?: RegionAmbience }
@@ -99,6 +101,7 @@ const HARNESS_MAPS: Record<
   r04: { raw: mapRawR04, sprites: enemySprites("r04-grand-library"), name: regionR04.name, order: 4, ambience: regionR04.ambience },
   r05: { raw: mapRawR05, sprites: enemySprites("r05-trade-port"), name: regionR05.name, order: 5, ambience: regionR05.ambience },
   r06: { raw: mapRawR06, sprites: enemySprites("r06-mirror-lake"), name: regionR06.name, order: 6, ambience: regionR06.ambience },
+  r07: { raw: mapRawR07, sprites: enemySprites("r07-hourglass-desert"), name: regionR07.name, order: 7, ambience: regionR07.ambience },
 };
 
 export function buildHarnessRegion(which: HarnessMap = "r01"): Region {
