@@ -1,6 +1,7 @@
 // 앱 계층: 월드·UI·실행기·진행 규칙·저장을 연결한다(design.md §4 게임 루프).
 // 월드는 그리기와 입력만, UI는 화면만, 규칙은 src/systems의 순수 함수가 맡고, 여기서는 순서만 정한다.
-import type { DialogueLine, GameContent, ItemDef, Lesson, Problem, Region } from "../contracts/content";
+import { manifest } from "../contracts/assets";
+import type { DialogueLine, GameContent, ItemDef, Lesson, Problem, Puzzle, Region } from "../contracts/content";
 import type { PythonRunner } from "../contracts/runner";
 import type { BattleOutcome, Facing, SaveData } from "../contracts/state";
 import type {
@@ -17,6 +18,7 @@ import type {
 } from "../contracts/ui";
 import type { MapObjectDef, WorldController, WorldFactory } from "../contracts/world";
 import { OPPOSITE } from "../game/grid";
+import { objectSpriteKey } from "../game/objectSprite";
 import { diagnoseResult } from "../python/diagnose";
 import { explainError } from "../python/explain";
 import type { PythonRunnerHandle } from "../python/runner";
@@ -26,6 +28,13 @@ import {
   accessorySlots,
   applyBattleOutcome,
   applyPracticeOutcome,
+  applyPuzzleSolved,
+  complexityGuessFlag,
+  createComplexityTracker,
+  doorPuzzleId,
+  isPuzzleSolved,
+  puzzleAsProblem,
+  shouldAskComplexity,
   applyQuestEvent,
   awardTitles,
   buyItem,
@@ -114,6 +123,8 @@ export class App {
   private notices: string[] = [];
   /** 퀘스트 보상으로 오른 레벨(알림을 띄울 때 레벨업 대사) */
   private pendingLevel: number | null = null;
+  /** 고장 난 다리 퍼즐의 작성 코드(이번 실행 동안만, 퍼즐 ID → 코드) */
+  private readonly puzzleDrafts = new Map<string, string>();
 
   constructor(private readonly deps: AppDeps) {
     this.now = deps.now ?? (() => new Date());
@@ -348,9 +359,89 @@ export class App {
       if (o.props.lockedDialogue) await this.say(String(o.props.lockedDialogue));
       return;
     }
+    // 고장 난 다리(design.md §5.4): door에 puzzle이 있으면 풀어야 열린다
+    const puzzleId = doorPuzzleId(o.props);
+    if (puzzleId && !isPuzzleSolved(this.save, puzzleId)) {
+      await this.openPuzzle(o, puzzleId);
+      return;
+    }
     this.save.removedObjects.push(o.id);
     await this.world.removeObject(o.id, "open");
     await this.persist();
+  }
+
+  /**
+   * 고장 난 다리 퍼즐(design.md §5.4, docs/phase3/region07-spec.md §9.1): 다리 앞 대사(lockedDialogue) → 전투 화면을 퍼즐 모드로 연다.
+   * 통과하면 flags["puzzle.solved:<ID>"]와 door 제거를 저장하고 풀었을 때 대사(solvedDialogue)를 재생한다.
+   * 전투 수·보상·문제 기록·그림자·일일 퀘스트·칭호·스트릭에는 넣지 않는다. 작성 코드는 이번 실행 동안만 기억한다(저장하지 않음)
+   */
+  private async openPuzzle(o: MapObjectDef, puzzleId: string): Promise<void> {
+    const puzzle = this.findPuzzle(puzzleId);
+    if (!puzzle) {
+      console.warn(`퍼즐 없음: ${puzzleId}`);
+      if (o.props.lockedDialogue) await this.say(String(o.props.lockedDialogue));
+      return;
+    }
+    if (o.props.lockedDialogue) await this.say(String(o.props.lockedDialogue));
+    if (!this.deps.runner.isReady()) {
+      this.deps.ui.hud.toast("마력을 모으는 중이야… 잠깐만!");
+      await this.deps.runner.init();
+    }
+    const fx = this.effects();
+    // 적 대신 맵에 그려진 그림(door의 sprite, 없으면 obj_door)
+    const sprite = objectSpriteKey(o, [], (name) => name in manifest.sprites) ?? "obj_door";
+    const problem = puzzleAsProblem(puzzle, sprite);
+    let solved = false;
+    const solve = () => {
+      if (solved) return;
+      solved = true;
+      this.save = applyPuzzleSolved(this.save, puzzle.id, o.id);
+      this.puzzleDrafts.delete(puzzle.id);
+    };
+    const outcome = await this.deps.ui.battle.open({
+      problem,
+      runner: this.deps.runner,
+      companion: this.deps.content.companion,
+      names: this.names,
+      player: { hp: this.save.player.hp, maxHp: maxHp(levelFromXp(this.save.player.xp), fx.maxHpBonus) },
+      draft: this.puzzleDrafts.get(puzzle.id),
+      knockouts: 0,
+      hintLevel: 0,
+      priorElapsedMs: 0,
+      regionOrder: this.regionOrderOf(problem),
+      traceback: this.deps.content.traceback,
+      explain: explainError,
+      diagnose: diagnoseResult,
+      onDraft: (code) => {
+        if (!solved) this.puzzleDrafts.set(puzzle.id, code);
+      },
+      // 배너를 누르기 전에 새로고침해도 다리가 이어진 채로 남게 바로 저장한다
+      onVictory: () => {
+        solve();
+        this.persist().catch((e) => console.error("퍼즐 저장 실패", e));
+      },
+      companionLines: { fatalRecursion: this.deps.content.commonDialogues.fatal_recursion },
+      puzzle: true,
+      perks: fx.lineCounts ? { lineCounts: true } : {},
+    });
+    if (outcome.result !== "victory") {
+      if (!solved) this.puzzleDrafts.set(puzzle.id, outcome.finalCode);
+      // 다리를 등지게 돌려세운다(바로 Space를 눌러 다시 열리지 않게)
+      const pos = this.world.getPlayerPosition();
+      this.world.teleport(pos.x, pos.y, OPPOSITE[pos.facing]);
+      this.save.location = { regionId: this.region.id, x: pos.x, y: pos.y, facing: OPPOSITE[pos.facing] };
+      this.scheduleSave(this.save);
+      return;
+    }
+    solve();
+    await this.persist();
+    await this.world.removeObject(o.id, "open");
+    if (puzzle.solvedDialogue) await this.say(puzzle.solvedDialogue);
+  }
+
+  /** 퍼즐 ID → 퍼즐(지금 지역 먼저) */
+  private findPuzzle(id: string): Puzzle | undefined {
+    return this.region.puzzles?.find((z) => z.id === id) ?? this.deps.content.regions.flatMap((r) => r.puzzles ?? []).find((z) => z.id === id);
   }
 
   // ───────────── 지역 간 이동 ─────────────
@@ -458,6 +549,11 @@ export class App {
     const potion = this.potionItem();
     // 막혔을 때 제안할 연습 상대(design.md §6.2, 단위 3-E3). 그림자전·연습 몬스터 전투에서는 제안하지 않는다
     const practiceOffer = shadow || problem.practice ? undefined : this.findPracticeOffer(problem);
+    // 보스 복잡도 예측 질문(design.md §5.3, region07-spec.md §9.2): 맵의 보스전에서만. 모래시계 부적이 이미 목표를 보여 준 문제는 묻지 않는다
+    const askComplexity =
+      problem.targetComplexity !== undefined &&
+      shouldAskComplexity(problem, { shadow, targetRevealed: this.save.flags[hourglassFlag(this.originalProblemId(problem))] === true });
+    const guess = askComplexity ? createComplexityTracker(problem.targetComplexity!) : null;
     // 전투 도중의 자동 저장: 힌트·해설서·반격·탭 숨김이 있었으면 '지금 후퇴(HP 0이면 쓰러짐)했다면'의 결과를 저장한다.
     // 그러지 않으면 새로고침으로 힌트 대가·해설서(보상 0)·쓰러짐 기록을 지울 수 있다(§5.3, §7.6)
     let progress: BattleProgress | null = null;
@@ -517,7 +613,28 @@ export class App {
         ...this.practiceLines(),
         solutionUnlockedHint: this.deps.content.commonDialogues.solution_unlocked_hint,
         hourglassReveal: this.deps.content.commonDialogues.hourglass_reveal,
+        complexityAsk: this.deps.content.commonDialogues.complexity_ask,
+        complexityAnswered: this.deps.content.commonDialogues.complexity_answered,
+        complexitySkipped: this.deps.content.commonDialogues.complexity_skipped,
       },
+      ...(guess
+        ? {
+            complexityQuestion: {
+              choices: [...problem.complexityChoices!],
+              onAnswer: (choice: string | null) => {
+                // 저장하는 값은 맞았는가(flags는 true/false만 담는다). 건너뛰면 남기지 않는다
+                const correct = guess.answer(choice);
+                if (correct === null) return;
+                this.save.flags[complexityGuessFlag(problem.id)] = correct;
+                saveDuringBattle(true);
+              },
+              takeReveal: () => {
+                const r = guess.reveal();
+                return r ? { guess: r.guess, target: r.target } : null;
+              },
+            },
+          }
+        : {}),
       shadow,
       ...(shadowItem?.anonymous ? { shadowAnonymous: true } : {}),
       ...(practiceOffer ? { practiceOffer } : {}),
@@ -572,7 +689,10 @@ export class App {
     this.refreshHud();
     // [연습 전투] 버튼(결정 23 P-E5): 이 전투는 후퇴로 적용했고, 후퇴 대사 없이 바로 연습 전투를 연다
     const practice = outcome.startPractice && outcome.result === "retreat" && practiceOffer && "problem" in practiceOffer ? practiceOffer.problem : null;
-    await this.afterBattle(problem, opts.object, result.events, result.summary, shadowItem, practice !== null);
+    // 복잡도 예측: 전투 중 모래시계 부적이 먼저 공개하지 않았으면 보상 창에서 예측과 목표를 함께 보인다(결정 30)
+    const reveal = outcome.result === "victory" ? guess?.reveal() : null;
+    const summary = reveal ? { ...result.summary, complexityReveal: { guess: reveal.guess, target: reveal.target } } : result.summary;
+    await this.afterBattle(problem, opts.object, result.events, summary, shadowItem, practice !== null);
     await this.flushNotices();
     if (practice) await this.runPracticeBattle(practice);
   }

@@ -1,0 +1,6 @@
+{
+  "id": "L7-1",
+  "title": "픽스처 레슨",
+  "scroll": { "id": "scroll.t", "name": "시험의 주문서", "summary": "반복과 조건" },
+  "introduces": ["def", "if", "while", "augassign", "op:%", "return"]
+}
