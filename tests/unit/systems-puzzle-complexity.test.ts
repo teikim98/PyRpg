@@ -8,11 +8,13 @@ import {
   createComplexityTracker,
   doorPuzzleId,
   isPuzzleSolved,
+  itemsRewardedBy,
   puzzleAsProblem,
   puzzleSolvedFlag,
   shouldAskComplexity,
   validComplexityChoices,
 } from "../../src/systems";
+import { loadContent } from "../../src/content/loader";
 import { validateSave } from "../../src/state/validate";
 import { newSave } from "./systems-fixtures";
 
@@ -94,6 +96,14 @@ describe("퍼즐: 문제 모양으로 바꾸기와 저장", () => {
     // 두 번 적용해도 door는 한 번만
     expect(applyPuzzleSolved(s1, "Z0701", "bridge_r07").removedObjects.filter((x) => x === "bridge_r07")).toHaveLength(1);
     expect(validateSave(JSON.parse(JSON.stringify(s1))).ok).toBe(true);
+  });
+});
+
+describe("모래시계 부적 보상(region07-spec.md §5.2)", () => {
+  it("지역 7 최종 보스 P0714를 처음 이기면 얻는다(지역 2 길잡이 깃털과 같은 방식)", () => {
+    const items = loadContent().items;
+    expect(items.find((i) => i.id === "hourglass-charm")?.rewardFrom).toBe("P0714");
+    expect(itemsRewardedBy(items, "P0714").map((i) => i.id)).toEqual(["hourglass-charm"]);
   });
 });
 
