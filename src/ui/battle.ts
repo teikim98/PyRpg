@@ -665,7 +665,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
             const fb = buildCastFeedback(res, disclosureMode(ctx.regionOrder, p.boss));
             if (relaxed) {
               // 연습 전투·퍼즐은 반격하지 않는다
-              const calm = puzzleMode ? "다리는 반격하지 않아. 어디가 틀렸는지 천천히 찾아보자." : "연습 전투라 반격은 없어. 천천히 고쳐 보자.";
+              const calm = puzzleMode ? "장치는 반격하지 않아. 어디가 틀렸는지 천천히 찾아보자." : "연습 전투라 반격은 없어. 천천히 고쳐 보자.";
               say(ex.emotion, `${ex.html}<div class="counter is-practice">${calm}</div>`, detailsEl(fb));
               revealTargetOnTle(res);
               timers.push(window.setTimeout(refillEnemy, 900));
@@ -772,7 +772,7 @@ export function createBattleUI(env: UiEnv): BattleUI {
           setBusy(true);
           if (puzzleMode) {
             say("happy", "고쳤어! 장치가 다시 움직이기 시작했어!");
-            showBanner("수리 완료!", `${withJosa(p.enemy.name, "이/가")} 다시 이어졌다.`, "계속", "is-victory is-puzzle", () => finish("victory"));
+            showBanner("수리 완료!", "고친 주문으로 장치가 다시 움직이기 시작했다.", "계속", "is-victory is-puzzle", () => finish("victory"));
             return;
           }
           if (practiceMode) {
