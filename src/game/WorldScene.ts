@@ -31,7 +31,8 @@ const DEPTH_BASE = 10;
 const tilesetKey = (name: string) => `tileset:${name}`;
 
 /** 닫힘/열림 두 프레임이라 제자리 애니메이션을 하지 않는 스프라이트 */
-const STATIC_SPRITES = new Set(["obj_chest", "obj_door"]);
+// obj_bridge_broken: 고장 난 다리(region07-spec.md §7, 정지 그림). door에 그린 그림은 objectSprite.ts isStaticObject로도 멈춘다
+const STATIC_SPRITES = new Set(["obj_chest", "obj_door", "obj_bridge_broken"]);
 
 function isCharacterSprite(key: string): boolean {
   return key === "player" || key === "nuri" || key.startsWith("npc_");
