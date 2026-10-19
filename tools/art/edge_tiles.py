@@ -135,30 +135,34 @@ def _grass_pieces(src, tip, line, hi, seed):
 
 
 def _shore_pieces(seed=53):
-    """물가 8방향(반투명). 위쪽 땅: 둑 그늘 2px + 물거품 선 + 얕은 물 1px.
-    나머지 방향: 가장자리 물거품 선(군데군데 끊김) + 안쪽 얕은 물 2px."""
+    """물가 8방향(반투명). 위쪽 땅: 둑 그늘 2px + 물거품 선 + 얕은 물 0~1px.
+    나머지 방향: 가장자리 물거품 선(군데군데 끊김) + 안쪽 얕은 물 0~2px(덩어리마다 폭이 달라 테두리처럼 보이지 않게)."""
     bank, foam, shallow = c("bank"), c("foam"), c("shallow")
     out = {}
     g = _blank()
     for x in range(T):
         g[0][x] = g[1][x] = bank
-        g[2][x] = foam if noise(x // 2, 0, seed) < 0.75 else shallow
-        g[3][x] = foam if g[2][x] == shallow and noise(x, 1, seed) < 0.5 else shallow
+        g[2][x] = foam if noise(x // 2, 0, seed) < 0.6 else shallow
+        if noise(x // 3, 6, seed) < 0.6:  # 얕은 물 폭이 2~3칸 덩어리마다 1~2px로 들쭉날쭉
+            g[3][x] = foam if g[2][x] == shallow and noise(x, 1, seed) < 0.5 else shallow
     out["n"] = g
     g = _blank()
     for x in range(T):
-        g[T - 1][x] = foam if noise(x // 3, 2, seed) < 0.7 else shallow
-        g[T - 2][x] = g[T - 3][x] = shallow
+        g[T - 1][x] = foam if noise(x // 3, 2, seed) < 0.55 else shallow
+        for k in range(1, 1 + int(noise(x // 2, 7, seed) * 3)):
+            g[T - 1 - k][x] = shallow
     out["s"] = g
     g = _blank()
     for y in range(T):
-        g[y][0] = foam if noise(4, y // 3, seed) < 0.7 else shallow
-        g[y][1] = g[y][2] = shallow
+        g[y][0] = foam if noise(4, y // 3, seed) < 0.55 else shallow
+        for k in range(1, 1 + int(noise(8, y // 2, seed) * 3)):
+            g[y][k] = shallow
     out["w"] = g
     g = _blank()
     for y in range(T):
-        g[y][T - 1] = foam if noise(5, y // 3, seed) < 0.7 else shallow
-        g[y][T - 2] = g[y][T - 3] = shallow
+        g[y][T - 1] = foam if noise(5, y // 3, seed) < 0.55 else shallow
+        for k in range(1, 1 + int(noise(9, y // 2, seed) * 3)):
+            g[y][T - 1 - k] = shallow
     out["e"] = g
     g = _blank()  # nw·ne: 둑 그늘 2×2 + 물거품 한 점 + 얕은 물
     g[0][0] = g[0][1] = g[1][0] = g[1][1] = bank
