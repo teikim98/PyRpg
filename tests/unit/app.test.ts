@@ -2,9 +2,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App, COMPANION_FLAG, hourglassFlag } from "../../src/app/app";
 import { loadContent } from "../../src/content/loader";
+import { manifest } from "../../src/contracts/assets";
 import type { DialogueLine, GameContent, Lesson, Region } from "../../src/contracts/content";
 import type { PythonRunner } from "../../src/contracts/runner";
-import type { BattleOutcome, Facing, SaveData } from "../../src/contracts/state";
+import type { BattleOutcome, Facing, RewardSummary, SaveData } from "../../src/contracts/state";
 import type {
   BattleContext,
   BoardView,
@@ -92,6 +93,8 @@ interface Harness {
   said: string[];
   hud: HudState[];
   recommended: string[];
+  /** 보상 창에 넘긴 요약(순서대로) */
+  rewards: RewardSummary[];
   battle: { open: (ctx: BattleContext) => Promise<BattleOutcome> };
   toasts: string[];
   /** 시스템 화면 대본(단위 3-1). 화면이 열리면 부른다 */
@@ -116,6 +119,7 @@ function harness(content: GameContent, store: MemoryStore): Harness {
   const said: string[] = [];
   const hud: HudState[] = [];
   const recommended: string[] = [];
+  const rewards: RewardSummary[] = [];
   const toasts: string[] = [];
   const sys: Harness["sys"] = {};
   const tables = [...content.regions.map((r) => r.dialogues), content.commonDialogues];
@@ -143,7 +147,7 @@ function harness(content: GameContent, store: MemoryStore): Harness {
     equipment: { open: async (v: () => EquipmentView, a: EquipmentActions) => sys.equipment?.(v, a) },
     titles: { open: async (v: () => TitlesView, sel: (id: string | null) => Promise<void>) => sys.titles?.(v, sel) },
     reward: {
-      show: async () => undefined,
+      show: async (s: RewardSummary) => void rewards.push(s),
       showRecommended: async (name: string) => void recommended.push(name),
     },
   } as unknown as UiServices;
@@ -172,6 +176,7 @@ function harness(content: GameContent, store: MemoryStore): Harness {
     said,
     hud,
     recommended,
+    rewards,
     battle,
     toasts,
     sys,
@@ -1269,5 +1274,139 @@ describe("메뉴 상점과 모래시계 부적(단위 3-E5)", () => {
     expect(ctxSeen!.problem.id).not.toBe("P0105");
     expect(store.data!.flags[hourglassFlag("P0105")]).toBe(true);
     expect(store.data!.flags[hourglassFlag(ctxSeen!.problem.id)]).toBeUndefined();
+  });
+});
+
+describe("고장 난 다리 퍼즐과 복잡도 예측 질문(region07-spec.md §9.1·§9.2, 시험 지역 r99)", () => {
+  /** r99의 (x, y)에 서서 facing을 본 저장으로 시작한다 */
+  async function r99Harness(x: number, y: number, facing: Facing, mutate: (s: SaveData) => void = () => undefined) {
+    const base = makeContent(true);
+    const content = { ...base, quests: { ...base.quests, pool: [] } };
+    const store = new MemoryStore();
+    store.data = r01Save(content, (s) => {
+      s.location = { regionId: "r99", x, y, facing };
+      s.flags["region.r99.intro"] = true;
+      s.flags["trigger.r99.t_r99_hello"] = true;
+      mutate(s);
+    });
+    const h = harness(content, store);
+    await h.app.start({} as HTMLElement);
+    await idle(h.app);
+    return { h, store, content };
+  }
+  const outcome = (ctx: BattleContext, result: BattleOutcome["result"], finalCode = ""): BattleOutcome => ({
+    problemId: ctx.problem.id, result, attempts: 1, maxHintLevel: 0, solutionViewed: false, finalCode, hpLeft: ctx.player.hp, elapsedMs: 1000,
+  });
+
+  it("퍼즐: 다리 앞 대사 → 퍼즐 모드 → 후퇴(코드는 기억) → 통과하면 플래그·door 제거·풀었을 때 대사, 전투 기록·보상·스트릭은 그대로", async () => {
+    const { h, store, content } = await r99Harness(7, 1, "right");
+    const before = structuredClone(store.data!);
+    const seen: BattleContext[] = [];
+    h.battle.open = async (ctx) => {
+      seen.push(ctx);
+      if (seen.length === 1) return outcome(ctx, "retreat", "고친 중");
+      // 배너를 누르기 전(AC 순간)에 바로 저장된다
+      ctx.onVictory?.(outcome(ctx, "victory"));
+      await vi.waitFor(() => expect(store.data!.flags["puzzle.solved:Z9901"]).toBe(true));
+      expect(store.data!.removedObjects).toContain("bridge_r99");
+      return outcome(ctx, "victory");
+    };
+    h.callbacks.onInteract(h.world.obj("bridge_r99"));
+    await idle(h.app);
+    const c1 = seen[0];
+    expect(h.said).toEqual(["r99_bridge_broken"]);
+    expect(c1.puzzle).toBe(true);
+    expect(c1.problem.id).toBe("Z9901");
+    expect(c1.problem.starter).toContain("while i * i < n:");
+    expect(c1.draft).toBeUndefined();
+    // obj_bridge_broken이 아직 manifest에 없으면 맵과 같이 obj_door
+    expect(c1.problem.enemy.sprite).toBe("obj_bridge_broken" in manifest.sprites ? "obj_bridge_broken" : "obj_door");
+    expect(c1.problem.enemy.attack).toBe(0);
+    expect(c1.potions).toBeUndefined();
+    expect(c1.practiceOffer).toBeUndefined();
+    expect(c1.complexityQuestion).toBeUndefined();
+    // 후퇴: door는 그대로, 다리를 등지게 돌아선다
+    expect(h.world.objects.some((o) => o.id === "bridge_r99")).toBe(true);
+    expect(h.world.pos.facing).toBe("left");
+    expect(store.data!.flags["puzzle.solved:Z9901"]).toBeUndefined();
+
+    h.callbacks.onInteract(h.world.obj("bridge_r99"));
+    await idle(h.app);
+    expect(seen[1].draft).toBe("고친 중");
+    expect(h.said).toEqual(["r99_bridge_broken", "r99_bridge_broken", "r99_bridge_fixed"]);
+    expect(h.world.objects.some((o) => o.id === "bridge_r99")).toBe(false);
+    const after = store.data!;
+    expect(after.flags["puzzle.solved:Z9901"]).toBe(true);
+    expect(after.removedObjects).toContain("bridge_r99");
+    expect(after.problems.Z9901).toBeUndefined();
+    expect(after.player.xp).toBe(before.player.xp);
+    expect(after.player.gold).toBe(before.player.gold);
+    expect(after.streak).toEqual(before.streak);
+    expect(after.history).toEqual(before.history);
+    expect(after.shadows).toEqual(before.shadows);
+    expect(h.rewards).toEqual([]);
+
+    // 새로고침: 다리는 이어진 채
+    const h2 = harness(content, store);
+    await h2.app.start({} as HTMLElement);
+    await idle(h2.app);
+    expect(h2.world.objects.some((o) => o.id === "bridge_r99")).toBe(false);
+  });
+
+  it("복잡도 예측: 맵의 보스전에 선택지를 넘기고, 고른 답(맞았는가)을 저장, 보상 창에서 예측과 목표를 함께 보인다", async () => {
+    const { h, store } = await r99Harness(4, 1, "right");
+    let ctxSeen: BattleContext | undefined;
+    h.battle.open = async (ctx) => {
+      ctxSeen = ctx;
+      ctx.complexityQuestion!.onAnswer("O(N)");
+      await vi.waitFor(() => expect(store.data!.flags["complexity.guess:P9901"]).toBe(false));
+      return outcome(ctx, "victory");
+    };
+    h.callbacks.onInteract(h.world.obj("m_P9901"));
+    await idle(h.app);
+    expect(ctxSeen!.complexityQuestion!.choices).toEqual(["O(N)", "O(1)", "O(N²)"]);
+    expect(h.rewards).toHaveLength(1);
+    expect(h.rewards[0].complexityReveal).toEqual({ guess: "O(N)", target: "O(1)" });
+    // 중간 보스: 지역 클리어는 없다
+    expect(store.data!.flags["region.r99.clear"]).toBeUndefined();
+  });
+
+  it("복잡도 예측: 모래시계 부적이 전투 중에 먼저 공개했으면 보상 창에는 다시 보이지 않고, 건너뛰면 저장·공개가 없다", async () => {
+    const { h, store } = await r99Harness(4, 1, "right");
+    h.battle.open = async (ctx) => {
+      ctx.complexityQuestion!.onAnswer("O(1)");
+      expect(ctx.complexityQuestion!.takeReveal()).toEqual({ guess: "O(1)", target: "O(1)" });
+      expect(ctx.complexityQuestion!.takeReveal()).toBeNull();
+      return outcome(ctx, "victory");
+    };
+    h.callbacks.onInteract(h.world.obj("m_P9901"));
+    await idle(h.app);
+    expect(store.data!.flags["complexity.guess:P9901"]).toBe(true);
+    expect(h.rewards[0].complexityReveal).toBeUndefined();
+
+    const s = await r99Harness(4, 1, "right");
+    s.h.battle.open = async (ctx) => {
+      ctx.complexityQuestion!.onAnswer(null);
+      return outcome(ctx, "victory");
+    };
+    s.h.callbacks.onInteract(s.h.world.obj("m_P9901"));
+    await idle(s.h.app);
+    expect(s.store.data!.flags["complexity.guess:P9901"]).toBeUndefined();
+    expect(s.h.rewards[0].complexityReveal).toBeUndefined();
+  });
+
+  it("복잡도 예측: 모래시계 부적이 이미 목표를 보여 준 보스와 선택지가 없는 보스(지역 1~6)는 묻지 않는다", async () => {
+    const { h } = await r99Harness(4, 1, "right", (s) => {
+      s.flags[hourglassFlag("P9901")] = true;
+    });
+    let q: BattleContext["complexityQuestion"] | "unset" = "unset";
+    h.battle.open = async (ctx) => {
+      q = ctx.complexityQuestion;
+      return outcome(ctx, "retreat");
+    };
+    h.callbacks.onInteract(h.world.obj("m_P9901"));
+    await idle(h.app);
+    expect(q).toBeUndefined();
+    for (const r of makeContent(false).regions) for (const p of r.problems) expect(p.complexityChoices, p.id).toBeUndefined();
   });
 });

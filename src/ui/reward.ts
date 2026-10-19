@@ -3,6 +3,7 @@ import type { Problem, RecommendedProblem } from "../contracts/content";
 import type { RewardSummary } from "../contracts/state";
 import type { RewardUI } from "../contracts/ui";
 import { h } from "./dom";
+import { complexityRevealText } from "../systems/complexity";
 import { bossKind } from "./battleLogic";
 import type { UiEnv } from "./env";
 
@@ -43,6 +44,9 @@ export function createRewardUI(env: UiEnv): RewardUI {
         rows.push(row("골드", `+${summary.gold} G`, "reward-gold"));
         if (summary.penalty >= 1) rows.push(row("대가", "해설서를 열어서 이번 보상은 없어", "reward-penalty"));
         else if (summary.penalty > 0) rows.push(row("힌트 대가", `보상 −${Math.round(summary.penalty * 100)}%`, "reward-penalty"));
+        // 복잡도 예측 질문(region07-spec.md §9.2): 전투 중 모래시계 부적이 먼저 공개하지 않았으면 여기서 예측과 목표를 함께
+        const cr = summary.complexityReveal;
+        if (cr) rows.push(row("복잡도", complexityRevealText(cr.guess, cr.target), `reward-complexity${cr.guess === cr.target ? " is-match" : ""}`));
         const els: HTMLElement[] = [
           h("div", { class: "reward-caption" }, problem.boss ? `${bossKind(problem)} 격파!` : "승리!"),
           h("h2", { class: "reward-title" }, `${problem.enemy.name} 정화`),
