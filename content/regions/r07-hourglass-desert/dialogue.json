@@ -1,0 +1,164 @@
+{
+  "region_intro": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 region_intro: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "desert_intro": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 desert_intro: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "npc_caravan_guide": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 npc_caravan_guide: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "npc_hourglass_keeper": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 npc_hourglass_keeper: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "sign_canyon": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 sign_canyon: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "chest_hidden_canyon": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 chest_hidden_canyon: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "sign_bazaar_gate": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 sign_bazaar_gate: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "midboss_intro": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 midboss_intro: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "midboss_defeated": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 midboss_defeated: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "bridge_broken": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 bridge_broken: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "bridge_fixed": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 bridge_fixed: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "sign_altar": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 sign_altar: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "boss_intro": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 boss_intro: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "boss_defeated": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 boss_defeated: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "east_gate_locked": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 east_gate_locked: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "to_be_continued": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 to_be_continued: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "region_clear": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 region_clear: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "lesson_L7-1_intro": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 lesson_L7-1_intro: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "lesson_L7-1_done": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 lesson_L7-1_done: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "lesson_L7-2_intro": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 lesson_L7-2_intro: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "lesson_L7-2_done": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 lesson_L7-2_done: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "lesson_L7-3_intro": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 lesson_L7-3_intro: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "lesson_L7-3_done": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 lesson_L7-3_done: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "lesson_L7-4_intro": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 lesson_L7-4_intro: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "lesson_L7-4_done": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 lesson_L7-4_done: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "lesson_L7-5_intro": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 lesson_L7-5_intro: 콘텐츠 담당이 채움)"
+    }
+  ],
+  "lesson_L7-5_done": [
+    {
+      "speaker": "system",
+      "text": "(임시 대사 lesson_L7-5_done: 콘텐츠 담당이 채움)"
+    }
+  ]
+}

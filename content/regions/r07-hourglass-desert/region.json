@@ -1,0 +1,8 @@
+{
+  "id": "r07",
+  "order": 7,
+  "name": "모래시계 사막",
+  "introDialogue": "region_intro",
+  "clearDialogue": "region_clear",
+  "recommended": []
+}

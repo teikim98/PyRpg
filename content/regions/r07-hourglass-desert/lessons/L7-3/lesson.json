@@ -1,0 +1,10 @@
+{
+  "id": "L7-3",
+  "title": "(임시) 찾음의 주문서",
+  "scroll": {
+    "id": "scroll.lookup",
+    "name": "찾음의 주문서",
+    "summary": "(임시 요약: 콘텐츠 담당이 채움)"
+  },
+  "introduces": []
+}
