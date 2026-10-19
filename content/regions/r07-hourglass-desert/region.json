@@ -1,0 +1,15 @@
+{
+  "id": "r07",
+  "order": 7,
+  "name": "모래시계 사막",
+  "introDialogue": "region_intro",
+  "clearDialogue": "region_clear",
+  "recommended": [
+    { "site": "programmers", "id": 42577, "title": "전화번호 목록", "level": "Lv.2" },
+    { "site": "programmers", "id": 12921, "title": "소수 찾기", "level": "Lv.1" },
+    { "site": "programmers", "id": 12940, "title": "최대공약수와 최소공배수", "level": "Lv.1" },
+    { "site": "programmers", "id": 68935, "title": "3진법 뒤집기", "level": "Lv.1" },
+    { "site": "boj", "id": 1920, "title": "수 찾기", "level": "S4" },
+    { "site": "boj", "id": 2745, "title": "진법 변환", "level": "B2" }
+  ]
+}

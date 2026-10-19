@@ -2375,3 +2375,30 @@
   padding-top: 6px;
   border-top: 2px dashed var(--border-dim);
 }
+
+/* 3-7 복잡도 예측 질문(design.md §5.3, region07-spec.md §9.2)과 고장 난 다리 퍼즐(§5.4) */
+.pyrpg-ui .battle-msg .complexity-ask {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 2px dashed var(--border-dim);
+}
+
+.pyrpg-ui .complexity-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.pyrpg-ui .complexity-skip {
+  color: var(--muted);
+}
+
+.pyrpg-ui .battle-msg .complexity-reveal,
+.pyrpg-ui .reward-complexity .reward-value {
+  color: var(--gold);
+}
+
+.pyrpg-ui .is-puzzle .enemy-name {
+  color: var(--ok);
+}

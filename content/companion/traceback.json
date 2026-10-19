@@ -181,7 +181,31 @@
   },
   {
     "exception": "TypeError",
+    "pattern": "int\\(\\) can't convert non-string with explicit base",
+    "text": "`int(값, 진법)`처럼 진법을 함께 주면 첫 인자는 **문자열**이어야 해. 이미 정수라면 읽어 들일 필요가 없어(정수는 진법과 상관없는 그냥 수야). 정수를 k진법 글자로 바꾸려던 거라면 `bin`·`oct`·`hex`를 쓰거나, `divmod(n, k)`로 나머지를 모아 거꾸로 읽어.",
+    "lesson": "L7-5"
+  },
+  {
+    "exception": "TypeError",
     "text": "자료형이 맞지 않는 곳에 값을 넣었대. 강조된 줄에서 각 값이 문자열인지 숫자인지 확인해 봐. `print(type(x))`로 찍어 보면 바로 알 수 있어. Python은 JS처럼 자료형을 알아서 바꿔 주지 않아."
+  },
+  {
+    "exception": "ValueError",
+    "pattern": "invalid literal for int\\(\\) with base 10: '( |\\\\[nrt])*'$",
+    "text": "`int()`가 빈 문자열(또는 공백·줄바꿈뿐인 문자열)을 받았어. 입력의 끝이나 빈 줄을 숫자로 바꾸려 한 거야. 흔한 경우는 셋: ① `split(\"\\n\")`처럼 구분자를 주고 나누면 끝 줄바꿈 뒤에 빈 조각 `''`이 생겨. 값만 필요하면 인자 없는 `.split()`을 써. ② `sys.stdin.readline()`은 입력이 끝나면 에러 대신 `''`을 줘. 입력 줄 수보다 많이 읽지 않았는지 확인해. ③ 빈 줄이 섞일 수 있다면 `if line.strip():`으로 거르고 넘어가.",
+    "lesson": "L7-1"
+  },
+  {
+    "exception": "ValueError",
+    "pattern": "invalid literal for int\\(\\) with base (?!10:)\\d+|int\\(\\) base must be",
+    "text": "`int(s, k)`로 k진법 문자열을 읽는데, 그 진법에 없는 글자가 섞였어. k진법에는 0부터 k - 1까지의 숫자만 있어: 2진법은 `0`과 `1`, 16진법은 `0`~`9`와 `A`~`F`(대소문자 상관없음). 메시지 끝 따옴표 안의 문자열과 진법을 확인하고, 인자 순서가 `int(문자열, 진법)`인지도 봐 줘. 진법은 2부터 36까지만 돼.",
+    "lesson": "L7-5"
+  },
+  {
+    "exception": "ValueError",
+    "pattern": "isqrt\\(\\) argument must be nonnegative|math domain error|expected a nonnegative input",
+    "text": "음수의 제곱근은 구할 수 없어서 `math.isqrt`(또는 `math.sqrt`)가 멈췄어. 넘긴 값이 음수가 되지 않았는지, 빼기 순서가 바뀌지 않았는지 확인해 봐. 소수 판정이라면 0·1·음수처럼 소수가 될 수 없는 수는 제곱근을 구하기 전에 먼저 걸러 내.",
+    "lesson": "L7-4"
   },
   {
     "exception": "ValueError",

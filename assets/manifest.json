@@ -92,7 +92,22 @@
         "lily_pad",
         "mist_grass",
         "echo_rock",
-        "island_grass"
+        "island_grass",
+        "desert_sand",
+        "desert_path",
+        "desert_dune",
+        "sandstone_wall",
+        "sandstone_gap",
+        "camel_skull",
+        "oasis_water",
+        "palm_tree",
+        "cactus",
+        "ruin_pillar",
+        "star_floor",
+        "sand_canal",
+        "canal_bridge",
+        "altar_floor",
+        "buried_hourglass"
       ],
       "blocking": [
         "water",
@@ -147,7 +162,15 @@
         "bridge_rail",
         "willow_tree",
         "lily_pad",
-        "echo_rock"
+        "echo_rock",
+        "desert_dune",
+        "sandstone_wall",
+        "oasis_water",
+        "palm_tree",
+        "cactus",
+        "ruin_pillar",
+        "sand_canal",
+        "buried_hourglass"
       ]
     }
   },
@@ -434,6 +457,66 @@
     },
     "npc_lake_keeper": {
       "file": "sprites/npc_lake_keeper.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_sand_stream": {
+      "file": "sprites/monster_sand_stream.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_dune_snail": {
+      "file": "sprites/monster_dune_snail.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_mirage_lizard": {
+      "file": "sprites/monster_mirage_lizard.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_sieve_urn": {
+      "file": "sprites/monster_sieve_urn.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_sundial_crab": {
+      "file": "sprites/monster_sundial_crab.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_caravan_ghost": {
+      "file": "sprites/monster_caravan_ghost.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "monster_dust_devil": {
+      "file": "sprites/monster_dust_devil.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "boss_sand_scorpion": {
+      "file": "sprites/boss_sand_scorpion.png",
+      "frameWidth": 32,
+      "frameHeight": 32
+    },
+    "boss_hourglass_sphinx": {
+      "file": "sprites/boss_hourglass_sphinx.png",
+      "frameWidth": 32,
+      "frameHeight": 32
+    },
+    "obj_bridge_broken": {
+      "file": "sprites/obj_bridge_broken.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "npc_caravan_guide": {
+      "file": "sprites/npc_caravan_guide.png",
+      "frameWidth": 16,
+      "frameHeight": 16
+    },
+    "npc_hourglass_keeper": {
+      "file": "sprites/npc_hourglass_keeper.png",
       "frameWidth": 16,
       "frameHeight": 16
     }

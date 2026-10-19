@@ -288,7 +288,15 @@ OBJECTS = {
     ">": (
         "warp_east",
         "warp",
-        {"requires": "problem:P0614", "lockedDialogue": "east_gate_locked", "openDialogue": "to_be_continued"},
+        {
+            "requires": "problem:P0614",
+            "lockedDialogue": "east_gate_locked",
+            # 지역 간 이동(docs/phase3/region07-spec.md §6): 배로 강을 따라 내려가 모래에 삼켜진 마른 나루(서쪽 입구)로.
+            # 처음 건널 때 누리의 연결 대사(to_be_continued)를 한 번 보여 주고 넘어간다(지역 4~6 문과 같은 방식)
+            "openDialogue": "to_be_continued",
+            "target": "r07",
+            "targetSpawn": "spawn_west",
+        },
         "island_grass",
     ),
 }

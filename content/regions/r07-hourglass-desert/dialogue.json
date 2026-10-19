@@ -1,0 +1,141 @@
+{
+  "region_intro": [
+    { "speaker": "system", "text": "강물이 모래 속으로 스며들어 사라지는 마른 나루. 배는 모래톱에 얹힌 채 더는 나아가지 못한다." },
+    { "speaker": "system", "text": "끝없이 펼쳐진 붉은 사막. 거대한 모래시계들이 모래에 반쯤 묻혀 있고, 떨어지던 모래알들이 공중에 그대로 멈춰 햇빛에 반짝인다." }
+  ],
+  "desert_intro": [
+    { "speaker": "companion", "emotion": "surprised", "text": "우와, 강이 모래에 통째로 삼켜졌어! 배로 갈 수 있는 건 여기까지인가 봐. 이제부턴 걸어가야겠다." },
+    { "speaker": "companion", "emotion": "neutral", "text": "저기 봐, 모래가 공중에 멈춰 있어. 모래시계 속 모래도 떨어지다 말았고. 여기가 '모래시계 사막'이래." },
+    { "speaker": "companion", "emotion": "worried", "text": "그런데 좀 이상해. 지금까지는 주문이 맞기만 하면 시계 룬이 돌았잖아. 여기 모래시계들은… 뭔가 더 까다로운 걸 바라는 느낌이야." },
+    { "speaker": "companion", "emotion": "happy", "text": "나루 옆에 낙타를 끄는 사람이 있어! 사막 길을 잘 알 것 같아. 말 걸어 보고, 비석도 찾아보자, {player}!" }
+  ],
+  "npc_caravan_guide": [
+    { "speaker": "대상 길잡이", "text": "물 냄새를 맡고 왔더니 배가 다 들어왔군. 나는 이 사막을 건너는 대상의 길잡이요. 세계가 멈춘 뒤로 우리 대상은 이 나루에 발이 묶였지." },
+    { "speaker": "대상 길잡이", "text": "잘 들으시오. 이 사막의 모래시계는 제시간에 끝나는 주문만 받아들이오. 답이 맞아도 모래가 다 떨어진 뒤에야 끝나는 주문으로는 시계 룬을 되살리지 못하지." },
+    { "speaker": "companion", "emotion": "surprised", "text": "답이 맞아도 안 된다고요? 그럼 이제 빠르기까지 챙겨야 하는 거네…" },
+    { "speaker": "대상 길잡이", "text": "그렇소. 그러니 길가의 비석을 차례로 읽고 가시오. 그리고 바람 협곡을 지날 땐 낙타 해골 바로 북쪽의 사암 벽을 잘 보시오. 바람이 깎아 낸 틈이 있어서 사람 하나는 지나갈 수 있소. 옛날 대상들이 거기에 물자를 숨겨 두곤 했지." },
+    { "speaker": "대상 길잡이", "text": "사막 한가운데 제단에는 스핑크스가 앉아 있소. 그 녀석이 이 사막의 시계 룬을 품고 있지. 수수께끼를 내는데, 느린 대답은 들은 척도 안 한다더군." },
+    { "speaker": "companion", "emotion": "serious", "text": "제시간에 끝나는 주문만… 대도서관 기록에 있던 '모든 주문을 제시간에 끝내도록 지키던 자'가 또 떠오르네." },
+    { "speaker": "companion", "emotion": "happy", "text": "아무튼 낙타 해골 바로 북쪽의 사암 벽, 지도에 적었어! 고마워요, 길잡이 아저씨!" }
+  ],
+  "npc_hourglass_keeper": [
+    { "speaker": "모래시계지기", "text": "어서 오게. 나는 이 시장의 모래시계를 돌보는 모래시계지기일세. 모래가 멈춘 뒤로는 돌볼 것도 없지만 말이야." },
+    { "speaker": "모래시계지기", "text": "모래시계는 정직하지. 모래가 다 떨어지기 전에 끝난 주문만 받아들이고, 그 뒤에 끝난 주문은 아무리 옳아도 없던 일로 하네. 느린 주문은 시계를 되돌리지 못해." },
+    { "speaker": "companion", "emotion": "worried", "text": "맞게 짜는 것만으론 부족하구나… 어떻게 하면 빠른지 미리 알 수 있어요?" },
+    { "speaker": "모래시계지기", "text": "주문이 일을 몇 번 하는지 세어 보게. 입력이 열 배로 늘 때 일이 열 배로 느는지, 백 배로 느는지. 모래시계는 그 차이를 귀신같이 알아채거든." },
+    { "speaker": "모래시계지기", "text": "그리고 이건 옛날이야기네만… 이 모래시계들을 처음 세운 이는 끝나지 않는 주문을 무엇보다 싫어했다고 하네. 시간 안에 끝나지 않는 건 아예 받아들이지 않도록 만들었다지." },
+    { "speaker": "companion", "emotion": "serious", "text": "끝나지 않는 주문을 싫어한 누군가… 호수지기 할아버지가 말한 낯선 사람이랑 같은 사람일까?" }
+  ],
+  "sign_canyon": [
+    { "speaker": "system", "text": "바람에 닳은 이정표가 서 있다. 『바람 협곡. 모래바람이 불면 바위 그늘에서 기다릴 것.』" },
+    { "speaker": "system", "text": "아래쪽에 낙타 그림과 함께 작게 새긴 글씨가 있다. 『대상의 쉼터: 낙타 해골 바로 북쪽의 사암 벽.』" },
+    { "speaker": "companion", "emotion": "neutral", "text": "길잡이 아저씨가 말한 그거다! 낙타 해골 바로 북쪽의 사암 벽. 벽을 잘 살펴보자." }
+  ],
+  "chest_hidden_canyon": [
+    { "speaker": "system", "text": "사암 벽의 틈 너머, 바람이 들지 않는 작은 굴에 낡은 궤짝이 있다. 100골드를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "옛날 대상이 숨겨 둔 물자인가 봐! 물주머니는 바싹 말랐지만 골드는 멀쩡해. 잘 쓸게요, 대상 여러분!" }
+  ],
+  "sign_bazaar_gate": [
+    { "speaker": "system", "text": "시장 끝 길목에 커다란 나무 팻말이 꽂혀 있다. 팻말 둘레에 집게발 자국이 잔뜩 찍혀 있다." },
+    { "speaker": "system", "text": "『검문소. 명부에 이름이 오른 상인만 지나갈 것. 지나가려는 자는 한 사람씩 이름을 대고, 명부에 있으면 1, 없으면 0으로 답을 받는다. 같은 이름이라도 대소문자가 다르면 다른 사람이다.』" },
+    { "speaker": "companion", "emotion": "neutral", "text": "이름마다 명부에 있는지 없는지 답해 주는 검문이구나. 저 앞에서 뭔가 커다란 게 버티고 있는 것 같아. 모닥불에서 숨 돌리고 가자." }
+  ],
+  "midboss_intro": [
+    { "speaker": "system", "text": "길목의 모래가 불룩 솟더니, 꼬리 끝에 모래시계를 매단 거대한 전갈이 기어 나온다. 집게발에는 두꺼운 명부가 들려 있다." },
+    { "speaker": "모래 전갈", "text": "멈춰라. 명부에 있는 상인만 지나간다. 이름을 대라. 한 사람도 빠짐없이 확인해 주마." },
+    { "speaker": "system", "text": "전갈이 첫 장부터 명부를 한 장씩 넘기기 시작한다. 꼬리의 모래시계에서 모래가 사락사락 떨어진다." },
+    { "speaker": "companion", "emotion": "worried", "text": "엄청 꼼꼼한 검문이다… 중간 보스야. 명부에 있는 사람은 1, 없는 사람은 0. 차근차근 답해 보자, {player}!" }
+  ],
+  "midboss_defeated": [
+    { "speaker": "system", "text": "전갈의 집게발에서 명부가 툭 떨어진다. 꼬리 끝 모래시계의 모래가 잠깐 흐르더니, 전갈은 모래 속으로 파고들어 사라진다." },
+    { "speaker": "모래 전갈", "text": "…빠르군. 명부를 넘기는 사이에 이미 답이 끝나 있다니. 지나가라." },
+    { "speaker": "companion", "emotion": "happy", "text": "해냈다! 길목이 열렸어. 저 너머가 별자리 유적이래. 무너진 기둥 사이로 별 무늬 바닥이 보여!" },
+    { "speaker": "companion", "emotion": "neutral", "text": "그래도 사막의 모래는 아직 멈춰 있어. 시계 룬은 제단의 스핑크스가 품고 있으니까. 바로 앞에 모닥불이 있으니 쉬었다 가자." }
+  ],
+  "bridge_broken": [
+    { "speaker": "system", "text": "모래 수로를 건너는 다리의 가운데 판자가 무너져 있다. 난간의 장치판에 디딤돌을 고르는 주문이 새겨져 있는데, 어딘가 어긋나 있다." },
+    { "speaker": "companion", "emotion": "worried", "text": "별 무늬가 있는 돌만 골라 디딤돌로 올리는 장치래. 그런데 주문이 고장 나서 가끔 엉뚱한 돌까지 올린대. 이대로면 다리가 안 이어져." },
+    { "speaker": "companion", "emotion": "neutral", "text": "주문을 한 줄씩 따라 읽어 보고 고장 난 곳을 고치면 될 것 같아. 장치판을 열어 보자!" }
+  ],
+  "bridge_fixed": [
+    { "speaker": "system", "text": "고친 주문을 시전하자 장치판이 '딸깍' 하고 돌아간다. 수로 바닥에서 디딤돌이 차례로 떠올라 무너진 자리를 메우고, 다리가 이어진다." },
+    { "speaker": "companion", "emotion": "happy", "text": "이어졌다! 고장 난 주문도 차근차근 읽으면 고칠 수 있구나. 해시계 광장으로 건너가자!" }
+  ],
+  "sign_altar": [
+    { "speaker": "system", "text": "제단으로 오르는 계단 앞에 돌판이 서 있다. 모래에 반쯤 묻힌 글씨를 털어 내자 문장이 드러난다." },
+    { "speaker": "system", "text": "『스핑크스의 수수께끼. 모래시계에 새겨진 수들 가운데, 1과 자기 자신 말고는 무엇으로도 나누어떨어지지 않는 수만 모래를 흘려보낸다. 그런 수가 몇 개인지, 그 수들을 모두 더하면 얼마인지 답하라. 같은 수가 여러 번 새겨져 있으면 새겨진 만큼 센다.』" },
+    { "speaker": "companion", "emotion": "neutral", "text": "몇 개인지, 다 더하면 얼마인지 두 가지를 답해야 하는구나. 이 위가 제단이야. 모닥불에서 쉬고 올라가자." }
+  ],
+  "boss_intro": [
+    { "speaker": "system", "text": "제단 위에서 거대한 스핑크스가 천천히 눈을 뜬다. 등 뒤로는 모래 폭포가 쏟아지다 만 채 멈춰 있고, 가슴의 시계 룬이 희미하게 깜박인다." },
+    { "speaker": "모래시계 스핑크스", "text": "멈추어라, 주문사여. 나는 이 사막의 모래시계를 지키는 자. 할트께서 나를 이곳에 세우셨다." },
+    { "speaker": "companion", "emotion": "surprised", "text": "할트…? 그게 누구야?" },
+    { "speaker": "모래시계 스핑크스", "text": "세상의 모든 주문이 제시간에 끝나도록 지키시던 분이다. 끝나지 않는 주문이 세계를 삼킬까 두려워하신 끝에, 할트께서는 세계의 시간을 멈추셨다. 그리고 내게 명하셨지. 제시간에 끝나는 주문만 받아들이라고." },
+    { "speaker": "모래시계 스핑크스", "text": "수수께끼를 내겠다. 모래시계에 새겨진 수들 가운데 나눠지지 않는 수만 모래를 흘려보낸다. 그런 수는 몇 개이며, 모두 더하면 얼마인가. 모래가 다 떨어지기 전에 답하라." },
+    { "speaker": "companion", "emotion": "serious", "text": "대도서관의 봉인 기록, 교역항의 뱃노래, 호숫가의 낯선 사람… 전부 할트였구나. 세계를 멈춘 게 할트야." },
+    { "speaker": "companion", "emotion": "neutral", "text": "사막에서 배운 걸 모두 꺼낼 때야. 시계 룬을 되찾자. 가자, {player}!" }
+  ],
+  "boss_defeated": [
+    { "speaker": "system", "text": "스핑크스의 가슴에서 시계 룬이 '딸깍' 하고 한 칸 움직인다. 공중에 멈춰 있던 모래알이 한꺼번에 쏟아져 내리고, 묻혀 있던 모래시계들 속에서 다시 모래가 흐르기 시작한다." },
+    { "speaker": "모래시계 스핑크스", "text": "…모래가 다 떨어지기 전에 끝났군. 옳고, 또 빠른 주문이다." },
+    { "speaker": "모래시계 스핑크스", "text": "할트께서는 끝나지 않는 주문을 두려워하셨다. 그래서 세계를 멈추는 것이 가장 안전하다고 믿으셨지. 하지만 너의 주문은 제때 끝났다. 어쩌면… 세계를 멈추지 않아도 되는 길이 있는지도 모르겠구나." },
+    { "speaker": "모래시계 스핑크스", "text": "이 모래시계 부적을 가져가라. 주문이 시간 안에 끝나지 못하면, 어느 만큼 빨라야 하는지 이 부적이 알려 줄 것이다." },
+    { "speaker": "companion", "emotion": "happy", "text": "해냈다! 모래가 흘러! 멈춰 있던 모래 폭포도 쏟아지고 있어!" },
+    { "speaker": "companion", "emotion": "serious", "text": "할트… 세계를 멈춘 게 미워서가 아니라 두려워서였구나. 그래도 멈춘 세계를 그냥 둘 순 없어. 할트가 어디 있는지 꼭 찾아내자." }
+  ],
+  "east_gate_locked": [
+    { "speaker": "system", "text": "동쪽 모래 언덕으로 이어지는 길이, 공중에 멈춘 모래 장막에 막혀 있다." },
+    { "speaker": "companion", "emotion": "worried", "text": "모래가 멈춰 있는 동안엔 이 장막을 못 지나가. 시계 룬을 품은 스핑크스를 먼저 만나야 해." }
+  ],
+  "to_be_continued": [
+    { "speaker": "companion", "emotion": "happy", "text": "모래 장막이 걷혔어! 모래 언덕 너머로 길이 이어지고, 저 멀리 산자락에 갱도 입구 같은 게 보여." },
+    { "speaker": "system", "text": "모래시계 사막 이야기는 여기까지입니다. 다음 지역은 준비 중이에요. 플레이해 주셔서 고맙습니다!" }
+  ],
+  "region_clear": [
+    { "speaker": "companion", "emotion": "happy", "text": "모래시계 사막 지도 완성! 입력을 끝까지 읽고, 일의 횟수를 세고, set으로 빨리 찾고, 체로 소수를 거르고, 나머지로 진법까지. 이제 맞는 주문을 넘어서 빠른 주문을 지을 수 있게 됐어!" },
+    { "speaker": "companion", "emotion": "neutral", "text": "바깥 시련장 목록도 새로 채워 뒀어. '전화번호 목록'은 찾음의 주문, '소수 찾기'는 체의 주문, '최대공약수와 최소공배수'랑 '3진법 뒤집기'는 나머지의 주문 그대로야. 한번 도전해 봐!" },
+    { "speaker": "대상 길잡이", "text": "허허, 모래가 다시 흐르는구려. 우리 대상도 이제 길을 떠날 수 있겠소. 고맙소, 주문사 양반." },
+    { "speaker": "companion", "emotion": "serious", "text": "할트라는 이름을 드디어 알았어. 모든 주문이 제시간에 끝나게 지키던 존재… 할트가 남긴 시련을 하나씩 넘다 보면 언젠가 할트한테 닿겠지." },
+    { "speaker": "companion", "emotion": "happy", "text": "지도 여백은 아직 한참 남았어. 같이 가자, {player}." }
+  ],
+  "lesson_L7-1_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "나루의 비석이야! 여긴 '흘림의 주문'. 몇 줄인지 모르는 입력을 끝까지 읽고, 깨진 줄은 에러를 받아 넘기는 `try`/`except`래." },
+    { "speaker": "companion", "emotion": "surprised", "text": "몸 아래가 모래 줄기로 흘러내리는 정령 봤어? 끝이 어딘지 모르게 자꾸 흘러나오더라. 줄 수를 세지 말고 끝까지 받아 내야 할 것 같아!" }
+  ],
+  "lesson_L7-1_done": [
+    { "speaker": "system", "text": "흘림의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "값만 필요하면 `sys.stdin.read().split()`, 줄 단위면 `for line in sys.stdin`! 깨진 줄은 `except ValueError:`로 받아 넘기고, 이름 없는 `except:`는 오타까지 삼키니까 조심하자." }
+  ],
+  "lesson_L7-2_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "바람 협곡의 비석이야. 여긴 '모래시계의 주문'. 주문이 일을 몇 번 하는지 입력 크기로 세어 보는 시간복잡도래." },
+    { "speaker": "companion", "emotion": "worried", "text": "껍데기에 모래시계 무늬가 있는 달팽이 봤어? 한 걸음 갈 때마다 지나온 길을 처음부터 다시 세어 본대. 그러니 길이 길어질수록 하염없이 느려지지." }
+  ],
+  "lesson_L7-2_done": [
+    { "speaker": "system", "text": "모래시계의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "반복 하나는 O(N), 겹치면 곱해서 O(N²), 반씩 줄이면 O(log N)! 문제를 읽으면 입력 범위부터 보고 목표를 정하자. `x in 리스트`, `pop(0)`, `arr[:i]`처럼 한 줄인데 N번 일하는 숨은 비용도 잊지 말기." }
+  ],
+  "lesson_L7-3_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "신기루 시장의 비석이야. 여긴 '찾음의 주문'. 리스트 대신 set과 dict로 순식간에 찾는 법이래." },
+    { "speaker": "companion", "emotion": "surprised", "text": "몸이 반쯤 투명하게 일렁이는 도마뱀 봤어? 보였다 안 보였다 해서, '이미 본 적 있나?'를 매번 처음부터 뒤지다가는 놓쳐 버린대." }
+  ],
+  "lesson_L7-3_done": [
+    { "speaker": "system", "text": "찾음의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "리스트의 `in`은 O(N), set·dict의 `in`은 평균 O(1)! set은 반복 밖에서 한 번만 만들고, 본 건 `seen`에 `add`. `{x for x in arr}`, `{k: v for ...}` 내포도 이제 쓸 수 있어." }
+  ],
+  "lesson_L7-4_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "별자리 유적의 비석이야. 여긴 '체의 주문'. 소수를 하나씩 판정하는 법과, 한꺼번에 걸러 내는 에라토스테네스의 체래." },
+    { "speaker": "companion", "emotion": "surprised", "text": "바닥에 구멍이 숭숭 난 항아리 정령 봤어? 모래를 부으면 고운 모래는 구멍으로 술술 빠지고 굵은 알갱이만 남더라. 수도 그렇게 걸러 낼 수 있대!" }
+  ],
+  "lesson_L7-4_done": [
+    { "speaker": "system", "text": "체의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "수 하나는 `i * i <= n`까지 나눠 보기(`<`면 49에서 틀려!), 판정할 수가 많으면 체를 한 번 만들어 표로! 정수 제곱근은 `math.sqrt` 말고 `math.isqrt`." }
+  ],
+  "lesson_L7-5_intro": [
+    { "speaker": "companion", "emotion": "neutral", "text": "해시계 광장의 비석이야. 여긴 '나머지의 주문'. 몫과 나머지, 최대공약수와 최소공배수, 그리고 진법 바꾸기래." },
+    { "speaker": "companion", "emotion": "surprised", "text": "등딱지가 해시계인 게 봤어? 바늘 그림자가 빙글빙글 돌다가 한 바퀴를 채우면 다시 0으로 돌아가. 나머지가 딱 그렇지!" }
+  ],
+  "lesson_L7-5_done": [
+    { "speaker": "system", "text": "나머지의 주문서를 얻었다!" },
+    { "speaker": "companion", "emotion": "happy", "text": "`divmod`로 몫과 나머지를 한 번에, 최대공약수는 `math.gcd`, 최소공배수는 `a * b // gcd`(`/` 말고 `//`!). 진법은 `int(s, k)`로 읽고, 직접 바꿀 땐 나머지를 모아 거꾸로. 0은 \"0\"으로 따로 챙기기!" }
+  ]
+}

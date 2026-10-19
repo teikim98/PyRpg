@@ -149,6 +149,38 @@ export interface Problem {
   variants?: ProblemVariant[];
   /** 보스 시간 결계의 목표 복잡도(예: "O(√N)"). 모래시계 부적(§7.3)이 시간 게이지에 보여 준다 */
   targetComplexity?: string;
+  /**
+   * 복잡도 예측 질문의 선택지 3개(design.md §5.3, docs/phase3/region07-spec.md §9.2). targetComplexity가 그 가운데 하나.
+   * 지역 7부터 보스에 필수. 2페이즈 시작 대사 뒤에 묻고, 정답은 2페이즈 통과 뒤 또는 모래시계 부적 공개 때 보여 준다(결정 30)
+   */
+  complexityChoices?: string[];
+}
+
+/**
+ * 고장 난 다리 퍼즐(design.md §5.4, docs/phase3/region07-spec.md §9.1). 버그가 든 시작 코드를 고쳐 테스트를 통과하면
+ * 맵의 door(props.puzzle = 퍼즐 ID)가 열린다. 전투 수·보상·그림자·퀘스트·칭호와 관계없다
+ */
+export interface Puzzle {
+  /** 예: "Z0701" */
+  id: string;
+  regionId: string;
+  title: string;
+  kind: ProblemKind;
+  /** 함수 구현형의 함수 이름. 기본 "solution" */
+  entry?: string;
+  /** Markdown 본문 */
+  statement: string;
+  /** 버그가 든 시작 코드(빈 틀이 아님). 하나 이상의 테스트에서 실패해야 한다(tools/verify_content.py) */
+  starter: string;
+  /** 고친 코드 */
+  solution: string;
+  timeLimitMs: number;
+  tests: ProblemTest[];
+  hints: [string, string, string];
+  /** 버그를 가져온 문제와 그 오답 파일(design.md §5.4: 버그 코드는 그 지역 문제의 wrong_*.py에서) */
+  source: { problem: string; wrong: string };
+  /** 풀었을 때 재생할 지역 대사 ID */
+  solvedDialogue?: string;
 }
 
 export interface Scroll {
@@ -211,6 +243,8 @@ export interface Region {
   clearDialogue?: string;
   problems: Problem[];
   lessons: Lesson[];
+  /** 고장 난 다리 퍼즐(지역 7부터). content/regions/<지역>/puzzles/<ID>/ */
+  puzzles?: Puzzle[];
   dialogues: DialogueMap;
   recommended: RecommendedProblem[];
 }

@@ -373,7 +373,8 @@ test.describe.serial("지역 1 전체 플레이", () => {
     await fightAndWin(page, "m_P0104", "P0104");
     await interact(page, "campfire_alley");
     await settle(page);
-    expect((await said(page)).at(-1)).toBe("campfire_rest");
+    // 일일 퀘스트(캠프파이어에서 쉬기 등) 보상으로 레벨이 오르면 끝에 level_up이 붙을 수 있다(날짜마다 다름)
+    expect((await said(page)).filter((d) => d !== "level_up").at(-1)).toBe("campfire_rest");
     await fightAndWin(page, "m_P0107", "P0107");
 
     // 보스 전에 동쪽 문은 잠겨 있다? 보스가 계단을 막고 있어 닿을 수 없으므로 보스부터
@@ -546,7 +547,8 @@ test.describe("실패와 복구", () => {
 
     await interact(page, "campfire_plaza");
     await settle(page);
-    expect((await said(page)).at(-1)).toBe("campfire_rest");
+    // 일일 퀘스트(캠프파이어에서 쉬기 등) 보상으로 레벨이 오르면 끝에 level_up이 붙을 수 있다(날짜마다 다름)
+    expect((await said(page)).filter((d) => d !== "level_up").at(-1)).toBe("campfire_rest");
     const camp = (await save(page)).lastCampfire;
     const fire = await obj(page, "campfire_plaza");
     expect(Math.abs(camp.x - fire.x) + Math.abs(camp.y - fire.y)).toBe(1);

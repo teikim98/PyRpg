@@ -93,7 +93,33 @@ export interface BattleContext {
     solutionUnlockedHint?: DialogueLine[];
     /** 모래시계 부적이 목표 복잡도를 처음 보여 줄 때(hourglass_reveal, design.md §7.3, 단위 3-E5) */
     hourglassReveal?: DialogueLine[];
+    /** 복잡도 예측 질문(complexity_ask 등, region07-spec.md §9.2). 없으면 전투 UI의 기본 문구 */
+    complexityAsk?: DialogueLine[];
+    /** 답을 고른 직후(맞았는지는 말하지 않음, 결정 30) */
+    complexityAnswered?: DialogueLine[];
+    /** 건너뛰었을 때 */
+    complexitySkipped?: DialogueLine[];
   };
+  /**
+   * 보스 복잡도 예측 질문(design.md §5.3, docs/phase3/region07-spec.md §9.2). 앱이 물을 전투(맵의 보스전, src/systems/complexity.ts
+   * shouldAskComplexity)에만 넘긴다. 전투 화면은 2페이즈 시작 대사 직후 선택지 3개 + 건너뛰기를 보이고, 고르는 동안은 시전을 막는다.
+   * 판정·보상·HP에는 영향이 없다
+   */
+  complexityQuestion?: {
+    choices: string[];
+    /** 고른 순간(null = 건너뛰기). 앱이 flags["complexity.guess:<문제 ID>"]에 남긴다 */
+    onAnswer(choice: string | null): void;
+    /**
+     * 예측과 목표를 함께 보여 줄 값. 고른 답이 있을 때 처음 한 번만 돌려준다(모래시계 부적 공개와 승리 뒤 보상 창 가운데 먼저, 결정 30).
+     * 전투 화면은 부적이 목표를 공개하는 순간에 부른다
+     */
+    takeReveal(): { guess: string; target: string } | null;
+  };
+  /**
+   * 고장 난 다리 퍼즐 모드(design.md §5.4, region07-spec.md §9.1). problem은 퍼즐을 문제 모양으로 바꾼 것(src/systems/puzzle.ts).
+   * 적 대신 다리 그림, 반격·HP 손실·보상·해설서·회복약·연습 제안 없음, 힌트는 대가 없이, 시작 코드는 퍼즐의 starter, 후퇴로 닫는다
+   */
+  puzzle?: boolean;
   /** 그림자 몬스터 전투(§7.6): 보상 50%, 해설서 없음, 연습 제안 없음 */
   shadow?: boolean;
   /**

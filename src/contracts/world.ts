@@ -8,7 +8,7 @@ export type MapObjectType =
   | "npc"       // props: dialogue, sprite, (lesson)
   | "sign"      // props: dialogue
   | "chest"     // props: gold?, item?(items.json의 아이템 ID. 이미 가진 장신구·꾸미기면 주지 않음), dialogue?
-  | "door"      // props: requires(문제 ID 또는 플래그), lockedDialogue
+  | "door"      // props: requires(문제 ID 또는 플래그), lockedDialogue, puzzle?(퍼즐 ID. 풀면 열림, region07-spec.md §9.1)
   | "monster"   // props: problem
   | "campfire"  // props: (없음)
   | "rune"      // 레슨 비석. props: lesson

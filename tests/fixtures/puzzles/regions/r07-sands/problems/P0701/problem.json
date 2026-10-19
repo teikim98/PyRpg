@@ -1,0 +1,7 @@
+{
+  "id": "P0701",
+  "title": "픽스처 소수 판정",
+  "kind": "function",
+  "requires": ["scroll.t"],
+  "wrong": [{ "file": "wrong_a.py" }]
+}

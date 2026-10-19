@@ -144,8 +144,8 @@ describe("parseTiledMap on the region-3 map", () => {
     expect(tileIndex("dark_floor")).toBe(23);
     expect(tileIndex("root_floor")).toBe(35);
     CAVE_TILES.forEach((t, k) => expect(tileIndex(t), t).toBe(36 + k));
-    // 지역 4 도서관 타일 12종, 지역 5 항구 타일 14종, 지역 6 호수 타일 14종이 그 뒤에 붙는다
-    expect(ts.tiles).toHaveLength(88);
+    // 지역 4 도서관 타일 12종, 지역 5 항구 타일 14종, 지역 6 호수 타일 14종, 지역 7 사막 타일 15종이 그 뒤에 붙는다
+    expect(ts.tiles).toHaveLength(103);
     const used = new Set([...map.ground, ...map.deco].filter((v) => v >= 0).map((v) => ts.tiles[v]));
     for (const t of CAVE_TILES) expect(used.has(t), t).toBe(true);
     // 동굴 맵은 동굴 타일만 쓴다

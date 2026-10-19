@@ -19,6 +19,7 @@ import type {
   BlankExercise,
   ItemDef,
   ProblemVariant,
+  Puzzle,
   QuestContent,
   TiledMap,
   TitleDef,
@@ -67,6 +68,25 @@ export interface ProblemFile {
   reward: { xp: number; gold: number };
   variants?: VariantFile[];
   targetComplexity?: string;
+  /** 복잡도 예측 질문의 선택지(design.md §5.3, region07-spec.md §9.2) */
+  complexityChoices?: string[];
+}
+
+/**
+ * puzzle.json의 파일 형식(design.md §5.4, region07-spec.md §9.1). statement는 같은 폴더의 .md 파일 이름이고,
+ * 시작 코드·고친 코드는 같은 폴더의 starter.py·solution.py
+ */
+export interface PuzzleFile {
+  id: string;
+  title: string;
+  kind: ProblemKind;
+  entry?: string;
+  statement: string;
+  timeLimitMs: number;
+  tests: ProblemTest[];
+  hints: [string, string, string];
+  source: { problem: string; wrong: string };
+  solvedDialogue?: string;
 }
 
 export interface RegionFile {
@@ -110,6 +130,7 @@ export function collectSources(): ContentSources {
       "../../content/regions/*/dialogue.json",
       "../../content/regions/*/problems/*/problem.json",
       "../../content/regions/*/lessons/*/lesson.json",
+      "../../content/regions/*/puzzles/*/puzzle.json",
       "../../content/common/dialogue.json",
       "../../content/companion/*.json",
       "../../content/items.json",
@@ -124,6 +145,8 @@ export function collectSources(): ContentSources {
       "../../content/regions/*/problems/*/*.py",
       "../../content/regions/*/problems/*/variants/*.md",
       "../../content/regions/*/lessons/*/lesson.md",
+      "../../content/regions/*/puzzles/*/*.md",
+      "../../content/regions/*/puzzles/*/*.py",
       // 맵은 월드 담당이 만든다. 아직 없으면 빈 객체로 둔다
       "../../content/regions/*/map.tmj",
     ],
@@ -180,6 +203,7 @@ function buildProblem(src: ContentSources, regionDir: string, regionId: string, 
   if (p.budgetUnits !== undefined) problem.budgetUnits = p.budgetUnits;
   if (p.compare) problem.compare = p.compare;
   if (p.targetComplexity) problem.targetComplexity = p.targetComplexity;
+  if (p.complexityChoices?.length) problem.complexityChoices = [...p.complexityChoices];
   if (p.variants?.length) problem.variants = p.variants.map((v) => buildVariant(src, base, v));
   return problem;
 }
@@ -222,6 +246,38 @@ function buildLesson(src: ContentSources, regionDir: string, regionId: string, d
   return lesson;
 }
 
+/** 고장 난 다리 퍼즐(design.md §5.4). 엔진은 전투 화면을 퍼즐 모드로 열어 이 데이터로 채점한다 */
+function buildPuzzle(src: ContentSources, regionDir: string, regionId: string, dir: string): Puzzle {
+  const base = `regions/${regionDir}/puzzles/${dir}/`;
+  const file = `${base}puzzle.json`;
+  const z = need(src.json[file] as PuzzleFile | undefined, base, "puzzle.json");
+  for (const key of ["id", "title", "kind", "statement", "timeLimitMs", "tests", "hints", "source"] as const) {
+    need(z[key], file, key);
+  }
+  if (z.id !== dir) throw new ContentError(base, `id ${z.id}가 폴더 이름과 다름`);
+  if (z.hints.length !== 3) throw new ContentError(base, "hints는 3개");
+  if (!Array.isArray(z.tests) || z.tests.length === 0) throw new ContentError(file, "tests 없음");
+  // 큰 입력 생성기(gen)는 퍼즐에 쓰지 않는다(작은 테스트만으로 버그를 드러낸다)
+  if (z.tests.some((t) => (t as { gen?: unknown }).gen !== undefined)) throw new ContentError(file, "퍼즐 테스트에는 gen을 쓰지 않음");
+  const statementPath = `${base}${z.statement.replace(/^\.\//, "")}`;
+  const puzzle: Puzzle = {
+    id: z.id,
+    regionId,
+    title: z.title,
+    kind: z.kind,
+    statement: need(src.text[statementPath], statementPath, "퍼즐 본문"),
+    starter: need(src.text[`${base}starter.py`], base, "starter.py"),
+    solution: need(src.text[`${base}solution.py`], base, "solution.py"),
+    timeLimitMs: z.timeLimitMs,
+    tests: z.tests,
+    hints: z.hints,
+    source: { problem: need(z.source.problem, file, "source.problem"), wrong: need(z.source.wrong, file, "source.wrong") },
+  };
+  if (z.kind === "function") puzzle.entry = z.entry ?? "solution";
+  if (z.solvedDialogue) puzzle.solvedDialogue = z.solvedDialogue;
+  return puzzle;
+}
+
 /** 하위 폴더 이름 목록. 예: subdirs(keys, "regions/r01-echo-village/problems/") → ["P0101", ...] */
 function subdirs(keys: string[], prefix: string): string[] {
   const set = new Set<string>();
@@ -251,6 +307,7 @@ export function buildContent(src: ContentSources): GameContent {
     const r = need(src.json[`${base}region.json`] as RegionFile | undefined, base, "region.json");
     const problems = subdirs(keys, `${base}problems/`).map((d) => buildProblem(src, regionDir, r.id, d));
     const lessons = subdirs(keys, `${base}lessons/`).map((d) => buildLesson(src, regionDir, r.id, d));
+    const puzzles = subdirs(keys, `${base}puzzles/`).map((d) => buildPuzzle(src, regionDir, r.id, d));
     const region: Region = {
       id: r.id,
       order: r.order,
@@ -263,6 +320,7 @@ export function buildContent(src: ContentSources): GameContent {
     };
     if (r.introDialogue) region.introDialogue = r.introDialogue;
     if (r.clearDialogue) region.clearDialogue = r.clearDialogue;
+    if (puzzles.length) region.puzzles = puzzles;
     regions.push(region);
   }
   regions.sort((a, b) => a.order - b.order);

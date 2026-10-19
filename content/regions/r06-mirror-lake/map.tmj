@@ -25,10 +25,10 @@
    "name": "overworld",
    "image": "../../../assets/tiles/overworld.png",
    "imagewidth": 128,
-   "imageheight": 176,
+   "imageheight": 208,
    "tilewidth": 16,
    "tileheight": 16,
-   "tilecount": 88,
+   "tilecount": 103,
    "columns": 8,
    "margin": 0,
    "spacing": 0,
@@ -1000,6 +1000,171 @@
        "value": false
       }
      ]
+    },
+    {
+     "id": 88,
+     "type": "desert_sand",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 89,
+     "type": "desert_path",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 90,
+     "type": "desert_dune",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 91,
+     "type": "sandstone_wall",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 92,
+     "type": "sandstone_gap",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 93,
+     "type": "camel_skull",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 94,
+     "type": "oasis_water",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 95,
+     "type": "palm_tree",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 96,
+     "type": "cactus",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 97,
+     "type": "ruin_pillar",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 98,
+     "type": "star_floor",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 99,
+     "type": "sand_canal",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": 100,
+     "type": "canal_bridge",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 101,
+     "type": "altar_floor",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": false
+      }
+     ]
+    },
+    {
+     "id": 102,
+     "type": "buried_hourglass",
+     "properties": [
+      {
+       "name": "blocking",
+       "type": "bool",
+       "value": true
+      }
+     ]
     }
    ]
   }
@@ -1602,6 +1767,16 @@
        "name": "openDialogue",
        "type": "string",
        "value": "to_be_continued"
+      },
+      {
+       "name": "target",
+       "type": "string",
+       "value": "r07"
+      },
+      {
+       "name": "targetSpawn",
+       "type": "string",
+       "value": "spawn_west"
       }
      ]
     },

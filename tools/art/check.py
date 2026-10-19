@@ -37,7 +37,10 @@ GROUND_TILES = {"grass", "grass_flower", "path", "plaza_stone", "water", "house_
                 "port_cobble", "dock_plank", "ship_deck", "harbor_water", "frozen_wave", "lighthouse_wall",
                 # 지역 6(거울 호수): 호숫가·섬 풀·안개 풀·다리 널·흐르는 물·거울 수면·물 위 징검돌
                 "lake_shore", "island_grass", "mist_grass", "lake_bridge", "lake_water", "mirror_water",
-                "lake_stepping_stone"}
+                "lake_stepping_stone",
+                # 지역 7(모래시계 사막): 모래·포석·모래 언덕·사암 벽과 숨은 틈·오아시스·별자리 판석·모래 수로·널다리·제단
+                "desert_sand", "desert_path", "desert_dune", "sandstone_wall", "sandstone_gap", "oasis_water",
+                "star_floor", "sand_canal", "canal_bridge", "altar_floor"}
 
 # 지역 2 명세(docs/phase3/region02-spec.md §6): 타일셋 끝에 이 순서로 붙고, 이 중 일부는 막힌다
 R02_TILES = ["forest_floor", "fallen_leaves", "tall_grass", "stump", "log", "mushroom_patch", "stream",
@@ -74,6 +77,15 @@ R06_TILES = ["lake_shore", "lake_water", "mirror_water", "lake_reed", "reed_gap"
 R06_BLOCKING = {"lake_water", "mirror_water", "lake_reed", "bridge_rail", "willow_tree", "lily_pad", "echo_rock"}
 R06_SPRITES = {"monster_call_frog", "monster_zip_eel", "monster_lambda_heron", "monster_nesting_lily",
                "monster_memo_moth", "boss_mirror_twins", "boss_lake_echo", "npc_lake_keeper"}
+# 지역 7 명세(docs/phase3/region07-spec.md §7): 지역 6 타일 뒤에 이 순서로 붙는다. sandstone_gap·camel_skull 등은 지나갈 수 있다
+R07_TILES = ["desert_sand", "desert_path", "desert_dune", "sandstone_wall", "sandstone_gap", "camel_skull", "oasis_water",
+             "palm_tree", "cactus", "ruin_pillar", "star_floor", "sand_canal", "canal_bridge", "altar_floor",
+             "buried_hourglass"]
+R07_BLOCKING = {"desert_dune", "sandstone_wall", "oasis_water", "palm_tree", "cactus", "ruin_pillar", "sand_canal",
+                "buried_hourglass"}
+R07_SPRITES = {"monster_sand_stream", "monster_dune_snail", "monster_mirage_lizard", "monster_sieve_urn",
+               "monster_sundial_crab", "monster_caravan_ghost", "monster_dust_devil", "boss_sand_scorpion",
+               "boss_hourglass_sphinx", "obj_bridge_broken", "npc_caravan_guide", "npc_hourglass_keeper"}
 # 지역 1 타일 24종의 인덱스는 바뀌면 안 된다(지역 1 맵이 gid로 참조)
 R01_TILE_COUNT = 24
 
@@ -178,6 +190,14 @@ def main():
             errors.append(f"overworld: tile {t} blocking should be {t in R06_BLOCKING}")
     for name in sorted(R06_SPRITES - set(manifest["sprites"])):
         errors.append(f"sprite {name}: missing from manifest (region-6 spec §6)")
+    r07_at = r06_at + len(R06_TILES)
+    if ow["tiles"][r07_at:r07_at + len(R07_TILES)] != R07_TILES:
+        errors.append("overworld: region-7 tiles must follow the region-6 tiles in spec order")
+    for t in R07_TILES:
+        if (t in ow["blocking"]) != (t in R07_BLOCKING):
+            errors.append(f"overworld: tile {t} blocking should be {t in R07_BLOCKING}")
+    for name in sorted(R07_SPRITES - set(manifest["sprites"])):
+        errors.append(f"sprite {name}: missing from manifest (region-7 spec §7)")
 
     for name, spr in manifest["sprites"].items():
         rule = frame_rule(name)

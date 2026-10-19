@@ -144,4 +144,9 @@ export interface RewardSummary {
   shadowNote?: string;
   /** 이번 처치로 스트릭 인정 조건을 채웠는지 */
   streakCounted: boolean;
+  /**
+   * 보스 복잡도 예측 질문의 공개(design.md §5.3, region07-spec.md §9.2). 고른 답이 있고 전투 중 모래시계 부적이 아직
+   * 공개하지 않았으면 보상 창에 "예측: … / 목표: …"를 보인다. 앱이 채운다
+   */
+  complexityReveal?: { guess: string; target: string };
 }
