@@ -292,7 +292,8 @@ def check_runes_before_monsters(info: dict, stages: list[Stage], region_dir: Pat
     return errors
 
 def check_practice_placement(info: dict, stages: list[Stage], region_dir: Path, hidden: set[tuple[int, int]],
-                             optional: set[str]) -> list[str]:
+                             optional: set[str], problems: dict[str, dict] | None = None,
+                             rune_of: dict[str, str] | None = None) -> list[str]:
     """연습 몬스터(problem.json의 practice: true) 배치(design.md §6.2 '연습 몬스터 배치', 단위 3-E3). 지역 7 생성기부터 부른다
     (지역 1~6은 이 규칙 전에 만들어져 부르지 않는다. 예: 지역 4의 m_P0403은 m_P0401을 이긴 뒤에야 닿는다).
     연습 몬스터마다:
@@ -300,18 +301,25 @@ def check_practice_placement(info: dict, stages: list[Stage], region_dir: Path, 
     2. 숨겨진 길 칸(hidden: 생성기가 아는 숨겨진 통로 칸)을 막은 채로도 닿는다(숨겨진 길 끝 금지)
     3. 같은 주문서(requires 집합이 같음)의 첫 필수 몬스터(진행 단계에서 가장 먼저 치우는 것)를 치우기 전에 닿는다
     4. 그 주문서의 비석보다 먼저 닿지 않는다(비석 뒤): 단계마다 연습 몬스터에 닿으면 비석에도 닿아야 한다
-    게임의 연습 상대 탐색 ②(src/app/reach.ts)는 숨겨진 길을 구별하지 않으므로 2가 '숨겨지지 않은' 조건을 지킨다."""
+    게임의 연습 상대 탐색 ②(src/app/reach.ts)는 숨겨진 길을 구별하지 않으므로 2가 '숨겨지지 않은' 조건을 지킨다.
+    problems(문제 ID → requires·practice·applied·boss)와 rune_of(주문서 ID → 비석 ID)를 주면 파일 대신 그것을 쓴다
+    (문제 파일이 아직 없을 때 생성기가 명세 표로 검사하려고. 지역 7 build_r07.py)."""
     errors: list[str] = []
-    rune_of = {}
-    for lj in sorted((region_dir / "lessons").glob("*/lesson.json")):
-        lesson = json.loads(lj.read_text(encoding="utf-8"))
-        rune_of[lesson["scroll"]["id"]] = f"rune_{lesson['id']}"
+    if rune_of is None:
+        rune_of = {}
+        for lj in sorted((region_dir / "lessons").glob("*/lesson.json")):
+            lesson = json.loads(lj.read_text(encoding="utf-8"))
+            rune_of[lesson["scroll"]["id"]] = f"rune_{lesson['id']}"
     monsters: dict[str, dict] = {}
     for o in info["objects"]:
         if o["type"] != "monster":
             continue
         pid = next(p["value"] for p in o.get("properties", []) if p["name"] == "problem")
-        monsters[o["name"]] = json.loads((region_dir / "problems" / pid / "problem.json").read_text(encoding="utf-8"))
+        if problems is not None:
+            monsters[o["name"]] = problems[pid]
+        else:
+            monsters[o["name"]] = json.loads(
+                (region_dir / "problems" / pid / "problem.json").read_text(encoding="utf-8"))
     removal_order = [r for r, _, _ in stages if r]
     for oid, prob in sorted(monsters.items()):
         if prob.get("practice") is not True:
