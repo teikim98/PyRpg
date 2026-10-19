@@ -19,9 +19,9 @@
     {"args": "(49,)", "expect": "False", "note": "완전제곱수(7 × 7)"},
     {"args": "(97,)", "expect": "True", "note": "두 자리 소수"},
     {"args": "(961,)", "expect": "False", "note": "완전제곱수(31 × 31)"},
-    {"args": "(999999937,)", "expect": "True", "note": "경계: 10억 이하에서 가장 큰 소수"},
     {"args": "(999002449,)", "expect": "False", "note": "경계: 큰 완전제곱수(31607 × 31607)"},
-    {"args": "(1000000000,)", "expect": "False", "note": "경계: 가장 큰 n"}
+    {"args": "(1000000000,)", "expect": "False", "note": "경계: 가장 큰 n"},
+    {"args": "(999999937,)", "expect": "True", "note": "경계: 10억 이하에서 가장 큰 소수"}
   ],
   "variants": [
     {
@@ -59,7 +59,7 @@
     {
       "file": "wrong_a.py",
       "title": "while i * i < n(완전제곱수를 소수로 봄)",
-      "expectFail": {"5": "WA", "6": "WA", "8": "WA", "10": "WA"},
+      "expectFail": {"5": "WA", "6": "WA", "8": "WA", "9": "WA"},
       "diagnosis": {
         "when": {"verdict": "WA", "onlyHiddenFail": true},
         "text": "예제는 맞았는데 숨은 돌판에서 틀렸어. 혹시 `while i * i < n`에서 멈추고 있지 않아? 49 = 7 × 7은 `i = 7`일 때 `i * i`가 `n`과 **딱 같아져서**, `<`면 7로 나눠 보기 전에 반복이 끝나고 소수로 보게 돼. `i * i <= n`으로 바꾸자."
@@ -68,7 +68,7 @@
     {
       "file": "wrong_b.py",
       "title": "range(2, n)으로 n 바로 앞까지 모두 나눠 봄",
-      "expectFail": {"9": "TLE"},
+      "expectFail": {"11": "TLE"},
       "diagnosis": {
         "when": {"verdict": "TLE"},
         "text": "판정은 맞는데 시간이 다 됐어! `range(2, n)`으로 n 바로 앞까지 나눠 보면, n이 10억 가까운 소수일 때 10억 번 가까이 나눠야 해. 약수는 짝을 이루니까(`a × b = n`이면 둘 중 작은 쪽은 √n 이하) `i * i <= n`인 동안만 나눠 보면 충분해. 그러면 3만 번 남짓이야."
