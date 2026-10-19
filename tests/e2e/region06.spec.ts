@@ -175,11 +175,11 @@ async function bump(page: Page, id: string): Promise<void> {
   await page.keyboard.press(KEY[dir]);
 }
 
-/** 오브젝트와 상호작용하고 대화가 끝나면 마지막 대사 ID */
+/** 오브젝트와 상호작용하고 대화가 끝나면 마지막 대사 ID(일일 퀘스트 보상으로 레벨이 올라 붙는 level_up은 빼고. 날짜마다 퀘스트가 달라 붙을 때가 있다) */
 async function talk(page: Page, id: string): Promise<string | undefined> {
   await interact(page, id);
   await settle(page);
-  return (await said(page)).at(-1);
+  return (await said(page)).filter((d) => d !== "level_up").at(-1);
 }
 
 async function closeAll(page: Page): Promise<void> {
