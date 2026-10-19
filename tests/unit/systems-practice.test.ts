@@ -255,8 +255,8 @@ describe("reach: 지금 위치에서 걸어서 닿는가(실제 지역 4 맵)", 
   });
 
   it("지역 1~6의 연습 몬스터는 모두 숨겨진 길을 지나지 않고 닿는다(런타임은 숨겨진 길을 구별하지 않으므로 콘텐츠로 확인)", () => {
-    // 지역 1·2: collision이 뚫어 둔 덤불, 지역 3~6: 숨겨진 길 전용 타일(tools/maps/build_r03~06.py)
-    const HIDDEN_TILES = new Set(["cave_crack", "shelf_gap", "crate_gap", "reed_gap"]);
+    // 지역 1·2: collision이 뚫어 둔 덤불, 지역 3~7: 숨겨진 길 전용 타일(tools/maps/build_r03~07.py)
+    const HIDDEN_TILES = new Set(["cave_crack", "shelf_gap", "crate_gap", "reed_gap", "sandstone_gap"]);
     for (const region of content.regions) {
       const parsed = parseTiledMap(region.map, Object.keys(manifest.tilesets));
       const ts = manifest.tilesets[parsed.tileset];
