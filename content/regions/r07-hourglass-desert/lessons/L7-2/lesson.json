@@ -1,10 +1,17 @@
 {
   "id": "L7-2",
-  "title": "(임시) 모래시계의 주문서",
+  "title": "모래시계의 주문: 시간복잡도",
   "scroll": {
     "id": "scroll.complexity",
     "name": "모래시계의 주문서",
-    "summary": "(임시 요약: 콘텐츠 담당이 채움)"
+    "summary": "시간복잡도는 일을 몇 번 하는지를 입력 크기 N의 식으로 센 것. 반복 하나는 O(N), 반복 안의 반복은 곱해서 O(N²), 매번 반으로 줄이면 O(log N). 상수와 작은 항은 뗀다. Python은 1초에 대략 천만 번 안팎(추정값)이라 N ≤ 1,000이면 O(N²)도 되지만 N이 10만~20만이면 O(N log N)이나 O(N), 10억 이상이면 O(log N)이나 O(1). 숨은 O(N): 리스트의 `x in arr`·`count`·`index`, `pop(0)`·`insert(0, x)`, 슬라이스 복사 `arr[:i]`, 반복 안의 `sum(arr[:i])`(지금까지의 합을 변수에 들고 다니기), 문자열 `+=` 반복(리스트에 모아 `join`)."
   },
-  "introduces": []
+  "introduces": [],
+  "exercise": {
+    "kind": "blank",
+    "prompt": "빈칸에 연산자를 채워서 `n`을 매번 반으로 줄여 봐. 1024가 1이 될 때까지 `10`번이 나와야 해.",
+    "code": "n = 1024\nsteps = 0\nwhile n > 1:\n    n ___ 2\n    steps += 1\nprint(steps)\n",
+    "expectedOutput": "10\n",
+    "answer": "//="
+  }
 }
