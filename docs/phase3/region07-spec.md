@@ -153,7 +153,7 @@
 | | `rune_L7-4` | rune | `lesson=L7-4` |
 | | `m_P0708` | monster | `problem=P0708`(**연습**, 비석과 `m_P0709` 사이. 중간 보스 뒤 '짧은 선택 전투'를 겸함) |
 | | `m_P0709` | monster | `problem=P0709`(길목) |
-| | `bridge_r07` | door | `puzzle=Z0701`, `lockedDialogue=bridge_broken`(**고장 난 다리**, §9.1. 모래 수로를 건너는 구역 출구) |
+| | `bridge_r07` | door | `puzzle=Z0701`, `lockedDialogue=bridge_broken`, `sprite=obj_bridge_broken`(**고장 난 다리**, §9.1. 모래 수로를 건너는 구역 출구. 이 칸의 바닥 타일은 지나갈 수 있는 `canal_bridge`이고, door 오브젝트가 부서진 다리 그림으로 길을 막음) |
 | 5 해시계 광장 | `rune_L7-5` | rune | `lesson=L7-5` |
 | | `m_P0710` | monster | `problem=P0710`(**연습**, 비석과 `m_P0711` 사이) |
 | | `m_P0711` | monster | `problem=P0711`(길목) |
@@ -184,11 +184,12 @@
 | `monster_dust_devil` | 별 조각이 섞인 작은 회오리(**응용, 주문서에 묶이지 않음**) | P0713 |
 | `boss_sand_scorpion` | 꼬리 끝이 모래시계인 거대한 전갈. 중간 보스 | P0707 |
 | `boss_hourglass_sphinx` | 가슴에 시계 룬, 등 뒤에 멈춘 모래 폭포가 있는 스핑크스 | P0714 |
+| `obj_bridge_broken` | 가운데 판자가 무너져 모래 수로가 보이는 다리(16×16 오브젝트, 정지 그림). `canal_bridge` 타일 위에 겹쳐 그려짐 | Z0701 |
 | `npc_caravan_guide` | 대상 길잡이(터번, 지팡이, 물주머니) | |
 | `npc_hourglass_keeper` | 모래시계지기(망토, 손에 작은 모래시계) | |
-| 사막 타일(타일셋 끝에 추가) | `desert_sand`, `desert_path`, `desert_dune`, `sandstone_wall`, `sandstone_gap`, `camel_skull`, `oasis_water`, `palm_tree`, `cactus`, `ruin_pillar`, `star_floor`, `sand_canal`, `canal_bridge`, `canal_bridge_broken`, `altar_floor`, `buried_hourglass`(지역 1~6과 이름이 겹치지 않게) | |
+| 사막 타일(타일셋 끝에 추가) | `desert_sand`, `desert_path`, `desert_dune`, `sandstone_wall`, `sandstone_gap`, `camel_skull`, `oasis_water`, `palm_tree`, `cactus`, `ruin_pillar`, `star_floor`, `sand_canal`, `canal_bridge`, `altar_floor`, `buried_hourglass`(지역 1~6과 이름이 겹치지 않게) | |
 
-- 충돌 타일: `desert_dune`, `sandstone_wall`, `oasis_water`, `palm_tree`, `cactus`, `ruin_pillar`, `sand_canal`, `canal_bridge_broken`, `buried_hourglass`. 지나갈 수 있는 타일: `desert_sand`, `desert_path`, `sandstone_gap`, `camel_skull`, `star_floor`, `canal_bridge`, `altar_floor`. `sandstone_gap`은 `sandstone_wall`과 거의 같아 보이되 자세히 보면 틈의 그림자가 살짝 짙게.
+- 충돌 타일: `desert_dune`, `sandstone_wall`, `oasis_water`, `palm_tree`, `cactus`, `ruin_pillar`, `sand_canal`, `buried_hourglass`. 지나갈 수 있는 타일: `desert_sand`, `desert_path`, `sandstone_gap`, `camel_skull`, `star_floor`, `canal_bridge`, `altar_floor`. `sandstone_gap`은 `sandstone_wall`과 거의 같아 보이되 자세히 보면 틈의 그림자가 살짝 짙게.
 - 크기·프레임·화풍은 `main`의 지금 형식과 같습니다(결정 29): 타일 16×16, 몬스터 16×16 × 2프레임, 보스 32×32 × 2프레임, NPC 128×16 걷기 시트, `tools/art`의 같은 팔레트. 지역 1~6 몬스터와 실루엣이 겹치지 않게(특히 지역 1 `monster_clock_beetle`류와 `monster_dune_snail`, 지역 6 `monster_nesting_lily`와 `monster_sieve_urn`).
 
 ## 8. 실전 추천
@@ -215,8 +216,8 @@
 
 - **데이터**: `content/regions/r07-hourglass-desert/puzzles/Z0701/`에 `puzzle.json`, `statement.md`, `starter.py`(버그가 든 시작 코드), `solution.py`(고친 코드). `puzzle.json`은 문제 형식(design.md §11.1)의 부분집합: `id`, `title`, `kind`, `entry`(함수형일 때), `source`(버그를 가져온 문제 ID와 오답 파일, 예: `{"problem": "P0708", "wrong": "wrong_a.py"}`), `tests`(공개 1 + 숨김 3 이상), `hints`(3단계), `dialogue`(풀었을 때 대사 ID).
 - **Z0701 부서진 수로 다리**: 다리 장치의 '돌 판정 코드'가 49 같은 완전제곱수를 소수로 봅니다. 시작 코드는 P0708의 오답 `wrong_a.py`(`while i * i < n`)와 같은 버그이고, 한 글자(`<` → `<=`)를 고치면 테스트를 통과합니다. 학습 시점은 L7-4입니다.
-- **맵**: `door` 오브젝트에 `puzzle=Z0701`(design.md §11.4). 문에 다가가 상호작용하면 퍼즐 창이 열립니다.
-- **엔진**: 전투 화면을 '퍼즐 모드'로 재사용합니다. 적 스프라이트 대신 다리 그림, 적의 반격·HP 손실·보상·그림자 등록·해설서·연습 제안 없음, 힌트는 대가 없이 열림, 시작 코드는 `starter.py`(빈 틀이 아님). 통과하면 `flags["puzzle.solved:Z0701"]`을 저장하고 문을 열고(`removedObjects`), 다리 타일을 `canal_bridge`로 바꿔 보여 줍니다. 전투 수·일일 퀘스트·칭호에는 넣지 않습니다(design.md §5.4).
+- **맵**: `door` 오브젝트에 `puzzle=Z0701`, `sprite=obj_bridge_broken`(design.md §11.4). 지금 엔진은 door를 언제나 `obj_door`로 그리므로(`src/game/WorldScene.ts`), door에 `sprite` 속성이 있으면 그 그림을 쓰게 합니다. 문에 다가가 상호작용하면 퍼즐 창이 열립니다.
+- **엔진**: 전투 화면을 '퍼즐 모드'로 재사용합니다. 적 스프라이트 대신 다리 그림, 적의 반격·HP 손실·보상·그림자 등록·해설서·연습 제안 없음, 힌트는 대가 없이 열림, 시작 코드는 `starter.py`(빈 틀이 아님). 통과하면 `flags["puzzle.solved:Z0701"]`을 저장하고 door를 없앱니다(`removedObjects`). door 아래의 바닥 타일이 이미 `canal_bridge`라서 이어진 다리가 드러납니다. 전투 수·일일 퀘스트·칭호에는 넣지 않습니다(design.md §5.4).
 - **검증기**(`tools/verify_content.py`): 퍼즐마다 `solution.py`는 모든 테스트 AC, **`starter.py`는 하나 이상의 테스트에서 실패**, `starter.py`가 `source`의 오답 파일과 같은 버그를 담는지(내용이 같거나 diff가 작은지) 확인, 선행 지식 검사는 `solution.py`를 문제처럼 검사. 맵의 `puzzle` 참조가 실제 퍼즐을 가리키는지.
 - **E2E**: 다리 앞에서 막힘 → 퍼즐 창 → 시작 코드 시전 실패 → 고쳐서 통과 → 다리가 이어지고 지나감 → 새로고침해도 이어진 상태.
 
