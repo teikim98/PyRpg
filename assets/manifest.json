@@ -238,7 +238,15 @@
       "deck_n",
       "deck_w",
       "deck_nw",
-      "wall_n"
+      "wall_n",
+      "shore_dark_n",
+      "shore_dark_s",
+      "shore_dark_w",
+      "shore_dark_e",
+      "shore_dark_nw",
+      "shore_dark_ne",
+      "shore_dark_sw",
+      "shore_dark_se"
     ],
     "terrain": {
       "grass": "grass",
@@ -268,12 +276,12 @@
       "water": "water",
       "stream": "water",
       "stepping_stone": "water",
-      "cave_pool": "water",
+      "cave_pool": "water_dark",
       "harbor_water": "water",
       "frozen_wave": "water",
-      "lake_water": "water",
+      "lake_water": "water_dark",
       "mirror_water": "water",
-      "lake_stepping_stone": "water",
+      "lake_stepping_stone": "water_dark",
       "house_wall": "wall",
       "house_window": "wall",
       "house_door": "wall",
@@ -323,10 +331,25 @@
       },
       {
         "from": [
+          "grass",
+          "forest",
+          "island",
+          "mist",
+          "ground",
+          "wall"
+        ],
+        "onto": [
+          "water_dark"
+        ],
+        "pieces": "shore_dark"
+      },
+      {
+        "from": [
           "deck"
         ],
         "onto": [
-          "water"
+          "water",
+          "water_dark"
         ],
         "pieces": "deck"
       },
@@ -337,7 +360,8 @@
         "onto": [
           "ground",
           "deck",
-          "water"
+          "water",
+          "water_dark"
         ],
         "pieces": "grass"
       },
@@ -348,7 +372,8 @@
         "onto": [
           "ground",
           "deck",
-          "water"
+          "water",
+          "water_dark"
         ],
         "pieces": "forest"
       },
@@ -359,7 +384,8 @@
         "onto": [
           "ground",
           "deck",
-          "water"
+          "water",
+          "water_dark"
         ],
         "pieces": "island"
       },
@@ -370,7 +396,8 @@
         "onto": [
           "ground",
           "deck",
-          "water"
+          "water",
+          "water_dark"
         ],
         "pieces": "mist"
       }

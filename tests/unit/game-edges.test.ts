@@ -155,19 +155,35 @@ describe("edge decor: real manifest and regions 1-6", () => {
     expect(problems).toEqual([]);
     expect(real).not.toBeNull();
     // 풀 덤불·물가 묶음이 모두 8방향을 갖는다
-    for (const set of ["grass", "forest", "island", "mist", "shore"]) {
+    for (const set of ["grass", "forest", "island", "mist", "shore", "shore_dark"]) {
       for (const d of DIRS) expect(manifest.edgeDecor!.pieces).toContain(`${set}_${d}`);
     }
+  });
+
+  it("dark water (cave pool, lake) uses the faint shore_dark set; bright water keeps shore; water beside water has none", () => {
+    const real = resolveEdgeDecor(manifest.edgeDecor, ts.tiles)!;
+    const t = (n: string) => ts.tiles.indexOf(n);
+    const at = (row: string[]) =>
+      edgePiecesAt(row.map(t), row.length, 1, real, 1, 0).map((p) => real.pieceNames[p]);
+    expect(at(["cave_floor", "cave_pool", "cave_pool"])).toEqual(["shore_dark_w"]);
+    expect(at(["lake_shore", "lake_water", "lake_water"])).toEqual(["shore_dark_w"]);
+    expect(at(["path", "water", "water"])).toEqual(["shore_w"]);
+    expect(at(["port_cobble", "harbor_water", "harbor_water"])).toEqual(["shore_w"]);
+    expect(at(["mirror_water", "lake_water", "mirror_water"])).toEqual([]);
+    expect(at(["lake_water", "mirror_water", "lake_water"])).toEqual([]);
+    // 어두운 물에도 풀 덤불·갑판 그늘은 그대로 넘어온다
+    expect(at(["island_grass", "lake_water", "lake_water"])).toEqual(["shore_dark_w", "island_w"]);
+    expect(at(["lake_bridge", "lake_water", "lake_water"])).toEqual(["deck_w"]);
   });
 
   /** 지역마다 반드시 나와야 하는 묶음(그 지역에 있는 경계) */
   const EXPECT: Record<string, string[]> = {
     r01: ["grass", "shore", "wall"],
     r02: ["forest", "shore"],
-    r03: ["shore", "wall"],
+    r03: ["shore_dark", "wall"],
     r04: ["wall"],
     r05: ["shore", "deck", "wall"],
-    r06: ["island", "mist", "shore", "deck"],
+    r06: ["island", "mist", "shore", "shore_dark", "deck"],
   };
 
   it.each(regionDirs)("%s: pieces land only on onto-classes, the map and collision are unchanged", (dir) => {

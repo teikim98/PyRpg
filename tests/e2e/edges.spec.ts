@@ -10,10 +10,10 @@ const SCREENS = "docs/art-overhaul/screens";
 const SCENES: { map: string; dir: string; at: [number, number]; sets: string[] }[] = [
   { map: "r01", dir: "r01-echo-village", at: [12, 32], sets: ["grass", "shore", "wall"] },
   { map: "r02", dir: "r02-crossroad-forest", at: [63, 14], sets: ["forest", "shore"] },
-  { map: "r03", dir: "r03-goblin-cave", at: [60, 7], sets: ["shore", "wall"] },
+  { map: "r03", dir: "r03-goblin-cave", at: [60, 7], sets: ["shore_dark", "wall"] },
   { map: "r04", dir: "r04-grand-library", at: [48, 12], sets: ["wall"] },
   { map: "r05", dir: "r05-trade-port", at: [78, 8], sets: ["shore", "deck"] },
-  { map: "r06", dir: "r06-mirror-lake", at: [39, 12], sets: ["island", "mist", "shore"] },
+  { map: "r06", dir: "r06-mirror-lake", at: [39, 12], sets: ["island", "mist", "shore", "shore_dark"] },
 ];
 
 async function bootWith(page: Page, query: string): Promise<void> {
@@ -86,7 +86,7 @@ test.describe("edge decor (decision 20)", () => {
     });
   }
 
-  for (const s of SCENES.filter((x) => x.sets.includes("shore"))) {
+  for (const s of SCENES.filter((x) => x.sets.some((set) => set.startsWith("shore")))) {
     test(`${s.map}: the shore is still blocked with edges on (decoration only)`, async ({ page }) => {
       const [x, y] = cellAboveWater(s.dir);
       await bootWith(page, `?map=${s.map}&fx=off`);

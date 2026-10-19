@@ -13,8 +13,10 @@
 - grass·forest·island·mist: 풀 덤불. 풀 타일의 질감을 그대로 이어 그려서(무늬가 16칸 주기라 위 칸 풀과 이어짐)
   색이 지역마다 달라도 맞는다. 위·왼쪽 풀은 잎 끝 그늘 + 아래(오른쪽)에 잎 그림자 선(빛이 왼쪽 위),
   아래 풀은 잎 끝이 위로 1~2px 솟는다(밝은 끝).
-- shore: 물가. 반투명(bank·foam)이라 물 색과 상관없이 얹힌다. 위쪽 땅은 둑 그늘 2px + 물거품 선,
-  나머지 방향은 물거품 선만.
+- shore: 밝은 물의 물가. 반투명(bank·foam·shallow)이라 물 색과 상관없이 얹힌다. 위쪽 땅은 둑 그늘 2px +
+  물거품 선, 나머지 방향은 끊긴 물거품 선 + 얕은 물.
+- shore_dark: 어두운 물(동굴 웅덩이·호수, manifest 분류 water_dark)의 물가. 흰 물거품은 어두운 물 위에서 밝은
+  네모 테두리로 읽혀서, 물빛에 가까운 옅은 잔물결 점선(1~2px 조각, 군데군데)과 짙은 둑 그늘만 쓴다.
 - deck: 부두·다리·갑판이 물 위에 드리운 그늘(위·왼쪽).
 - wall: 벽·지붕 발치 그늘(벽 바로 아래 칸의 위 2px, style-guide.md §3.2 '벽 아래 첫 줄').
 
@@ -183,6 +185,61 @@ def _shore_pieces(seed=53):
     return out
 
 
+def _shore_dark_pieces(seed=59):
+    """어두운 물의 물가 8방향. 가장자리에 붙은 선을 만들지 않고, 가장자리에서 1px 안쪽에 짧은 잔물결 조각을
+    드문드문 둔다(이어진 선이 없어서 테두리로 읽히지 않음). 위쪽 땅만 둑 그늘 2px."""
+    bank, rip = c("bank_dark"), c("ripple_dark")
+    out = {}
+
+    def dashes(n, seed_):
+        """길이 16 줄에서 잔물결 조각 위치: 3칸마다 35% 확률로 1~2px"""
+        on = [False] * T
+        for x0 in range(0, T, 3):
+            if noise(x0, 0, seed_) < 0.35:
+                for k in range(1 + int(noise(x0, 1, seed_) * 2)):
+                    if x0 + k < T:
+                        on[x0 + k] = True
+        if not any(on):  # 한 조각도 없으면 가운데 하나(빈 조각 금지)
+            on[7] = on[8] = True
+        return on
+
+    g = _blank()
+    for x in range(T):
+        g[0][x] = g[1][x] = bank
+    for x, v in enumerate(dashes(T, seed)):
+        if v:
+            g[3][x] = rip
+    out["n"] = g
+    g = _blank()
+    for x, v in enumerate(dashes(T, seed + 1)):
+        if v:
+            g[T - 2][x] = rip
+    out["s"] = g
+    g = _blank()
+    for y, v in enumerate(dashes(T, seed + 2)):
+        if v:
+            g[y][1] = rip
+    out["w"] = g
+    g = _blank()
+    for y, v in enumerate(dashes(T, seed + 3)):
+        if v:
+            g[y][T - 2] = rip
+    out["e"] = g
+    g = _blank()
+    g[0][0] = g[0][1] = g[1][0] = g[1][1] = bank
+    out["nw"] = g
+    g = _blank()
+    g[0][T - 1] = g[0][T - 2] = g[1][T - 1] = g[1][T - 2] = bank
+    out["ne"] = g
+    g = _blank()
+    g[T - 2][1] = rip
+    out["sw"] = g
+    g = _blank()
+    g[T - 2][T - 2] = rip
+    out["se"] = g
+    return out
+
+
 def _deck_pieces():
     """물 위 구조물(부두·다리·갑판)의 그늘: 위 3px, 왼쪽 2px, 왼쪽 위 모서리 2×3."""
     sh = c("shadow_soft")
@@ -219,12 +276,14 @@ def _build():
     for name, (src, tip, line, hi, seed) in GRASS_SETS.items():
         for d, g in _grass_pieces(src, tip, line, hi, seed).items():
             pieces[f"{name}_{d}"] = g
-    for prefix, made in (("shore", _shore_pieces()), ("deck", _deck_pieces()), ("wall", _wall_pieces())):
+    for prefix, made in (("shore", _shore_pieces()), ("deck", _deck_pieces()), ("wall", _wall_pieces()),
+                         ("shore_dark", _shore_dark_pieces())):
         for d, g in made.items():
             pieces[f"{prefix}_{d}"] = g
     # 이름 순서를 방향 순서로 고정(manifest pieces와 같은 순서로 쓰기 쉽게)
     ordered = {}
-    for prefix in [*GRASS_SETS, "shore", "deck", "wall"]:
+    # shore_dark는 뒤에 붙인다(앞 조각의 시트 위치가 바뀌지 않게)
+    for prefix in [*GRASS_SETS, "shore", "deck", "wall", "shore_dark"]:
         for d in DIRS:
             k = f"{prefix}_{d}"
             if k in pieces:
