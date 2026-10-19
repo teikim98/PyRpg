@@ -9,6 +9,8 @@
 - 초상화(portrait_*): 64×64(manifest size = 64)
 - manifest `tileAnimations`(선택): { 타일: { frames: [타일, 프레임 타일…], fps: 양수 } }. 프레임 타일은 타일셋에
   있어야 하고 키 타일보다 뒤(끝에 추가)에 있어야 한다. 바닥 타일의 애니메이션 프레임도 불투명해야 한다
+- manifest `edgeDecor`(선택, 결정 20): 조각 시트(16×16, columns칸)가 있고, 조각 이름이 `<묶음>_<방향>`이며 빈 조각이 없는지,
+  terrain의 타일이 overworld 타일셋에 있는지, 규칙의 분류가 terrain에 있고 묶음마다 조각이 하나 이상인지
 추가로 PNG가 RGBA(컬러 타입 6)인지, 바닥 타일이 완전히 불투명한지, 빈 프레임이 없는지,
 build.py로 다시 만든 결과가 디스크의 파일과 바이트 단위로 같은지(결정적 빌드) 확인한다.
 
@@ -156,6 +158,49 @@ def check_tile_animations(manifest, errors):
     return ground_frames
 
 
+EDGE_DIRS = ("n", "s", "w", "e", "nw", "ne", "sw", "se")
+
+
+def check_edge_decor(manifest, errors):
+    """manifest `edgeDecor` 형식 검사(파일 크기·빈 조각은 main에서). 돌려주는 값: 조각 이름 목록."""
+    decor = manifest.get("edgeDecor")
+    if decor is None:
+        return []
+    extra = set(decor) - {"file", "columns", "pieces", "terrain", "rules"}
+    if extra:
+        errors.append(f"edgeDecor: unknown fields {sorted(extra)}")
+    pieces = decor.get("pieces")
+    if not isinstance(pieces, list) or not pieces or not all(isinstance(p, str) for p in pieces):
+        errors.append("edgeDecor.pieces must be a non-empty list of names")
+        return []
+    if len(set(pieces)) != len(pieces):
+        errors.append("edgeDecor.pieces has duplicates")
+    for p in pieces:
+        if "_" not in p or p.rsplit("_", 1)[1] not in EDGE_DIRS:
+            errors.append(f"edgeDecor.pieces: {p!r} must be <set>_<n|s|w|e|nw|ne|sw|se>")
+    if not isinstance(decor.get("columns"), int) or decor["columns"] <= 0:
+        errors.append("edgeDecor.columns must be a positive integer")
+    tiles = set(manifest["tilesets"]["overworld"]["tiles"])
+    terrain = decor.get("terrain", {})
+    for t, cls in terrain.items():
+        if t not in tiles:
+            errors.append(f"edgeDecor.terrain: tile {t!r} not in overworld tileset")
+        if not isinstance(cls, str) or not cls:
+            errors.append(f"edgeDecor.terrain.{t}: class must be a non-empty string")
+    classes = set(terrain.values())
+    sets = {p.rsplit("_", 1)[0] for p in pieces}
+    for i, r in enumerate(decor.get("rules", [])):
+        for key in ("from", "onto"):
+            for cls in r.get(key, []):
+                if cls not in classes:
+                    errors.append(f"edgeDecor.rules[{i}].{key}: class {cls!r} has no tiles in terrain")
+        if r.get("pieces") not in sets:
+            errors.append(f"edgeDecor.rules[{i}]: no pieces named {r.get('pieces')!r}_<dir>")
+        if set(r.get("from", [])) & set(r.get("onto", [])):
+            errors.append(f"edgeDecor.rules[{i}]: from and onto overlap (every inner cell would get an edge)")
+    return pieces
+
+
 def color_type(path):
     with open(path, "rb") as f:
         head = f.read(33)
@@ -205,6 +250,16 @@ def main():
                 errors.append(f"tile {t}: ground tile has transparent pixels")
             if all(p[3] == 0 for p in px):
                 errors.append(f"tile {t}: empty")
+
+    edge_pieces = check_edge_decor(manifest, errors)
+    if edge_pieces and isinstance(manifest["edgeDecor"].get("columns"), int) and manifest["edgeDecor"]["columns"] > 0:
+        decor = manifest["edgeDecor"]
+        cols = decor["columns"]
+        rows = check_file(decor["file"], cols * ts, math.ceil(len(edge_pieces) / cols) * ts)
+        if rows is not None:
+            for i, p in enumerate(edge_pieces):
+                if frame_empty(rows, (i % cols) * ts, (i // cols) * ts, ts, ts):
+                    errors.append(f"edge piece {p}: empty")
 
     ow = manifest["tilesets"]["overworld"]
     if ow["tiles"][R01_TILE_COUNT:R01_TILE_COUNT + len(R02_TILES)] != R02_TILES:
@@ -288,6 +343,8 @@ def main():
     listed = {os.path.normpath(t["file"]) for t in manifest["tilesets"].values()}
     listed |= {os.path.normpath(s["file"]) for s in manifest["sprites"].values()}
     listed |= {os.path.normpath(p["file"]) for p in manifest["portraits"].values()}
+    if manifest.get("edgeDecor", {}).get("file"):
+        listed.add(os.path.normpath(manifest["edgeDecor"]["file"]))
     for dirpath, _, files in os.walk(build.ASSETS):
         for f in files:
             if f.endswith(".png"):

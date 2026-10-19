@@ -191,6 +191,191 @@
       "fps": 2
     }
   },
+  "edgeDecor": {
+    "file": "tiles/edges.png",
+    "columns": 8,
+    "pieces": [
+      "grass_n",
+      "grass_s",
+      "grass_w",
+      "grass_e",
+      "grass_nw",
+      "grass_ne",
+      "grass_sw",
+      "grass_se",
+      "forest_n",
+      "forest_s",
+      "forest_w",
+      "forest_e",
+      "forest_nw",
+      "forest_ne",
+      "forest_sw",
+      "forest_se",
+      "island_n",
+      "island_s",
+      "island_w",
+      "island_e",
+      "island_nw",
+      "island_ne",
+      "island_sw",
+      "island_se",
+      "mist_n",
+      "mist_s",
+      "mist_w",
+      "mist_e",
+      "mist_nw",
+      "mist_ne",
+      "mist_sw",
+      "mist_se",
+      "shore_n",
+      "shore_s",
+      "shore_w",
+      "shore_e",
+      "shore_nw",
+      "shore_ne",
+      "shore_sw",
+      "shore_se",
+      "deck_n",
+      "deck_w",
+      "deck_nw",
+      "wall_n"
+    ],
+    "terrain": {
+      "grass": "grass",
+      "grass_flower": "grass",
+      "forest_floor": "forest",
+      "fallen_leaves": "forest",
+      "tall_grass": "forest",
+      "island_grass": "island",
+      "mist_grass": "mist",
+      "path": "ground",
+      "plaza_stone": "ground",
+      "floor_stone": "ground",
+      "floor_wood": "ground",
+      "dark_floor": "ground",
+      "stairs": "ground",
+      "root_floor": "ground",
+      "cave_floor": "ground",
+      "minecart_rail": "ground",
+      "lib_floor": "ground",
+      "lib_carpet": "ground",
+      "floating_pages": "ground",
+      "port_cobble": "ground",
+      "lake_shore": "ground",
+      "dock_plank": "deck",
+      "ship_deck": "deck",
+      "lake_bridge": "deck",
+      "water": "water",
+      "stream": "water",
+      "stepping_stone": "water",
+      "cave_pool": "water",
+      "harbor_water": "water",
+      "frozen_wave": "water",
+      "lake_water": "water",
+      "mirror_water": "water",
+      "lake_stepping_stone": "water",
+      "house_wall": "wall",
+      "house_window": "wall",
+      "house_door": "wall",
+      "house_roof": "wall",
+      "wall_stone": "wall",
+      "clocktower_wall": "wall",
+      "clocktower_door": "wall",
+      "cave_wall": "wall",
+      "cave_wall_top": "wall",
+      "torch_frozen": "wall",
+      "mural_wall": "wall",
+      "cave_crack": "wall",
+      "lib_wall": "wall",
+      "lib_wall_top": "wall",
+      "bookshelf": "wall",
+      "shelf_gap": "wall",
+      "lighthouse_wall": "wall"
+    },
+    "rules": [
+      {
+        "from": [
+          "wall"
+        ],
+        "onto": [
+          "ground",
+          "deck",
+          "grass",
+          "forest",
+          "island",
+          "mist"
+        ],
+        "pieces": "wall"
+      },
+      {
+        "from": [
+          "grass",
+          "forest",
+          "island",
+          "mist",
+          "ground",
+          "wall"
+        ],
+        "onto": [
+          "water"
+        ],
+        "pieces": "shore"
+      },
+      {
+        "from": [
+          "deck"
+        ],
+        "onto": [
+          "water"
+        ],
+        "pieces": "deck"
+      },
+      {
+        "from": [
+          "grass"
+        ],
+        "onto": [
+          "ground",
+          "deck",
+          "water"
+        ],
+        "pieces": "grass"
+      },
+      {
+        "from": [
+          "forest"
+        ],
+        "onto": [
+          "ground",
+          "deck",
+          "water"
+        ],
+        "pieces": "forest"
+      },
+      {
+        "from": [
+          "island"
+        ],
+        "onto": [
+          "ground",
+          "deck",
+          "water"
+        ],
+        "pieces": "island"
+      },
+      {
+        "from": [
+          "mist"
+        ],
+        "onto": [
+          "ground",
+          "deck",
+          "water"
+        ],
+        "pieces": "mist"
+      }
+    ]
+  },
   "sprites": {
     "player": {
       "file": "sprites/player.png",

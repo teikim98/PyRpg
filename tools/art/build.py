@@ -10,6 +10,7 @@ library_tiles.py · library_npcs.py · library_monsters.py · library_boss.py(�
 port_tiles.py · port_npcs.py · port_monsters.py · port_boss.py(지역 5, 팔레트 portpal.py),
 lake_tiles.py · lake_npcs.py · lake_monsters.py · lake_boss.py(지역 6, 팔레트 lakepal.py)에
 팔레트 문자 그리드(또는 도형으로 그리는 코드)로 정의되어 있다. 같은 코드면 언제나 같은 바이트가 나온다.
+경계 장식 조각(manifest `edgeDecor`, 결정 20)은 edge_tiles.py가 그리고 assets/tiles/edges.png로 묶는다.
 
 미리보기: docs/phase2/art-preview.png(지역 1 에셋), docs/phase3/art-preview-r02.png(지역 2 에셋 + 숲 장면),
 docs/phase3/art-preview-r03.png(지역 3 에셋 + 동굴 장면), docs/phase3/art-preview-r04.png(지역 4 에셋 + 도서관 장면),
@@ -27,6 +28,7 @@ from cave_boss import CAVE_BOSSES  # noqa: E402
 from cave_monsters import CAVE_MONSTERS  # noqa: E402
 from cave_npcs import CAVE_CHARACTERS  # noqa: E402
 from cave_tiles import CAVE_TILES  # noqa: E402
+from edge_tiles import EDGE_PIECES  # noqa: E402
 from characters import CHARACTERS  # noqa: E402
 from forest_boss import FOREST_BOSSES  # noqa: E402
 from forest_monsters import FOREST_MONSTERS  # noqa: E402
@@ -154,6 +156,16 @@ def render_assets(manifest):
         out[tset["file"]] = c
     for name, spr in manifest["sprites"].items():
         out[spr["file"]] = sprite_sheet(name, spr)
+    decor = manifest.get("edgeDecor")
+    if decor:  # 경계 장식 조각 시트(edge_tiles.py, 결정 20)
+        cols = decor["columns"]
+        names = decor["pieces"]
+        c = Canvas(cols * ts, -(-len(names) // cols) * ts)
+        for i, n in enumerate(names):
+            if n not in EDGE_PIECES:
+                raise KeyError(f"no art defined for edge piece {n!r}")
+            c.draw(EDGE_PIECES[n], (i % cols) * ts, (i // cols) * ts)
+        out[decor["file"]] = c
     for name, por in manifest["portraits"].items():
         g = portrait_grid(name)
         size = por["size"]
