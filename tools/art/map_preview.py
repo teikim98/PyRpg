@@ -72,10 +72,13 @@ REGIONS = {
     },
     "r04": {
         "dir": "r04-grand-library", "title": "grand library", "tiles": (48, 60), "town": False,
-        "ground": [],
-        "mass": [],
-        "areas": [],
-        "views": [],
+        "ground": ["lib_floor", "lib_carpet", "floating_pages", "lib_wall"],
+        "mass": ["bookshelf", "lib_wall_top"],
+        "areas": [("entrance hall", 0, 4, 22, 15), ("reading room & ghost", 19, 4, 22, 18),
+                  ("stacks maze & hidden path", 37, 2, 24, 16), ("scriptorium", 58, 5, 22, 16),
+                  ("sealed archive", 76, 5, 16, 12), ("golem's lectern", 86, 5, 17, 13)],
+        "views": [("entrance hall", 0, 5 * TS), ("reading room", 21 * TS, 6 * TS), ("stacks", 42 * TS, 2 * TS),
+                  ("scriptorium", 60 * TS, 7 * TS), ("sealed archive", 74 * TS, 6 * TS), ("boss", 83 * TS, 6 * TS)],
     },
     "r05": {
         "dir": "r05-trade-port", "title": "trade port", "tiles": (60, 74), "town": False,
