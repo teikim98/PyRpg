@@ -93,10 +93,14 @@ REGIONS = {
     },
     "r07": {
         "dir": "r07-hourglass-desert", "title": "hourglass desert", "tiles": (88, 103), "town": False,
-        "ground": [],
-        "mass": [],
-        "areas": [],
-        "views": [],
+        "ground": ["desert_sand", "desert_path", "desert_dune", "oasis_water", "star_floor", "sand_canal",
+                   "canal_bridge", "altar_floor"],
+        "mass": ["sandstone_wall", "sandstone_gap"],
+        "areas": [("dry ferry", 0, 3, 22, 16), ("wind canyon & hidden gap", 18, 2, 22, 18),
+                  ("mirage bazaar & scorpion", 37, 3, 24, 16), ("star ruins & broken bridge", 58, 4, 22, 14),
+                  ("sundial plaza & sphinx altar", 78, 4, 32, 14)],
+        "views": [("ferry", 0, 2 * TS), ("canyon", 21 * TS, 2 * TS), ("oasis bazaar", 41 * TS, 3 * TS),
+                  ("star ruins", 55 * TS, 3 * TS), ("broken bridge", 66 * TS, 6 * TS), ("altar", 90 * TS, 6 * TS)],
     },
 }
 

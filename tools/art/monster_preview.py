@@ -102,10 +102,19 @@ REGIONS = {
     },
     "r07": {
         "out": "r07-monsters", "title": "region 7 monsters", "monsters": DESERT_MONSTERS, "bosses": DESERT_BOSSES,
-        "floor": None,
-        "path": None,
-        "notes": {},
-        "boss": None,
+        "floor": lambda: __import__("desert_tiles").DESERT_SAND,
+        "path": lambda: __import__("desert_tiles").DESERT_PATH,
+        "notes": {
+            "monster_sand_stream": "fly 0 -1 -2 -1, grains flow down, mound fixed",
+            "monster_dune_snail": "crawl: base / reach 1px / base / pull (shell lifts), sand grain drops",
+            "monster_mirage_lizard": "legs alternate, tail sways, shimmer band moves down",
+            "monster_sieve_urn": "fly 0 -1 -2 -1, sand leaks from holes, blink on 3",
+            "monster_sundial_crab": "gnomon shadow turns 1/4 step, legs alternate, claws snap on 3",
+            "monster_caravan_ghost": "fly 0 -1 -2 -1, misty legs alternate",
+            "monster_dust_devil": "bands turn 1/4 step, funnel sways, star bits orbit",
+        },
+        "boss": [("boss_sand_scorpion", "glare / breathe / sand drops / threat (claws up, eyes glow)"),
+                 ("boss_hourglass_sphinx", "doze / breathe / hand turns / awake (eyes, rune, falls glow)")],
     },
 }
 
