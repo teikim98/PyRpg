@@ -59,8 +59,11 @@ from portraits import PORTRAITS  # noqa: E402
 from tiles import DECO_UNDER as R01_DECO_UNDER, TILE_ANIMATIONS, TILES as R01_TILES  # noqa: E402
 from town_objects import TOWN_OBJECTS  # noqa: E402
 
-# 미리보기에서 투명 물체 타일 밑에 깔 바닥(코지 화풍으로 다시 그린 지역의 물체 타일)
+# 미리보기에서 투명 물체 타일 밑에 깔 바닥(코지 화풍으로 다시 그린 지역의 물체 타일).
+# 지역 3~7 타일 모듈은 DECO_UNDER가 있으면 모은다(화풍 통일 병렬 작업에서 이 파일을 고치지 않게)
 DECO_UNDER = {**R01_DECO_UNDER, **FOREST_DECO_UNDER}
+for _mod in ("cave_tiles", "library_tiles", "port_tiles", "lake_tiles", "desert_tiles"):
+    DECO_UNDER.update(getattr(sys.modules[_mod], "DECO_UNDER", {}))
 TILES ={**R01_TILES, **FOREST_TILES, **CAVE_TILES, **LIBRARY_TILES, **PORT_TILES, **LAKE_TILES, **DESERT_TILES}
 # 지역 2·3·4·5·6·7에서 새로 생긴 에셋(미리보기를 지역별로 나눌 때 쓴다)
 R02_NAMES = set(FOREST_TILES) | set(FOREST_CHARACTERS) | set(FOREST_MONSTERS) | set(FOREST_BOSSES)

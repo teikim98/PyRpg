@@ -10,6 +10,7 @@
 
     python tools/art/overhaul_preview.py r02   # 화풍 통일: r02-characters.png(지역 NPC 시트 + 주인공·누리)만
 """
+import importlib
 import os
 import sys
 
@@ -258,9 +259,10 @@ def walk_gif_frames():
 
 def region_characters(region):
     """화풍 통일: 그 지역 NPC 시트(6열 × 4행, 6배)를 주인공·누리와 나란히 → rNN-characters.png"""
-    if region == "r02":
-        from forest_npcs import RIGS as REGION_RIGS
-    else:
+    modules = {"r02": "forest_npcs", "r03": "cave_npcs", "r04": "library_npcs", "r05": "port_npcs",
+               "r06": "lake_npcs", "r07": "desert_npcs"}
+    REGION_RIGS = getattr(importlib.import_module(modules[region]), "RIGS", None) if region in modules else None
+    if not REGION_RIGS:
         raise SystemExit(f"no NPC rigs for {region}")
     rigs = {"player": RIGS["player"], "nuri": RIGS["nuri"], **REGION_RIGS}
     print(os.path.relpath(save(characters_sheet(rigs), f"{region}-characters.png"), ROOT))

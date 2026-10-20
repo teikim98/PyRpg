@@ -62,6 +62,42 @@ REGIONS = {
         "views": [("entrance", 0, 5 * TS), ("traveler", 14 * TS, 9 * TS), ("woodcutter", 37 * TS, 2 * TS),
                   ("stream", 53 * TS, 8 * TS), ("loop", 20 * TS, 7 * TS), ("boss", 63 * TS, 5 * TS)],
     },
+    # 지역 3~7: 화풍 통일 병렬 작업에서 그 지역 에이전트가 자기 칸의 ground·mass·areas·views만 채운다
+    "r03": {
+        "dir": "r03-goblin-cave", "title": "goblin cave", "tiles": (36, 48), "town": False,
+        "ground": [],
+        "mass": [],
+        "areas": [],
+        "views": [],
+    },
+    "r04": {
+        "dir": "r04-grand-library", "title": "grand library", "tiles": (48, 60), "town": False,
+        "ground": [],
+        "mass": [],
+        "areas": [],
+        "views": [],
+    },
+    "r05": {
+        "dir": "r05-trade-port", "title": "trade port", "tiles": (60, 74), "town": False,
+        "ground": [],
+        "mass": [],
+        "areas": [],
+        "views": [],
+    },
+    "r06": {
+        "dir": "r06-mirror-lake", "title": "mirror lake", "tiles": (74, 88), "town": False,
+        "ground": [],
+        "mass": [],
+        "areas": [],
+        "views": [],
+    },
+    "r07": {
+        "dir": "r07-hourglass-desert", "title": "hourglass desert", "tiles": (88, 103), "town": False,
+        "ground": [],
+        "mass": [],
+        "areas": [],
+        "views": [],
+    },
 }
 
 

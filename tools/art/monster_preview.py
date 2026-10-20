@@ -15,14 +15,24 @@ sys.path.insert(0, HERE)
 
 from boss import BOSSES  # noqa: E402
 from build import text  # noqa: E402
+from cave_boss import CAVE_BOSSES  # noqa: E402
+from cave_monsters import CAVE_MONSTERS  # noqa: E402
 from cozysamples import grass, path  # noqa: E402
+from desert_boss import DESERT_BOSSES  # noqa: E402
+from desert_monsters import DESERT_MONSTERS  # noqa: E402
 from forest_boss import FOREST_BOSSES  # noqa: E402
 from forest_monsters import FOREST_MONSTERS  # noqa: E402
 from forest_tiles import FOREST_FLOOR, ROOT_FLOOR  # noqa: E402
 from gif import write_gif  # noqa: E402
 from gridlib import Canvas  # noqa: E402
+from lake_boss import LAKE_BOSSES  # noqa: E402
+from lake_monsters import LAKE_MONSTERS  # noqa: E402
+from library_boss import LIBRARY_BOSSES  # noqa: E402
+from library_monsters import LIBRARY_MONSTERS  # noqa: E402
 from monsters import MONSTERS  # noqa: E402
 from png import encode_png  # noqa: E402
+from port_boss import PORT_BOSSES  # noqa: E402
+from port_monsters import PORT_MONSTERS  # noqa: E402
 
 ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
 OUT = os.path.join(ROOT, "docs", "art-overhaul")
@@ -59,7 +69,51 @@ REGIONS = {
         },
         "boss": ("boss_crossroad_tree", "doze / breathe / hand turns / awake (roots glow)"),
     },
+    # 지역 3~7: 화풍 통일 병렬 작업에서 그 지역 에이전트가 자기 칸의 floor·path·notes·boss만 채운다.
+    # floor·path는 그 지역 타일 모듈을 함수 안에서 import한다(이 파일 머리의 import는 고치지 않음).
+    # boss는 (이름, 메모) 하나 또는 보스가 둘인 지역은 그 목록
+    "r03": {
+        "out": "r03-monsters", "title": "region 3 monsters", "monsters": CAVE_MONSTERS, "bosses": CAVE_BOSSES,
+        "floor": None,
+        "path": None,
+        "notes": {},
+        "boss": None,
+    },
+    "r04": {
+        "out": "r04-monsters", "title": "region 4 monsters", "monsters": LIBRARY_MONSTERS, "bosses": LIBRARY_BOSSES,
+        "floor": None,
+        "path": None,
+        "notes": {},
+        "boss": None,
+    },
+    "r05": {
+        "out": "r05-monsters", "title": "region 5 monsters", "monsters": PORT_MONSTERS, "bosses": PORT_BOSSES,
+        "floor": None,
+        "path": None,
+        "notes": {},
+        "boss": None,
+    },
+    "r06": {
+        "out": "r06-monsters", "title": "region 6 monsters", "monsters": LAKE_MONSTERS, "bosses": LAKE_BOSSES,
+        "floor": None,
+        "path": None,
+        "notes": {},
+        "boss": None,
+    },
+    "r07": {
+        "out": "r07-monsters", "title": "region 7 monsters", "monsters": DESERT_MONSTERS, "bosses": DESERT_BOSSES,
+        "floor": None,
+        "path": None,
+        "notes": {},
+        "boss": None,
+    },
 }
+
+
+def boss_list(cfg):
+    """cfg["boss"]: (이름, 메모) 하나 또는 그 목록(중간 보스가 있는 지역)"""
+    b = cfg["boss"]
+    return b if isinstance(b, list) else [b]
 
 
 def tiled(tile, w, h):
@@ -83,7 +137,7 @@ def sheet(cfg):
     W = 16 + 4 * cell + 16 + battle_w + 16 + map_w + 16
     row_h = 16 * S + 30
     boss_h = 32 * BS + 30 + 96 + 16
-    H = 16 + 20 + len(order) * row_h + 20 + boss_h + 16
+    H = 16 + 20 + len(order) * row_h + 20 + len(boss_list(cfg)) * boss_h + 16
     cv = Canvas(W, H, BG)
     text(cv, f"{cfg['title']}  4 frames  (x8 / battle x4 / map x1 x3)", 16, 12, 2, HEAD)
     g_tile, p_tile = cfg["floor"](), cfg["path"]()
@@ -112,30 +166,32 @@ def sheet(cfg):
             cv.paste(bg, mx + 4 * 18 + 8 + i * 52, y0, 3)
         y += row_h
     y += 20
-    boss, note = cfg["boss"]
-    text(cv, f"{boss}  -  {note} (x6, battle x3)", 16, y, 1, DIM)
-    y0 = y + 10
-    for i, g in enumerate(cfg["bosses"][boss]):
-        bg = tiled(p_tile, 32, 32)
-        bg.draw(g)
-        cv.paste(bg, 16 + i * (32 * BS + 10), y0, BS)
-    y1 = y0 + 32 * BS + 16
-    cv.fill_rect(12, y1 - 4, 4 * 106 + 8, 96 + 8, PANEL)
-    for i, g in enumerate(cfg["bosses"][boss]):
-        cv.paste(frame_cv(g), 16 + i * 106, y1, 3)
+    for boss, note in boss_list(cfg):
+        text(cv, f"{boss}  -  {note} (x6, battle x3)", 16, y, 1, DIM)
+        y0 = y + 10
+        for i, g in enumerate(cfg["bosses"][boss]):
+            bg = tiled(p_tile, 32, 32)
+            bg.draw(g)
+            cv.paste(bg, 16 + i * (32 * BS + 10), y0, BS)
+        y1 = y0 + 32 * BS + 16
+        cv.fill_rect(12, y1 - 4, 4 * 106 + 8, 96 + 8, PANEL)
+        for i, g in enumerate(cfg["bosses"][boss]):
+            cv.paste(frame_cv(g), 16 + i * 106, y1, 3)
+        y += boss_h
     return cv
 
 
 def gif_frames(cfg):
     order = list(cfg["notes"])
-    boss = cfg["boss"][0]
-    W, H = len(order) * 72 + 112 + 16, 112
+    bosses = [b for b, _ in boss_list(cfg)]
+    W, H = len(order) * 72 + len(bosses) * 104 + 8 + 16, 112
     out = []
     for i in range(4):
         cv = Canvas(W, H, PANEL)
         for k, name in enumerate(order):
             cv.paste(frame_cv(cfg["monsters"][name][i]), 8 + k * 72, 24, 4)
-        cv.paste(frame_cv(cfg["bosses"][boss][i]), 8 + len(order) * 72 + 8, 8, 3)
+        for k, boss in enumerate(bosses):
+            cv.paste(frame_cv(cfg["bosses"][boss][i]), 8 + len(order) * 72 + 8 + k * 104, 8, 3)
         out.append(cv)
     return out
 

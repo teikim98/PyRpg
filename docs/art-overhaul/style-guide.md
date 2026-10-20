@@ -87,6 +87,7 @@
 | r04 무너진 대도서관 | cloth_indigo · cream · brick | 잉크 남색, 양피지, 봉랍 빨강 |
 | r05 교역항 | blue · cloth_red · rust | 바다 파랑, 깃발 빨강, 녹 |
 | r06 거울 호수 | sky · cloth_purple · water | 안개 하늘빛, 연보라, 물 |
+| r07 모래시계 사막 | rust · teal · cloth_indigo | 붉은 사암·주황 모래 그늘, 오아시스·멈춘 시간 룬, 별자리 유적 밤하늘. 바닥은 공통 `sand`(§4.4 '바닥 = 강조 램프 base'의 예외: `rust.base`는 맵 전체 바닥으로 쓰기에 채도가 높음). 모래시계 틀·제단은 공통 `brass` |
 
 새 램프가 필요하면 `cozypal.RAMPS` **끝에** 추가합니다(앞에 끼우면 문자 배정이 바뀌어 모든 PNG 바이트가 달라집니다).
 
