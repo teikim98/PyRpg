@@ -134,6 +134,7 @@ def anim_frame(manifest, name, t):
 def actors(tmj, region):
     """[(스프라이트 이름, 프레임 번호, 타일 x, 타일 y)]"""
     out = []
+    known = build.load_manifest()["sprites"]
     objs = next(layer for layer in tmj["layers"] if layer["name"] == "objects")["objects"]
     for o in objs:
         props = {p["name"]: p["value"] for p in o.get("properties", [])}
@@ -150,6 +151,8 @@ def actors(tmj, region):
                 key = json.load(f)["enemy"]["sprite"]
         elif t == "npc":
             key = props["sprite"]
+        elif t == "door" and props.get("sprite") in known:
+            key = props["sprite"]          # 엔진 objectSpriteKey와 같다: door의 그림(고장 난 다리 등)이 manifest에 있으면
         else:
             key = OBJ_SPRITE.get(t)
         if key:
