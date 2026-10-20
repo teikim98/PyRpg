@@ -580,7 +580,7 @@
     "npc_goblin": {
       "file": "sprites/npc_goblin.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     },
     "monster_index_goblin": {
       "file": "sprites/monster_index_goblin.png",

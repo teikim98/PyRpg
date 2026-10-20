@@ -74,10 +74,16 @@ REGIONS = {
     # boss는 (이름, 메모) 하나 또는 보스가 둘인 지역은 그 목록
     "r03": {
         "out": "r03-monsters", "title": "region 3 monsters", "monsters": CAVE_MONSTERS, "bosses": CAVE_BOSSES,
-        "floor": None,
-        "path": None,
-        "notes": {},
-        "boss": None,
+        "floor": lambda: __import__("cave_tiles").CAVE_FLOOR,
+        "path": lambda: __import__("cave_tiles").MINECART_RAIL,
+        "notes": {
+            "monster_index_goblin": "stand / crouch / stand / hop, tag 0 1 2 -1",
+            "monster_slice_bat": "fly 0 -1 -2 -1, blade wings spread / up / down / up",
+            "monster_stack_crab": "legs alternate, bob, top crate lags, claws up on 3",
+            "monster_mirror_slime": "squash / stretch, mirror top reflects stalactites",
+            "monster_grid_golem": "step bob, lit cell walks down the middle column, eyes glow on 3",
+        },
+        "boss": ("boss_goblin_chief", "glare / breathe / necklace hand turns / threat (roar, scepter up)"),
     },
     "r04": {
         "out": "r04-monsters", "title": "region 4 monsters", "monsters": LIBRARY_MONSTERS, "bosses": LIBRARY_BOSSES,

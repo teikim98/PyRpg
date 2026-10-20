@@ -65,10 +65,12 @@ REGIONS = {
     # 지역 3~7: 화풍 통일 병렬 작업에서 그 지역 에이전트가 자기 칸의 ground·mass·areas·views만 채운다
     "r03": {
         "dir": "r03-goblin-cave", "title": "goblin cave", "tiles": (36, 48), "town": False,
-        "ground": [],
-        "mass": [],
-        "areas": [],
-        "views": [],
+        "ground": ["cave_floor", "minecart_rail", "cave_pool", "cave_wall", "torch_frozen", "mural_wall", "cave_crack"],
+        "mass": ["cave_wall_top"],
+        "areas": [("entrance & tunnels", 0, 2, 34, 14), ("storeroom", 34, 2, 24, 14),
+                  ("mirror pool & hidden crack", 55, 1, 22, 15), ("mural & chief's throne", 74, 3, 31, 14)],
+        "views": [("entrance", 0, 5 * TS), ("tunnels", 16 * TS, 4 * TS), ("storeroom", 36 * TS, 3 * TS),
+                  ("pool & crack", 55 * TS, 2 * TS), ("mural", 74 * TS, 3 * TS), ("boss", 85 * TS, 5 * TS)],
     },
     "r04": {
         "dir": "r04-grand-library", "title": "grand library", "tiles": (48, 60), "town": False,
