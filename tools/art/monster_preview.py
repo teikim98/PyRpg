@@ -87,10 +87,16 @@ REGIONS = {
     },
     "r04": {
         "out": "r04-monsters", "title": "region 4 monsters", "monsters": LIBRARY_MONSTERS, "bosses": LIBRARY_BOSSES,
-        "floor": None,
-        "path": None,
-        "notes": {},
-        "boss": None,
+        "floor": lambda: __import__("library_tiles").LIB_FLOOR,
+        "path": lambda: __import__("library_tiles").LIB_CARPET,
+        "notes": {
+            "monster_letter_moth": "fly 0 -1 -2 -1, wings fold up on 1 3",
+            "monster_ink_slime": "squash / stretch, inkpot rides along, drip on 3",
+            "monster_quill_sprite": "fly 0 -1 -2 -1, tip sways, ink drop forms / falls",
+            "monster_scroll_snake": "wave flows 1/4 cycle, roll mark turns 1/4",
+            "monster_cipher_owl": "wheel hands turn 1/4, letter A B C D, tassel sways",
+        },
+        "boss": ("boss_librarian_golem", "glare / breathe / dial hand turns / threat (eye wide, quill raised)"),
     },
     "r05": {
         "out": "r05-monsters", "title": "region 5 monsters", "monsters": PORT_MONSTERS, "bosses": PORT_BOSSES,

@@ -615,7 +615,7 @@
     "npc_ghost_librarian": {
       "file": "sprites/npc_ghost_librarian.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     },
     "monster_letter_moth": {
       "file": "sprites/monster_letter_moth.png",
