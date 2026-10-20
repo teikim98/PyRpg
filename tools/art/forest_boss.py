@@ -1,166 +1,143 @@
-"""지역 2 보스(32×32 프레임 2개): 갈림길 수호목.
+"""지역 2 보스(32×32 프레임 4개): 갈림길 수호목.
 
-굵은 줄기 가운데에 지역 1 보스와 같은 황동 테·청록 문자판의 시계 룬 눈이 박힌 수호목이다.
-뿌리는 밑동에서 갈라지고 또 갈라져(두 갈래씩) 사방으로 뻗는 길이 된다. 갈래 끝마다 청록 빛이 맺혀 있다.
-잎 사이로 단풍이 공중에 멈춰 떠 있다. 프레임 A는 눈을 가늘게 뜨고, 프레임 B는 눈을 크게 뜨며
-바늘이 돌고 가지를 치켜든다(잎덩이가 한 칸 올라가고 뿌리 끝 빛이 밝아진다).
+화풍 통일(docs/art-overhaul/style-guide.md §6.3, 기준 구현 boss.py): 코지 팔레트만 쓰고 monsters.Px로 덩어리마다
+3단 음영, auto_outline으로 1px 외곽선. 디자인은 옛 그림 그대로다.
+- 굵은 줄기 가운데에 지역 1 보스와 같은 황동 테·청록 문자판의 시계 룬 눈.
+- 뿌리는 밑동에서 두 갈래씩 갈라져 사방으로 뻗는 길이 되고, 갈래 끝마다 청록 빛이 맺혀 있다.
+- 잎덩이(짙은 잎·이끼)에 멈춘 단풍(빨강·주황) 덩이가 섞이고, 둘레에 낙엽이 공중에 멈춰 떠 있다.
+
+프레임(엔진은 맵·전투 모두 4프레임을 그대로 돌린다. 잠든/깬 상태를 따로 고르지 않으므로 boss_stair_mimic처럼
+'노려봄 → 숨 → 바늘 돎 → 위협'의 제자리 루프 안에서 깨어남을 보여 준다):
+0 노려봄(눈꺼풀이 반쯤 덮임) → 1 숨 들이쉼(잎덩이 1px 들림) → 2 노려봄(분침이 한 칸 돎)
+→ 3 위협(가지를 치켜들어 잎덩이 2px, 눈을 크게 뜨고 문자판이 환하게, 입 틈에 청록 빛, 뿌리 끝 빛이 밝아짐).
 """
 import math
 
-from forestpal import CH, color_outline
+from cozypal import c
+from monsters import Px, ellipse
 
 SIZE = 32
-LIGHT = (-0.6, -0.8)
 
 
-def _crossroad_tree(awake: bool):
-    g = [["."] * SIZE for _ in range(SIZE)]
+def _root(p, x0, y0, ang, length, width, depth, tips):
+    """뿌리 한 갈래(두께 width)를 그리고 끝에서 두 갈래로 나눈다. 위쪽 가장자리 밝음, 아래쪽 그늘."""
+    x1, y1 = x0 + math.cos(ang) * length, y0 + math.sin(ang) * length
+    steps = int(length * 3) + 1
+    for s in range(steps + 1):
+        t = s / steps
+        x, y = x0 + (x1 - x0) * t, y0 + (y1 - y0) * t
+        w = width * (1 - 0.35 * t)
+        for yy in range(int(y - w) - 1, int(y + w) + 2):
+            for xx in range(int(x - w) - 1, int(x + w) + 2):
+                if math.hypot(xx + 0.5 - x, yy + 0.5 - y) <= w:
+                    rel = (yy + 0.5 - y) / max(w, 0.5)
+                    p.put(xx, yy, "wood.hi" if rel < -0.4 else ("wood.shade" if rel > 0.3 else "wood.base"))
+    if depth == 0:
+        tips.append((round(x1 - 0.5), round(y1 - 0.5)))
+        return
+    spread = 0.5 + 0.1 * depth
+    for a in (ang - spread, ang + spread):
+        _root(p, x1, y1, a, length * 0.72, max(0.5, width * 0.7), depth - 1, tips)
 
-    def put(x, y, name):
-        if 0 <= x < SIZE and 0 <= y < SIZE:
-            g[y][x] = CH[name]
 
-    def get(x, y):
-        return g[y][x] if 0 <= x < SIZE and 0 <= y < SIZE else "."
+# 잎덩이: (중심 x, 중심 y, 반지름, 램프) 뒤에서 앞으로
+_CLUMPS = [(16, 4.5, 5.0, "leaf"), (9, 6.5, 4.8, "moss"), (23, 6.5, 4.8, "leaf"), (4, 10.5, 3.4, "brick"),
+           (28, 10.5, 3.4, "rust"), (12, 9.5, 4.4, "leaf"), (20.5, 9.5, 4.4, "moss"), (16, 11, 3.0, "leaf")]
 
-    # ── 뿌리: 밑동(16, 24)에서 두 갈래씩 갈라지는 길 ─────────────────────────────
+
+def _crossroad_tree(frame):
+    p = Px(SIZE, SIZE)
+    lift = (0, 1, 0, 2)[frame]
+    threat = frame == 3
+
     tips = []
-
-    def root(x0, y0, ang, length, width, depth):
-        x1 = x0 + math.cos(ang) * length
-        y1 = y0 + math.sin(ang) * length
-        steps = int(length * 3) + 1
-        for s in range(steps + 1):
-            t = s / steps
-            x = x0 + (x1 - x0) * t
-            y = y0 + (y1 - y0) * t
-            w = width * (1 - 0.35 * t)
-            for yy in range(int(y - w) - 1, int(y + w) + 2):
-                for xx in range(int(x - w) - 1, int(x + w) + 2):
-                    d = math.hypot(xx + 0.5 - x, yy + 0.5 - y)
-                    if d <= w:
-                        # 위쪽 가장자리는 밝게, 아래쪽은 어둡게(빛이 위에서)
-                        rel = (yy + 0.5 - y) / max(w, 0.5)
-                        put(xx, yy, "w4" if rel < -0.4 else ("w2" if rel > 0.35 else "w3"))
-        if depth == 0:
-            tips.append((round(x1), round(y1)))
-            return
-        spread = 0.5 + 0.1 * depth
-        root(x1, y1, ang - spread, length * 0.72, max(0.5, width * 0.7), depth - 1)
-        root(x1, y1, ang + spread, length * 0.72, max(0.5, width * 0.7), depth - 1)
-
     for ang, ln in ((math.pi * 0.97, 7.5), (math.pi * 0.68, 5.0), (math.pi * 0.32, 5.0), (math.pi * 0.03, 7.5)):
-        root(16, 24, ang, ln, 1.7, 1)
+        _root(p, 16, 25, ang, ln, 1.7, 1, tips)
 
-    # ── 줄기: 위는 가늘고 밑동은 뿌리 쪽으로 퍼진다 ─────────────────────────────
-    for y in range(8, 27):
-        half = 4.2 + max(0, y - 18) * 0.55
-        for x in range(SIZE):
-            u = (x + 0.5 - 16) / half  # -1 ~ 1
-            if abs(u) > 1:
-                continue
-            if u < -0.6:
-                c = "w4"
-            elif u < -0.15:
-                c = "w3"
-            elif u < 0.55:
-                c = "w2"
-            else:
-                c = "w1"
-            # 세로 나뭇결
-            if (x * 7 + y // 3) % 5 == 0 and c in ("w3", "w2"):
-                c = "w2" if c == "w3" else "w1"
-            put(x, y, c)
-    # 가지 두 개가 잎덩이 속으로
-    for i in range(7):
-        put(11 - i, 10 - i // 2, "w2")
-        put(11 - i, 11 - i // 2, "w1")
-        put(20 + i, 10 - i // 2, "w2")
-        put(20 + i, 11 - i // 2, "w1")
+    # 줄기: 위는 가늘고 밑동은 뿌리 쪽으로 퍼진다. 왼쪽 밝음, 오른쪽 그늘, 세로 결
+    trunk = set()
+    for y in range(9, 27):
+        half = 4.2 + max(0, y - 19) * 0.55
+        trunk |= {(x, y) for x in range(SIZE) if abs(x + 0.5 - 16) <= half}
+    p.mass(trunk, "wood", shade_below=25)
+    for x, y in trunk:
+        if (x * 7 + y // 3) % 5 == 0 and p.get(x, y) == "wood.base":
+            p.put(x, y, "wood.shade")
+    # 가지 두 개가 잎덩이 속으로(치켜들면 1px 더 올라간다)
+    for i in range(6):
+        for sx, d in ((11 - i, -1), (20 + i, 1)):
+            yy = 11 - i // 2 - (1 if threat else 0)
+            p.put(sx, yy, "wood.base")
+            p.put(sx, yy + 1, "wood.shade")
 
-    # ── 잎덩이: 뒤에서 앞으로 겹쳐 그린 둥근 덩이. 덩이마다 왼쪽 위가 밝고 오른쪽 아래 가장자리가 어둡다 ──
-    lift = 1 if awake else 0
-    clumps = [  # (중심 x, 중심 y, 반지름, 램프)
-        (16, 4, 5.2, "g"), (9, 6, 5.0, "g"), (23, 6, 5.0, "g"),
-        (4, 10, 3.6, "a"), (28, 10, 3.6, "g"), (12, 9, 4.6, "g"), (20, 9, 4.6, "a"), (16, 11, 3.2, "g"),
-    ]
-    ramps = {"g": ["f1", "f2", "f3", "f4", "f5", "f6"], "a": ["a0", "a1", "a2", "a3", "a4", "a5"]}
-    for cx, cy, r, rk in clumps:
-        cy -= lift
-        ramp = ramps[rk]
-        for y in range(SIZE):
-            for x in range(SIZE):
-                d = math.hypot(x + 0.5 - cx, y + 0.5 - cy)
-                if d > r:
-                    continue
-                nx, ny = (x + 0.5 - cx) / r, (y + 0.5 - cy) / r
-                lit = -(nx * 0.6 + ny * 0.8)
-                k = 2.4 + lit * 1.8
-                if d > r - 1.1 and lit < 0.1:
-                    k = 0.6  # 덩이 가장자리 그늘(덩이끼리 갈라 보이게)
-                if (x * 3 + y * 5) % 7 == 0 and k < 4.2:
-                    k -= 0.7
-                put(x, y, ramp[max(0, min(5, int(round(k))))])
-    # 얼어붙은 서리(잎 끝의 청록 점)
-    for x, y in ((6, 3), (25, 2), (1, 9), (30, 11), (17, 0)):
-        put(x, y - lift, "i4")
+    # 잎덩이
+    for cx, cy, r, ramp in _CLUMPS:
+        p.mass(ellipse(cx, cy - lift, r, r, SIZE), ramp)
+    for x, y in ((14, 1), (7, 4), (21, 3), (11, 7)):                 # 잎 끝 강조
+        if p.get(x, y - lift):
+            p.put(x, y - lift, p.get(x, y - lift).split(".")[0] + ".spec")
+    for x, y in ((6, 3), (25, 2), (1, 9), (30, 11), (17, 0)):        # 얼어붙은 서리
+        p.put(x, y - lift, "teal.hi")
 
-    # ── 얼굴: 성난 눈썹 + 시계 룬 눈 + 갈라진 입 ───────────────────────────────────
+    # 시계 룬 눈: 황동 테 + 청록 문자판 + 분침. 0~2는 눈꺼풀(껍질)이 위를 덮고, 3은 활짝
     ey = 14
+    face = "teal.hi" if threat else "teal.base"
+    turned = frame == 2
     eye = [
-        "..bbbb..",
-        ".bccccb.",
-        "bccEcccb",
-        "bTcEEEcb" if awake else "bTcEcTcb",
-        ".bccccb." if awake else ".bcEEcb.",
-        "..BBBB..",
-    ] if awake else [
-        "........",
-        ".bbbbbb.",
-        "bccEcccb",
-        "bTcEcTcb",
-        ".bcEEcb.",
-        "..BBBB..",
+        "..UUUU..",
+        ".UffffU.",
+        "UffkfffU" if not turned else "UffffffU",
+        "Uffkkffu" if not turned else "Uffkkkfu",
+        ".uffffu.",
+        "..uuuu..",
     ]
-    names = {"b": "b3", "B": "b1", "c": "i4", "T": "i3", "E": "w0"}
+    legend = {"U": "brass.hi", "u": "brass.shade", "f": face, "k": "ink"}
     for j, row in enumerate(eye):
         for i, ch in enumerate(row):
             if ch != ".":
-                put(12 + i, ey + j, names[ch])
-    put(13, ey, "b5") if awake else put(13, ey + 1, "b5")
+                p.put(12 + i, ey + j, legend[ch])
+    if threat:
+        p.put(13, ey + 1, "teal.spec")
+        p.put(14, ey + 1, "white")
+    else:
+        for i in range(1, 7):                                       # 반쯤 감은 눈꺼풀
+            p.put(12 + i, ey + 1, "wood.shade")
+        p.put(12, ey + 2, "wood.shade")
+        p.put(19, ey + 2, "wood.shade")
     # 눈썹(옹이 진 껍질): 가운데로 내려온다
     for dx, dy in ((0, 0), (1, 0), (2, 1), (3, 1)):
-        put(10 + dx, ey - 2 + dy + (0 if awake else 1), "w0")
-        put(21 - dx, ey - 2 + dy + (0 if awake else 1), "w0")
-    # 입: 나무 틈, 안쪽에 청록 빛
-    mouth = [(13, 22), (14, 21), (15, 22), (16, 21), (17, 22), (18, 21)]
-    for x, y in mouth:
-        put(x, y, "w0")
-        put(x, y + 1, "w0")
-    if awake:
+        p.put(10 + dx, ey - 2 + dy + (0 if threat else 1), "wood.ol")
+        p.put(21 - dx, ey - 2 + dy + (0 if threat else 1), "wood.ol")
+    # 입: 나무 틈. 위협 때 벌어져 안쪽에 청록 빛
+    for x, y in ((13, 22), (14, 21), (15, 22), (16, 21), (17, 22), (18, 21)):
+        p.put(x, y, "wood.ol")
+        p.put(x, y + 1, "wood.ol")
+    if threat:
         for x in range(14, 18):
-            put(x, 23, "i2")
-        put(15, 22, "i3")
-        put(16, 22, "i3")
+            p.put(x, 23, "wood.ol")
+            p.put(x, 22, "teal.base")
+        p.put(15, 22, "teal.hi")
 
-    # ── 뿌리 끝의 빛(갈래 길의 끝) ────────────────────────────────────────────
+    # 뿌리 끝의 빛(갈래 길의 끝)
     for x, y in tips:
-        put(x, y, "i4" if awake else "i3")
-    out = color_outline(["".join(r) for r in g])
+        p.put(x, y, "teal.spec" if threat else "teal.hi")
+    g = p.grid()
 
-    # ── 공중에 멈춘 단풍(외곽선 없이) ─────────────────────────────────────────
-    leaves = [(2, 4, "a3"), (29, 3, "a4"), (1, 19, "a2"), (30, 17, "a3"), (6, 22, "a4"), (26, 23, "a2")]
-    if awake:
-        leaves = [(x, y - 1, c) for x, y, c in leaves]
-    out = [list(r) for r in out]
-    for x, y, c in leaves:
-        if out[y][x] == ".":
-            out[y][x] = CH[c]
-            if out[y][x + 1] == "." and x + 1 < SIZE:
-                out[y][x + 1] = CH["a1"]
-            if y > 0 and out[y - 1][x] == ".":
-                out[y - 1][x] = CH["i4"]
-    return ["".join(r) for r in out]
+    # 공중에 멈춘 낙엽(외곽선 없이). 위협 때 1px 들썩인다
+    g = [list(r) for r in g]
+    for x, y, ramp in ((2, 3, "rust"), (28, 2, "brick"), (1, 18, "lamp"), (29, 16, "rust"), (6, 22, "brick"),
+                       (26, 22, "lamp")):
+        y -= 1 if threat else 0
+        if g[y][x] == "." and g[y][x + 1] == ".":
+            g[y][x] = c(f"{ramp}.hi")
+            g[y][x + 1] = c(f"{ramp}.shade")
+            if g[y + 1][x] == ".":
+                g[y + 1][x] = c(f"{ramp}.base")
+    if threat:                                                      # 뿌리 끝 하나에 반짝임
+        x, y = tips[0]
+        if y > 0 and g[y - 1][x] == ".":
+            g[y - 1][x] = c("sparkle")
+    return ["".join(r) for r in g]
 
 
-FOREST_BOSSES = {"boss_crossroad_tree": [_crossroad_tree(False), _crossroad_tree(True)]}
+FOREST_BOSSES = {"boss_crossroad_tree": [_crossroad_tree(i) for i in range(4)]}
