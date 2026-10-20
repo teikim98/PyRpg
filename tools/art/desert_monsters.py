@@ -1,345 +1,304 @@
-"""지역 7(모래시계 사막) 몬스터 7종(16×16 프레임 2개). 다섯은 주문서 몬스터, 둘(낙타 대상 유령·먼지 회오리)은 응용 전투용으로
-주문서에 묶이지 않는다.
+"""지역 7(모래시계 사막) 몬스터 7종(16×16 프레임 4개 제자리). 다섯은 주문서 몬스터, 둘(낙타 대상 유령·먼지 회오리)은
+응용 전투용으로 주문서에 묶이지 않는다.
 
-몸통은 외곽선 없이 칠한 뒤 color_outline()으로 재질에 맞는 색 외곽선을 두른다(누리의 화풍).
-대칭인 몸은 왼쪽 절반(8칸)만 그리고 sym()으로 좌우를 맞춘다. 빛은 왼쪽 위에서 온다.
-지역 1~6 몬스터와 실루엣이 겹치지 않게:
-흐름 모래 정령은 둥근 머리 아래가 가늘게 흘러내리는 모래 줄기와 작은 모래 더미(물방울을 거꾸로 세운 모양),
-모래 달팽이는 옆모습(왼쪽을 봄)의 낮고 긴 달팽이로 껍데기에 금빛 모래시계 무늬가 있다(지역 1 시계 딱정벌레의
-정면 둥근 몸·문자판과 다르다), 신기루 도마뱀은 위에서 본 반투명 도마뱀(네 다리를 벌리고 꼬리가 휜다),
-체 항아리는 목이 좁고 배가 불룩한 손잡이 둘 달린 토기 항아리로 바닥 구멍에서 모래가 샌다(지역 6 겹연꽃 정령의
-위가 벌어진 컵 모양 분홍 꽃과 다르다), 해시계 게는 위에서 본 둥근 해시계 판이 몸 전체를 덮고 집게와 다리가
-판 밖으로 나온다(지역 3·5 게들과 달리 등딱지가 둥근 문자판), 낙타 대상 유령은 옆모습의 반투명 낙타가 짐 꾸러미를
-졌고 다리가 안개로 흩어진다, 먼지 회오리는 위가 넓고 아래가 뾰족한 깔때기에 별 조각이 박혔다.
+화풍 통일(docs/art-overhaul/style-guide.md §3·§6.2, 기준 구현 forest_monsters.py): 코지 팔레트(cozypal)의 이름 있는 색만
+쓰고, monsters.Px로 덩어리마다 3단 음영(빛은 왼쪽 위)을 칠한 뒤 auto_outline(재질 ol)으로 바깥 외곽선을 두른다.
+옛 디자인(정체·모양)은 그대로이고, 옛 팔레트의 반투명 색(유령·신기루)은 불투명한 밝은 램프(sky·teal)로 바꿔 읽히게 했다.
+
+| 몬스터 | 정체(문제) | 4프레임 |
+|---|---|---|
+| 흐름 모래 정령 | 둥근 모래 머리 아래로 끊김 없이 흘러내리는 모래 줄기, 바닥의 작은 더미(입력 끝까지 읽기) | 나는 몸 0 → −1 → −2 → −1px(더미는 고정), 줄기의 모래알이 한 칸씩 흘러내림 |
+| 모래 달팽이 | 왼쪽을 보는 옆모습의 낮고 긴 달팽이, 붉은 사암 껍데기에 황동 모래시계 무늬(시간복잡도) | 기어가기: 기본 → 몸을 앞으로 1px 늘임(눈자루 기욺) → 기본 → 몸을 당겨 껍데기가 1px 들림, 모래시계 모래알이 내려감 |
+| 신기루 도마뱀 | 위에서 본 도마뱀, 몸에 일렁임 띠(찾기 비용) | 다리 두 벌이 번갈아(대각선 걸음), 꼬리 끝이 좌우로, 일렁임 띠가 한 줄씩 아래로 |
+| 체 항아리 | 목이 좁고 배가 불룩한 손잡이 둘 토기 항아리, 바닥 구멍에서 모래가 샘(에라토스테네스의 체) | 나는 몸 0 → −1 → −2 → −1px(바닥 더미 고정), 새는 모래알이 한 칸씩 떨어짐 |
+| 해시계 게 | 위에서 본 납작하고 넓은 게, 등딱지가 해시계 판, 큰 집게 둘(GCD·진법) | 바늘 그림자가 1/4칸씩 돌고, 다리 두 벌이 번갈아, 4번째에 집게를 닫음 |
+| 낙타 대상 유령 | 왼쪽을 보는 옆모습의 창백한 낙타가 짐 꾸러미를 졌고 다리가 안개로 흩어짐(응용) | 나는 몸 0 → −1 → −2 → −1px, 다리 안개가 번갈아 |
+| 먼지 회오리 | 위가 넓고 아래가 뾰족한 모래 깔때기에 별 조각(응용) | 띠가 1/4칸씩 돌고 깔때기가 S자로 흔들리며 별 조각이 돈다 |
+
+지역 1~6과 실루엣이 겹치지 않게: 해시계 게는 지역 1 시계 딱정벌레(정면의 둥근 황동 회중시계)와 달리 가로로 납작한
+붉은 게에 큰 집게 둘이 위로 솟고 판이 크림색, 모래 달팽이는 옆모습의 낮고 긴 몸, 체 항아리는 지역 6 겹연꽃 정령
+(위가 벌어진 분홍 컵 꽃)과 달리 목이 좁고 배가 불룩한 주황 토기에 손잡이 고리 둘.
 """
-from gridlib import overlay
-from desertpal import CH, color_outline, paint, shade_right, sym
+import math
+
+from cozypal import c
+from monsters import FLY, Px, ellipse
 
 
-# ── 흐름 모래 정령(입력 끝까지 읽기): 둥근 모래 머리에 청록 눈, 몸 아래는 끊김 없이 흘러내리는 모래 줄기가
-# 바닥의 작은 더미로 쌓인다. 프레임 B는 줄기의 알갱이가 한 칸 흘러내리고 더미가 조금 커진다 ─────────────────
-STREAM_KEY = {"6": "d6", "5": "d5", "4": "d4", "3": "d3", "2": "d2", "1": "d1", "C": "i5", "c": "i2"}
-
-_STREAM_HEAD = sym("""
-    ........
-    ......45
-    ....4455
-    ...44556
-    ..445566
-    ..45Cc56
-    ..445555
-    ..344555
-    ...34455
-    ....3344
-""")
-_STREAM_A = """
-    ......3454......
-    .......4453.....
-    ........445.....
-    .........44.....
-    ........4..5....
-    .....2334555....
-"""
-_STREAM_B = """
-    ......3445......
-    .......4543.....
-    ........454.....
-    .........4......
-    ........5.4.....
-    ....23345552....
-"""
+def _eyes(p, y, xl, xr, blink=False, blush=True):
+    """점 눈 1×2 + 볼터치(눈 아래 줄, 1px 바깥). blink면 아래 픽셀만 남기고 바깥쪽으로 1px 늘린 가로선."""
+    for ex, out in ((xl, -1), (xr, 1)):
+        if blink:
+            p.put(ex, y + 1, "eye")
+            p.put(ex + out, y + 1, "eye")
+        else:
+            p.put(ex, y, "eye")
+            p.put(ex, y + 1, "eye")
+    if blush:
+        p.put(xl - 1, y + 2, "blush")
+        p.put(xr + 1, y + 2, "blush")
 
 
-def _sand_stream(flow: bool):
-    head = paint(_STREAM_HEAD, STREAM_KEY, 16, 10)
-    tail = paint(_STREAM_B if flow else _STREAM_A, STREAM_KEY, 16, 6)
-    g = head + tail
-    g = shade_right(g, 8, skip=("i5", "i2"))
-    return color_outline(g)
+# ── 흐름 모래 정령: 둥근 모래 머리 + 흘러내리는 모래 줄기 + 바닥 더미 ─────────────────────────────
+def _sand_stream(frame, dy):
+    """거꾸로 세운 물방울: 둥근 머리가 아래로 가늘어지며 모래 줄기가 되고, 줄기는 바닥 더미로 쌓인다.
+    머리 위쪽은 해를 받은 밝은 모래(sand 한 단계 밝게), 아래쪽 절반은 주황 그늘(rust)."""
+    p = Px()
+    mound = {(x, y) for x, y in ellipse(8.8, 15.6, 5.0, 2.4) if y <= 14}
+    p.mass(mound, "sand")
+    cy = 4.8 + dy
+    body = ellipse(8, cy, 4.8, 4.0)
+    for y in range(int(cy) + 1, 13):                       # 머리에서 줄기로 가늘어지는 꼬리(오른쪽으로 살짝 휨)
+        t = (y - cy) / (12 - cy)
+        hw = max(0.6, 4.6 * (1 - t) ** 1.6)
+        cx = 8 + (0.6 if t > 0.55 else 0)
+        body |= {(x, y) for x in range(16) if abs(x + 0.5 - cx) <= hw}
+    p.mass(body, "sand", lift=1)
+    for x, y in body:                                      # 아래쪽 절반은 주황 그늘(한낮의 모래)
+        if y > cy + 1.5:
+            k = p.get(x, y).split(".")[1]
+            p.put(x, y, {"spec": "rust.spec", "hi": "rust.hi", "base": "rust.base"}.get(k, "rust.shade"))
+    for x, y in body:                                      # 흘러내리는 모래알: 프레임마다 한 칸씩 내려간다
+        if y > cy + 3 and (y - frame) % 3 == 0 and p.get(x, y) in ("rust.hi", "rust.base"):
+            p.put(x, y, "sand.spec")
+    p.put(5, 2 + dy, "white")
+    _eyes(p, 4 + dy, 6, 10)
+    p.put(8, 1 + dy, "teal.hi")                            # 이마의 청록 룬 한 점
+    return p.grid()
 
 
-# ── 모래 달팽이(시간복잡도): 왼쪽을 보는 옆모습. 낮고 긴 흰 모래빛 몸, 머리 위 눈자루 둘, 등에 붉은 사암빛 껍데기와
-# 금빛 모래시계 무늬(위·아래 가로대, 위 유리의 모래가 목을 지나 아래로). 프레임 B는 몸을 앞으로 한 칸 늘이고
-# 눈자루가 기울며 모래시계의 모래가 한 알 내려간다 ──────────────────────────────────────────
-SNAIL_KEY = {"5": "r5", "4": "r4", "3": "r3", "2": "r2", "G": "g4", "g": "g2", "S": "d5", "s": "d4",
-             "B": "b5", "b": "b3", "c": "b2", "e": "eye"}
-_SNAIL_A = """
-    ................
-    ................
-    ................
-    .B..B....4443...
-    .b..b...455543..
-    ..b.b..4GGGGG43.
-    ..bbbb.45gSSg432
-    .Bbebb.455gg5432
-    .bbbbb.45gsSg432
-    .bbbbb.4GGGGG432
-    ..bbbb.34444432.
-    ...bbbbb333332..
-    ..cbbbbbbbbbbbc.
-    .ccccccccccccc..
-    ................
-    ................
-"""
-_SNAIL_B = """
-    ................
-    ................
-    ................
-    B...B....4443...
-    b..b....455543..
-    .b.b...4GGGGG43.
-    .bbbbb.45gS5g432
-    Bbebbb.455gg5432
-    bbbbbb.45gSSg432
-    .bbbbb.4GGGGG432
-    ..bbbb.34444432.
-    ..bbbbbb333332..
-    .cbbbbbbbbbbbbc.
-    cccccccccccccc..
-    ................
-    ................
-"""
+# ── 모래 달팽이: 옆모습(왼쪽을 봄), 붉은 사암 껍데기에 황동 모래시계 ──────────────────────────────
+def _dune_snail(frame):
+    p = Px()
+    reach = (0, 1, 0, -1)[frame]          # 머리가 앞으로 나온 정도(+면 왼쪽으로 늘어남)
+    lift = 1 if frame == 3 else 0          # 몸을 당길 때 껍데기가 1px 들린다
+    # 몸(발): 낮고 긴 크림빛 몸, 머리는 왼쪽에서 솟는다
+    x_head = 2 - reach
+    foot = {(x, y) for x in range(x_head, 15) for y in (12, 13)} - {(14, 12)}
+    neck = {(x, y) for x in range(x_head, x_head + 4) for y in range(8, 12)} - {(x_head, 8)}
+    p.mass(foot | neck, "cream", lift=1, shade_below=13)
+    for x in range(x_head + 1, 14, 3):                    # 발 아래 주름
+        p.put(x, 13, "cream.shade")
+    # 눈자루 둘(앞이 길다). 늘일 때 앞으로 기운다
+    lean = -1 if reach > 0 else 0
+    for sx, h in ((x_head + 1, 4), (x_head + 3, 3)):
+        for k in range(1, h):
+            p.put(sx + (lean if k == h - 1 else 0), 8 - k, "cream.base")
+        p.put(sx + lean, 8 - h, "eye")
+    p.put(x_head + 1, 10, "blush")
+    # 껍데기: 붉은 사암 소용돌이(rust), 가운데 황동 모래시계
+    cy = 7.2 - lift
+    shell = ellipse(10.2, cy, 4.6, 4.4)
+    p.mass(shell, "rust")
+    for x, y in ellipse(10.2, cy, 3.0, 2.8) - ellipse(10.2, cy, 2.0, 1.8):   # 소용돌이 홈
+        if p.get(x, y) == "rust.base":
+            p.put(x, y, "rust.shade")
+    oy = int(cy) - 2
+    for x in (9, 10, 11):                                 # 모래시계 위·아래 가로대
+        p.put(x, oy, "brass.hi")
+        p.put(x, oy + 4, "brass.shade")
+    for x, y in ((10, oy + 1), (10, oy + 2), (10, oy + 3)):
+        p.put(x, y, "teal.base")
+    grain = oy + 1 + (frame % 3)                          # 떨어지는 모래알
+    p.put(10, grain, "sand.hi")
+    p.put(8, oy - 1, "rust.spec")
+    return p.grid()
 
 
-def _dune_snail(stretch: bool):
-    g = paint(_SNAIL_B if stretch else _SNAIL_A, SNAIL_KEY, 16, 16)
-    return color_outline(g)
+# ── 신기루 도마뱀: 위에서 본 도마뱀, 일렁임 띠 ─────────────────────────────────────────────
+def _mirage_lizard(frame):
+    """위에서 본 도마뱀: 뾰족한 머리, 가는 몸, 네 다리를 옆으로 벌리고 발가락, 길게 휜 꼬리. 몸은 신기루 청록
+    (teal 한 단계 밝게), 등에 짙은 점 줄, 일렁이는 띠(sky 강조)가 한 줄씩 아래로 지나간다."""
+    p = Px()
+    step = (0, 1, 0, -1)[frame]
+    # 다리: 어깨(몸 옆)에서 옆으로 2px 뻗고 발끝은 앞(위)이나 뒤(아래)로. 대각선 두 다리가 함께 움직인다
+    for i, (x, y, side) in enumerate(((6, 6, -1), (9, 6, 1), (6, 10, -1), (9, 10, 1))):
+        fwd = step if i in (0, 3) else -step
+        p.put(x + side, y, "teal.base")
+        p.put(x + 2 * side, y - fwd, "teal.base")
+        p.put(x + 3 * side, y - fwd - 1, "teal.shade")          # 발가락
+        p.put(x + 3 * side, y - fwd, "teal.shade")
+    sway = (0, 1, 0, -1)[frame]
+    for x, y in ((8, 12), (8, 13), (9, 14), (10 + sway, 14), (11 + sway, 15)):   # 꼬리
+        p.put(x, y, "teal.base")
+    p.put(7, 12, "teal.base")
+    body = ellipse(7.5, 8.6, 2.1, 3.9) | ellipse(7.5, 3.4, 2.1, 2.5) | {(7, 0), (8, 0)}
+    p.mass(body, "teal", lift=1)
+    for y in range(7, 12, 2):
+        p.put(7, y, "teal.shade")
+        p.put(8, y + 1, "teal.shade")
+    band = (5, 7, 9, 11)[frame]
+    for x in range(16):
+        if (x, band) in body:
+            p.put(x, band, "sky.spec" if x % 2 else "sky.hi")
+    for ex in (6, 9):                                       # 눈(머리 양옆)
+        p.put(ex, 3, "eye")
+    p.put(6, 2, "white")
+    return p.grid()
 
 
-# ── 신기루 도마뱀(찾기 비용): 위에서 본 반투명 청록 도마뱀. 네 다리를 벌리고 꼬리가 오른쪽으로 휜다. 몸에 보랏빛
-# 일렁임 띠가 지나가고(프레임 B는 띠가 아래로 옮겨 가고 꼬리 끝이 반대로 휜다) 눈만 또렷하다 ─────────────────
-LIZARD_KEY = {"4": "m4", "3": "m3", "2": "m2", "1": "m1", "e": "eye", "U": "u4", "u": "u3"}
-_LIZARD_BODY = sym("""
-    ........
-    ........
-    ......33
-    .....334
-    .....e44
-    ......34
-    .23..334
-    ..334444
-    ....3444
-    ....3444
-    ....3444
-    ..334444
-    .23..344
-    ......34
-    ........
-    ........
-""")
-_TAIL_A = paint("""
-    ........
-    ...33...
-    ....32..
-    .....32.
-    ......2.
-    ........
-""", LIZARD_KEY, 8, 6)
-_TAIL_B = paint("""
-    ........
-    ....33..
-    ...23...
-    ..23....
-    ..2.....
-    ........
-""", LIZARD_KEY, 8, 6)
+# ── 체 항아리: 목이 좁고 배가 불룩한 토기, 바닥 구멍에서 모래가 샌다 ───────────────────────────
+_URN_ROWS = ((6, 9), (6, 9), (4, 11), (3, 12), (3, 12), (3, 12), (3, 12), (4, 11), (5, 10))  # (왼쪽, 오른쪽)
+_HOLES = (6, 8, 10)
 
 
-def _mirage_lizard(shift: bool):
-    g = paint(_LIZARD_BODY, LIZARD_KEY, 16, 16)
-    g = shade_right(g, 8, skip=("eye", "m4"))
-    # 일렁임 띠(몸 위의 칸만 보랏빛으로)
-    rows = [list(r) for r in g]
-    for y in ((7, 8) if not shift else (10, 11)):
-        for x in range(16):
-            if rows[y][x] != ".":
-                rows[y][x] = CH["u4" if (x + y) % 2 else "u3"]
-    g = ["".join(r) for r in rows]
-    g = overlay(g, _TAIL_B if shift else _TAIL_A, 3 if shift else 5, 12)
-    return color_outline(g)
+def _sieve_urn(frame, dy):
+    p = Px()
+    # 바닥의 모래 더미(고정)
+    pile = {(x, y) for x, y in ellipse(8, 15.4, 4.2, 1.9) if y <= 14}
+    p.mass(pile, "sand", lift=1)
+    top = 2 + dy
+    bottom = top + len(_URN_ROWS) - 1
+    # 새는 모래 줄기(구멍 아래에서 더미까지), 모래알이 프레임마다 한 칸씩 떨어진다
+    for hx in _HOLES:
+        for y in range(bottom + 1, 14):
+            if (y + hx - frame) % 3 == 0:
+                p.put(hx, y, "sand.hi")
+    # 손잡이 고리 둘(어깨에서 배로)
+    for x, y in ((2, top + 2), (1, top + 3), (1, top + 4), (2, top + 5), (13, top + 2), (14, top + 3), (14, top + 4),
+                 (13, top + 5)):
+        p.put(x, y, "rust.shade")
+    body = {(x, top + j) for j, (l, r) in enumerate(_URN_ROWS) for x in range(l, r + 1)}
+    p.mass(body, "rust", shade_below=bottom)
+    for x in range(6, 10):                                 # 입술(밝은 테)과 목 그늘
+        p.put(x, top, "rust.hi")
+        p.put(x, top + 1, "rust.shade")
+    p.put(6, top, "rust.spec")
+    for x in range(4, 12):                                 # 어깨의 크림 띠 무늬
+        if x % 2 == 0:
+            p.put(x, top + 3, "cream.hi")
+    for hx in _HOLES:                                      # 바닥 구멍
+        p.put(hx, bottom, "void")
+    _eyes(p, top + 4, 6, 9, blink=frame == 3)
+    p.put(4, top + 4, "rust.spec")
+    return p.grid()
 
 
-# ── 체 항아리(소수의 체): 목이 좁고 배가 불룩한 토기 항아리 정령. 양옆에 고리 손잡이, 배에 눈과 작은 입,
-# 바닥에 구멍 넷이 뚫려 모래가 줄줄 샌다. 프레임 B는 새는 모래가 한 칸 내려가고 구멍 아래 더미가 생긴다 ──────────
-URN_KEY = {"5": "a5", "4": "a4", "3": "a3", "2": "a2", "1": "a1", "o": "k0", "e": "eye", "w": "white", "m": "k1",
-           "S": "d5", "s": "d4"}
-_URN = sym("""
-    ........
-    ...34444
-    ...23333
-    .....445
-    ....4455
-    ..445555
-    .2445555
-    2.4we555
-    2.445555
-    .2445m55
-    ..344455
-    ..334444
-    ...3o3o3
-    ........
-    ........
-    ........
-""")
-_LEAK_A = """
-    ....S.S..S.S....
-    ....s...s..s....
-    .......s.....s..
-"""
-_LEAK_B = """
-    ....s.S..S.s....
-    ....S.s..s.S....
-    ...ss.S..S.ss...
-"""
+# ── 해시계 게: 위에서 본 납작하고 넓은 게, 등딱지 = 해시계 판 ─────────────────────────────────
+def _sundial_crab(frame):
+    p = Px()
+    alt = frame % 2
+    # 다리 셋씩(옆으로), 두 벌이 번갈아 1px 들림
+    for k, y in enumerate((8, 10, 12)):
+        up = 1 if (k + alt) % 2 else 0
+        for x, side in ((2, -1), (13, 1)):
+            p.put(x, y, "rust.shade")
+            p.put(x + side, y - up, "rust.shade")
+            p.put(x + 2 * side, y + 1 - up, "rust.ol")
+    # 집게 둘(위로 솟음): 팔 + 손가락 둘이 V자로 벌어진 집게. 4번째 프레임에 닫는다
+    claw_open = ((1, 0), (3, 0), (0, 1), (1, 1), (3, 1), (4, 1), (0, 2), (1, 2), (2, 2), (3, 2), (4, 2),
+                 (1, 3), (2, 3), (3, 3))
+    claw_shut = ((1, 0), (2, 0), (0, 1), (1, 1), (2, 1), (3, 1), (0, 2), (1, 2), (2, 2), (3, 2), (4, 2),
+                 (1, 3), (2, 3), (3, 3))
+    shape = claw_shut if frame == 3 else claw_open
+    for ox, arm in ((0, (3, 4)), (11, (12, 4))):
+        p.put(arm[0], arm[1] + 1, "cloth_red.shade")
+        p.put(arm[0] + (1 if ox == 0 else -1), arm[1] + 2, "cloth_red.shade")
+        cells = {(ox + (x if ox == 0 else 4 - x), y + 1) for x, y in shape}
+        p.mass(cells, "cloth_red")
+    # 등딱지(가로로 넓은 타원): 붉은 테 + 크림 해시계 판
+    shell = ellipse(8, 9.6, 6.4, 4.2)
+    p.mass(shell, "rust", shade_below=12)
+    plate = ellipse(8, 9.4, 4.6, 2.9)
+    p.mass(plate, "cream", lift=1)
+    for x, y in ((8, 7), (12, 9), (8, 12), (4, 9), (11, 7), (5, 7)):   # 시각 눈금
+        if (x, y) in plate:
+            p.put(x, y, "cream.shade")
+    # 바늘 그림자(1/4칸씩 돈다)와 황동 바늘
+    ang = math.pi * (-0.35 + 0.3 * frame)
+    for r in (1, 2, 3):
+        x = round(7.5 + math.cos(ang) * r * 1.3)
+        y = round(9.0 + math.sin(ang) * r * 0.8)
+        if (x, y) in plate:
+            p.put(x, y, "stone.shade")
+    p.put(7, 9, "brass.hi")
+    p.put(8, 9, "brass.shade")
+    p.put(7, 8, "brass.spec")
+    # 눈자루(판 위쪽)
+    for ex in (6, 10):
+        p.put(ex, 5, "eye")
+        p.put(ex, 6, "rust.base")
+    return p.grid()
 
 
-def _sieve_urn(drip: bool):
-    g = paint(_URN, URN_KEY, 16, 16)
-    g = shade_right(g, 8, skip=("eye", "white", "k0", "k1"))
-    g = color_outline(g)
-    leak = paint(_LEAK_B if drip else _LEAK_A, URN_KEY, 16, 3)
-    return overlay(g, leak, 0, 13)
-
-
-# ── 해시계 게(GCD·진법): 위에서 본 게. 몸 전체가 둥근 해시계 판(흰 돌 + 금테, 둘레에 시각 눈금)이고 가운데 금
-# 바늘(삼각 그노몬)의 그림자가 프레임마다 돈다(A는 오른쪽 아래, B는 왼쪽 아래). 판 위로 눈자루 둘과 붉은 집게,
-# 양옆으로 다리 셋씩 ────────────────────────────────────────────────────────────
-CRAB_KEY = {"5": "r5", "4": "r4", "3": "r3", "2": "r2", "e": "eye", "W": "white"}
-_CRAB_LIMBS = """
-    .45..........54.
-    4554........4554
-    45.4.W....W.4.54
-    .44..e....e..44.
-    ..4..........4..
-    ................
-    3..............3
-    .3............3.
-    3..............3
-    .3............3.
-    3..............3
-    .3............3.
-    ................
-    ................
-    ................
-    ................
-"""
-
-
-def _sundial_crab(turn: bool):
-    g = [["."] * 16 for _ in range(16)]
-    cx, cy = 7.5, 8.5
-    for y in range(16):
-        for x in range(16):
-            d = ((x - cx) ** 2 + (y - cy) ** 2) ** 0.5
-            if d <= 5.6:
-                if d > 4.6:
-                    c = "g3" if (x - cx) + (y - cy) < 0 else "g2"
-                else:
-                    c = "b4" if (x - cx) + (y - cy) < -1 else "b3" if (x - cx) + (y - cy) < 3 else "b2"
-                g[y][x] = c
-    # 시각 눈금(판 둘레 안쪽 12곳 가운데 잘 보이는 8곳)
-    for x, y in ((7, 4), (8, 4), (11, 5), (12, 8), (11, 12), (7, 13), (4, 12), (3, 8), (4, 5)):
-        g[y][x] = "b1"
-    # 바늘 그림자(짙은 선)와 금 바늘(삼각)
-    shadow = [(9, 10), (10, 11), (11, 11)] if not turn else [(6, 10), (5, 11), (4, 11)]
-    for x, y in shadow:
-        g[y][x] = "k3"
-    for x, y, c in ((7, 7, "g4"), (8, 7, "g3"), (7, 8, "g4"), (8, 8, "g2"), (7, 9, "g3"), (8, 9, "g2")):
-        g[y][x] = c
-    body = ["".join("." if c == "." else CH[c] for c in row) for row in g]
-    limbs = paint(_CRAB_LIMBS, CRAB_KEY, 16, 16)
-    if turn:
-        # 집게를 한 칸 벌리고 다리를 바꿔 디딘다
-        limbs = [r[1:] + "." if y < 5 else r for y, r in enumerate(limbs)]
-        limbs = [r[:8] + "." + r[8:15] if y < 5 else r for y, r in enumerate(limbs)]
-        limbs = [r[1:] + r[0] if 6 <= y <= 11 else r for y, r in enumerate(limbs)]
-    g = overlay(limbs, body)
-    return color_outline(g)
-
-
-# ── 낙타 대상 유령(응용 통합형): 왼쪽을 보는 반투명 청백 낙타 유령. 혹 위에 남청·흰 짐 꾸러미를 줄로 묶어 졌고
-# 눈은 청록으로 빛난다. 다리는 아래로 갈수록 옅어져 안개로 흩어진다. 프레임 B는 몸이 한 칸 떠오르고 다리 안개가 바뀐다 ──
-GHOST_KEY = {"4": "h4", "3": "h3", "2": "h2", "1": "h1", "e": "i3", "Q": "q3", "q": "q2", "T": "t3", "t": "t2",
-             "r": "w3"}
+# ── 낙타 대상 유령: 왼쪽을 보는 창백한 낙타, 짐 꾸러미, 다리가 안개로 ──────────────────────────
 _CAMEL = """
-    ................
-    ..34............
-    .3443...........
-    34e43....TTQQ...
-    .3343...tTTQQq..
-    ...43..3rrrrrr3.
-    ...44334444444..
-    ....44444444443.
-    ....344444444...
-    .....33....33...
+.hh.............
+hhhh............
+hhEh.....PPPQ...
+.hhh....PPpQQq..
+..hh...rrrrrrr..
+..hhhhbbbbbbbbb.
+...hbbbbbbbbbbbb
+....bbbbbbbbbbb.
+....bbbbbbbbbb..
 """
-_LEGS_A = """
-    .....3.3...3.3..
-    .....2.2...2.2..
-    .....1.....1.1..
-    ......1.....1...
-    ................
-    ................
-"""
-_LEGS_B = """
-    ....3..3..3..3..
-    ....2..2..2...2.
-    .....1..1....1..
-    ................
-    ................
-    ................
-"""
+_CAMEL_KEY = {"h": "sky.base", "b": "sky.base", "E": "teal.hi", "P": "cloth_indigo.base", "p": "cloth_indigo.shade",
+              "Q": "cream.hi", "q": "cream.shade", "r": "leather.base"}
+# 다리 넷(x)과 안개: 위 두 줄은 몸빛 다리(외곽선), 아래 두 줄은 외곽선 없이 흩어지는 안개 점. 두 벌이 번갈아 앞뒤로
+_LEGS = ((5, 7, 11, 13), (4, 8, 10, 14))
+_MIST = (((5, 0), (8, 0), (11, 0), (14, 0), (6, 1), (12, 1)), ((4, 0), (7, 0), (10, 0), (13, 0), (8, 1), (14, 1)))
 
 
-def _caravan_ghost(float_: bool):
-    body = paint(_CAMEL, GHOST_KEY, 16, 10)
-    legs = paint(_LEGS_B if float_ else _LEGS_A, GHOST_KEY, 16, 6)
-    g = body + legs
-    if float_:
-        g = g[1:] + ["." * 16]
-    return color_outline(g)
+def _caravan_ghost(frame, dy):
+    p = Px()
+    oy = 4 + dy
+    lines = _CAMEL.strip("\n").splitlines()
+    body = {(i, oy + j) for j, ln in enumerate(lines) for i, ch in enumerate(ln) if ch in "hbE"}
+    legs = {(x, oy + 9 + k) for x in _LEGS[frame % 2] for k in (0, 1)}
+    p.mass(body | legs, "sky", lift=1)
+    for j, ln in enumerate(lines):
+        for i, ch in enumerate(ln):
+            if ch in "EPpQqr":
+                p.put(i, oy + j, _CAMEL_KEY[ch])
+    p.put(5, oy + 4, "sky.spec")                            # 혹 밝음
+    g = [list(r) for r in p.grid()]
+    for x, k in _MIST[frame % 2]:                           # 흩어지는 안개(외곽선 없이)
+        y = oy + 12 + k
+        if 0 <= y < 16 and g[y][x] == ".":
+            g[y][x] = c("sky.hi") if k == 0 else c("sky.base")
+    return ["".join(r) for r in g]
 
 
-# ── 먼지 회오리(응용 판별형): 위가 넓고 아래가 뾰족한 모래 깔때기가 S자로 흔들린다. 비스듬한 띠가 돌아가고
-# 별 조각(금·흰·하늘) 몇 개가 박혀 반짝인다. 위쪽에 가는 눈 둘. 프레임 B는 띠가 한 칸 돌고 별이 자리를 옮긴다 ─────
-_SWAY = (0, 0, 0, 1, 1, 1, 0, 0, -1, -1, -1, 0, 0, 1, 1, 0)
+# ── 먼지 회오리: 위가 넓고 아래가 뾰족한 깔때기, 도는 띠, 별 조각 ────────────────────────────
+_SWAY = (0, 0, 1, 1, 1, 0, 0, -1, -1, -1, 0, 0, 1, 1, 0, 0)
 
 
-def _dust_devil(spin: bool):
-    ph = 1 if spin else 0
-    g = [["."] * 16 for _ in range(16)]
+def _dust_devil(frame):
+    p = Px()
+    cells = {}
     for y in range(1, 15):
-        half = max(0.6, 6.6 - (y - 1) * 0.45)
-        cx = 7.5 + _SWAY[(y + ph) % 16] * 0.8
+        half = max(0.7, 6.4 - (y - 1) * 0.45)
+        cx = 8 + _SWAY[(y + frame * 2) % 16] * 0.8
         for x in range(16):
-            if abs(x - cx) <= half:
-                band = int((x - cx) * 0.6 + 1.5 * y + 2 * ph) % 3
-                c = ("d6", "d4", "d3")[band]
-                if abs(x - cx) > half - 1:
-                    c = "d3" if x < cx else "d2"
-                g[y][x] = c
-    stars = [(4, 3, "g4"), (11, 5, "b5"), (6, 8, "v6"), (9, 11, "g4")] if not spin else \
-            [(10, 3, "g4"), (5, 5, "b5"), (9, 8, "v6"), (6, 11, "g4")]
-    for x, y, c in stars:
-        if g[y][x] != ".":
-            g[y][x] = c
-    # 깔때기 둘레에 흩날리는 모래 먼지
-    puffs = [(1, 2), (14, 1), (0, 5), (15, 6)] if not spin else [(2, 1), (13, 2), (1, 6), (14, 4)]
-    for x, y in puffs:
-        g[y][x] = "d5"
-    # 가는 눈 둘(위쪽, 띠 위에)
-    for x in (6, 9):
-        g[4][x] = "k1"
-    out = ["".join("." if c == "." else CH[c] for c in row) for row in g]
-    return color_outline(out)
+            if abs(x + 0.5 - cx) <= half:
+                cells[(x, y)] = cx
+    p.mass(set(cells), "sand", lift=1)
+    for (x, y), cx in cells.items():                        # 비스듬한 띠: 프레임마다 1/4칸씩 돈다
+        if p.get(x, y) in ("sand.hi", "sand.base") and int((x - cx) * 0.7 + y * 1.0 + frame) % 4 == 0:
+            p.put(x, y, "rust.hi")
+    stars = ((4, 3), (11, 5), (6, 8), (9, 11))
+    for k, (x, y) in enumerate(stars):                      # 별 조각이 깔때기를 따라 돈다
+        sx = x + (frame if k % 2 else -frame) % 3 - 1
+        if (sx, y) in cells:
+            p.put(sx, y, "cloth_indigo.spec" if k % 2 else "brass.hi")
+    for x in (6, 10):                                       # 가는 눈 둘
+        p.put(x + _SWAY[(4 + frame * 2) % 16], 4, "eye")
+    g = p.grid()
+    g = [list(r) for r in g]
+    for i, (x, y) in enumerate(((1, 2), (14, 1), (0, 6), (15, 6))):  # 흩날리는 먼지(외곽선 없이)
+        yy = (y + frame) % 8
+        if g[yy][x] == ".":
+            g[yy][x] = c("sand.hi") if i % 2 else c("sand.base")
+    return ["".join(r) for r in g]
 
 
 DESERT_MONSTERS = {
-    "monster_sand_stream": [_sand_stream(False), _sand_stream(True)],
-    "monster_dune_snail": [_dune_snail(False), _dune_snail(True)],
-    "monster_mirage_lizard": [_mirage_lizard(False), _mirage_lizard(True)],
-    "monster_sieve_urn": [_sieve_urn(False), _sieve_urn(True)],
-    "monster_sundial_crab": [_sundial_crab(False), _sundial_crab(True)],
-    "monster_caravan_ghost": [_caravan_ghost(False), _caravan_ghost(True)],
-    "monster_dust_devil": [_dust_devil(False), _dust_devil(True)],
+    "monster_sand_stream": [_sand_stream(i, dy) for i, dy in enumerate(FLY)],
+    "monster_dune_snail": [_dune_snail(i) for i in range(4)],
+    "monster_mirage_lizard": [_mirage_lizard(i) for i in range(4)],
+    "monster_sieve_urn": [_sieve_urn(i, dy) for i, dy in enumerate(FLY)],
+    "monster_sundial_crab": [_sundial_crab(i) for i in range(4)],
+    "monster_caravan_ghost": [_caravan_ghost(i, dy) for i, dy in enumerate(FLY)],
+    "monster_dust_devil": [_dust_devil(i) for i in range(4)],
 }
