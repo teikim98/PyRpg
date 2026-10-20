@@ -100,10 +100,15 @@ REGIONS = {
     },
     "r05": {
         "out": "r05-monsters", "title": "region 5 monsters", "monsters": PORT_MONSTERS, "bosses": PORT_BOSSES,
-        "floor": None,
-        "path": None,
-        "notes": {},
-        "boss": None,
+        "floor": lambda: __import__("port_tiles").PORT_COBBLE, "path": lambda: __import__("port_tiles").DOCK_PLANK,
+        "notes": {
+            "monster_twin_fish": "fly 0 -1 -2 -1, tail fin folds on 1 3, bubbles rise",
+            "monster_ledger_gull": "stand / crouch / leap 2px wings spread / land",
+            "monster_bubble_jelly": "fly 0 -1 -2 -1, bell squeezes on 1 3, tentacles sway",
+            "monster_tally_parrot": "tally 2 3 4 5, stand / crouch / stand / beak open",
+            "monster_queue_crab": "legs alternate, bob, tiny crabs hop front to back",
+        },
+        "boss": ("boss_smuggler_captain", "glare / breathe / dial turns / threat (ledger up, eye glows)"),
     },
     "r06": {
         "out": "r06-monsters", "title": "region 6 monsters", "monsters": LAKE_MONSTERS, "bosses": LAKE_BOSSES,

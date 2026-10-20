@@ -650,7 +650,7 @@
     "npc_guild_master": {
       "file": "sprites/npc_guild_master.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     },
     "monster_twin_fish": {
       "file": "sprites/monster_twin_fish.png",
