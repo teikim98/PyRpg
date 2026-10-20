@@ -6,26 +6,28 @@
 }
 
 .pyrpg-ui {
-  --ink: #f1ecd6;
-  --muted: #a7aed0;
-  --navy-950: #070a17;
-  --navy-900: #0d1226;
-  --navy-800: #151c38;
-  --navy-700: #1f2950;
-  --navy-600: #2b3a78;
-  --border: #e9e3c9;
-  --border-dim: #5b6aa8;
-  --gold: #ffcf4a;
-  --gold-dark: #b8862a;
-  --hp: #e8504a;
-  --hp-dark: #7a2324;
-  --xp: #52c3ff;
-  --ok: #6bd96b;
-  --warn: #ffa64a;
-  --bad: #ff6b6b;
-  --paper: #f3ead0;
-  --paper-ink: #2a2238;
-  --paper-line: #e2d5ab;
+  /* 코지 팔레트(tools/art/cozypal.py)의 hex만 쓴다. 변수 → 색 이름 표: docs/art-overhaul/style-guide.md §9.
+     --navy-* 이름은 옛 이름을 그대로 두었고, 값은 어두운 갈보라(어두운 쪽부터 950 → 600)다. */
+  --ink: #f6f0e0; /* cream.spec */
+  --muted: #b6ab94; /* cream.base */
+  --navy-950: #221e2b; /* void */
+  --navy-900: #261e2c; /* hair_ink.ol */
+  --navy-800: #2b2433; /* ink: 패널 바탕 */
+  --navy-700: #3e3446; /* hair_ink.shade */
+  --navy-600: #5a4c5e; /* hair_ink.base: 버튼 */
+  --border: #dcd2b8; /* cream.hi */
+  --border-dim: #7c6c7c; /* hair_ink.hi */
+  --gold: #e6bc5a; /* brass.hi */
+  --gold-dark: #be8a36; /* brass.base */
+  --hp: #bc4446; /* cloth_red.base */
+  --hp-dark: #862c3a; /* cloth_red.shade */
+  --xp: #70c2c0; /* teal.hi */
+  --ok: #a8c840; /* grass.hi */
+  --warn: #de9648; /* rust.hi */
+  --bad: #e06c62; /* cloth_red.hi */
+  --paper: #f6f0e0; /* cream.spec */
+  --paper-ink: #2b2433; /* ink */
+  --paper-line: #dcd2b8; /* cream.hi */
 
   position: absolute;
   inset: 0;
@@ -60,7 +62,7 @@
   box-shadow:
     inset 0 0 0 3px var(--navy-950),
     0 0 0 3px var(--navy-950),
-    6px 6px 0 3px rgba(0, 0, 0, 0.45);
+    6px 6px 0 3px rgba(34, 30, 43, 0.55);
   border-radius: 0;
 }
 
@@ -97,7 +99,7 @@
 }
 
 .pyrpg-ui .btn:hover:not(:disabled) {
-  background: #3a4c96;
+  background: #7c6c7c;
 }
 
 .pyrpg-ui .btn:active:not(:disabled) {
@@ -122,13 +124,13 @@
 
 .pyrpg-ui .btn-primary {
   background: var(--gold);
-  color: #1a1430;
-  border-color: #fff6d8;
+  color: #2b2433;
+  border-color: #fff0a8;
   font-weight: 700;
 }
 
 .pyrpg-ui .btn-primary:hover:not(:disabled) {
-  background: #ffdb73;
+  background: #ffd870;
 }
 
 .pyrpg-ui .btn-small {
@@ -236,7 +238,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(5, 8, 20, 0.66);
+  background: rgba(34, 30, 43, 0.66);
   outline: none;
 }
 
@@ -327,8 +329,8 @@
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(circle at 50% 38%, #f6c79a 0 24%, transparent 25%),
-    linear-gradient(#e8742e 0 30%, #6b7a2f 30% 100%);
+    radial-gradient(circle at 50% 38%, #f2bc98 0 24%, transparent 25%),
+    linear-gradient(#e07634 0 30%, #6c7834 30% 100%);
 }
 
 .pyrpg-ui .portrait.is-fallback .portrait-img {
@@ -343,8 +345,8 @@
   margin-top: 40%;
   font-size: 24px;
   font-weight: 700;
-  color: #fff6d8;
-  text-shadow: 2px 2px 0 #000;
+  color: #fffcf4;
+  text-shadow: 2px 2px 0 #2b2433;
 }
 
 .pyrpg-ui .portrait[data-emotion="happy"] .portrait-fallback {
@@ -375,8 +377,8 @@
 }
 
 .pyrpg-ui .sprite.is-fallback {
-  background: #5fbf5a;
-  border: 3px solid #1d3b1b;
+  background: #7da634;
+  border: 3px solid #2f4a2a;
   border-radius: 45% 45% 12% 12%;
 }
 
@@ -385,7 +387,7 @@
   top: 38%;
   width: 14%;
   height: 18%;
-  background: #1d1d2b;
+  background: #2b2433;
 }
 
 .pyrpg-ui .sprite-fallback-eye.l {
@@ -524,7 +526,7 @@
 }
 
 .pyrpg-ui .md strong {
-  color: #fff3c4;
+  color: #fff6c0;
 }
 
 .pyrpg-ui .md em {
@@ -626,7 +628,7 @@
   margin: 0;
   padding: 6px 12px;
   background: var(--navy-950);
-  color: #bdf5b8;
+  color: #b8d088;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   max-height: 200px;
@@ -635,19 +637,19 @@
 
 .pyrpg-ui .md-run-out.is-error,
 .pyrpg-ui .blank-out.is-error {
-  color: #ffb3a8;
+  color: #f6a092;
 }
 
 .pyrpg-ui .md-compare {
   margin: 12px 0;
-  border: 3px solid #f0db4f;
-  background: #2a2610;
+  border: 3px solid #e6bc5a;
+  background: #3b2a2c;
 }
 
 .pyrpg-ui .md-compare-title {
   padding: 2px 10px;
-  background: #f0db4f;
-  color: #1a1430;
+  background: #e6bc5a;
+  color: #2b2433;
   font-family: Galmuri11, sans-serif;
   font-size: 12px;
   font-weight: 700;
@@ -656,7 +658,7 @@
 .pyrpg-ui .md-compare .md-code {
   margin: 0;
   border: 0;
-  background: #fbf6d4;
+  background: #f2e4bc;
 }
 
 /* ---------- CodeMirror(양피지 테마) ---------- */
@@ -686,24 +688,41 @@
 
 .pyrpg-ui .code-editor .cm-gutters {
   background: var(--paper-line);
-  color: #8a7c5a;
-  border-right: 2px solid #c9b98a;
+  color: #5a4c5e;
+  border-right: 2px solid #b6ab94;
 }
 
 .pyrpg-ui .code-editor .cm-activeLine {
-  background: rgba(120, 90, 30, 0.08);
+  background: rgba(190, 138, 54, 0.1);
 }
 
 .pyrpg-ui .code-editor .cm-activeLineGutter {
-  background: #d8c99a;
+  background: #dcc69c;
 }
 
 .pyrpg-ui .code-editor .cm-cursor {
   border-left: 2px solid var(--paper-ink);
 }
 
+/* 선택 영역: CodeMirror 기본(회색·연보라) 대신 sky.hi. 기본 테마의 선택자보다 구체적으로 쓴다 */
+.pyrpg-ui .code-editor .cm-editor > .cm-scroller > .cm-selectionLayer .cm-selectionBackground {
+  background: rgba(164, 208, 204, 0.45);
+}
+
+.pyrpg-ui .code-editor .cm-editor.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground {
+  background: rgba(164, 208, 204, 0.75);
+}
+
+.pyrpg-ui .code-editor .cm-editor.cm-focused .cm-matchingBracket {
+  background: rgba(112, 194, 192, 0.4);
+}
+
+.pyrpg-ui .code-editor .cm-editor.cm-focused .cm-nonmatchingBracket {
+  background: rgba(188, 68, 70, 0.3);
+}
+
 .pyrpg-ui .code-editor .cm-error-line {
-  background: rgba(232, 80, 74, 0.25);
+  background: rgba(188, 68, 70, 0.25);
   box-shadow: inset 4px 0 0 var(--hp);
 }
 
@@ -714,7 +733,7 @@
 }
 
 .pyrpg-ui .code-editor .cm-echo-count {
-  color: #6a3fa0;
+  color: #4a3a6a;
   font-family: Galmuri11, monospace;
   font-size: 12px;
   white-space: nowrap;
@@ -722,7 +741,7 @@
 
 .pyrpg-ui .battle-msg .echo-note {
   margin-top: 4px;
-  color: #c9b2ff;
+  color: #c4b4dc;
 }
 
 .pyrpg-ui .md-run-editor {
@@ -790,8 +809,8 @@
 .pyrpg-ui .blank-input {
   min-width: 4ch;
   padding: 0 4px;
-  border: 2px dashed #b8452e;
-  background: #fffbe8;
+  border: 2px dashed #bc4446;
+  background: #fffcf4;
   color: var(--paper-ink);
 }
 
@@ -852,9 +871,9 @@
   width: 48px;
   height: 36px;
   background:
-    linear-gradient(90deg, #b8862a 0 8px, transparent 8px calc(100% - 8px), #b8862a calc(100% - 8px)),
-    linear-gradient(#f3ead0 0 0);
-  border: 3px solid #2a2238;
+    linear-gradient(90deg, #be8a36 0 8px, transparent 8px calc(100% - 8px), #be8a36 calc(100% - 8px)),
+    linear-gradient(#f6f0e0 0 0);
+  border: 3px solid #2b2433;
 }
 
 .pyrpg-ui .scroll-caption {
@@ -1042,7 +1061,7 @@
 
 .pyrpg-ui .reward-shadow {
   margin: 0;
-  color: #c9a8ff;
+  color: #c4b4dc;
 }
 
 .pyrpg-ui .reward-streak {
@@ -1160,7 +1179,7 @@
 .pyrpg-ui .phase-label {
   padding: 1px 8px;
   border: 2px solid var(--hp);
-  color: #ffb3a8;
+  color: #f6a092;
 }
 
 .pyrpg-ui .enemy-hp {
@@ -1237,7 +1256,7 @@
   position: absolute;
   font-size: 24px;
   font-weight: 700;
-  text-shadow: 2px 2px 0 #000;
+  text-shadow: 2px 2px 0 #221e2b;
   animation: ui-float 1s steps(8) forwards;
 }
 
@@ -1382,7 +1401,7 @@
   right: 10px;
   bottom: 0;
   height: 22px;
-  background: linear-gradient(to bottom, rgba(21, 28, 56, 0), var(--navy-800));
+  background: linear-gradient(to bottom, rgba(43, 36, 51, 0), var(--navy-800));
   pointer-events: none;
 }
 
@@ -1549,7 +1568,7 @@
 }
 
 .pyrpg-ui .battle-msg .phase-intro {
-  color: #ffb3a8;
+  color: #f6a092;
 }
 
 .pyrpg-ui .hint-body {
@@ -1633,7 +1652,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(5, 8, 20, 0.6);
+  background: rgba(34, 30, 43, 0.6);
 }
 
 .pyrpg-ui .banner-panel {
@@ -1703,14 +1722,14 @@
 @keyframes ui-damage {
   25% {
     transform: translate(-4px, 2px);
-    background: rgba(232, 80, 74, 0.25);
+    background: rgba(188, 68, 70, 0.25);
   }
   50% {
     transform: translate(4px, -2px);
   }
   75% {
     transform: translate(-2px, 0);
-    background: rgba(232, 80, 74, 0.15);
+    background: rgba(188, 68, 70, 0.15);
   }
 }
 
@@ -1725,7 +1744,7 @@
 @keyframes ui-phase {
   25%,
   75% {
-    background: #3a1630;
+    background: #461c2a;
   }
 }
 
@@ -1781,11 +1800,11 @@
 .pyrpg-ui .is-shadow .enemy-sprite-wrap .sprite,
 .pyrpg-ui .is-shadow .enemy-sprite-wrap canvas,
 .pyrpg-ui .is-shadow .enemy-sprite-wrap img {
-  filter: grayscale(1) brightness(0.45) drop-shadow(0 0 4px #9b7fd0);
+  filter: grayscale(1) brightness(0.45) drop-shadow(0 0 4px #9886ba);
 }
 
 .pyrpg-ui .is-shadow .enemy-name {
-  color: #c8b4ff;
+  color: #c4b4dc;
 }
 
 .pyrpg-ui .act-hint.is-free {
@@ -1798,7 +1817,7 @@
 }
 
 .pyrpg-ui .hud-title {
-  color: #c8b4ff;
+  color: #c4b4dc;
 }
 
 .pyrpg-ui .hud-quests.is-done {
@@ -1874,8 +1893,8 @@
   align-items: center;
   gap: 12px;
   padding: 8px 10px;
-  background: #1a1430;
-  border: 2px solid #5b3f80;
+  background: #2c2240;
+  border: 2px solid #6c5a94;
 }
 
 .pyrpg-ui .shadow-card.is-returning {
@@ -1887,10 +1906,10 @@
   height: 32px;
   flex: none;
   background:
-    radial-gradient(circle at 35% 40%, #f1ecd6 0 2px, transparent 3px),
-    radial-gradient(circle at 65% 40%, #f1ecd6 0 2px, transparent 3px),
-    radial-gradient(ellipse at 50% 60%, #3a2f45 0 60%, transparent 62%);
-  filter: drop-shadow(0 0 3px #9b7fd0);
+    radial-gradient(circle at 35% 40%, #f6f0e0 0 2px, transparent 3px),
+    radial-gradient(circle at 65% 40%, #f6f0e0 0 2px, transparent 3px),
+    radial-gradient(ellipse at 50% 60%, #3e3446 0 60%, transparent 62%);
+  filter: drop-shadow(0 0 3px #9886ba);
 }
 
 .pyrpg-ui .shadow-info {
@@ -1901,7 +1920,7 @@
 }
 
 .pyrpg-ui .shadow-name {
-  color: #c8b4ff;
+  color: #c4b4dc;
   font-weight: 700;
 }
 
@@ -1933,7 +1952,7 @@
 }
 
 .pyrpg-ui .box-pip.is-on {
-  background: #9b7fd0;
+  background: #9886ba;
 }
 
 .pyrpg-ui .quest-item {
@@ -1973,8 +1992,8 @@
 .pyrpg-ui .chest-icon {
   width: 16px;
   height: 12px;
-  background: linear-gradient(#cfa042 0 4px, #7a4a2e 4px);
-  border: 2px solid #1c1424;
+  background: linear-gradient(#e6bc5a 0 4px, #6a4632 4px);
+  border: 2px solid #2b2433;
 }
 
 .pyrpg-ui .streak-row {
@@ -2083,57 +2102,59 @@
 
 /* 아이템 아이콘: 종류별 도트 모양(CSS 그라디언트). 실루엣은 검게 칠한다 */
 .pyrpg-ui .item-icon {
-  --tint: #ee8ea6;
+  --tint: #dc7894;
   width: 32px;
   height: 32px;
   flex: none;
   image-rendering: pixelated;
-  border: 2px solid #1c1424;
+  border: 2px solid #2b2433;
   background: var(--navy-700);
 }
 
 .pyrpg-ui .item-consumable {
   background:
-    linear-gradient(#b9b8c2 0 0) 12px 2px / 8px 6px no-repeat,
-    linear-gradient(#e8504a 0 0) 6px 8px / 20px 20px no-repeat,
+    linear-gradient(#a3adb2 0 0) 12px 2px / 8px 6px no-repeat,
+    linear-gradient(#bc4446 0 0) 6px 8px / 20px 20px no-repeat,
     var(--navy-700);
 }
 
 .pyrpg-ui .item-iceRune {
   background:
-    linear-gradient(45deg, transparent 30%, #a6ecf2 30% 70%, transparent 70%) 6px 6px / 20px 20px no-repeat,
-    linear-gradient(-45deg, transparent 30%, #3fa7bf 30% 70%, transparent 70%) 6px 6px / 20px 20px no-repeat,
+    linear-gradient(45deg, transparent 30%, #bcecda 30% 70%, transparent 70%) 6px 6px / 20px 20px no-repeat,
+    linear-gradient(-45deg, transparent 30%, #3c94a0 30% 70%, transparent 70%) 6px 6px / 20px 20px no-repeat,
     var(--navy-700);
 }
 
 .pyrpg-ui .item-accessory {
   background:
-    radial-gradient(circle at 50% 55%, #f6dc7c 0 5px, #cfa042 6px 9px, transparent 10px),
+    radial-gradient(circle at 50% 55%, #ffd870 0 5px, #be8a36 6px 9px, transparent 10px),
     var(--navy-700);
 }
 
 .pyrpg-ui .item-accessory[data-item="guide-feather"] {
   background:
-    linear-gradient(135deg, transparent 40%, #f4efe2 40% 60%, transparent 60%) 4px 4px / 24px 24px no-repeat,
+    linear-gradient(135deg, transparent 40%, #f6f0e0 40% 60%, transparent 60%) 4px 4px / 24px 24px no-repeat,
     var(--navy-700);
 }
 
 .pyrpg-ui .item-accessory[data-item="sturdy-cloak"] {
   background:
-    linear-gradient(#c23b3b 0 0) 8px 4px / 16px 4px no-repeat,
-    linear-gradient(#7a2433 0 0) 6px 8px / 20px 20px no-repeat,
+    linear-gradient(#bc4446 0 0) 8px 4px / 16px 4px no-repeat,
+    linear-gradient(#862c3a 0 0) 6px 8px / 20px 20px no-repeat,
     var(--navy-700);
 }
 
 .pyrpg-ui .item-cosmetic {
   background:
     radial-gradient(circle at 50% 60%, var(--tint) 0 8px, transparent 9px),
-    linear-gradient(#a8743f 0 0) 14px 2px / 4px 10px no-repeat,
+    linear-gradient(#966a44 0 0) 14px 2px / 4px 10px no-repeat,
     var(--navy-700);
 }
 
 .pyrpg-ui .item-icon.is-silhouette {
-  filter: brightness(0) drop-shadow(0 0 1px #5b6aa8);
+  /* 아이콘 그림(배경 층) 전체를 짙은 갈보라 한 색으로 덮어 내용을 감춘다(hair_ink.shade) */
+  background: #3e3446;
+  filter: drop-shadow(0 0 1px #7c6c7c);
 }
 
 .pyrpg-ui .equip-slots {
@@ -2173,7 +2194,7 @@
 
 .pyrpg-ui .profile-title {
   margin-left: 8px;
-  color: #c8b4ff;
+  color: #c4b4dc;
 }
 
 .pyrpg-ui .profile-meta {
@@ -2193,7 +2214,7 @@
 }
 
 .pyrpg-ui .title-item.is-active {
-  outline: 2px solid #c8b4ff;
+  outline: 2px solid #c4b4dc;
 }
 
 .pyrpg-ui .title-name {
@@ -2217,7 +2238,7 @@
 }
 
 .pyrpg-ui .codex-purified-list li {
-  color: #c8b4ff;
+  color: #c4b4dc;
 }
 
 /* ---------- 해설서: 설명 먼저, 코드를 보는 동안 에디터 가림(design.md §5.3, 단위 3-E4) ---------- */
@@ -2310,7 +2331,7 @@
 /* E2 그림자 게시판(단위 3-E2): 예산 문구, 이름 없는 그림자, 대기 목록 */
 .pyrpg-ui .shadow-budget {
   margin: 0 0 6px;
-  color: #c8b4ff;
+  color: #c4b4dc;
 }
 
 .pyrpg-ui .shadow-budget-used {
@@ -2326,7 +2347,7 @@
 }
 
 .pyrpg-ui .shadow-card.is-anonymous .shadow-name {
-  color: #9b8fb8;
+  color: #9886ba;
   font-style: italic;
 }
 
@@ -2351,13 +2372,13 @@
   gap: 8px;
   align-items: baseline;
   padding: 4px 10px;
-  border: 1px dashed #5b3f80;
+  border: 1px dashed #6c5a94;
   color: var(--muted);
   opacity: 0.85;
 }
 
 .pyrpg-ui .shadow-pending-name {
-  color: #b9a8e0;
+  color: #c4b4dc;
 }
 
 .pyrpg-ui .shadow-pending-why {

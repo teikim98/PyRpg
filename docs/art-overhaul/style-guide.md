@@ -262,3 +262,55 @@
 2. `python tools/art/build.py` → `python tools/art/check.py`(새 계약·결정적 재빌드).
 3. 6배 이상 확대 미리보기를 직접 열어 보고, 레퍼런스와 나란히 놓고 §1 표의 원칙과 비교합니다. 바닥은 3×3 이어 붙임으로 이음새를 확인합니다.
 4. 게임 화면(에코 마을)을 찍어 캐릭터가 바닥보다 밝게 읽히는지, 16×24 머리가 위 칸 물체와 어색하게 겹치지 않는지 확인합니다.
+
+## 9. UI 테마(DOM UI: 대화창·레슨·코덱스·전투·HUD·메뉴·상점·보상)
+
+> 2026-10-20(화풍 통일 다음 단계). 구현: [`src/ui/styles.css`](../../src/ui/styles.css) 맨 위 `.pyrpg-ui` 변수, [`index.html`](../../index.html) 부팅 화면. 전후 비교: [`screens/ui-theme-compare.png`](screens/ui-theme-compare.png)(`python tools/art/ui_compare.py`).
+
+구조(어두운 패널 + 크림 테두리 + 안팎 짙은 선 + 그림자)는 그대로 두고 색만 코지 팔레트로 옮겼습니다. UI는 맵·캐릭터보다 **채도를 낮게** 두고(§3.4), 채도 높은 색은 작은 강조(제목·수치·테두리 한 줄)에만 씁니다. UI 색은 `cozypal`의 hex만 쓰고, 반투명이 필요하면 같은 hex에 알파만 붙입니다(예: 덮개 `rgba(34, 30, 43, 0.66)` = `void`). 순검정·`ffffff`는 쓰지 않습니다.
+
+| 변수 | 코지 색 | hex | 쓰는 곳 |
+|---|---|---|---|
+| `--ink` | `cream.spec` | `f6f0e0` | 본문 글자 |
+| `--muted` | `cream.base` | `b6ab94` | 흐린 글자(설명·라벨·시스템 대사) |
+| `--navy-950` | `void` | `221e2b` | 가장 짙은 칸(전투 바탕, 막대 바탕, 출력 칸, 패널 안팎 선) |
+| `--navy-900` | `hair_ink.ol` | `261e2c` | 패널 안 칸(섹션·목록 항목) |
+| `--navy-800` | `ink` | `2b2433` | 패널 바탕 |
+| `--navy-700` | `hair_ink.shade` | `3e3446` | 이름표·선택한 탭·표 머리·누리 말풍선 |
+| `--navy-600` | `hair_ink.base` | `5a4c5e` | 버튼(올리면 `hair_ink.hi` `7c6c7c`) |
+| `--border` | `cream.hi` | `dcd2b8` | 패널·버튼 테두리 |
+| `--border-dim` | `hair_ink.hi` | `7c6c7c` | 안쪽 구분선·흐린 테두리 |
+| `--gold` / `--gold-dark` | `brass.hi` / `brass.base` | `e6bc5a` / `be8a36` | 제목·강조·주 버튼(올리면 `lamp.hi` `ffd870`) |
+| `--hp` / `--hp-dark` | `cloth_red.base` / `cloth_red.shade` | `bc4446` / `862c3a` | HP 막대·적 HP 칸 |
+| `--xp` | `teal.hi` | `70c2c0` | XP 막대·시간 게이지·링크 |
+| `--ok` | `grass.hi` | `a8c840` | 성공·장착·완료 |
+| `--warn` | `rust.hi` | `de9648` | 경고·보상 감소 |
+| `--bad` | `cloth_red.hi` | `e06c62` | 실패·오류 줄·반격 |
+| `--paper` / `--paper-line` | `cream.spec` / `cream.hi` | `f6f0e0` / `dcd2b8` | 양피지(코드 에디터·예제 코드·입력칸) / 에디터 줄 번호 칸 |
+| `--paper-ink` | `ink` | `2b2433` | 양피지 위 글자 |
+
+`--navy-*`는 옛 이름을 그대로 두었습니다(값은 어두운 갈보라, 950이 가장 어둡고 600이 가장 밝음).
+
+직접 쓴 색(변수 밖)의 규칙:
+- 그림자·칭호·메아리 계열 보라 = `cloth_purple`(글자 `spec` `c4b4dc`, 빛 `hi` `9886ba`, 카드 바탕 `ol` `2c2240`, 테두리 `base` `6c5a94`).
+- 실행 결과 글자 = `moss.spec` `b8d088`, 오류 출력·페이즈 표시 = `cloth_red.spec` `f6a092`, 굵은 글씨 = `lamp.spec` `fff6c0`.
+- 'JavaScript와 비교' 상자 = 테두리·머리 `brass.hi`, 코드 바탕 `sand.spec` `f2e4bc`.
+- 아이템 아이콘·대체 초상화·대체 스프라이트는 같은 재질 램프(물약 `cloth_red`, 얼음 룬 `teal`, 장신구 `lamp`·`brass`, 망토 `cloth_red`, 깃털 `cream`, 염료 손잡이 `wood`).
+- 코드 에디터(양피지): 줄 번호 `hair_ink.base` `5a4c5e`, 줄 번호 칸 경계 `cream.base`, 현재 줄 `brass.base` 알파 0.1, 현재 줄 번호 칸 `sand.hi` `dcc69c`, 선택 `sky.hi` 알파 0.75(초점 없으면 0.45), 짝 괄호 `teal.hi` 알파 0.4, 오류 줄 `cloth_red.base` 알파 0.25, 메아리 횟수 `cloth_purple.shade` `4a3a6a`. 구문 강조는 CodeMirror 기본(`defaultHighlightStyle`, 밝은 바탕용)을 그대로 씁니다.
+- 상점·장비의 잠긴·없는 품목 실루엣은 아이콘 그림(배경 층) 전체를 `hair_ink.shade` `3e3446` 한 색으로 덮어 내용을 감춥니다(테두리 `ink`, 둘레 빛 `hair_ink.hi`). 행이 반투명(0.75)이라 화면에서는 `383040` 근처로 보입니다.
+
+가독성 기준(WCAG 명암비): 본문 글자와 그 바탕 **4.5:1 이상**, 큰 제목(24px)·버튼 글자·테두리 같은 UI 요소 **3:1 이상**. 주요 짝:
+
+| 짝 | 명암비 |
+|---|---|
+| 본문 `cream.spec` / 패널 `ink` | 13.2 |
+| 본문 / 버튼 `hair_ink.base` · 올린 버튼 `hair_ink.hi` | 7.0 · 4.3 |
+| 흐린 글자 `cream.base` / 패널 · 이름표 `hair_ink.shade` | 6.6 · 5.2 |
+| 강조 `brass.hi` / 패널 | 8.3 |
+| 주 버튼 글자 `ink` / `brass.hi` | 8.3 |
+| XP `teal.hi` · 성공 `grass.hi` · 경고 `rust.hi` · 실패 `cloth_red.hi` / 패널 | 7.3 · 7.8 · 6.1 · 4.6 |
+| 양피지 글자 `ink` / `cream.spec` | 13.2 |
+| 줄 번호 `hair_ink.base` / `cream.hi` | 5.3 |
+| 구분선 `hair_ink.hi` / 패널 | 3.1 |
+
+새 UI 색을 더할 때는 위 표의 짝처럼 명암비를 재서 기준을 넘는지 확인하고 이 표에 줄을 더합니다.
