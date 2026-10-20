@@ -1,298 +1,270 @@
-"""지역 5(교역항) 몬스터 5종(16×16 프레임 2개).
+"""지역 5(교역항) 몬스터 5종(16×16 프레임 4개 제자리).
 
-몸통은 외곽선 없이 칠한 뒤 color_outline()으로 재질에 맞는 색 외곽선을 두른다(누리의 화풍).
-대칭인 몸은 왼쪽 절반(8칸)만 그리고 sym()으로 좌우를 맞춘다. 빛은 왼쪽 위에서 온다.
-지역 1~4 몬스터(슬라임 돔, 박쥐, 부엉이, 층층 게 등)와 실루엣이 겹치지 않게:
-쌍둥이 물고기는 꼬리가 붙은 채 좌우로 머리를 둔 나비넥타이 모양, 장부 갈매기는 옆모습에 부리에 문 빨간 장부,
-구슬 해파리는 반투명한 갓과 늘어진 촉수(속에 색이 다른 구슬 셋), 눈금 앵무새는 옆모습에 긴 꼬리와 날개의 正자 눈금,
-줄 게는 옆모습의 소라게(나선 껍데기) 위에 작은 게 셋이 한 줄로 탄 가로로 긴 모양이다.
-지역 3 '층층 게'(정면, 빨간 게 위에 상자가 세로로 쌓임)와는 방향(옆모습)·색(산호 주황과 크림색 껍데기)·쌓는 방향(가로 줄)이 다르다.
+화풍 통일(docs/art-overhaul/style-guide.md §3·§6.2, 기준 구현 forest_monsters.py): 코지 팔레트(cozypal)의 이름 있는 색만
+쓰고, monsters.Px로 덩어리마다 3단 음영(빛은 왼쪽 위)을 칠한 뒤 auto_outline(재질 ol)으로 바깥 외곽선을 두른다.
+옛 디자인(정체·모양)은 그대로이고, 지역 1~4 몬스터와 실루엣이 겹치지 않게 했다(지역 3 '층층 게'는 정면에 상자를 세로로
+쌓았고, 줄 게는 옆모습 소라게 위에 작은 게가 가로로 줄 선다).
+
+| 몬스터 | 정체(문제) | 4프레임 |
+|---|---|---|
+| 쌍둥이 물고기 | 꼬리가 하나로 붙어 서로 반대쪽을 보는 은빛 물고기 둘(tuple) | 나는 몸 0 → −1 → −2 → −1px, 1·3번에 꼬리지느러미가 접히고 공기방울이 오른다 |
+| 장부 갈매기 | 부리에 빨간 장부를 문 흰 갈매기 옆모습(dict) | 뛰는 새: 서기 → 웅크림 → 날개 펴고 2px 뜀 → 1px 내려옴 |
+| 구슬 해파리 | 갓 속에 색이 다른 구슬 셋(빨강·초록·금)(set) | 나는 몸 0 → −1 → −2 → −1px, 1·3번에 갓이 오므라들고 촉수가 반대로 흔들림 |
+| 눈금 앵무새 | 날개에 새긴 바를 정(正) 눈금(Counter) | 눈금이 2 → 3 → 4 → 5(넷째 뒤 가로 긋기)로 늘고, 몸은 서기 → 웅크림 → 서기 → 부리 벌림 |
+| 줄 게 | 소라게 껍데기 위에 한 줄로 선 작은 게 셋(deque) | 다리 두 벌이 번갈아 디딜 때 몸 1px, 작은 게가 앞에서부터 하나씩 1px 뛰어 줄이 물결친다 |
 """
-from gridlib import overlay, shift
-from portpal import color_outline, paint, shade_right, sym
+import math
 
-# ── 쌍둥이 물고기(tuple): 꼬리지느러미가 하나로 붙은 은빛 물고기 둘이 서로 반대쪽을 본다.
-# 프레임 B는 둘이 함께 꼬리를 쳐서 몸이 한 칸 휘고 지느러미가 펄럭인다 ─────────────────────────
-FISH_KEY = {"1": "x1", "2": "x2", "3": "x3", "4": "x4", "5": "x5", "e": "eye", "w": "white",
-            "o": "o2", "O": "o3", "P": "o4", "b": "b5", "B": "b6"}
+from cozypal import c
+from monsters import FLY, Px, ellipse
 
-_FISH_A = paint(sym("""
-    ........
-    ........
-    ........
-    ...P....
-    ...OP...
-    ..4OOP..
-    .45444O.
-    45w5443P
-    4ee44333
-    .4433332
-    ..3222O.
-    ...2OO..
-    ....O...
-    ........
-    ........
-    ........
-"""), FISH_KEY, 16, 16)
-
-_FISH_B = paint(sym("""
-    ........
-    ........
-    ........
-    ........
-    ...P....
-    ..POP...
-    .4OOOP..
-    45444OPP
-    5w54433O
-    ee444333
-    .433332O
-    ..2222O.
-    ..OO....
-    ........
-    ........
-    ........
-"""), FISH_KEY, 16, 16)
-
-_BUBBLES_A = paint("""
-    .B..
-    B.B.
-    .B..
-    ...b
-""", FISH_KEY, 4, 4)
-_BUBBLES_B = paint("""
-    ..B.
-    .B.B
-    ..B.
-    b...
-""", FISH_KEY, 4, 4)
+_DOWN = {"ol": "ol", "shade": "ol", "base": "shade", "hi": "base", "spec": "hi"}
 
 
-def _twin_fish(flap: bool):
-    g = shade_right(_FISH_B if flap else _FISH_A, 8)
-    g = color_outline(g)
-    # 입에서 올라가는 공기 방울 두 줄기(왼쪽 물고기는 왼쪽 위, 오른쪽 물고기는 오른쪽 위)
-    bub = _BUBBLES_B if flap else _BUBBLES_A
-    g = overlay(g, bub, 0, 1 if flap else 2)
-    g = overlay(g, [r[::-1] for r in bub], 12, 2 if flap else 1)
-    return g
+def _darken(p, cells):
+    for x, y in cells:
+        n = p.get(x, y)
+        if n and "." in n:
+            r, s = n.split(".")
+            p.put(x, y, f"{r}.{_DOWN[s]}")
 
 
-# ── 장부 갈매기(dict): 옆모습(왼쪽을 봄)의 흰 갈매기가 노란 부리에 빨간 장부를 물었다. 회색 날개 끝은 짙고,
-# 주황 발. 프레임 B는 날개를 위로 펼친다(장부 쪽지가 살짝 펄럭) ─────────────────────────────
-GULL_KEY = {"5": "y5", "4": "y4", "3": "y3", "2": "y2", "1": "y1", "0": "y0", "e": "eye",
-            "g": "g3", "G": "g4", "R": "r3", "r": "r2", "x": "r1", "a": "a4", "A": "a5", "o": "o3", "O": "o2"}
-
-_GULL_A = paint("""
-    ................
-    ................
-    ................
-    .....455........
-    ....45555.......
-    ...45e555.......
-    .GGg5555........
-    RRRx4555........
-    RaAx45554333....
-    RaAx4555332220..
-    RRRx.4553322100.
-    .x.x..44433210..
-    .......4444.....
-    ........o.o.....
-    .......OO.OO....
-    ................
-""", GULL_KEY, 16, 16)
-
-_GULL_B = paint("""
-    ..........0.....
-    .........120....
-    ........1232....
-    .....455233.....
-    ....45555322....
-    ...45e555332....
-    .GGg5555.332....
-    RRRx4555...2....
-    RaAx4555543.....
-    RaAx45555433....
-    RRRx.455544330..
-    .x.x..44433210..
-    .......4444.....
-    ........o.o.....
-    .......OO.OO....
-    ................
-""", GULL_KEY, 16, 16)
+def _shift(cells, dx=0, dy=0):
+    return {(x + dx, y + dy) for x, y in cells}
 
 
-def _ledger_gull(wings_up: bool):
-    return color_outline(_GULL_B if wings_up else _GULL_A)
+# ── 쌍둥이 물고기: 꼬리지느러미가 하나로 붙은 은빛 물고기 둘이 서로 반대쪽을 본다(나비넥타이 모양) ─────────
+_BUBBLES = (((1, 3), (0, 1)), ((2, 2), (1, 0)), ((1, 1), (2, 0)), ((0, 2), (1, 0)))
+# 왼쪽 물고기(왼쪽을 봄, 0~7열). 오른쪽 물고기는 좌우 거울. 7열 f가 둘이 하나로 붙은 꼬리지느러미
+_FISH = (
+    "...f...f",
+    ".BBBB..f",
+    "Bebbbbbf",
+    "bebbbbff",
+    "bkbbbb.f",
+    ".LLLL..f",
+    "..f....f",
+)
+_FISH_FOLD = {0: ".", 6: "."}       # 접힌 프레임: 꼬리지느러미 위·아래 끝이 몸 쪽으로 모인다
 
 
-# ── 구슬 해파리(set): 반투명한 분홍 보라 갓 속에 색이 다른 구슬(빨강·초록·금)이 하나씩 떠 있고, 촉수가 늘어진다.
-# 프레임 B는 갓이 오므라들며 한 칸 내려앉고 촉수가 반대로 흔들린다 ─────────────────────────────
-JELLY_KEY = {"0": "j0", "1": "j1", "2": "j2", "3": "j3", "4": "j4", "5": "j5"}
-
-_JELLY_A = paint(sym("""
-    ........
-    ........
-    .....455
-    ...44333
-    ..433333
-    .4333333
-    .3333333
-    .3322222
-    .2222222
-    .1212121
-    ..2..2.1
-    ..2.2..2
-    .2..2.2.
-    ..2..2.2
-    ..1.1..1
-    ........
-"""), JELLY_KEY, 16, 16)
-
-_JELLY_B = paint(sym("""
-    ........
-    ........
-    ........
-    .....455
-    ...44333
-    ..433333
-    ..333333
-    .3333222
-    .2222222
-    .1212121
-    .2..2..1
-    ..2..2.2
-    ..2.2..2
-    .2..2.2.
-    .1..1..1
-    ........
-"""), JELLY_KEY, 16, 16)
-
-MARBLE_KEY = {"R": "r3", "r": "r2", "E": "e4", "e": "e2", "G": "g4", "g": "g2", "w": "white"}
-_MARBLES = [(paint("wR\nRr", MARBLE_KEY, 2, 2), 4, 5), (paint("wE\nEe", MARBLE_KEY, 2, 2), 9, 7),
-            (paint("wG\nGg", MARBLE_KEY, 2, 2), 10, 3)]
+def _twin_fish(frame):
+    dy = FLY[frame]
+    flap = frame % 2 == 1
+    p = Px()
+    oy = 5 + dy
+    rows = [r + r[::-1] for r in _FISH]
+    if flap:
+        for j, ch in _FISH_FOLD.items():
+            rows[j] = rows[j][:7] + ch + ch + rows[j][9:]
+    body = {(x, oy + j) for j, r in enumerate(rows) for x, ch in enumerate(r) if ch in "bBwekL"}
+    p.mass(body, "sky")                                                 # 은빛 비늘(물빛 은색)
+    legend = {"B": "blue.base", "w": "white", "e": "eye", "k": "blush", "L": "cloth_white.base"}
+    for j, r in enumerate(rows):
+        for x, ch in enumerate(r):
+            if ch in legend:
+                col = legend[ch]
+                if ch == "B" and x >= 8:
+                    col = "blue.shade"
+                p.put(x, oy + j, col)
+            elif ch == "f":
+                p.put(x, oy + j, "rust.hi" if x < 8 and j < 3 else "rust.base" if j < 5 else "rust.shade")
+    for x, y in ((3, 3), (3, 4), (12, 3), (12, 4)):                     # 아가미 선
+        p.put(x, oy + y, "sky.shade")
+    p.put(2, oy + 2, "white")
+    # 공기방울(외곽선 없이): 왼쪽 물고기는 왼쪽 위, 오른쪽 물고기는 오른쪽 위로
+    g = [list(r) for r in p.grid()]
+    (bx, by), (sx, sy) = _BUBBLES[frame]
+    for x, y, col in ((bx, by + dy, "sky.hi"), (bx + sx, by - 2 + dy, "white"),
+                      (15 - bx, by + 1 + dy, "sky.hi"), (15 - bx - sx, by - 1 + dy, "white")):
+        if 0 <= y < 16 and g[y][x] == ".":
+            g[y][x] = c(col)
+    return ["".join(r) for r in g]
 
 
-def _bubble_jelly(squash: bool):
-    g = shade_right(_JELLY_B if squash else _JELLY_A, 10, skip=("j5", "j4"))
-    for m, x, y in _MARBLES:
-        g = overlay(g, m, x, y + (1 if squash else 0))
-    return color_outline(g)
+# ── 장부 갈매기: 옆모습(왼쪽을 봄)의 흰 갈매기가 노란 부리에 빨간 장부를 물었다 ─────────────────────
+# 날개(몸 기준 칸): 접음 → 반쯤 → 활짝(위로 들어 올림)
+_GULL_WINGS = {
+    "tuck": {(x, y) for x in range(7, 13) for y in (6, 7)} | {(13, 7), (11, 8), (12, 8), (13, 8), (14, 8)},
+    "half": {(x, y) for x in range(8, 12) for y in (4, 5, 6)} | {(12, 4), (12, 5), (13, 4), (7, 6), (12, 6)},
+    "spread": {(8, 6), (9, 5), (9, 6), (10, 4), (10, 5), (11, 3), (11, 4), (12, 2), (12, 3), (13, 1), (13, 2),
+               (14, 1), (10, 6), (11, 5)},
+}
 
 
-# ── 눈금 앵무새(Counter): 옆모습(왼쪽을 봄)의 초록 앵무새. 노란 뺨, 굽은 상아빛 부리, 날개에 새긴 正자 눈금
-# (세로 넷 + 가로 하나), 빨강·파랑 긴 꼬리. 프레임 B는 부리를 벌리고 날개를 들어 눈금을 내보인다 ──────────
-PARROT_KEY = {"5": "e5", "4": "e4", "3": "e3", "2": "e2", "1": "e1", "0": "e0", "e": "eye", "w": "white",
-              "Y": "g4", "y": "g3", "b": "a4", "B": "a2", "k": "k1", "R": "r3", "r": "r2", "Q": "q3", "q": "q2",
-              "o": "k3", "O": "k4"}
-
-_PARROT_A = paint("""
-    ................
-    .......45.......
-    .....45554......
-    ....4555554.....
-    ...bbYwe554.....
-    ..bbbYYe5543....
-    ..bB.YY45443....
-    ..B...44433332..
-    ......4433222232
-    ......433222222.
-    ......43322222..
-    .......4322221..
-    ........OoOo.RQ.
-    ..........rRQq..
-    ..........rRqq..
-    ............Rq..
-""", PARROT_KEY, 16, 16)
-
-_PARROT_B = paint("""
-    .......45.......
-    .....45554......
-    ....4555554..22.
-    ...bbYwe5542222.
-    ..bbbYYe554322..
-    ..b..YY4554322..
-    ..bB..4544332...
-    ..B...44433322..
-    ......4433332...
-    ......43332222..
-    ......4333222...
-    .......4332221..
-    ........OoOo.RQ.
-    ..........rRQq..
-    ..........rRqq..
-    ............Rq..
-""", PARROT_KEY, 16, 16)
-
-# 날개의 正자 눈금(세로 넷, 가로로 긋는 하나)
-_TALLY = paint("""
-    k.k.k.k
-    k.k.k.k
-    kkkkkkk
-    k.k.k.k
-""", PARROT_KEY, 7, 4)
-
-
-def _tally_parrot(open_beak: bool):
-    g = _PARROT_B if open_beak else _PARROT_A
-    g = overlay(g, _TALLY, 8, 7 if not open_beak else 6)
-    return color_outline(g)
-
-
-# ── 줄 게(deque): 옆모습(왼쪽을 봄)의 소라게. 크림색 나선 껍데기를 지고 산호빛 집게와 눈자루를 내밀었고,
-# 껍데기 위에 작은 빨간 게 셋이 한 줄로 서 있다. 프레임 B는 맨 앞 게가 껍데기 앞으로 뛰어내리고(popleft),
-# 뒤의 게들이 한 칸씩 앞으로 다가선다 ──────────────────────────────────────────────
-CRAB_KEY = {"5": "o5", "4": "o4", "3": "o3", "2": "o2", "1": "o1", "e": "eye", "w": "white",
-            "A": "a5", "a": "a4", "b": "a3", "B": "a2", "c": "a1", "s": "o3", "S": "o2"}
-
-_HERMIT = paint("""
-    ................
-    ................
-    ................
-    ................
-    ................
-    ................
-    .......aAAAa....
-    ......aAaaaabb..
-    .e.e.aSSSSSSab..
-    .3.3baSAaaaSabb.
-    .434aaSaSSaSabb.
-    3443.bSaSaaSabB.
-    4433.bSaSSSSbBc.
-    .3443.SbbbbbBBc.
-    ..2.2..2.2.2cc..
-    .2..2.2..2......
-""", CRAB_KEY, 16, 16)
-
-TINY_KEY = {"R": "r4", "r": "r3", "x": "r2"}
-
-def _queue_crab(pop: bool):
-    g = shade_right(_HERMIT, 11)
-    g = color_outline(g)
-    # 작은 게: 치켜든 두 집게, 둥근 등딱지, 다리
-    tiny = color_outline(paint("""
-        .....
-        .R.R.
-        .rRr.
-        .x.x.
-        .....
-    """, TINY_KEY, 5, 5))
-    if pop:
-        # 맨 앞 게가 껍데기 앞으로 뛰어내렸고, 나머지 둘이 한 칸씩 앞으로 당겨 섰다
-        spots = [(0, 3), (5, 2), (9, 1)]
+def _gull(dy, wings, crouch):
+    p = Px()
+    oy = 2 + dy
+    body = ellipse(8.2, oy + 7.2, 4.6, 2.7 - (0.4 if crouch else 0)) | {(13, oy + 6), (14, oy + 6), (14, oy + 7)}
+    head = ellipse(4.6, oy + 3.6, 2.6, 2.4)
+    neck = {(4, oy + 5), (5, oy + 5), (5, oy + 6), (6, oy + 5)}
+    p.mass(body | head | neck, "cloth_white")
+    p.put(4, oy + 2, "cloth_white.spec")
+    wing = _shift(_GULL_WINGS[wings], 0, oy - 2 + (1 if crouch else 0))
+    p.mass(wing, "stone")
+    tips = sorted(wing, key=lambda c: (-c[0], c[1]))[:3]             # 날개 끝은 짙게
+    for x, y in tips:
+        p.put(x, y, "stone.ol")
+    p.put(3, oy + 3, "eye")
+    p.put(3, oy + 4, "eye")
+    p.put(4, oy + 5, "blush")
+    # 부리(노랑)와 문 장부(빨간 표지 + 크림 종이 단면)
+    p.put(1, oy + 4, "lamp.base")
+    p.put(0, oy + 4, "lamp.shade")
+    p.put(1, oy + 5, "lamp.shade")
+    for x, y, col in ((0, oy + 5, "cloth_red.hi"), (1, oy + 6, "cloth_red.base"), (0, oy + 6, "cloth_red.base"),
+                      (2, oy + 6, "cloth_red.shade"), (0, oy + 7, "cream.hi"), (1, oy + 7, "cream.hi"),
+                      (2, oy + 7, "cloth_red.shade")):
+        p.put(x, y, col)
+    # 다리(주황): 뜀 프레임에는 발을 접는다
+    if dy >= 0:
+        for x in (7, 10):
+            p.put(x, 12, "lamp.shade")
+            p.put(x, 13, "lamp.shade")
+            p.put(x - 1, 13, "lamp.base")
     else:
-        spots = [(3, 2), (7, 1), (11, 2)]
-    for x, y in spots:
-        g = overlay(g, tiny, x, y)
-    return g
+        p.put(8, oy + 10, "lamp.shade")
+        p.put(9, oy + 10, "lamp.shade")
+    return p.grid()
+
+
+# ── 구슬 해파리: 분홍 갓 속에 색이 다른 구슬 셋, 늘어진 촉수 ───────────────────────────────────────
+_MARBLES = (("cloth_red", 4, 5), ("grass", 9, 4), ("lamp", 7, 7))
+
+
+def _jelly(frame):
+    dy = FLY[frame]
+    squash = frame % 2 == 1
+    p = Px()
+    oy = 2 + dy
+    rx, ry = (5.4, 5.6) if squash else (6.4, 5.0)
+    bell = {(x, y) for x, y in ellipse(8, oy + 5.6, rx, ry) if y <= oy + 7}
+    p.mass(bell, "flower")
+    for x, y in ellipse(8, oy + 5.0, rx - 2.0, ry - 2.2):           # 비치는 속(갓 안쪽은 밝게)
+        if (x, y) in bell and p.get(x, y) == "flower.base":
+            p.put(x, y, "flower.hi")
+    xs = sorted(x for x, y in bell if y == oy + 7)
+    for x in xs:                                                     # 갓 아래 주름(물결 테두리)
+        p.put(x, oy + 7, "flower.shade" if x % 2 else "flower.base")
+    p.put(xs[0] + 2, oy + 2, "white")
+    p.put(xs[0] + 3, oy + 2, "flower.spec")
+    for ramp, mx, my in _MARBLES:                                   # 구슬 셋(2×2, 왼쪽 위 반사광)
+        my += oy - 2 + (1 if squash else 0)
+        p.put(mx, my, "white")
+        p.put(mx + 1, my, f"{ramp}.base")
+        p.put(mx, my + 1, f"{ramp}.base")
+        p.put(mx + 1, my + 1, f"{ramp}.shade")
+    # 촉수 넷: 아래로 늘어지며 프레임마다 반대로 흔들린다
+    for i, tx in enumerate((4, 7, 9, 12)):
+        for k in range(1, 6 if not squash else 5):
+            sway = ((k + i + frame) // 2) % 2
+            x = tx + (sway if i % 2 else -sway)
+            p.put(x, oy + 7 + k, "flower.base" if k < 3 else "flower.shade")
+    ey = oy + 5 + (1 if squash else 0)
+    p.put(5, ey, "eye")
+    p.put(10, ey, "eye")
+    p.put(5, ey - 1, "eye")
+    p.put(10, ey - 1, "eye")
+    p.put(4, ey + 1, "blush")
+    p.put(11, ey + 1, "blush")
+    return p.grid()
+
+
+# ── 눈금 앵무새: 옆모습(왼쪽을 봄)의 초록 앵무새, 날개에 바를 정 눈금 ────────────────────────────────
+def _parrot(count, bob, beak_open):
+    p = Px()
+    oy = bob
+    body = ellipse(8.2, oy + 8.6, 4.0, 3.6)
+    head = ellipse(5.6, oy + 4.2, 3.2, 2.9)
+    tail = {(11, oy + 11), (12, oy + 11), (12, oy + 12), (13, oy + 12), (13, oy + 13), (14, oy + 13), (14, oy + 14)}
+    tail = {(x, y) for x, y in tail if y <= 15}
+    p.mass(body | head, "grass")
+    for x, y in tail:                                                 # 긴 꼬리깃: 빨강·파랑 두 갈래
+        p.put(x, y, "cloth_red.base" if (x + y) % 2 else "blue.base")
+    wing = {(x, y) for x, y in ellipse(9.4, oy + 8.8, 3.8, 2.4)}
+    p.mass(wing, "grass")
+    _darken(p, wing)
+    # 눈금(크림): 세로 금 count개(넷까지), 다섯째는 가로로 긋는다
+    for i in range(min(count, 4)):
+        for k in range(3):
+            p.put(7 + i * 2, oy + 8 + k - 1, "cream.hi")
+    if count >= 5:
+        for x in range(6, 15):
+            if p.get(x, oy + 8):
+                p.put(x, oy + 8, "cream.spec")
+    # 얼굴: 노란 뺨, 눈, 굽은 상아빛 부리
+    for x, y in ((4, oy + 4), (5, oy + 5), (4, oy + 5)):
+        p.put(x, y, "lamp.hi")
+    p.put(5, oy + 3, "eye")
+    p.put(5, oy + 4, "eye")
+    p.put(6, oy + 2, "grass.spec")
+    p.put(2, oy + 3, "cream.hi")
+    p.put(1, oy + 4, "cream.base")
+    p.put(2, oy + 4, "cream.base")
+    p.put(1, oy + 5, "cream.shade")
+    if beak_open:
+        p.put(2, oy + 6, "cream.shade")
+        p.put(2, oy + 5, "cloth_red.shade")
+    else:
+        p.put(2, oy + 5, "cream.shade")
+    for x in (7, 9):                                                  # 발(쥔 발가락)
+        p.put(x, 13, "stone.shade")
+        p.put(x + 1, 13, "stone.base")
+    p.put(4, oy + 6, "blush")
+    return p.grid()
+
+
+# ── 줄 게: 옆모습(왼쪽을 봄) 소라게, 나선 껍데기 위에 작은 게 셋이 한 줄로 ────────────────────────────
+_LEGS = {0: ((3, 0), (5, 1), (7, 0)), 1: ((2, 1), (5, 0), (8, 1))}
+
+
+def _crab(frame):
+    p = Px()
+    bob = frame % 2
+    # 다리 두 벌(녹빛 코랄): 디딜 때 몸이 1px 내려온다
+    for x, lift in _LEGS[frame % 2]:
+        p.put(x, 12 + bob, "rust.base")
+        p.put(x - 1 if x < 5 else x, 13 + bob - lift, "rust.shade")
+        p.put(x - 1 if x < 5 else x, 14, "rust.shade")
+    shell = ellipse(10.2, 9.0 + bob, 5.0, 4.2)
+    p.mass(shell, "cream")
+    cx, cy = 10.6, 9.0 + bob                                          # 나선 무늬(녹 줄): 안에서 밖으로 감기는 선
+    for k in range(240):
+        t = k / 240 * 3.6 * math.pi
+        r = 0.5 + 0.33 * t
+        x, y = int(cx + math.cos(t) * r * 1.12), int(cy - math.sin(t) * r * 0.92)
+        if (x, y) in shell:
+            p.put(x, y, "rust.base" if x + y < 19 + bob else "rust.shade")
+    p.put(7, 6 + bob, "cream.spec")
+    front = ellipse(4.6, 10.4 + bob, 3.0, 2.2)
+    p.mass(front, "rust")
+    claw = ellipse(1.8, 9.2 + bob, 1.8, 1.5)
+    p.mass(claw, "rust", lift=1)
+    p.put(1, 10 + bob, "rust.ol")                                       # 집게 틈
+    p.put(0, 8 + bob, "rust.spec")
+    for x in (3, 5):                                                  # 눈자루와 눈
+        p.put(x, 7 + bob, "rust.shade")
+        p.put(x, 5 + bob, "eye")
+        p.put(x, 6 + bob, "eye")
+    p.put(6, 11 + bob, "blush")
+    # 작은 게 셋(빨강, 3×3: 치켜든 밝은 집게 둘, 점 눈이 있는 둥근 몸). 껍데기 위에 한 줄로 서고,
+    # 앞에서부터 프레임마다 하나씩 1px 뛴다
+    tiny = ("C.C", "ReR", ".r.")
+    legend = {"C": "cloth_red.spec", "e": "eye", "R": "cloth_red.base", "r": "cloth_red.shade"}
+    for i, tx in enumerate((5, 9, 13)):
+        ty = 2 + bob - (1 if i == frame else 0)
+        for j, row in enumerate(tiny):
+            for k, ch in enumerate(row):
+                if ch != ".":
+                    p.put(tx + k, ty + j, legend[ch])
+    return p.grid()
 
 
 PORT_MONSTERS = {
-    "monster_twin_fish": [_twin_fish(False), _twin_fish(True)],
-    "monster_ledger_gull": [_ledger_gull(False), _ledger_gull(True)],
-    "monster_bubble_jelly": [_bubble_jelly(False), _bubble_jelly(True)],
-    "monster_tally_parrot": [_tally_parrot(False), _tally_parrot(True)],
-    "monster_queue_crab": [_queue_crab(False), _queue_crab(True)],
+    "monster_twin_fish": [_twin_fish(i) for i in range(4)],
+    "monster_ledger_gull": [_gull(0, "tuck", False), _gull(1, "half", True), _gull(-2, "spread", False),
+                            _gull(-1, "half", False)],
+    "monster_bubble_jelly": [_jelly(i) for i in range(4)],
+    "monster_tally_parrot": [_parrot(2, 0, False), _parrot(3, 1, False), _parrot(4, 0, False), _parrot(5, -1, True)],
+    "monster_queue_crab": [_crab(i) for i in range(4)],
 }
-
-_ = shift  # (다른 지역 모듈과 같은 가져오기 목록 유지)
