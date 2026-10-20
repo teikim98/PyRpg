@@ -78,28 +78,29 @@ def _sprout(w, h, leaf_dy):
 
 
 # ── 달력 부엉이: 배에 고리 철 달력 한 장(청록 머리띠, 날짜 점, 빨갛게 표시한 29일) ─────────────
+# 몸: 귀깃 두 갈래가 솟은 머리, 둥근 어깨, 아래로 둥글게 모이는 배(달걀꼴). 배에 달력 한 장
 _OWL = """
-..t........t..
-..tt......tt..
-..hhhhhhhhhh..
+.t..........t.
+.tt........tt.
+..thhhhhhhht..
 .hhWWhhhhWWhh.
-.hWeWhhhhWeWh.
-.hWWWhkkhWWWh.
-.hhhhhhkhhhhh.
+.hWeWhkkhWeWh.
+.hWWWhhkhWWWh.
+.hhhhhhhhhhhh.
 .hhPPPPPPPPhh.
 .hhCoCCCCoChh.
-.hhCdCdCdCChh.
-.hhCdCdCdRChh.
-.hhCCCCCCCChh.
-..hhhhhhhhhh..
+..hCdCdCdCCh..
+..hCdCdCdRCh..
+...hCCCCCCh...
+....hhhhhh....
 """
 _OWL_DETAIL = {"W": "cream.spec", "e": "eye", "k": "lamp.base", "P": "teal.base", "C": "cream.hi",
                "o": "stone.hi", "d": "cream.shade", "R": "brick.base"}
+# 날개(왼쪽 날개 칸, 몸 기준 좌표. 오른쪽은 좌우 대칭): 접음 → 반쯤 → 활짝(위로 들어 올림)
 _OWL_WINGS = {
-    "tuck": ((0, 6), (0, 7), (0, 8), (0, 9), (13, 6), (13, 7), (13, 8), (13, 9)),
-    "half": ((-1, 5), (0, 5), (-1, 6), (0, 6), (0, 7), (13, 5), (14, 5), (13, 6), (14, 6), (13, 7)),
-    "spread": ((-1, 2), (-1, 3), (0, 3), (-1, 4), (0, 4), (-1, 5), (0, 5), (0, 6), (0, 7),
-               (14, 2), (14, 3), (13, 3), (14, 4), (13, 4), (14, 5), (13, 5), (13, 6), (13, 7)),
+    "tuck": ((0, 6), (0, 7), (1, 7), (0, 8), (1, 8), (0, 9), (1, 9), (1, 10), (2, 10), (2, 11)),
+    "half": ((-1, 5), (0, 5), (-1, 6), (0, 6), (0, 7), (1, 7), (0, 8), (1, 8), (1, 9)),
+    "spread": ((-1, 1), (-1, 2), (0, 2), (-1, 3), (0, 3), (-1, 4), (0, 4), (0, 5), (1, 5), (0, 6), (1, 6)),
 }
 
 
@@ -114,11 +115,18 @@ def _owl(dy, wings, feet):
             if ch in _OWL_DETAIL:
                 p.put(ox + i, oy + j, _OWL_DETAIL[ch])
     p.put(ox + 3, oy + 3, "white")                     # 눈 반사광
-    p.put(ox + 2, oy, "hair_brown.hi")                 # 귀깃 끝
-    for x, y in _OWL_WINGS[wings]:
-        p.put(ox + x, oy + y, "hair_brown.shade" if x > 6 else "hair_brown.base")
+    p.put(ox + 1, oy, "hair_brown.hi")                 # 귀깃 끝
+    p.put(ox + 12, oy, "hair_brown.base")
+    # 날개: 몸보다 한 단계 어두운 덩어리(깃 끝 그늘 줄)를 몸 가장자리에 겹친다
+    left = {(ox + x, oy + y) for x, y in _OWL_WINGS[wings]}
+    right = {(ox + 13 - x, oy + y) for x, y in _OWL_WINGS[wings]}
+    for wing in (left, right):
+        p.mass(wing, "hair_brown")
+        for x, y in wing:
+            p.put(x, y, {"hair_brown.hi": "hair_brown.base", "hair_brown.base": "hair_brown.shade",
+                         "hair_brown.shade": "hair_brown.ol"}[p.get(x, y)])
     if feet:
-        for x in (4, 5, 9, 10):
+        for x in (5, 6, 9, 10):
             p.put(x, oy + 13, "lamp.shade")
     return p.grid()
 
@@ -126,8 +134,8 @@ def _owl(dy, wings, feet):
 # ── 고리 뱀: 제 꼬리를 문 보라 고리(우로보로스). 비늘 띠가 돌고, 노란 배 비늘이 안쪽에 ─────────────
 def _loop_snake(phase):
     p = Px()
-    cx, cy = 7.5, 8.5
-    r_out, r_in = 6.9, 3.3
+    cx, cy = 7.0, 8.7                                   # 고리를 조금 줄여 오른쪽 위에 큰 머리 자리를 둔다
+    r_out, r_in = 6.2, 2.9
     head_ang = -math.pi / 4                             # 머리는 오른쪽 위
     ring = set()
     for y in range(16):
@@ -136,7 +144,7 @@ def _loop_snake(phase):
             r = math.hypot(dx, dy)
             if r_in <= r <= r_out:
                 da = (math.atan2(dy, dx) - head_ang + math.pi) % (2 * math.pi) - math.pi
-                if not -0.3 < da < 0.5:                 # 머리가 꼬리를 무는 자리는 비운다
+                if not -0.45 < da < 0.6:                # 머리가 꼬리를 무는 자리는 비운다
                     ring.add((x, y))
     p.mass(ring, "cloth_purple")
     for x, y in ring:
@@ -150,21 +158,23 @@ def _loop_snake(phase):
         band = int((ang + math.pi) / (2 * math.pi) * 12 + phase * 0.5) % 2
         if band and r < r_out - 1.0 and p.get(x, y) == "cloth_purple.base":
             p.put(x, y, "cloth_purple.shade")
-    # 머리: 오른쪽 위에서 고리 쪽을 보며 꼬리 끝을 문다
-    head = """
-    ...HHHH.
-    ..HhhhhH
-    .HhwEhhH
-    .HhhEhhH
-    .mmmmhHH
-    Rttm.HH.
-    """
-    legend = {"H": "cloth_purple.base", "h": "cloth_purple.hi", "w": "white", "E": "eye",
-              "m": "cloth_purple.ol", "R": "brick.base", "t": "lamp.hi"}
-    p.rows(head, legend, 8, 0)
-    if phase == 3:                                      # 눈 깜빡임
-        p.put(11, 2, "cloth_purple.hi")
-        p.put(12, 2, "cloth_purple.hi")
+    # 머리(7×7): 오른쪽 위에서 고리 쪽(왼쪽 아래)을 보며 꼬리 끝을 문다. 2×2 큰 눈 + 반사광, 턱선은 외곽선 색,
+    # 벌린 입에 노란 꼬리 끝과 빨간 혀. 머리는 고리보다 한 단계 밝게 칠해 따로 읽히게 한다
+    head = ellipse(12.0, 3.6, 3.4, 3.3)
+    p.mass(head, "cloth_purple", lift=1)
+    for x, y in ((11, 2), (12, 2), (11, 3), (12, 3)):
+        p.put(x, y, "eye")
+    p.put(11, 2, "white")
+    for x, y in ((13, 1), (14, 2)):                     # 정수리 비늘 무늬
+        p.put(x, y, "cloth_purple.base")
+    for x in range(9, 13):                               # 턱선
+        p.put(x, 6, "cloth_purple.ol")
+    p.put(13, 6, "cloth_purple.shade")
+    for x, y, col in ((9, 7, "lamp.hi"), (10, 7, "lamp.base"), (8, 7, "brick.base"), (11, 7, "cloth_purple.ol")):
+        p.put(x, y, col)                                 # 문 꼬리 끝(노랑)과 혀(빨강)
+    if phase == 3:                                       # 눈 깜빡임: 감은 눈 가로선
+        for x, y in ((11, 2), (12, 2)):
+            p.put(x, y, "cloth_purple.spec")
         p.put(11, 3, "eye")
         p.put(12, 3, "eye")
     return p.grid()
