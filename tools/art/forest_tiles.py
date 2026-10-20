@@ -262,6 +262,9 @@ def pine_tree():
     p.put(13, 14, "wood.shade")
     crown = ellipse(11.6, 6.4, 4.6, 4.9) | ellipse(13.4, 8.6, 2.8, 2.6)
     p.mass(crown, "leaf")
+    # 숲 벽은 바닥보다 한 단계 어둡게(style-guide §3.4): 3단 음영을 한 단계씩 내린다(밝음→기본, 기본→그늘, 그늘→외곽선)
+    for x, y in crown:
+        p.put(x, y, {"leaf.hi": "leaf.base", "leaf.base": "leaf.shade", "leaf.shade": "leaf.ol"}[p.get(x, y)])
     for x, y in ((9, 3), (10, 3), (11, 2), (12, 2), (10, 5), (14, 6)):     # 풀빛 잎 송이(지역 1 나무와 같은 연두)
         if p.get(x, y):
             p.put(x, y, "grass.base")
@@ -277,7 +280,6 @@ def pine_tree():
         p.put(5, y, "wood.base")
         p.put(6, y, "wood.shade")
     p.put(4, 14, "wood.hi")
-    # 숲 벽은 바닥보다 한 단계 어둡게(style-guide §3.4): 3단 음영을 한 단계씩 내려 칠한다(밝음→기본, 기본→그늘, 그늘→외곽선)
     down = {"moss.hi": "moss.base", "moss.base": "moss.shade", "moss.shade": "moss.ol"}
     for y0, y1, w0, w1 in ((0, 3, 0.4, 1.9), (2, 6, 1.0, 3.4), (5, 9, 1.6, 4.6), (8, 12, 2.2, 5.6)):
         cells = _tier(cx, y0, y1, w0, w1)
