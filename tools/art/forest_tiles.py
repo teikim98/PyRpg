@@ -63,18 +63,18 @@ def forest_floor(seed=211):
             r = noise(x, y, seed)
             ox = x + int(noise(x, y, seed + 1) * 3)
             oy = y + int(noise(x, y, seed + 2) * 3)
-            if r < 0.26:                                      # 'ㅅ'자 이끼 송이
+            if r < 0.22:                                      # 'ㅅ'자 이끼 송이
                 _set(g, ox - 1, oy, hi)
                 _set(g, ox + 1, oy, hi)
                 _set(g, ox, oy + 1, sh)
-            elif r < 0.44:                                    # 외잎
+            elif r < 0.36:                                    # 외잎
                 _set(g, ox, oy, hi)
                 _set(g, ox, oy + 1, sh)
-            elif r < 0.62:                                    # 그늘 점(흙이 비치는 곳)
+            elif r < 0.66:                                    # 그늘 점(흙이 비치는 곳). 숲 그늘이라 지역 1 풀보다 많이
                 _set(g, ox, oy, sh)
-                if noise(x, y, seed + 4) < 0.5:
+                if noise(x, y, seed + 4) < 0.6:
                     _set(g, ox + 1, oy, sh)
-            elif r < 0.70:                                    # 떨어진 솔잎(짙은 잎 대각선 2px)
+            elif r < 0.76:                                    # 떨어진 솔잎(짙은 잎 대각선 2px)
                 _set(g, ox, oy, c("leaf.shade"))
                 _set(g, ox + 1, oy + 1, c("leaf.shade"))
     return g
@@ -255,46 +255,48 @@ def pine_tree():
     가지 끝에 청록 서리). 두 그루가 칸을 거의 채워서 숲이 이어진 덩어리로 보이고, 키·모양·색이 달라 단조롭지 않다."""
     p = Px()
     # 뒤: 둥근 활엽수(오른쪽 위)와 줄기
-    for y in range(10, 15):
-        p.put(11, y, "wood.base")
-        p.put(12, y, "wood.shade")
-    p.put(10, 14, "wood.hi")
-    p.put(13, 14, "wood.shade")
+    for y in range(10, 15):                              # 줄기는 숲 그늘 속이라 그늘·외곽선 두 단계
+        p.put(11, y, "wood.shade")
+        p.put(12, y, "wood.ol")
+    p.put(10, 14, "wood.base")
+    p.put(13, 14, "wood.ol")
     crown = ellipse(11.6, 6.4, 4.6, 4.9) | ellipse(13.4, 8.6, 2.8, 2.6)
     p.mass(crown, "leaf")
-    # 숲 벽은 바닥보다 한 단계 어둡게(style-guide §3.4): 3단 음영을 한 단계씩 내린다(밝음→기본, 기본→그늘, 그늘→외곽선)
+    # 숲 벽은 바닥보다 어둡게(style-guide §3.4): 3단 음영을 한 단계씩 내리고(밝음→기본, 기본→그늘, 그늘→외곽선),
+    # 잎덩이 아래쪽 절반의 그늘은 한 단계 더 내려 빛이 위에만 닿는 깊은 숲으로
     for x, y in crown:
-        p.put(x, y, {"leaf.hi": "leaf.base", "leaf.base": "leaf.shade", "leaf.shade": "leaf.ol"}[p.get(x, y)])
-    for x, y in ((9, 3), (10, 3), (11, 2), (12, 2), (10, 5), (14, 6)):     # 풀빛 잎 송이(지역 1 나무와 같은 연두)
+        k = {"leaf.hi": "leaf.base", "leaf.base": "leaf.shade", "leaf.shade": "leaf.ol"}[p.get(x, y)]
+        if k == "leaf.shade" and (y >= 8 or x >= 14):
+            k = "leaf.ol"
+        p.put(x, y, k)
+    for x, y in ((10, 3), (11, 2), (12, 2)):                               # 꼭대기에만 풀빛 잎 송이
         if p.get(x, y):
-            p.put(x, y, "grass.base")
-    for x, y in ((10, 2), (12, 1)):
-        if p.get(x, y):
-            p.put(x, y, "grass.hi")
-    for x, y in ((13, 9), (15, 8), (12, 10)):                              # 잎덩이 아래 깊은 그늘
-        if p.get(x, y):
-            p.put(x, y, "leaf.ol")
+            p.put(x, y, "grass.shade")
+    p.put(11, 2, "grass.base")
     # 앞: 전나무(왼쪽, 위에서 아래로 층을 겹친다. 아래 층이 위 층의 밑동을 덮는다)
     cx = 5.5
     for y in range(12, 15):
-        p.put(5, y, "wood.base")
-        p.put(6, y, "wood.shade")
-    p.put(4, 14, "wood.hi")
+        p.put(5, y, "wood.shade")
+        p.put(6, y, "wood.ol")
+    p.put(4, 14, "wood.base")
     down = {"moss.hi": "moss.base", "moss.base": "moss.shade", "moss.shade": "moss.ol"}
     for y0, y1, w0, w1 in ((0, 3, 0.4, 1.9), (2, 6, 1.0, 3.4), (5, 9, 1.6, 4.6), (8, 12, 2.2, 5.6)):
         cells = _tier(cx, y0, y1, w0, w1)
         p.mass(cells, "moss")
         for x, y in cells:
-            p.put(x, y, down[p.get(x, y)])
-    for x, y in ((4, 2), (3, 5), (2, 8), (1, 11)):                          # 층마다 왼쪽 가지 끝 강조
+            k = down[p.get(x, y)]
+            if k == "moss.shade" and x + 0.5 > cx + 1 and y >= y1 - 1:      # 층마다 오른쪽 아래는 한 단계 더 그늘
+                k = "moss.ol"
+            p.put(x, y, k)
+    for x, y in ((4, 2), (3, 5), (2, 8)):                                  # 위 세 층만 왼쪽 가지 끝 강조
         if p.get(x, y):
             p.put(x, y, "moss.hi")
-    for x, y in ((8, 6), (10, 11)):                                        # 오른쪽 가지 끝 청록 서리
-        if p.get(x, y):
-            p.put(x, y, "teal.hi")
+    p.put(8, 6, "teal.hi")                                                 # 가지 끝 청록 서리 하나
     g = p.grid()
-    g = _shadow(g, 15, 2, 14)
-    return g
+    # 나무 사이로 비치는 바닥도 숲 그늘 속: 남은 투명 칸을 위쪽은 옅은 그늘, 밑동 쪽(11행부터)은 짙은 그림자로 덮는다.
+    # 그래서 길·빈터는 숲 벽 안에 파인 밝은 공간으로 읽힌다
+    sh, soft = c("shadow"), c("shadow_soft")
+    return ["".join((sh if y >= 11 else soft) if ch == "." else ch for ch in row) for y, row in enumerate(g)]
 
 
 PINE_TREE = pine_tree()
