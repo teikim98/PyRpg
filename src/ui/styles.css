@@ -642,13 +642,13 @@
 
 .pyrpg-ui .md-compare {
   margin: 12px 0;
-  border: 3px solid #ffd870;
+  border: 3px solid #e6bc5a;
   background: #3b2a2c;
 }
 
 .pyrpg-ui .md-compare-title {
   padding: 2px 10px;
-  background: #ffd870;
+  background: #e6bc5a;
   color: #2b2433;
   font-family: Galmuri11, sans-serif;
   font-size: 12px;
@@ -658,7 +658,7 @@
 .pyrpg-ui .md-compare .md-code {
   margin: 0;
   border: 0;
-  background: #fff6c0;
+  background: #f2e4bc;
 }
 
 /* ---------- CodeMirror(양피지 테마) ---------- */
@@ -688,24 +688,41 @@
 
 .pyrpg-ui .code-editor .cm-gutters {
   background: var(--paper-line);
-  color: #8a7c5a;
-  border-right: 2px solid #c9b98a;
+  color: #5a4c5e;
+  border-right: 2px solid #b6ab94;
 }
 
 .pyrpg-ui .code-editor .cm-activeLine {
-  background: rgba(120, 90, 30, 0.08);
+  background: rgba(190, 138, 54, 0.1);
 }
 
 .pyrpg-ui .code-editor .cm-activeLineGutter {
-  background: #d8c99a;
+  background: #dcc69c;
 }
 
 .pyrpg-ui .code-editor .cm-cursor {
   border-left: 2px solid var(--paper-ink);
 }
 
+/* 선택 영역: CodeMirror 기본(회색·연보라) 대신 sky.hi. 기본 테마의 선택자보다 구체적으로 쓴다 */
+.pyrpg-ui .code-editor .cm-editor > .cm-scroller > .cm-selectionLayer .cm-selectionBackground {
+  background: rgba(164, 208, 204, 0.45);
+}
+
+.pyrpg-ui .code-editor .cm-editor.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground {
+  background: rgba(164, 208, 204, 0.75);
+}
+
+.pyrpg-ui .code-editor .cm-editor.cm-focused .cm-matchingBracket {
+  background: rgba(112, 194, 192, 0.4);
+}
+
+.pyrpg-ui .code-editor .cm-editor.cm-focused .cm-nonmatchingBracket {
+  background: rgba(188, 68, 70, 0.3);
+}
+
 .pyrpg-ui .code-editor .cm-error-line {
-  background: rgba(232, 80, 74, 0.25);
+  background: rgba(188, 68, 70, 0.25);
   box-shadow: inset 4px 0 0 var(--hp);
 }
 
@@ -716,7 +733,7 @@
 }
 
 .pyrpg-ui .code-editor .cm-echo-count {
-  color: #6a3fa0;
+  color: #4a3a6a;
   font-family: Galmuri11, monospace;
   font-size: 12px;
   white-space: nowrap;
