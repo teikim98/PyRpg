@@ -2,9 +2,10 @@
 
 화풍 통일(docs/art-overhaul/style-guide.md §3·§4.4, 기준 구현 forest_tiles.py·tiles.py): 코지 팔레트(cozypal)의
 이름 있는 색만 쓴다. 지역 강조색은 blue(바다 파랑) · cloth_red(깃발 빨강) · rust(녹)이고 작은 장식에만 쓴다.
-- 바닥 색: 맵의 대부분을 덮는 자갈길(port_cobble)은 공통 stone(청회) 램프. 강조 램프 셋(blue·cloth_red·rust)은
-  base 채도가 높아 맵 전체 바닥으로 쓰면 강조색 15% 규칙을 넘는다(지역 7 sand와 같은 예외). 청회 돌은 따뜻한 나무
-  부두·상자와 색상으로 갈리고, 청록 바다(water 램프)보다 채도가 낮아 바다와 땅이 분명히 나뉜다.
+- 바닥 색: 맵의 절반 가까이를 덮는 자갈길(port_cobble)은 공통 plank(따뜻한 회색) 램프. 강조 램프 셋(blue·cloth_red·rust)은
+  base 채도가 높아 맵 전체 바닥으로 쓰면 강조색 15% 규칙을 넘는다(지역 7 sand와 같은 예외). 청회 stone도 그려 봤지만
+  청록 바다(water)와 색상이 겹쳐 항구 전체가 차갑고 땅과 바다가 명도로만 갈렸다. 햇볕에 바랜 따뜻한 회색 돌은 바다와
+  색상으로 갈리고, 나무 상자·부두와 어울리면서 명도(상자 앞판은 그늘)로 구분된다(지역 1 광장도 plank·cream).
 - 바닥(port_cobble, dock_plank, harbor_water, frozen_wave, ship_deck, lighthouse_wall)은 맵의 ground 레이어라
   불투명하고 가장자리가 이어진다(무늬는 x % 16, y % 16). 외곽선 없이 줄눈·이음새만 재질의 ol·shade로.
   부두 널(wood)은 세로, 밀수선 갑판(leather, 짙은 붉은 나무)은 가로로 놓여 둘이 섞여도 구별된다.
@@ -76,8 +77,11 @@ k#llllll#mmm#nnk
 """
 
 
+FLOOR = "plank"
+
+
 def port_cobble(seed=511):
-    """항구 자갈길: 청회 돌(stone.base) + 왼쪽·위 가장자리 밝음, 모서리를 깎은 줄눈(stone.shade).
+    """항구 자갈길: 바랜 회색 돌(plank.base) + 윗가장자리 밝음, 모서리를 깎은 줄눈(plank.shade).
     줄눈에 따뜻한 모래알(sand.shade)이 드문드문 끼고, 돌 위에 닳은 얼룩. 맵의 절반 가까이를 덮어서 대비를 낮게
     (spec 없음, 아래·오른쪽 그늘 가장자리 없이 줄눈이 그늘 역할)."""
     rows = _COBBLE_LAYOUT.strip().splitlines()
@@ -85,7 +89,7 @@ def port_cobble(seed=511):
     def at(x, y):
         return rows[y % T][x % T]
 
-    mortar, base, hi = c("stone.shade"), c("stone.base"), c("stone.hi")
+    mortar, base, hi = c(f"{FLOOR}.shade"), c(f"{FLOOR}.base"), c(f"{FLOOR}.hi")
     out = []
     for y in range(T):
         row = ""
@@ -101,7 +105,7 @@ def port_cobble(seed=511):
             else:
                 row += base
         out.append(row)
-    out = speckle(out, "stone.base", "stone.shade", 0.025, seed + 2)
+    out = speckle(out, f"{FLOOR}.base", f"{FLOOR}.shade", 0.025, seed + 2)
     g = [list(r) for r in out]
     for y in range(T):                                                  # 줄눈에 낀 모래알
         for x in range(T):
