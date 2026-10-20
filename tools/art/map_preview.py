@@ -86,10 +86,13 @@ REGIONS = {
     },
     "r06": {
         "dir": "r06-mirror-lake", "title": "mirror lake", "tiles": (74, 88), "town": False,
-        "ground": [],
-        "mass": [],
-        "areas": [],
-        "views": [],
+        "ground": ["lake_shore", "lake_water", "mirror_water", "mist_grass", "island_grass", "lake_bridge",
+                   "lake_stepping_stone"],
+        "mass": ["lake_reed", "willow_tree", "bridge_rail"],
+        "areas": [("ferry & willow bank", 0, 0, 36, 22), ("mirror bridge", 36, 2, 26, 18),
+                  ("mist reeds (hidden path)", 58, 0, 22, 18), ("echo shoal & island", 76, 2, 30, 18)],
+        "views": [("ferry", 0, 6 * TS), ("willow bank", 23 * TS, 6 * TS), ("keeper", 15 * TS, 1 * TS),
+                  ("mirror bridge", 45 * TS, 5 * TS), ("reeds hidden path", 62 * TS, 0), ("island", 86 * TS, 6 * TS)],
     },
     "r07": {
         "dir": "r07-hourglass-desert", "title": "hourglass desert", "tiles": (88, 103), "town": False,
