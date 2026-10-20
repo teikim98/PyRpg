@@ -7,6 +7,8 @@
 - characters.png    : 새 캐릭터 시트 전체(6열 × 4행, 6배)
 - walk.png          : 방향별 걷기 4프레임을 나란히(8배), 같은 프레임을 1배·3배로
 - walk.gif          : 캐릭터 5명이 아래·오른쪽·위·왼쪽으로 걷고 멈춰 숨쉬고 깜빡이는 애니메이션(4배)
+
+    python tools/art/overhaul_preview.py r02   # 화풍 통일: r02-characters.png(지역 NPC 시트 + 주인공·누리)만
 """
 import os
 import sys
@@ -165,9 +167,9 @@ def sample_scene(frame=0, actors_frame=None):
 
 
 # ── 캐릭터 ───────────────────────────────────────────────────────────────────────
-def characters_sheet():
+def characters_sheet(rigs=RIGS):
     S = 6
-    names = list(RIGS)
+    names = list(rigs)
     fw, fh = 16, 24
     cell_w, cell_h = fw * S + 6, fh * S + 6
     W = 16 + 70 + 6 * cell_w + 16
@@ -175,7 +177,7 @@ def characters_sheet():
     cv = Canvas(W, H, BG)
     y = 16
     for n in names:
-        frames = RIGS[n].frames()
+        frames = rigs[n].frames()
         text(cv, n, 16, y, 2, HEAD)
         for k in range(6):
             text(cv, COLS[k], 16 + 70 + k * cell_w, y + 6 + 10, 1, TXT)
@@ -254,7 +256,20 @@ def walk_gif_frames():
     return out
 
 
+def region_characters(region):
+    """화풍 통일: 그 지역 NPC 시트(6열 × 4행, 6배)를 주인공·누리와 나란히 → rNN-characters.png"""
+    if region == "r02":
+        from forest_npcs import RIGS as REGION_RIGS
+    else:
+        raise SystemExit(f"no NPC rigs for {region}")
+    rigs = {"player": RIGS["player"], "nuri": RIGS["nuri"], **REGION_RIGS}
+    print(os.path.relpath(save(characters_sheet(rigs), f"{region}-characters.png"), ROOT))
+
+
 def main():
+    if len(sys.argv) > 1:          # python tools/art/overhaul_preview.py r02 → 그 지역 캐릭터 시트만
+        region_characters(sys.argv[1])
+        return
     files = [
         save(palette_sheet(), "palette.png"),
         save(materials_sheet(), "materials.png"),
