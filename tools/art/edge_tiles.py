@@ -58,8 +58,10 @@ GRASS_SETS = {
     "grass": (R01_TILES["grass"], c("grass.shade"), c("grass.ol"), c("grass.hi"), 31),
     # 숲 바닥(화풍 통일 뒤 코지 이끼 램프): 잎 끝 이끼 그늘, 잎 그림자 선 이끼 외곽선, 솟은 잎 끝 이끼 밝음
     "forest": (_FOREST, c("moss.shade"), c("moss.ol"), c("moss.hi"), 37),
-    "island": (_ISLAND, _tile_char(_ISLAND, "205c38"), c("grass.ol"), _tile_char(_ISLAND, "529c48"), 41),
-    "mist": (_MIST, _tile_char(_MIST, "425450"), c("moss.ol"), _tile_char(_MIST, "80927c"), 43),
+    # 섬 풀(화풍 통일 뒤 청록빛 풀 cloth_green): 잎 끝 그늘, 잎 그림자 선 외곽선, 솟은 잎 끝 밝음
+    "island": (_ISLAND, c("cloth_green.shade"), c("cloth_green.ol"), c("cloth_green.hi"), 41),
+    # 안개 풀(옅은 이끼, 바탕이 moss.hi): 잎 끝 이끼 기본, 잎 그림자 선 이끼 그늘, 솟은 잎 끝 이끼 강조
+    "mist": (_MIST, c("moss.base"), c("moss.shade"), c("moss.spec"), 43),
 }
 
 
