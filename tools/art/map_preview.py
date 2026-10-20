@@ -79,10 +79,12 @@ REGIONS = {
     },
     "r05": {
         "dir": "r05-trade-port", "title": "trade port", "tiles": (60, 74), "town": False,
-        "ground": [],
-        "mass": [],
-        "areas": [],
-        "views": [],
+        "ground": ["port_cobble", "dock_plank", "harbor_water", "frozen_wave", "ship_deck", "lighthouse_wall"],
+        "mass": ["port_crate", "ship_rail"],
+        "areas": [("coast market & guild", 0, 2, 34, 16), ("warehouse street", 34, 0, 24, 17),
+                  ("docks", 56, 4, 24, 14), ("lighthouse & smuggler ship", 76, 0, 26, 17)],
+        "views": [("market", 0, 2 * TS), ("guild", 16 * TS, 2 * TS), ("warehouse", 40 * TS, 1 * TS),
+                  ("docks", 57 * TS, 5 * TS), ("lighthouse", 72 * TS, 1 * TS), ("ship", 82 * TS, 5 * TS)],
     },
     "r06": {
         "dir": "r06-mirror-lake", "title": "mirror lake", "tiles": (74, 88), "town": False,
