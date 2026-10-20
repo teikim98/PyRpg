@@ -525,12 +525,12 @@
     "npc_traveler": {
       "file": "sprites/npc_traveler.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     },
     "npc_woodcutter": {
       "file": "sprites/npc_woodcutter.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     },
     "monster_fork_sprout": {
       "file": "sprites/monster_fork_sprout.png",
@@ -580,7 +580,7 @@
     "npc_goblin": {
       "file": "sprites/npc_goblin.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     },
     "monster_index_goblin": {
       "file": "sprites/monster_index_goblin.png",
@@ -615,7 +615,7 @@
     "npc_ghost_librarian": {
       "file": "sprites/npc_ghost_librarian.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     },
     "monster_letter_moth": {
       "file": "sprites/monster_letter_moth.png",
@@ -650,7 +650,7 @@
     "npc_guild_master": {
       "file": "sprites/npc_guild_master.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     },
     "monster_twin_fish": {
       "file": "sprites/monster_twin_fish.png",
@@ -720,7 +720,7 @@
     "npc_lake_keeper": {
       "file": "sprites/npc_lake_keeper.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     },
     "monster_sand_stream": {
       "file": "sprites/monster_sand_stream.png",
@@ -775,12 +775,12 @@
     "npc_caravan_guide": {
       "file": "sprites/npc_caravan_guide.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     },
     "npc_hourglass_keeper": {
       "file": "sprites/npc_hourglass_keeper.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     }
   },
   "portraits": {

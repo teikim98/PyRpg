@@ -1,73 +1,107 @@
-"""지역 3 NPC 걷기 시트(16×16 × 8프레임: 아래×2, 왼쪽×2, 오른쪽×2, 위×2).
+"""지역 3 NPC 걷기 시트(새 형식 16×24, 6열 × 4행 = 24프레임).
 
-- npc_goblin: 말이 통하는 고블린 서기. 둥근 쇠테 안경(청록 반사), 옆으로 뻗은 큰 귀, 크림색 셔츠 깃에
-  남색 조끼, 옆모습에서는 장부(갈색 책)를 끼고 있다.
+화풍 통일(docs/art-overhaul/style-guide.md §5~6, 기준 구현 forest_npcs.py): charrig.Rig에 머리(0행부터)·몸통(12행부터 7행)
+그리드를 아래·오른쪽·위 세 방향만 주면 왼쪽(좌우 반전)·팔·다리·걷기·숨쉬기·깜빡임은 리그가 만든다. 외곽선은 자동.
+NPC는 주인공 일행보다 채도를 한 단계 낮춘 옷을 입힌다(§3.4). 디자인은 옛 그림 그대로다.
 
-characters.py의 character()로 다리를 끼워 8프레임을 만들고, 외곽선 K는 닿은 재질의 색 외곽선으로 바꾼다.
+- npc_goblin: 말이 통하는 고블린 서기. 옆으로 뻗은 뾰족한 큰 귀, 정수리에 짙은 머리 한 줌, 둥근 쇠테 안경(테 위에
+  청록 반사), 크림색 셔츠 깃에 수정 보라 조끼(지역 강조색 cloth_purple), 옆모습에서는 장부(갈색 책)를 가슴에 안고 있다.
+  피부는 번호표 고블린·족장과 같은 올리브 초록(leaf 램프를 한 단계 밝게).
 """
-from cavepal import CH, color_outline, paint
-from characters import character
+from charrig import Rig, rows
 
-KEY = {"3": "n3", "4": "n4", "5": "n5", "2": "n2", "M": "m2", "l": "i4", "E": "eye", "k": "r0",
-       "w": "b3", "W": "b2", "q": "q1", "Q": "q2", "n": "w3", "N": "w4"}
+# 열 번호 안내: 0123456789abcdef
 
-
-def _sym(half: str) -> str:
-    rows = [r.strip() for r in half.strip("\n").splitlines() if r.strip()]
-    return "\n".join(r + r[::-1] for r in rows)
-
-
-DOWN = paint(_sym("""
-    ........
-    ....KKKK
-    ...K4555
-    KK.K4555
-    K4K45555
-    .K344555
-    ..K34MM4
-    ..K3MlEM
-    ..K34MM4
-    ...K3344
-    ....K3kk
-    ...KwqqW
-    ..K4QqqW
-    ..KKqqqq
-"""), KEY, 16, 14)
-
-RIGHT = paint("""
-    ................
-    ....KKKKK.......
-    ...K455555K.....
-    KK.K4555555K....
-    K4K455555555K...
-    .K334455555554K.
-    ..K33454MMM5K...
-    ..K33454MlEM44K.
-    ..K334454MM444K.
-    ...K3344444k4K..
-    ....KK3333KK....
-    ...KwqqqWnNK....
-    ...KqqqQnnNK....
-    ....KqqqKKK.....
-""", KEY, 16, 14)
-
-UP = paint(_sym("""
-    ........
-    ....KKKK
-    ...K4555
-    KK.K4555
-    K4K45555
-    .K344555
-    ..K34455
-    ..KM3444
-    ..K33344
-    ...K3333
-    ....KK33
-    ...KqqqQ
-    ..K4qqqQ
-    ..KKqqqq
-"""), KEY, 16, 14)
-
-CAVE_CHARACTERS = {
-    "npc_goblin": [color_outline(f) for f in character(DOWN, RIGHT, UP, CH["q0"], CH["w1"])],
+GOBLIN_LEGEND = {
+    "s": "leaf.hi", "S": "leaf.spec", "z": "leaf.base", "p": "blush", "e": "eye", "o": "leaf.ol",
+    "a": "hair_ink.base", "A": "hair_ink.hi", "q": "hair_ink.shade",          # 정수리 머리 한 줌
+    "u": "stone.shade", "G": "teal.hi",                                       # 쇠 안경테, 청록빛 안경알
+    "t": "cream.base", "T": "cream.hi", "y": "cream.shade",                    # 셔츠 깃·소매
+    "c": "cloth_purple.base", "C": "cloth_purple.hi", "x": "cloth_purple.shade",   # 조끼
+    "m": "leather.base", "Q": "leather.shade",                                 # 장부
+    "b": "plank.base", "B": "plank.hi", "n": "plank.shade",                    # 바지
+    "f": "leather.shade", "F": "leather.base", "v": "leather.ol",              # 신발
 }
+
+GOBLIN = Rig(
+    GOBLIN_LEGEND,
+    heads={
+        "down": rows("""
+            ................
+            .......aAq......
+            .....sSSsssz....
+            ...sSSssssssz...
+            ..sSsssssssssz..
+            S.sSsssssssssz.z
+            Szsssssssssssszz
+            .Sssuuussuuuszz.
+            ..ssGeGuuGeGsz..
+            ..spGeGzzGeGpz..
+            ...zssoooossz...
+            ....zzsssszz....
+        """),
+        "right": rows("""
+            ................
+            ......aAq.......
+            ....sSSsssz.....
+            ...sSSssssssz...
+            ..sSssssssssssz.
+            S.sSsssssssssss.
+            Szsssssssssssss.
+            .Sssssssssuuus..
+            ..ssssssuuGeGsS.
+            ..ssssssspGeGzz.
+            ...zsssssssooz..
+            ....zzzsssszz...
+        """),
+        "up": rows("""
+            ................
+            .......aAq......
+            .....sSAaqsz....
+            ...sSSsaqsssz...
+            ..sSsssssssssz..
+            S.sSsssssssssz.z
+            Szsssssssssssszz
+            .Sssssssssssszz.
+            ..sssssssssssz..
+            ..zssssssssszz..
+            ...zzsssssszz...
+            ....zzzzzzzz....
+        """),
+    },
+    torsos={
+        "down": rows("""
+            ....cCtTTtcx....
+            ....cCctTtcx....
+            ....cCcttycx....
+            ....cCcttycx....
+            ....cCccccxx....
+            ....bBbbbbnn....
+            ....bbbbbbnn....
+        """),
+        "right": rows("""
+            .....cCtTcx.....
+            .....cCttmmT....
+            .....cCcmmmT....
+            .....cCcmmmT....
+            .....cCcQQQx....
+            .....bBbbbn.....
+            .....bbbbnn.....
+        """),
+        "up": rows("""
+            ....cCttttcx....
+            ....cCccccxx....
+            ....cCccccxx....
+            ....cCccccxx....
+            ....cCccccxx....
+            ....bBbbbbnn....
+            ....bbbbbbnn....
+        """),
+    },
+    arm_front={"sleeve": "t", "sleeve_dark": "y", "hand": "s", "top": 13},
+    arm_side={"sleeve": "T", "sleeve_dark": "t", "hand": "s", "shoulder": (8, 13)},
+)
+
+RIGS = {"npc_goblin": GOBLIN}
+
+CAVE_CHARACTERS = {name: rig.frames() for name, rig in RIGS.items()}

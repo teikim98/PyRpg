@@ -256,7 +256,7 @@ export interface Region {
  * GRADE_NAMES·PARTICLE_KINDS(tools/verify_content.py가 같은 목록으로 검사)
  */
 export interface RegionAmbience {
-  /** 색 보정·비네트 프리셋: dusty_teal, forest, cave, library, harbor, lake */
+  /** 색 보정·비네트 프리셋: dusty_teal, forest, cave, library, harbor, lake, desert */
   grade?: string;
   /** 떠다니는 입자: none, sparkle, dust, leaves, spray, mist */
   particles?: string;

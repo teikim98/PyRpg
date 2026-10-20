@@ -2,6 +2,7 @@
 
     npx playwright test tests/e2e/edges.spec.ts   # docs/art-overhaul/screens/edges-rNN-{before,after}.png
     python tools/art/edge_compare.py
+    python tools/art/edge_compare.py unify r02    # 화풍 통일 전후: screens/unify-r02-compare.png
 
 E2E가 하네스(dev/world.html, 960×540 = 내부 320×180의 3배)에서 찍은 지역 1~6 화면을 내부 해상도로 줄여
 (3×3 칸의 가운데 픽셀) 한 줄에 [장식 없음 | 장식 있음]을 2배로 놓는다. build.py/check.py의 산출물이 아니라
@@ -38,7 +39,41 @@ def shrink(path):
     return c
 
 
+def compare(pairs, out, left, right):
+    """[(제목, 전 Canvas, 후 Canvas)] → 한 줄에 [전 | 후]를 2배로 놓은 그림을 out에 쓴다."""
+    pad, head, gap = 12, 22, 12
+    fw, fh = pairs[0][1].width * SCALE, pairs[0][1].height * SCALE
+    cv = Canvas(pad * 2 + fw * 2 + gap, pad + head + len(pairs) * (fh + head + pad), BG)
+    text(cv, left, pad, pad, 2, HEAD)
+    text(cv, right, pad + fw + gap, pad, 2, HEAD)
+    y = pad + head
+    for label, a, b in pairs:
+        text(cv, label, pad, y + 2, 2)
+        cv.paste(a, pad, y + head, SCALE)
+        cv.paste(b, pad + fw + gap, y + head, SCALE)
+        y += fh + head + pad
+    with open(out, "wb") as f:
+        f.write(encode_png(cv.width, cv.height, cv.rows()))
+    print(os.path.relpath(out, build.ROOT), f"{cv.width}x{cv.height}")
+
+
+def unify(region):
+    """화풍 통일 전후: screens/unify-<지역>-<장면>-{before,after}.png → screens/unify-<지역>-compare.png
+    (전후 화면은 같은 하네스 위치에서 찍는다. 지역 2는 옛 아트 커밋에서 before, 새 아트에서 after)"""
+    names = sorted({f[len(f"unify-{region}-"):-len("-before.png")] for f in os.listdir(SCREENS)
+                    if f.startswith(f"unify-{region}-") and f.endswith("-before.png")})
+    pairs = [(n, shrink(os.path.join(SCREENS, f"unify-{region}-{n}-before.png")),
+              shrink(os.path.join(SCREENS, f"unify-{region}-{n}-after.png"))) for n in names
+             if os.path.isfile(os.path.join(SCREENS, f"unify-{region}-{n}-after.png"))]
+    if not pairs:
+        raise SystemExit(f"no unify-{region}-*-before/after.png in docs/art-overhaul/screens")
+    compare(pairs, os.path.join(SCREENS, f"unify-{region}-compare.png"), "before (old art)", "after (cozy art)")
+
+
 def main():
+    if len(sys.argv) > 2 and sys.argv[1] == "unify":     # python tools/art/edge_compare.py unify r02
+        unify(sys.argv[2])
+        return
     pairs = []
     for key, label in REGIONS:
         a = os.path.join(SCREENS, f"edges-{key}-before.png")
@@ -47,20 +82,7 @@ def main():
             pairs.append((label, shrink(a), shrink(b)))
     if not pairs:
         raise SystemExit("no edges-rNN-before/after.png in docs/art-overhaul/screens (run tests/e2e/edges.spec.ts)")
-    pad, head, gap = 12, 22, 12
-    fw, fh = pairs[0][1].width * SCALE, pairs[0][1].height * SCALE
-    cv = Canvas(pad * 2 + fw * 2 + gap, pad + head + len(pairs) * (fh + head + pad), BG)
-    text(cv, "before (edges off)", pad, pad, 2, HEAD)
-    text(cv, "after (edges on)", pad + fw + gap, pad, 2, HEAD)
-    y = pad + head
-    for label, a, b in pairs:
-        text(cv, label, pad, y + 2, 2)
-        cv.paste(a, pad, y + head, SCALE)
-        cv.paste(b, pad + fw + gap, y + head, SCALE)
-        y += fh + head + pad
-    with open(OUT, "wb") as f:
-        f.write(encode_png(cv.width, cv.height, cv.rows()))
-    print(os.path.relpath(OUT, build.ROOT), f"{cv.width}x{cv.height}")
+    compare(pairs, OUT, "before (edges off)", "after (edges on)")
 
 
 if __name__ == "__main__":

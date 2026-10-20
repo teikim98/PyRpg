@@ -1,341 +1,299 @@
-"""지역 2(갈림길 숲) 몬스터 6종(16×16 프레임 2개).
+"""지역 2(갈림길 숲) 몬스터 6종(16×16 프레임 4개 제자리).
 
-몸통은 외곽선 없이 칠한 뒤 color_outline()으로 재질에 맞는 색 외곽선을 두른다(누리의 새 화풍).
-빛은 왼쪽 위에서 온다. 각 몬스터는 문제 주제를 실루엣으로 읽히게 한다.
+화풍 통일(docs/art-overhaul/style-guide.md §3·§6.2, 기준 구현 monsters.py): 코지 팔레트(cozypal)의 이름 있는 색만 쓰고,
+monsters.Px로 덩어리마다 3단 음영(빛은 왼쪽 위)을 칠한 뒤 auto_outline(재질 ol)으로 바깥 외곽선을 두른다.
+각 몬스터는 문제 주제를 실루엣으로 읽히게 한다(옛 디자인 유지).
+
+| 몬스터 | 정체(문제) | 4프레임 |
+|---|---|---|
+| 갈래 새싹 | 줄기가 Y자로 두 갈래(if/else, P0201·P0202) | 통통 튀는 몸: 기본 → 눌림(잎 처짐) → 기본 → 늘어남(잎 듦), 바닥 줄 고정 |
+| 달력 부엉이 | 배에 달력 한 장, 빨간 29일(윤년, P0203) | 도약: 서기 → 웅크림 → 날개 펴고 2px 뜀 → 1px 내려옴 |
+| 고리 뱀 | 제 꼬리를 문 고리(반복, P0204·P0206) | 비늘 띠가 한 프레임에 1/4칸씩 돌아 고리가 도는 것처럼, 4번째에 눈 깜빡임 |
+| 숫자 버섯 | 갓의 숫자가 3 → 2 → 1 → 0(거꾸로 세기, P0205) | 숫자가 한 칸씩 줄고 몸은 기본 → 눌림 → 기본 → 늘어남 |
+| 우박 도깨비불 | 얼음빛 불꽃, 둘레의 우박 세 알(우박 수열, P0207) | 나는 몸 0 → −1 → −2 → −1px, 불꽃 끝이 흔들리고 우박이 오르내리며 돈다 |
+| 도토리 진드기 | 깍정이 모자 도토리에 다리 여섯(최댓값 찾기, P0209) | 다리 두 벌이 번갈아, 디딜 때 몸 1px 내려옴, 4번째에 눈 깜빡임 |
 """
 import math
 
-from forestpal import CH, color_outline, paint
-from gridlib import overlay, shift
-
-# ── 갈래 새싹: 줄기가 Y자로 두 갈래로 갈라진 새싹. 프레임 B는 잎을 들어 올리며 몸을 살짝 누른다 ────────
-SPROUT_KEY = {"L": "f6", "M": "f5", "m": "f4", "g": "f3", "s": "f4", "S": "f2",
-              "f": "w5", "d": "w4", "c": "w3", "b": "w2", "a": "w1", "e": "eye", "p": "blush", "r": "w2"}
-
-_SPROUT_A = paint("""
-    ................
-    .LLM.......MLL..
-    LMMmm.....mmMML.
-    LMmmgs...sgmmML.
-    .mggg.s.s.gggm..
-    .......s........
-    .......sS.......
-    .....ddddcc.....
-    ....dfdddddcb...
-    ...dfdeddedcbb..
-    ...dddeddeccbb..
-    ...ddpddddpcbb..
-    ...cdddeedccbb..
-    ....ccccccccb...
-    ...r..bbbbb..r..
-    ................
-""", SPROUT_KEY, 16, 16)
-
-_SPROUT_B = paint("""
-    LL.............L
-    LMMm.........mML
-    .Mmmgs.....sgmM.
-    ..mgg.s...s.gg..
-    .......s.s......
-    ........s.......
-    .......sS.......
-    ................
-    .....ddddcc.....
-    ...ddfdddddcbb..
-    ..ddfdeddedccbb.
-    ..ddddeddeccbbb.
-    ..dddpddddpccbb.
-    ..ccdddeedcccbb.
-    ...rcccccccccr..
-    ................
-""", SPROUT_KEY, 16, 16)
-
-# ── 윤년 부엉이: 배에 달력 한 장(고리 철, 청록 머리띠, 날짜 칸, 빨갛게 표시한 29일). 프레임 B는 깡충 뛰며 날개를 편다 ──
-OWL_KEY = {"a": "w1", "b": "w2", "c": "w3", "d": "w4", "D": "w5", "y": "a4", "Y": "a5", "e": "eye",
-           "k": "a3", "W": "c3", "n": "c0", "R": "m2", "r": "m1", "f": "b3", "F": "b2", "s": "s4", "T": "i2"}
-
-_OWL_A = paint("""
-    ................
-    ...b........b...
-    ...cb......bc...
-    ..cdDddddddddcb.
-    ..cyyyYddyyyYcb.
-    ..cyeyydcyeyycb.
-    ..ccyyykkyyycbb.
-    ..bcddddkdddcbb.
-    ..bcdsddddsdcba.
-    ..bcTsTTTTsTcba.
-    ..bcWWWWWWWWcba.
-    ..bbWnWnWnWWbba.
-    ..abWnWnWRWWbaa.
-    ..abWWWWWWWWbaa.
-    ...abbbbbbbbaa..
-    ....ff....ff....
-""", OWL_KEY, 16, 16)
-
-_OWL_B = paint("""
-    ...b........b...
-    ...cb......bc...
-    ..cdDddddddddcb.
-    ..cyyyYddyyyYcb.
-    ..cyeyydcyeyycb.
-    ..ccyyykkyyycbb.
-    .bbcddddkdddcbba
-    cbbcdsddddsdcbbb
-    cb.cTsTTTTsTca.b
-    c..bWWWWWWWWba.a
-    ...bWnWnWnWWba..
-    ...bWnWnWRWWba..
-    ...bWWWWWWWWba..
-    ...abbbbbbbbaa..
-    ....Ff....Ff....
-    ................
-""", OWL_KEY, 16, 16)
+from monsters import FLY, Px, ellipse
 
 
-# ── 고리 뱀: 제 꼬리를 문 보라 고리 뱀(우로보로스). 프레임 B는 비늘 띠가 돌아 고리가 도는 것처럼 보인다 ──
-def _loop_snake(phase: int):
-    ramp = ["v0", "v1", "v2", "v3", "v4"]
-    g = [["."] * 16 for _ in range(16)]
-    cx, cy = 7.5, 8.5
-    r_out, r_in = 6.6, 3.1
-    head_ang = -math.pi / 4  # 오른쪽 위
-    for y in range(16):
+def _body(w, h, bottom=14, cx=8.0):
+    """바닥 줄(bottom)에 붙은 반타원 몸(폭 w, 높이 h). 슬라임(monsters._slime)과 같은 모양 규칙."""
+    top = bottom + 1 - h
+    cells = set()
+    for y in range(top, bottom + 1):
+        t = (y - top + 0.5) / h
+        k = min(1.0, t / 0.6)
+        hw = w / 2 * math.sqrt(max(0.0, 1 - (1 - k) ** 2))
+        if y == bottom:
+            hw -= 0.7
         for x in range(16):
-            dx, dy = x + 0.5 - cx - 0.5, y + 0.5 - cy - 0.5
-            r = math.hypot(dx, dy)
-            if not r_in <= r <= r_out:
-                continue
-            ang = math.atan2(dy, dx)
-            # 머리 근처는 몸통을 비워 머리를 따로 그린다
-            da = (ang - head_ang + math.pi) % (2 * math.pi) - math.pi
-            if -0.35 < da < 0.45:
-                continue
-            # 고리 단면의 음영: 바깥쪽 위-왼쪽이 밝다
-            nx, ny = dx / r, dy / r
-            mid = (r_in + r_out) / 2
-            t = (r - mid) / ((r_out - r_in) / 2)  # -1(안) ~ 1(밖)
-            light = -(nx * 0.6 + ny * 0.8) * t + (1 - abs(t)) * 0.8
-            k = 1 + round(max(-1, min(1.6, light)) * 1.4)
-            k = max(0, min(4, k))
-            ch = ramp[k]
-            # 배 쪽(안쪽 가장자리)은 노란 배 비늘
-            if t < -0.45:
-                ch = "a3" if light > 0 else "a2"
-            # 비늘 띠(각도 방향으로 반복, phase에 따라 회전)
-            band = int(((ang + math.pi) / (2 * math.pi) * 10 + phase * 0.5)) % 2
-            if band and -0.2 < t < 0.75 and ch in ("v2", "v3"):
-                ch = "v1" if ch == "v2" else "v2"
-            g[y][x] = CH[ch]
-    # 머리: 오른쪽 위에서 고리 쪽(왼쪽 아래)을 보며 꼬리 끝을 물고 있다
-    head = paint("""
-        ........HHHH....
-        .......HhhhhH...
-        ......HhYEhhhH..
-        ......HhEEhhhH..
-        .....mmmmhhhvH..
-        .....RttmhvvH...
-        ......mmvvvH....
-        ........vv......
-    """, {"H": "v2", "h": "v4", "Y": "white", "E": "eye", "m": "v0", "R": "m2", "t": "a4", "v": "v3"}, 16, 8)
-    if phase:
-        head = overlay(head, paint("""
-            ................
-            ................
-            ........EE......
-            ................
-            ................
-            ................
-            ................
-            ................
-        """, {"E": "v4"}, 16, 8))
-    rows = ["".join(r) for r in g]
-    rows = overlay(rows, head, 0, 0)
-    return rows
+            if abs(x + 0.5 - cx) <= hw:
+                cells.add((x, y))
+    return cells, top
 
 
-# ── 세는 버섯: 갓의 점이 숫자. 프레임 A는 3·2·1, 프레임 B는 한 칸씩 줄어 2·1·0(거꾸로 센다) ──────────
-SHROOM_KEY = {"a": "m0", "b": "m1", "c": "m2", "d": "m3", "D": "m4", "W": "c3", "w": "c2",
-              "s": "c2", "S": "c3", "t": "c1", "T": "c0", "e": "eye", "p": "blush"}
+def _face(p, top, h, x_l=5, x_r=10, blush=True):
+    """점 눈 1×2 + 볼터치(눈 아래 줄, 1px 바깥)."""
+    ey = top + max(1, (h * 40) // 100)
+    for ex in (x_l, x_r):
+        p.put(ex, ey, "eye")
+        p.put(ex, ey + 1, "eye")
+    if blush:
+        p.put(x_l - 1, ey + 2, "blush")
+        p.put(x_r + 1, ey + 2, "blush")
+    return ey
 
-_DIGITS = {
-    "0": ["WWW", "W.W", "W.W", "W.W", "WWW"],
-    "1": [".W.", "WW.", ".W.", ".W.", "WWW"],
-    "2": ["WW.", "..W", ".W.", "W..", "WWW"],
-    "3": ["WW.", "..W", ".W.", "..W", "WW."],
+
+# ── 갈래 새싹: 씨앗 몸에서 줄기가 Y자로 두 갈래로 갈라져 잎 두 장 ───────────────────────────
+def _sprout(w, h, leaf_dy):
+    p = Px()
+    body, top = _body(w, h)
+    p.mass(body, "wood", shade_below=13)
+    p.put(min(x for x, y in body if y == top + 1) + 1, top + 1, "wood.spec")
+    ey = _face(p, top, h)
+    p.put(7, ey + 2, "wood.ol")                      # 작은 입
+    p.put(8, ey + 2, "wood.ol")
+    # 줄기: 정수리에서 위로 2px, 그다음 Y자로 갈라짐
+    for y in (top - 1, top - 2):
+        p.put(8, y, "moss.base")
+    p.put(7, top - 3, "moss.base")
+    p.put(9, top - 3, "moss.shade")
+    p.put(6, top - 4, "moss.base")
+    p.put(10, top - 4, "moss.shade")
+    # 잎 두 장(풀빛, 왼쪽 잎은 빛을 받아 밝고 오른쪽 잎은 한 단계 그늘). leaf_dy: 눌릴 때 처지고 늘어날 때 든다
+    ly = top - 5 + leaf_dy
+    left = ellipse(3.6, ly + 0.5, 2.7, 1.5)
+    right = ellipse(12.4, ly + 0.5, 2.7, 1.5)
+    p.mass(left, "grass")
+    p.mass(right, "grass")
+    for x, y in right:
+        if p.get(x, y) == "grass.hi":
+            p.put(x, y, "grass.base")
+    p.put(2, ly, "grass.spec")
+    p.put(5, ly + 1, "grass.shade")                  # 잎맥
+    p.put(11, ly + 1, "grass.shade")
+    return p.grid()
+
+
+# ── 달력 부엉이: 배에 고리 철 달력 한 장(청록 머리띠, 날짜 점, 빨갛게 표시한 29일) ─────────────
+# 몸: 귀깃 두 갈래가 솟은 머리, 둥근 어깨, 아래로 둥글게 모이는 배(달걀꼴). 배에 달력 한 장
+_OWL = """
+.t..........t.
+.tt........tt.
+..thhhhhhhht..
+.hhWWhhhhWWhh.
+.hWeWhkkhWeWh.
+.hWWWhhkhWWWh.
+.hhhhhhhhhhhh.
+.hhPPPPPPPPhh.
+.hhCoCCCCoChh.
+..hCdCdCdCCh..
+..hCdCdCdRCh..
+...hCCCCCCh...
+....hhhhhh....
+"""
+_OWL_DETAIL = {"W": "cream.spec", "e": "eye", "k": "lamp.base", "P": "teal.base", "C": "cream.hi",
+               "o": "stone.hi", "d": "cream.shade", "R": "brick.base"}
+# 날개(왼쪽 날개 칸, 몸 기준 좌표. 오른쪽은 좌우 대칭): 접음 → 반쯤 → 활짝(위로 들어 올림)
+_OWL_WINGS = {
+    "tuck": ((0, 6), (0, 7), (1, 7), (0, 8), (1, 8), (0, 9), (1, 9), (1, 10), (2, 10), (2, 11)),
+    "half": ((-1, 5), (0, 5), (-1, 6), (0, 6), (0, 7), (1, 7), (0, 8), (1, 8), (1, 9)),
+    "spread": ((-1, 1), (-1, 2), (0, 2), (-1, 3), (0, 3), (-1, 4), (0, 4), (0, 5), (1, 5), (0, 6), (1, 6)),
 }
 
-_SHROOM_BODY = """
-    ................
-    .....bccccb.....
-    ...bcdDdddccb...
-    ..bcdDddddcccb..
-    .bcddddddccccba.
-    .bcddddddccccba.
-    bcdddddddcccccba
-    bccddddcccccccba
-    abbbbbbbbbbbbbaa
-    ...TtSSSSStT....
-    ...tSSeSSeSt....
-    ...tSpSSSSpt....
-    ...TtSSeeStT....
-    ...TttttttT.....
-    ..bb.......bb...
-    ................
-"""
+
+def _owl(dy, wings, feet):
+    p = Px()
+    ox, oy = 1, 2 + dy
+    lines = [ln.strip() for ln in _OWL.strip("\n").splitlines()]
+    cells = {(ox + i, oy + j) for j, ln in enumerate(lines) for i, ch in enumerate(ln) if ch != "."}
+    p.mass(cells, "hair_brown")
+    for j, ln in enumerate(lines):
+        for i, ch in enumerate(ln):
+            if ch in _OWL_DETAIL:
+                p.put(ox + i, oy + j, _OWL_DETAIL[ch])
+    p.put(ox + 3, oy + 3, "white")                     # 눈 반사광
+    p.put(ox + 1, oy, "hair_brown.hi")                 # 귀깃 끝
+    p.put(ox + 12, oy, "hair_brown.base")
+    # 날개: 몸보다 한 단계 어두운 덩어리(깃 끝 그늘 줄)를 몸 가장자리에 겹친다
+    left = {(ox + x, oy + y) for x, y in _OWL_WINGS[wings]}
+    right = {(ox + 13 - x, oy + y) for x, y in _OWL_WINGS[wings]}
+    for wing in (left, right):
+        p.mass(wing, "hair_brown")
+        for x, y in wing:
+            p.put(x, y, {"hair_brown.hi": "hair_brown.base", "hair_brown.base": "hair_brown.shade",
+                         "hair_brown.shade": "hair_brown.ol"}[p.get(x, y)])
+    if feet:
+        for x in (5, 6, 9, 10):
+            p.put(x, oy + 13, "lamp.shade")
+    return p.grid()
 
 
-def _count_shroom(digits: str, squash: bool):
-    body = paint(_SHROOM_BODY, SHROOM_KEY, 16, 16)
-    # 숫자 점: 갓 위 세 자리(왼쪽 위로 기울어진 갓에 맞춰 가운데가 한 칸 위)
-    spots = [(2, 3), (6, 2), (10, 3)]
-    for d, (sx, sy) in zip(digits, spots):
-        glyph = paint("\n".join(_DIGITS[d]), {"W": "c3"}, 3, 5)
-        body = overlay(body, glyph, sx, sy)
-    if squash:
-        # 줄기를 한 칸 줄이고 갓을 한 칸 내려 눌린 모습
-        top = body[:9]
-        stem = body[9:13]
-        bottom = body[13:]
-        body = ["." * 16] + top + stem[:1] + stem[2:] + bottom
-        body = body[:16]
-    return color_outline(body)
+# ── 고리 뱀: 제 꼬리를 문 보라 고리(우로보로스). 비늘 띠가 돌고, 노란 배 비늘이 안쪽에 ─────────────
+def _loop_snake(phase):
+    p = Px()
+    cx, cy = 7.0, 8.7                                   # 고리를 조금 줄여 오른쪽 위에 큰 머리 자리를 둔다
+    r_out, r_in = 6.2, 2.9
+    head_ang = -math.pi / 4                             # 머리는 오른쪽 위
+    ring = set()
+    for y in range(16):
+        for x in range(16):
+            dx, dy = x + 0.5 - cx, y + 0.5 - cy
+            r = math.hypot(dx, dy)
+            if r_in <= r <= r_out:
+                da = (math.atan2(dy, dx) - head_ang + math.pi) % (2 * math.pi) - math.pi
+                if not -0.45 < da < 0.6:                # 머리가 꼬리를 무는 자리는 비운다
+                    ring.add((x, y))
+    p.mass(ring, "cloth_purple")
+    for x, y in ring:
+        dx, dy = x + 0.5 - cx, y + 0.5 - cy
+        r = math.hypot(dx, dy)
+        ang = math.atan2(dy, dx)
+        if r < r_in + 1.1:                              # 안쪽 가장자리 = 노란 배 비늘
+            p.put(x, y, "lamp.base" if dx + dy > 0 else "lamp.shade")
+            continue
+        # 비늘 띠: 각도 방향으로 12칸, 프레임마다 1/4칸씩 돈다
+        band = int((ang + math.pi) / (2 * math.pi) * 12 + phase * 0.5) % 2
+        if band and r < r_out - 1.0 and p.get(x, y) == "cloth_purple.base":
+            p.put(x, y, "cloth_purple.shade")
+    # 머리(7×7): 오른쪽 위에서 고리 쪽(왼쪽 아래)을 보며 꼬리 끝을 문다. 2×2 큰 눈 + 반사광, 턱선은 외곽선 색,
+    # 벌린 입에 노란 꼬리 끝과 빨간 혀. 머리는 고리보다 한 단계 밝게 칠해 따로 읽히게 한다
+    head = ellipse(12.0, 3.6, 3.4, 3.3)
+    p.mass(head, "cloth_purple", lift=1)
+    for x, y in ((11, 2), (12, 2), (11, 3), (12, 3)):
+        p.put(x, y, "eye")
+    p.put(11, 2, "white")
+    for x, y in ((13, 1), (14, 2)):                     # 정수리 비늘 무늬
+        p.put(x, y, "cloth_purple.base")
+    for x in range(9, 13):                               # 턱선
+        p.put(x, 6, "cloth_purple.ol")
+    p.put(13, 6, "cloth_purple.shade")
+    for x, y, col in ((9, 7, "lamp.hi"), (10, 7, "lamp.base"), (8, 7, "brick.base"), (11, 7, "cloth_purple.ol")):
+        p.put(x, y, col)                                 # 문 꼬리 끝(노랑)과 혀(빨강)
+    if phase == 3:                                       # 눈 깜빡임: 감은 눈 가로선
+        for x, y in ((11, 2), (12, 2)):
+            p.put(x, y, "cloth_purple.spec")
+        p.put(11, 3, "eye")
+        p.put(12, 3, "eye")
+    return p.grid()
 
 
-# ── 우박 도깨비불: 얼음빛 불꽃에 얼굴, 둘레를 도는 우박 세 알. 프레임 B는 불꽃 끝이 흔들리고 우박이 돈다 ─
-WISP_KEY = {"0": "i0", "1": "i1", "2": "i2", "3": "i3", "4": "i4", "5": "i5", "w": "white", "e": "eye", "p": "blush"}
-
-_WISP_A = paint("""
-    .......3........
-    ......34........
-    .....345..3.....
-    .....3452.4.....
-    ....2345534.....
-    ...234555542....
-    ...2345555432...
-    ..234e555e432...
-    ..234e555e432...
-    ..2345p5p5432...
-    ..2234555432....
-    ...22344432.....
-    ....222322......
-    .....2..2.......
-    ................
-    ................
-""", WISP_KEY, 16, 16)
-
-_WISP_B = paint("""
-    ................
-    ..........3.....
-    .....3....43....
-    .....43..343....
-    .....4433542....
-    ...234555542....
-    ...2345555432...
-    ..234e555e432...
-    ..234e555e432...
-    ..2345p5p5432...
-    ...234555432....
-    ...22344432.....
-    ....222322......
-    ......2..2......
-    ................
-    ................
-""", WISP_KEY, 16, 16)
-
-_HAIL = {"w": "white", "4": "i4", "3": "i3"}
-_HAIL_A = [(0, 4), (13, 2), (12, 12)]
-_HAIL_B = [(1, 11), (12, 5), (5, 13)]
+# ── 숫자 버섯: 빨간 갓 한가운데 흰 숫자가 3 → 2 → 1 → 0으로 줄어든다 ───────────────────────────
+_DIGITS = {
+    "0": ("WWW", "W.W", "W.W", "W.W", "WWW"),
+    "1": (".W.", "WW.", ".W.", ".W.", "WWW"),
+    "2": ("WW.", "..W", ".W.", "W..", "WWW"),
+    "3": ("WW.", "..W", ".W.", "..W", "WW."),
+}
 
 
-def _wisp(body, hail):
-    g = color_outline(body)
-    stone = color_outline(paint("""
-        ....
-        .w4.
-        .43.
-        ....
-    """, _HAIL, 4, 4))
-    for x, y in hail:
-        g = overlay(g, stone, x - 1, y - 1)
-    return g
+def _count_shroom(digit, top, rx):
+    p = Px()
+    # 줄기(크림, 얼굴이 있다)
+    stem = {(x, y) for x in range(5, 11) for y in range(top + 7, 15)} | {(x, 14) for x in (4, 11)}
+    p.mass(stem, "cream", shade_below=14)
+    _face(p, top + 7, 15 - (top + 7), x_l=6, x_r=9)
+    # 갓(빨강): 위가 둥근 반타원 + 아래 주름 그늘
+    cap = {(x, y) for x, y in ellipse(8, top + 4.6, rx, 4.6) if y <= top + 6}
+    p.mass(cap, "brick")
+    for x, y in cap:
+        if y == top + 6:
+            p.put(x, y, "brick.shade")
+    for x, y in ((3, top + 3), (12, top + 4), (5, top + 1)):
+        if (x, y) in cap:
+            p.put(x, y, "cream.hi")
+    for j, row in enumerate(_DIGITS[digit]):
+        for i, ch in enumerate(row):
+            if ch == "W":
+                p.put(7 + i, top + 1 + j, "cream.spec")
+    return p.grid()
 
 
-# ── 도토리 진드기: 도토리 몸통에 다리 여섯, 깍정이 모자. 프레임 B는 다리가 번갈아 움직인다 ───────────────
-ACORN_KEY = {"a": "w0", "b": "w1", "c": "w2", "d": "w3", "e": "w4", "f": "w5",
-             "n": "a1", "N": "a2", "o": "a3", "O": "a4", "Y": "a5", "E": "eye", "W": "white", "s": "b2"}
-
-_ACORN_BODY = """
-    ................
-    .......cb.......
-    .......dc.......
-    ....edededdc....
-    ...eddeddeddc...
-    ..ededdeddeddc..
-    ..dcdcdcdcdcdb..
-    ...ONNNNNNNNn...
-    ...OoWEoWEoNn...
-    ...OoooooonNn...
-    ...oONooooNNn...
-    ....oNNNNNNn....
-    .....nNNNNn.....
-    ......nnnn......
-    ................
-    ................
-"""
-
-_ACORN_LEGS_A = """
-    ................
-    .....b....b.....
-    ......b..b......
-    ................
-    ................
-    ................
-    ................
-    ..............B.
-    BBb..........bBB
-    B..............B
-    .bbb........bbb.
-    b..............b
-    ...Bb......bB...
-    ..B..........B..
-    ................
-    ................
-"""
-
-_ACORN_LEGS_B = """
-    ................
-    ....b......b....
-    .....b....b.....
-    ................
-    ................
-    ................
-    ................
-    ................
-    .Bbb........bbB.
-    B..............B
-    ..bbb......bbb..
-    .B............B.
-    .B..bB....Bb..B.
-    ......B..B......
-    ................
-    ................
-"""
+# ── 우박 도깨비불: 얼음빛 불꽃에 얼굴, 둘레를 도는 우박 세 알 ─────────────────────────────────
+_WISP_ROWS = [(7, 7), (7, 8), (6, 8), (5, 9), (4, 10), (4, 11), (3, 11), (3, 11), (3, 11), (4, 10), (5, 9)]
+# 우박 세 알(2×2)의 자리: 프레임마다 시계 방향으로 돌면서 오르내린다
+_HAIL = (((0, 4), (12, 1), (13, 12)), ((1, 1), (13, 6), (7, 14)), ((4, 0), (13, 11), (0, 10)),
+         ((0, 1), (11, 13), (1, 7)))
 
 
-def _acorn(legs_text, bob):
-    legs = paint(legs_text, {"b": "w3", "B": "w2"}, 16, 16)
-    body = paint(_ACORN_BODY, ACORN_KEY, 16, 16)
-    if bob:
-        body = shift(body, 0, 1)
-    return color_outline(overlay(legs, body))
+def _wisp(frame, dy):
+    p = Px()
+    oy = 3 + dy
+    flame = set()
+    for j, (x0, x1) in enumerate(_WISP_ROWS):
+        lean = 1 if (frame % 2 and j < 3) else 0          # 불꽃 끝이 흔들린다
+        flame |= {(x + lean, oy + j) for x in range(x0, x1 + 1)}
+    p.mass(flame, "teal", lift=1)
+    for x, y in ellipse(7.5, oy + 8.2, 2.2, 1.6):          # 차가운 속불
+        if (x, y) in flame:
+            p.put(x, y, "sky.spec")
+    p.put(5, oy + 4, "white")
+    ey = oy + 5
+    for ex in (5, 9):
+        p.put(ex, ey, "eye")
+        p.put(ex, ey + 1, "eye")
+    p.put(4, ey + 2, "blush")
+    p.put(10, ey + 2, "blush")
+    for hx, hy in _HAIL[frame]:
+        p.put(hx, hy, "white")
+        p.put(hx + 1, hy, "sky.hi")
+        p.put(hx, hy + 1, "sky.hi")
+        p.put(hx + 1, hy + 1, "sky.shade")
+    return p.grid()
+
+
+# ── 도토리 진드기: 깍정이 모자 도토리에 다리 여섯 ───────────────────────────────────────────
+_LEGS = {
+    0: ((2, 8, -1), (1, 10, 0), (2, 12, 1)),
+    1: ((2, 8, 0), (1, 10, 1), (2, 12, 0)),
+}
+
+
+def _acorn(frame):
+    p = Px()
+    bob = frame % 2
+    blink = frame == 3
+    for x, y, d in _LEGS[frame % 2]:                       # 다리(가죽빛, 몸 쪽 기본·바깥 그늘), 오른쪽은 반대 박자
+        p.put(x + 1, y + d + bob, "leather.base")
+        p.put(x, y + d + bob + (1 if d >= 0 else 0), "leather.shade")
+        rd = -d
+        p.put(14 - x, y + rd + bob, "leather.base")
+        p.put(15 - x, y + rd + bob + (1 if rd >= 0 else 0), "leather.shade")
+    nut = ellipse(8, 9.6 + bob, 4.8, 4.4)
+    nut = {(x, y) for x, y in nut if y >= 6 + bob}
+    p.mass(nut, "rust", shade_below=12 + bob)
+    cap = {(x, y) for x in range(3, 13) for y in range(4 + bob, 7 + bob)} - {(3, 4 + bob), (12, 4 + bob)}
+    p.mass(cap, "wood")
+    for x, y in cap:                                       # 깍정이 비늘 무늬
+        if (x + y) % 3 == 0 and p.get(x, y) == "wood.base":
+            p.put(x, y, "wood.shade")
+    for y in (2 + bob, 3 + bob):
+        p.put(8, y, "wood.base")
+    p.put(9, 2 + bob, "wood.shade")
+    ey = 8 + bob
+    for ex in (6, 10):
+        if blink:
+            p.put(ex, ey + 1, "eye")
+            p.put(ex - 1 if ex < 8 else ex + 1, ey + 1, "eye")
+        else:
+            p.put(ex, ey, "eye")
+            p.put(ex, ey + 1, "eye")
+    p.put(5, 7 + bob, "rust.spec")                         # 껍질 광택
+    p.put(5, ey + 2, "blush")
+    p.put(11, ey + 2, "blush")
+    return p.grid()
 
 
 FOREST_MONSTERS = {
-    "monster_fork_sprout": [color_outline(_SPROUT_A), color_outline(_SPROUT_B)],
-    "monster_leap_owl": [color_outline(_OWL_A), color_outline(_OWL_B)],
-    "monster_loop_snake": [color_outline(_loop_snake(0)), color_outline(_loop_snake(1))],
-    "monster_count_shroom": [_count_shroom("321", False), _count_shroom("210", True)],
-    "monster_hail_wisp": [_wisp(_WISP_A, _HAIL_A), _wisp(_WISP_B, _HAIL_B)],
-    "monster_acorn_mite": [_acorn(_ACORN_LEGS_A, False), _acorn(_ACORN_LEGS_B, True)],
+    # 통통 튀는 몸: 기본(폭 10·높이 7) → 눌림(12·6, 잎 처짐) → 기본 → 늘어남(9·8, 잎 듦)
+    "monster_fork_sprout": [_sprout(10, 7, 0), _sprout(12, 6, 1), _sprout(10, 7, 0), _sprout(9, 8, -1)],
+    "monster_leap_owl": [_owl(0, "tuck", True), _owl(1, "half", True), _owl(-2, "spread", False),
+                         _owl(-1, "half", False)],
+    "monster_loop_snake": [_loop_snake(i) for i in range(4)],
+    "monster_count_shroom": [_count_shroom("3", 2, 7.0), _count_shroom("2", 3, 7.6), _count_shroom("1", 2, 7.0),
+                             _count_shroom("0", 1, 6.6)],
+    "monster_hail_wisp": [_wisp(i, dy) for i, dy in enumerate(FLY)],
+    "monster_acorn_mite": [_acorn(i) for i in range(4)],
 }

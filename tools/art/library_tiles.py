@@ -1,321 +1,486 @@
-"""지역 4(무너진 대도서관) 지형 타일(16×16). manifest의 overworld 타일셋 끝에 이 순서대로 붙는다.
+"""지역 4(무너진 대도서관) 지형 타일(16×16). manifest의 overworld 타일셋에서 지역 3 타일 바로 뒤에 이 순서로 붙는다.
 
-- 바닥류(lib_floor 마루, lib_carpet 포도주색 카펫, floating_pages 떠 있는 페이지)는 가장자리가 이어지게 그린다.
-- 벽은 두 가지: 바닥과 맞닿은 앞면(lib_wall: 몰딩 + 돌 벽 + 나무 징두리 판벽 + 걸레받이)과
-  그 뒤 무너진 천장 쪽의 벽 윗면(lib_wall_top: 짙은 돌 블록에 부러진 들보). 맵 생성기가 바로 아래 칸을 보고 고른다.
-- bookshelf는 칸 전체를 채우는 책장(위아래 두 칸에 책). 가로·세로로 이어 붙이면 책장 벽이 된다.
-  shelf_gap(지나갈 수 있음)은 책장과 거의 같지만 아래 칸 가운데 책 세 권이 빠져 깊은 어둠이 보이고,
-  그 안에서 찬 바람 반짝임(청록 한 점)이 샌다. 멀리서는 책장, 자세히 보면 빈칸.
-- 물체류(bookshelf_fallen, book_pile, reading_desk, candle_frozen, broken_pillar)는 마루를 깔고
-  색 외곽선을 두른 물체를 얹는다.
+화풍 통일(docs/art-overhaul/style-guide.md §4.4, 기준 구현 forest_tiles.py): 코지 팔레트(cozypal)의 이름 있는 색만 쓴다.
+지역 강조색은 cloth_indigo(잉크 남색) · cream(양피지) · brick(봉랍 빨강). 강조색은 책등·카펫·낱장처럼 작은 면에만.
+- 바닥 색은 공통 `wood`(따뜻한 나무 마루). 강조 램프 셋은 맵 대부분을 덮기에 맞지 않는다: cream.base는 주인공의
+  흰 옷(cloth_white.hi)과 명도가 가까워 일행이 묻히고 떠 있는 낱장(cream)도 바닥에 녹으며, cloth_indigo·brick은
+  채도가 높아 면적 15% 규칙을 넘는다. wood.base 위에서는 양피지 낱장·남색/빨강 책등이 모두 또렷하다.
+- 바닥(lib_floor, lib_carpet, floating_pages)은 불투명하고 가장자리가 이어진다(무늬는 x % 16, y % 16). 마루는
+  맵의 대부분을 덮으므로 이음새를 외곽선이 아닌 그늘색으로 낮게 둔다(지역 1 floor_wood보다 차분하게).
+- 맵을 덮는 벽은 바닥보다 한 단계 어둡게(§3.4): 벽 윗면(lib_wall_top, 무너진 천장 쪽 두꺼운 벽)은 돌 램프의
+  외곽선·그늘 단계, 벽 앞면(lib_wall)은 돌 블록 + 나무 징두리 판벽, 책장(bookshelf)은 그늘진 나무 틀 속 책등.
+  같은 책장이 100칸 넘게 이어지므로 한 칸 안의 위·아래 칸에 키·색·기울기가 다른 책을 비대칭으로 꽂아
+  가로·세로로 이어도 '같은 칸 × 격자'로 읽히지 않게 한다.
+- 숨겨진 길 shelf_gap은 책장과 같은 틀·위 칸에, 아래 칸 가운데 책 세 권이 빠져 뒤판 없는 깊은 어둠(void)이 보이고
+  그 바닥에 쓰러진 책 한 권, 어둠 속에서 찬 바람 한 점(청록)이 샌다. 바로 아래 칸이 떠 있는 낱장(floating_pages).
+- 물체(bookshelf_fallen, book_pile, reading_desk, candle_frozen, broken_pillar)는 맵의 deco 레이어에 마루 위로
+  겹쳐 그려지므로 배경이 투명하다. 바깥 외곽선은 auto_outline(재질 ol), 발치에 반투명 그림자.
+- 시간이 멈춘 도서관: 촛불은 불꽃 모양 그대로 청록 서리에 갇혀 있고(애니메이션 없음), 낱장은 공중에 멈춰 떠 있다.
 """
-from forestpal import Rng
-from gridlib import overlay
-from librarypal import CH, color_outline, paint
+from cozypal import auto_outline, c, noise, speckle
+from monsters import Px
 
-# ── 마루: 가로로 놓인 널 네 장(4줄씩), 이음매는 엇갈린다. 스프라이트가 잘 보이게 대비는 낮게 ─────────
-def _planks():
-    g = [[3] * 16 for _ in range(16)]
-    joints = {0: 5, 1: 13, 2: 9, 3: 1}
-    rng = Rng(41)
-    for p in range(4):
-        y0 = p * 4
-        j = joints[p]
-        for x in range(16):
-            g[y0][x] = 4
-            g[y0 + 3][x] = 2
-        for y in range(y0, y0 + 3):
-            g[y][j] = 1
-        g[y0][(j + 1) % 16] = 5
-        # 나뭇결: 널마다 짧은 어두운 결 두 개
-        for _ in range(2):
-            x = rng.randint(0, 13)
-            y = y0 + 1 + rng.randint(0, 1)
-            for k in range(rng.randint(2, 3)):
-                if g[y][(x + k) % 16] == 3:
-                    g[y][(x + k) % 16] = 2
+T = 16
+
+
+# ── 도구 ─────────────────────────────────────────────────────────────────────────
+def _grid(fn):
+    return ["".join(fn(x, y) for x in range(T)) for y in range(T)]
+
+
+def _set(g, x, y, ch):
+    """이어지는 바닥용: 좌표를 16으로 감아서 칠한다."""
+    x %= T
+    y %= T
+    g[y] = g[y][:x] + ch + g[y][x + 1:]
+
+
+def _put(g, x, y, ch):
+    """물체용: 칸 밖은 무시한다."""
+    if 0 <= x < T and 0 <= y < T:
+        g[y] = g[y][:x] + ch + g[y][x + 1:]
+
+
+def _shadow(g, y, x0, x1, name="shadow"):
+    """발치 그림자: y줄의 x0..x1 중 투명한 칸을 반투명 그림자로."""
+    for x in range(x0, x1 + 1):
+        if 0 <= x < T and g[y][x] == ".":
+            _put(g, x, y, c(name))
     return g
 
 
-def _ramp_rows(g, ramp: str):
-    return ["".join(CH[f"{ramp}{v}"] for v in row) for row in g]
+def _under(base, top):
+    """불투명 바닥 위에 물체 그리드를 얹는다('.'은 바닥이 비침)."""
+    return ["".join(t if t != "." else b for b, t in zip(br, tr)) for br, tr in zip(base, top)]
 
 
-LIB_FLOOR = _ramp_rows(_planks(), "w")
+# ── 바닥: 나무 마루 ─────────────────────────────────────────────────────────────
+FLOOR = "wood"
+# 널(4줄)마다 끝 이음새 자리(None이면 이음새 없이 옆 칸으로 길게 이어지는 널). 널마다 이음새를 두면 칸마다
+# 짧은 널이 엇갈려 쌓인 벽돌 벽처럼 읽혀서(게임 화면에서 확인) 두 장에만 둔다
+_JOINTS = (5, None, 12, None)
 
 
-# ── 카펫: 포도주색 바탕에 금실 마름모 격자, 가운데 금 무늬. 사방으로 이어진다 ──────────────────
-def _carpet():
-    rows = []
-    for y in range(16):
-        line = []
-        for x in range(16):
+def lib_floor(seed=401):
+    """가로 널 네 장(한 장 4줄). 널 사이 줄과 끝 이음새는 그늘색(외곽선 아님) 1px.
+    결(그늘 2~3px)과 닳은 점, 먼지 알갱이(밝음)를 드물게. 대비를 낮춰 일행·몬스터가 바닥보다 또렷하게.
+    이음새 옆에 밝은 점을 두면 널이 벽돌처럼 읽혀서 두지 않는다."""
+    base, sh = c(f"{FLOOR}.base"), c(f"{FLOOR}.shade")
+    g = _grid(lambda x, y: sh if y % 4 == 3 else base)
+    for band, j in enumerate(_JOINTS):
+        y0 = band * 4
+        if j is not None:
+            for y in range(y0, y0 + 3):
+                _set(g, j, y, sh)
+        # 결: 널마다 짧은 그늘 결 하나(이음새와 겹치지 않는 자리)
+        gx = ((j if j is not None else band * 5) + 4 + int(noise(band, 0, seed) * 6)) % T
+        gy = y0 + 1 + int(noise(band, 1, seed) * 2)
+        for k in range(2 + (band % 2)):
+            _set(g, gx + k, gy, sh)
+    g = speckle(g, f"{FLOOR}.base", f"{FLOOR}.shade", 0.035, seed + 2)
+    g = speckle(g, f"{FLOOR}.base", f"{FLOOR}.hi", 0.018, seed + 3)
+    return g
+
+
+LIB_FLOOR = lib_floor()
+
+
+# ── 바닥: 카펫(봉랍 빨강 바탕, 마름모 격자, 양피지 무늬) ───────────────────────────
+def lib_carpet(seed=411):
+    """짙은 빨강(brick.shade) 바탕에 외곽선색 마름모 격자와 그 안쪽 기본색 줄. 마름모 가운데에 양피지 꽃 무늬
+    (테 + 가운데), 격자가 만나는 칸 모서리(네 칸이 모이는 곳)에 작은 남색 점. 닳은 자국은 외곽선색 점. 사방으로 이어진다.
+    brick.base 바탕은 게임 색 보정 아래에서 연어색 분홍으로 보여서 한 단계 내렸다."""
+    g = []
+    for y in range(T):
+        row = ""
+        for x in range(T):
             d = abs(x + 0.5 - 8) + abs(y + 0.5 - 8)
             if d == 8:
-                c = "g2"
-            elif d == 7 or d == 9:
-                c = "r1"
-            elif d <= 1:
-                c = "g4"
-            elif d == 2:
-                c = "g2"
-            elif d == 3:
-                c = "r3"
-            elif d >= 15:
-                c = "g3"
-            elif d == 14:
-                c = "r3"
+                row += c("brick.ol")
+            elif d == 7:
+                row += c("brick.base") if (x + y) % 2 else c("brick.shade")
             else:
-                c = "r2"
-            line.append(CH[c])
-        rows.append("".join(line))
-    return rows
+                row += c("brick.shade")
+        g.append(row)
+    for x, y in ((7, 6), (8, 6), (6, 7), (9, 7), (6, 8), (9, 8), (7, 9), (8, 9)):   # 가운데 무늬 테
+        _set(g, x, y, c("cream.shade"))
+    for x, y in ((7, 7), (8, 7), (7, 8)):
+        _set(g, x, y, c("cream.hi"))
+    _set(g, 8, 8, c("cream.base"))
+    for x, y in ((0, 0), (15, 0), (0, 15), (15, 15)):                               # 모서리 남색 점(2×2로 이어짐)
+        _set(g, x, y, c("cloth_indigo.shade"))
+    g = speckle(g, "brick.shade", "brick.ol", 0.03, seed)
+    return g
 
 
-LIB_CARPET = _carpet()
-
-# ── 벽 앞면: 위 몰딩, 돌 블록 벽, 나무 난간대, 징두리 판벽(판 두 장), 걸레받이 ─────────────────
-WALL_KEY = {"M": "w5", "m": "w3", "n": "w1", "S": "s4", "s": "s3", "t": "s2", "u": "s1",
-            "R": "w5", "r": "w4", "P": "w4", "p": "w3", "q": "w2", "z": "w1", "Z": "w0"}
-LIB_WALL = paint("""
-    MMMMMMMMMMMMMMMM
-    nnnnnnnnnnnnnnnn
-    SSSSSSStSSSSSSSt
-    sssssssusssssssu
-    sssssssusssssssu
-    ttttttttttttttut
-    SSSStSSSSSSStSSS
-    ssssusssssssusss
-    uuuuuuuuuuuuuuuu
-    RRRRRRRRRRRRRRRR
-    qqqqqqqqqqqqqqqq
-    zPPPPPpzzPPPPPpz
-    zPppppqzzPppppqz
-    zPppppqzzPppppqz
-    zpqqqqqzzpqqqqqz
-    ZZZZZZZZZZZZZZZZ
-""", WALL_KEY, 16, 16)
+LIB_CARPET = lib_carpet()
 
 
-# ── 벽 윗면: 무너진 천장 쪽 짙은 돌 블록, 대각선으로 걸친 부러진 들보 조각. 사방으로 이어진다 ─────────
-def _wall_top():
-    g = [[1] * 16 for _ in range(16)]
-    # 큰 돌 블록(8×6, 줄마다 엇갈림)
-    for y in range(16):
-        for x in range(16):
-            row = y // 6 if y < 12 else 2
-            off = 4 if row % 2 else 0
-            if y % 6 == 0 or (x + off) % 8 == 0:
-                g[y][x] = 0
-            elif y % 6 == 1 or (x + off) % 8 == 1:
-                g[y][x] = 2
-    # 무너진 천장에서 떨어진 부스러기 몇 점(밝은 돌)
-    for x, y in ((4, 3), (11, 9), (13, 14), (2, 13)):
-        g[y][x] = 3
-    return _ramp_rows(g, "s")
+# ── 벽 앞면: 몰딩, 돌 블록, 난간대, 나무 징두리 판벽, 걸레받이 ──────────────────────
+_WALL = """
+HHHHHHHHHHHHHHHH
+wwwwwwwwwwwwwwww
+SSSSSSSoSSSSSSSo
+sssssssosssssssx
+sssssssossxssssx
+oooooooooooooooo
+SSSoSSSSSSSoSSSS
+sxsossssssxossss
+oooooooooooooooo
+HHHHHHHHHHHHHHHH
+WWWWWWWWWWWWWWWW
+ZWbbbbbZZWbbbbbZ
+ZWbddddZZWbddddZ
+ZWbddddZZWbddddZ
+ZWbbbbbZZWbbbbbZ
+ZZZZZZZZZZZZZZZZ
+"""
+_WALL_KEY = {"H": "wood.hi", "w": "wood.shade", "W": "wood.base", "b": "wood.shade", "d": "wood.ol", "Z": "wood.ol",
+             "S": "stone.base", "s": "stone.shade", "x": "stone.ol", "o": "stone.ol"}
 
 
-LIB_WALL_TOP = _wall_top()
+def lib_wall():
+    """도서관 벽 앞면(바닥과 맞닿는 줄): 위 나무 몰딩(밝음 + 그늘), 청회 돌 블록 두 줄(엇갈린 줄눈, 블록 윗줄 밝음,
+    얼룩 점), 나무 난간대, 판 두 장의 징두리 판벽(판 안쪽은 그늘 → 외곽선으로 한 단계 들어감), 걸레받이.
+    바닥(wood.base)보다 어둡게 둬서 방의 둘레가 읽힌다."""
+    rows = [ln for ln in _WALL.strip().splitlines()]
+    return ["".join(c(_WALL_KEY[ch]) for ch in r) for r in rows]
 
-# ── 책장: 위 장식 몰딩, 두 칸에 빽빽한 책(빨강·파랑·초록·가죽·양피지, 금박 띠), 옆기둥 ────────────
-SHELF_KEY = {"O": "w5", "o": "w4", "p": "w3", "q": "w2", "z": "w1", "Z": "w0",
-             "R": "r3", "r": "r2", "E": "e3", "e": "e2", "U": "u3", "u": "u2", "A": "a3", "a": "a2",
-             "L": "w6", "l": "w5", "G": "g4", "g": "g2", "x": "k0", "t": "i3", "T": "i4"}
-_SHELF_ROWS = [
-    "OOOOOOOOOOOOOOOo",
-    "pqqqqqqqqqqqqqqz",
-    "pRrZZZZLlZZEeZZz",
-    "pRrRrUuLlZZEeUuz",
-    "pGgRrUuLlAaEeUuz",
-    "pRrGgUuGgAaEeGgz",
-    "pRrRrUuLlAaEeUuz",
-    "poooooooooooooqz",
-    "pqqqqqqqqqqqqqqz",
-    "pEeZZRrZZLlZZEez",
-    "pEeAaRrZZLlRrEez",
-    "pGgAaRrUuGgRrGgz",
-    "pEeAaGgUuLlGgEez",
-    "pEeAaRrUuLlRrEez",
-    "poooooooooooooqz",
-    "zzzzzzzzzzzzzzzz",
+
+LIB_WALL = lib_wall()
+
+
+# ── 벽 윗면: 무너진 천장 쪽 두꺼운 벽(돌 램프 어두운 단계) ───────────────────────────
+def lib_wall_top(seed=421):
+    """두꺼운 벽 위를 내려다본 면: 짙은 돌 블록(stone.ol 바탕, 블록마다 윗줄·왼줄에 그늘색 빛), 줄눈은 void.
+    블록은 8×6으로 줄마다 엇갈린다(16칸 주기라 이어 붙여도 맞음). 칸 안쪽(가장자리에 닿지 않게)에 무너진 천장의
+    부러진 들보 조각 하나와 돌 부스러기. 맵의 절반 이상을 덮으므로 바닥보다 확실히 어둡고 무늬 대비는 낮게."""
+    ol, sh, void = c("stone.ol"), c("stone.shade"), c("void")
+    g = []
+    for y in range(T):
+        r = (y // 6) if y < 12 else 2
+        yy = y - r * 6
+        off = 4 if r % 2 else 0
+        row = ""
+        for x in range(T):
+            xx = (x + off) % 8
+            if yy == 0 or xx == 0:
+                row += void
+            elif (yy == 1 or xx == 1) and noise((x + off) // 8, r, seed) < 0.7:
+                row += sh if (yy == 1 and xx != 1) else ol
+            else:
+                row += ol
+        g.append(row)
+    # 돌 부스러기·금(칸 안쪽 블록에만, 낮은 대비). 들보처럼 큰 무늬는 1500칸 넘게 반복되면 격자로 읽혀서 넣지 않는다
+    for x, y in ((3, 3), (13, 9), (10, 14)):
+        _set(g, x, y, c("stone.shade"))
+    for x, y in ((5, 9), (6, 10)):
+        _set(g, x, y, void)
+    return g
+
+
+LIB_WALL_TOP = lib_wall_top()
+
+
+# ── 책장 ─────────────────────────────────────────────────────────────────────────
+# 책: (x, 폭, 키, 램프, 금박 띠 행 또는 None). 위 칸 바닥은 6행, 아래 칸 바닥은 13행.
+# 두 칸 책등은 왼쪽 1px 세로 줄이 밝음(hi), 오른쪽이 그늘(shade), 얇은 책은 기본(base)이라 이웃 책과 명도가 엇갈려
+# 한 권씩 끊어져 보이면서 책장 전체는 바닥보다 어둡다(옛 그늘 위주 칠은 1배에서 갈색 칸막이로 뭉개짐). 색은 강조 램프
+# 남색·빨강·양피지가 주, 가죽·초록이 한 권씩.
+_TOP_BOOKS = [
+    (1, 2, 5, "brick", 1), (3, 1, 4, "cream", None), (4, 2, 5, "cloth_indigo", 2), (6, 1, 3, "cloth_green", None),
+    (7, 2, 5, "cream", 1), (9, 2, 4, "brick", None), (14, 1, 5, "cloth_indigo", 2),
 ]
-BOOKSHELF = paint("\n".join(_SHELF_ROWS), SHELF_KEY, 16, 16)
-
-# 빈 책장 칸(숨겨진 길): 아래 칸 가운데 책 세 권(x5~10)이 빠지고 뒤판도 없어 깊은 어둠이 보인다.
-# 어둠 속에 찬 바람 반짝임 하나(청록), 빈칸 바닥에 먼지 자국(밝은 널 한 줄)
-_GAP_ROWS = list(_SHELF_ROWS)
-_GAP_ROWS[9] = "pEeZZRr" + "ZZZZ" + "ZZEez"
-_GAP_ROWS[10] = "pEeAaRr" + "ZxxZ" + "RrEez"
-_GAP_ROWS[11] = "pGgAaRr" + "ZxTZ" + "RrGgz"
-_GAP_ROWS[12] = "pEeAaGg" + "ZxxZ" + "GgEez"
-_GAP_ROWS[13] = "pEeAaRr" + "Zxxt" + "RrEez"
-_GAP_ROWS[14] = "poooooo" + "OOOO" + "oooqz"
-SHELF_GAP = paint("\n".join(_GAP_ROWS), SHELF_KEY, 16, 16)
+_BOTTOM_BOOKS = [
+    (1, 2, 4, "cloth_indigo", None), (3, 1, 5, "leather", 1), (4, 2, 5, "brick", 2), (6, 2, 4, "cream", None),
+    (8, 1, 5, "cloth_indigo", 1), (9, 2, 3, "cloth_green", None), (11, 2, 5, "cream", 2), (13, 2, 4, "brick", None),
+]
+_LEAN = (12, 6, 4, "cloth_indigo")   # 위 칸 빈자리(11~13열)에 기댄 남색 책: (아래 x, 바닥 행, 키, 램프)
 
 
-def on_floor(text: str, legend: dict, base=None, outline: bool = True):
-    """마루 위에 물체를 얹는다. '_'·'-'는 외곽선 없이 바닥에 직접 칠하는 그림자."""
-    shadow_key = {"_": "w2", "-": "w1"}
-    obj_rows, shadow_rows = [], []
-    for line in [r.strip() for r in text.strip("\n").splitlines() if r.strip()]:
-        obj_rows.append("".join("." if ch in shadow_key else ch for ch in line))
-        shadow_rows.append("".join(ch if ch in shadow_key else "." for ch in line))
-    obj = paint("\n".join(obj_rows), legend, 16, 16)
-    if outline:
-        obj = color_outline(obj)
-    shadow = paint("\n".join(shadow_rows), shadow_key, 16, 16)
-    return overlay(overlay(base or LIB_FLOOR, shadow), obj)
+def _book(p, x, w, h, ramp, band, floor):
+    for dx in range(w):
+        for k in range(h):
+            step = "base" if w == 1 else ("hi" if dx == 0 else "shade")
+            p.put(x + dx, floor - k, f"{ramp}.{step}")
+        if band is not None and h > band + 1:
+            p.put(x + dx, floor - h + 1 + band, "brass.hi" if dx == 0 else "brass.base")
 
 
-# ── 쓰러진 책장: 뒤판을 위로 하고 비스듬히 누운 책장, 앞으로 쏟아진 책들 ────────────────────
-FALLEN_KEY = {"O": "w5", "o": "w4", "p": "w3", "q": "w2", "z": "w1",
-              "R": "r3", "r": "r2", "E": "e3", "e": "e2", "U": "u3", "u": "u2", "A": "a4", "a": "a3", "G": "g4"}
-BOOKSHELF_FALLEN = on_floor("""
-    ................
-    ................
-    ..........Oo....
-    ......OOoopqo...
-    ..OOooppqpqpz...
-    .Oopqpqpqpqpqz..
-    .opqpqpqpqpqpz..
-    .opqpqpqpqpqqz..
-    .opqpqpqpqqzz...
-    .zqpqpqqzzz.....
-    ..zzzzzz..RU....
-    ...EeAa..Rruu...
-    ..Ee.Aa_UuGr__..
-    ..__..__Uu___...
-    ........__......
-    ................
-""", FALLEN_KEY)
+def _shelf(gap=False):
+    p = Px()
+    # 틀: 위 몰딩(밝음) + 그 아래 그늘, 왼쪽 기둥(기본, 빛 받음), 오른쪽 기둥(외곽선), 선반 두 장, 맨 아래 걸레받이
+    for x in range(T):
+        p.put(x, 0, "wood.base")
+        p.put(x, 1, "wood.ol")
+        p.put(x, 7, "wood.shade")
+        p.put(x, 8, "wood.ol")
+        p.put(x, 14, "wood.shade")
+        p.put(x, 15, "wood.ol")
+    for x in range(0, T, 3):
+        p.put(x, 0, "wood.hi")
+    for y in range(T):
+        p.put(0, y, "wood.shade")
+        p.put(15, y, "wood.ol")
+    p.put(0, 0, "wood.hi")
+    # 칸 안쪽 뒤판(어두운 나무)
+    for y in list(range(2, 7)) + list(range(9, 14)):
+        for x in range(1, 15):
+            p.put(x, y, "wood.ol")
+    for b in _TOP_BOOKS:
+        _book(p, *b[:5], floor=6)
+    lx, ly, lh, lr = _LEAN                                       # 기댄 책(대각선 2px 폭)
+    for k in range(lh):
+        p.put(lx - 1 + k // 2, ly - k, f"{lr}.hi")
+        p.put(lx + k // 2, ly - k, f"{lr}.base")
+    for b in _BOTTOM_BOOKS:
+        _book(p, *b[:5], floor=13)
+    if gap:
+        # 아래 칸 가운데 책 세 권(6~10열)이 빠지고 뒤판도 없어 깊은 어둠이 보인다
+        for y in range(9, 14):
+            for x in range(6, 11):
+                p.put(x, y, "void")
+        for x in range(6, 10):                                     # 쓰러져 누운 책 한 권(빨강, 바닥에)
+            p.put(x, 13, "brick.shade")
+        p.put(6, 12, "brick.base")
+        p.put(7, 12, "brick.base")
+        p.put(8, 12, "cream.shade")                                # 누운 책의 페이지 끝
+        p.put(9, 10, "teal.base")                                  # 틈으로 새는 찬 바람 한 점
+        p.put(10, 13, "cream.shade")                               # 선반에 쌓인 먼지가 쓸린 자리
+    return [
+        "".join(c(n) if n else "." for n in row) for row in p.g
+    ]
 
-# ── 책 더미: 크기가 다른 책 다섯 권이 엇갈려 쌓였다. 옆에 펼쳐진 책 한 권 ─────────────────
-PILE_KEY = {"R": "r3", "r": "r2", "x": "r1", "E": "e3", "e": "e2", "U": "u3", "u": "u2", "A": "a4", "a": "a3",
-            "b": "a2", "L": "w5", "l": "w4", "G": "g4", "g": "g2", "t": "a1"}
-BOOK_PILE = on_floor("""
-    ................
-    ................
-    ......LLLLl.....
-    ......aaaal.....
-    .....RRRRRRr....
-    .....aaaaaar....
-    ....UUUUUUUu....
-    ....GgUUUUUu....
-    ...EEEEEEEEe....
-    ...aaaaaaaae....
-    ...RRRRRRRRRRr..
-    ...RRGgRRRRRRr..
-    ..aaaaaaaaaaaar.
-    ..xxxxxxxxxxxxx.
-    ..______________
-    ................
-""", PILE_KEY)
 
-# ── 열람 책상: 나무 상판(3/4 시점), 펼쳐진 책(글줄), 오른쪽에 청록 서리 낀 작은 초 ───────────────
-DESK_KEY = {"O": "w6", "o": "w5", "p": "w4", "P": "w3", "q": "w2", "z": "w1",
-            "A": "a5", "a": "a4", "b": "a3", "t": "a1", "c": "c3", "C": "c1",
-            "i": "i3", "I": "i5", "f": "f2", "F": "f3"}
-READING_DESK = on_floor("""
-    ................
-    ................
-    ............i...
-    ...........iFi..
-    ...........ifi..
-    ............c...
-    ..ooAAaabbo.cC..
-    .oOOAtAatbOooo..
-    .oOOAAaabbOOoo..
-    .ppppppppppppp..
-    .PPPPPPPPPPPPP..
-    .qzqqqqqqqqqzq..
-    .qz.........zq..
-    .zz.........zz..
-    .__.........__..
-    ................
-""", DESK_KEY)
+BOOKSHELF = _shelf()
+SHELF_GAP = _shelf(gap=True)
 
-# ── 얼어붙은 촛대: 놋쇠 촛대에 초 세 자루, 불꽃은 청록 서리 속에 멈췄다 ─────────────────────
-CANDLE_KEY = {"G": "g4", "g": "g3", "h": "g2", "j": "g1", "c": "c3", "C": "c2", "d": "c1",
-              "f": "f1", "F": "f2", "Y": "f3", "i": "i2", "I": "i3", "J": "i4", "W": "i5"}
-CANDLE_FROZEN = on_floor("""
-    .......J........
-    ..J...IYI...J...
-    .IYI..JFJ..IYI..
-    .JFJ..IfI..JFJ..
-    .IfI...c...IfI..
-    ..c....C....c...
-    ..C....C....C...
-    .GgGG..C..GGgh..
-    ...hGGGgGGGh....
-    ......GgG.......
-    .......g........
-    .......g........
-    ......Ggh.......
-    .....GGghj......
-    ....__jjj__.....
-    ................
-""", CANDLE_KEY)
 
-# ── 부러진 기둥: 홈 파인 돌기둥이 비스듬히 부러졌다. 받침돌과 떨어진 돌 조각 ──────────────────
-PILLAR_KEY = {"1": "s2", "2": "s3", "3": "s4", "4": "s5", "5": "s6", "0": "s1"}
-BROKEN_PILLAR = on_floor("""
-    ................
-    ................
-    ....5.4.........
-    ....543.42......
-    ....5432322.....
-    ....543232......
-    ....543232......
-    ....543232......
-    ....543232......
-    ....543232......
-    ...55443322.....
-    ..5444333221.3..
-    ..4333222110.21.
-    ..___________-..
-    ................
-    ................
-""", PILLAR_KEY)
+# ── 물체: 쓰러진 책장 ─────────────────────────────────────────────────────────────
+def bookshelf_fallen():
+    """뒤판을 위로 하고 비스듬히 누운 책장(왼쪽 아래 → 오른쪽 위), 판자 이음새와 옆판, 앞쪽으로 쏟아진 책 네 권."""
+    p = Px()
+    body = set()
+    for x in range(1, 14):
+        top = 9 - (x - 1) * 5 // 12          # 왼쪽 9행 → 오른쪽 4행
+        for y in range(top, top + 5):
+            body.add((x, y))
+    p.mass(body, "wood", shade_below=None)
+    for x, y in body:                                       # 뒤판 판자 이음새(가로로 비스듬히)
+        top = 9 - (x - 1) * 5 // 12
+        if y == top + 2 and p.get(x, y) == "wood.base":
+            p.put(x, y, "wood.shade")
+    for x in (5, 9):                                        # 칸막이 자리 못줄
+        top = 9 - (x - 1) * 5 // 12
+        p.put(x, top + 1, "wood.shade")
+        p.put(x, top + 3, "wood.shade")
+    for x in range(2, 14):                                  # 옆판(아래쪽 두께)
+        top = 9 - (x - 1) * 5 // 12
+        p.put(x, top + 5, "wood.ol" if x % 4 else "wood.shade")
+    # 쏟아진 책(바닥에 흩어짐)
+    for x, y, ramp in ((2, 12, "brick"), (6, 13, "cloth_indigo"), (11, 11, "cream"), (13, 13, "leather")):
+        p.put(x, y, f"{ramp}.hi")
+        p.put(x + 1, y, f"{ramp}.base")
+        p.put(x, y + 1, f"{ramp}.base")
+        p.put(x + 1, y + 1, f"{ramp}.shade")
+    p.put(12, 11, "cream.base")
+    p.put(11, 12, "cream.shade")
+    g = p.grid()
+    g = _shadow(g, 15, 2, 14)
+    return _shadow(g, 14, 1, 1)
 
-# ── 떠 있는 페이지: 마루 위에 멈춘 채 떠 있는 종이 석 장(청록 서리 테), 바닥에 비친 그림자 ─────────
-PAGE_KEY = {"A": "a5", "a": "a4", "b": "a3", "t": "a1", "i": "i3", "I": "i4", "_": "w2", "-": "w1"}
-_PAGES = paint("""
-    ................
-    ..IaaI..........
-    ..atab..........
-    ..aaab......I...
-    ..Iab......aA...
-    ..........abtI..
-    ...........ab...
-    ................
-    ................
-    .....IAa........
-    ....aatab.......
-    ....Iaab........
-    ................
-    ................
-    ................
-    ................
-""", PAGE_KEY, 16, 16)
-_PAGE_SHADOW = paint("""
-    ................
-    ................
-    ................
-    ................
-    ................
-    ..____..........
-    ................
-    ................
-    ...........__...
-    ................
-    ................
-    ................
-    ................
-    .....___........
-    ................
-    ................
-""", PAGE_KEY, 16, 16)
-FLOATING_PAGES = overlay(overlay(LIB_FLOOR, _PAGE_SHADOW), _PAGES)
+
+BOOKSHELF_FALLEN = bookshelf_fallen()
+
+
+# ── 물체: 책 더미 ───────────────────────────────────────────────────────────────
+# (왼쪽 x, 오른쪽 x, 램프) 아래에서 위로. 책 한 권은 2줄: 표지 윗면 + 옆면(페이지 끝이 오른쪽에 보임)
+_PILE = [(2, 13, "brick"), (3, 12, "cloth_indigo"), (4, 12, "cream"), (3, 10, "leather"), (5, 11, "cloth_green"),
+         (6, 10, "brick")]
+
+
+def book_pile():
+    """크기·색이 다른 책 여섯 권이 조금씩 엇갈려 쌓였다. 권마다 표지 윗면(밝음) + 옆면(그늘), 오른쪽 끝에
+    양피지 페이지 끝. 맨 위 책에 금박 띠, 더미 옆에 떨어진 낱장 하나."""
+    p = Px()
+    y = 13
+    for x0, x1, ramp in _PILE:
+        for x in range(x0, x1 + 1):
+            p.put(x, y - 1, f"{ramp}.hi" if x == x0 else f"{ramp}.base")
+            p.put(x, y, f"{ramp}.shade")
+        p.put(x1, y, "cream.hi")                            # 페이지 끝
+        p.put(x1 - 1, y, "cream.base")
+        y -= 2
+    p.put(8, y + 1, "brass.base")                            # 맨 위 책의 금박
+    p.put(9, y + 1, "brass.shade")
+    g = p.grid()
+    for x, y2, col in ((13, 7, "cream.hi"), (14, 7, "cream.base"), (13, 8, "cream.base")):   # 떨어진 낱장(외곽선 없음)
+        _put(g, x, y2, c(col))
+    return _shadow(g, 15, 2, 14)
+
+
+BOOK_PILE = book_pile()
+
+
+# ── 물체: 열람 책상 ─────────────────────────────────────────────────────────────
+def reading_desk():
+    """나무 책상(3/4 시점: 상판 윗면 밝음, 앞판 그늘, 다리 두 개), 위에 펼쳐진 양피지 책(남색 잉크 글줄),
+    오른쪽에 불꽃이 청록 서리에 갇혀 멈춘 작은 초."""
+    p = Px()
+    top = {(x, y) for x in range(1, 15) for y in range(7, 10)}
+    p.mass(top, "wood")
+    for x in range(1, 15):                                   # 앞판
+        p.put(x, 10, "wood.shade")
+        p.put(x, 11, "wood.shade" if x in (1, 2, 13, 14) else "wood.ol")
+    for y in (12, 13):                                       # 다리
+        for x in (1, 13):
+            p.put(x, y, "wood.base")
+            p.put(x + 1, y, "wood.shade")
+    p.put(7, 10, "brass.base")                               # 서랍 손잡이
+    # 펼쳐진 책: 양피지 두 쪽, 가운데 접힘 그늘, 글줄
+    for x in range(3, 10):
+        for y in (6, 7, 8):
+            p.put(x, y, "cream.hi" if x < 6 else "cream.base")
+    for x in range(3, 10):
+        p.put(x, 9, "brick.shade")                           # 책 표지 가장자리
+    p.put(6, 6, "cream.shade")
+    p.put(6, 7, "cream.shade")
+    p.put(6, 8, "cream.shade")
+    for x, y in ((4, 7), (5, 7), (7, 7), (8, 7), (4, 8), (7, 8)):
+        p.put(x, y, "cloth_indigo.base")
+    # 초(크림 촛농) + 서리에 갇힌 불꽃
+    p.put(12, 6, "cream.hi")
+    p.put(12, 7, "cream.base")
+    p.put(11, 7, "brass.base")
+    p.put(13, 7, "brass.shade")
+    p.put(12, 5, "teal.base")
+    p.put(12, 4, "teal.hi")
+    p.put(12, 3, "teal.base")
+    p.put(11, 4, "teal.shade")
+    p.put(13, 4, "teal.shade")
+    g = p.grid()
+    _put(g, 12, 4, c("lamp.hi"))                             # 서리 속 멈춘 불씨
+    return _shadow(g, 14, 1, 14)
+
+
+READING_DESK = reading_desk()
+
+
+# ── 물체: 얼어붙은 촛대 ─────────────────────────────────────────────────────────
+def _flame(p, x, y):
+    """청록 서리에 갇힌 불꽃(위로 3px): 서리 껍질 teal, 속에 멈춘 불씨 lamp."""
+    p.put(x, y - 3, "teal.hi")
+    p.put(x - 1, y - 2, "teal.base")
+    p.put(x, y - 2, "lamp.hi")
+    p.put(x + 1, y - 2, "teal.shade")
+    p.put(x - 1, y - 1, "teal.base")
+    p.put(x, y - 1, "lamp.base")
+    p.put(x + 1, y - 1, "teal.shade")
+
+
+def candle_frozen():
+    """황동 세 가지 촛대(가운데 초가 가장 높음)에 크림 초 세 자루. 불꽃은 일렁이던 모양 그대로 청록 서리에 갇혀
+    멈췄다(애니메이션 없음). 받침은 둥근 황동 발, 발치 그림자."""
+    p = Px()
+    for x, y0, h in ((3, 6, 3), (8, 4, 4), (12, 6, 3)):            # 초
+        for k in range(h):
+            p.put(x, y0 + k, "cream.hi" if k == 0 else "cream.base")
+        p.put(x, y0 + 1, "cream.spec")
+        _flame(p, x, y0)
+    # 황동 팔: 양쪽 컵(초 밑) → 가운데 기둥으로
+    for x in (2, 3, 4, 11, 12, 13):
+        p.put(x, 9, "brass.hi" if x in (2, 11) else "brass.base")
+    for x in range(4, 12):
+        p.put(x, 10, "brass.base")
+    p.put(4, 10, "brass.shade")
+    p.put(11, 10, "brass.shade")
+    for x in (7, 8, 9):
+        p.put(x, 8, "brass.base")
+    for y in range(11, 13):                                         # 기둥
+        p.put(8, y, "brass.base")
+        p.put(9, y, "brass.shade")
+    for x in range(6, 12):                                          # 받침
+        p.put(x, 13, "brass.base" if x < 9 else "brass.shade")
+    p.put(6, 13, "brass.hi")
+    g = p.grid()
+    return _shadow(g, 14, 5, 12)
+
+
+CANDLE_FROZEN = candle_frozen()
+
+
+# ── 물체: 부러진 기둥 ───────────────────────────────────────────────────────────
+def broken_pillar():
+    """홈 파인 크림 대리석 기둥이 들쭉날쭉 부러졌다: 받침돌 위 기둥 몸(세로 홈, 부러진 단면은 밝음, 회색 결 한 줄)과
+    오른쪽 바닥에 옆으로 누운 기둥 토막(끝면 원 + 가로 홈). 회색 stone이면 룬 비석(obj_rune)과 같은 회색 덩어리로
+    읽혀서 따뜻한 cream으로, 실루엣도 '선 기둥 + 누운 토막'으로 칸 폭을 거의 다 쓰게 했다."""
+    p = Px()
+    shaft = set()
+    tops = {2: 5, 3: 3, 4: 4, 5: 1, 6: 3, 7: 5}                     # 들쭉날쭉 부러진 윗면(묘비처럼 둥글지 않게)
+    for x, top in tops.items():
+        for y in range(top, 12):
+            shaft.add((x, y))
+    p.mass(shaft, "cream")
+    for x in (3, 5):                                                # 세로 홈 두 줄
+        for y in range(tops[x] + 1, 11):
+            if p.get(x, y) == "cream.base":
+                p.put(x, y, "cream.shade")
+    for x, top in tops.items():                                     # 부러진 단면(밝음)
+        p.put(x, top, "cream.spec" if x == 5 else "cream.hi")
+    for x, y in ((6, 6), (7, 7), (6, 8)):                           # 대리석 결(회색 가는 줄)
+        p.put(x, y, "plank.shade")
+    base = {(x, y) for x in range(1, 9) for y in (11, 12, 13)} - {(1, 11), (8, 11)}   # 받침돌
+    p.mass(base, "cream", shade_below=13)
+    for x in range(2, 8):
+        p.put(x, 11, "cream.hi" if x < 5 else "cream.base")
+    # 옆으로 누운 기둥 토막(오른쪽 바닥): 몸통은 가로 홈, 왼쪽 끝면은 밝은 원
+    drum = {(x, y) for x in range(10, 16) for y in range(9, 14)} - {(15, 9), (15, 13)}
+    p.mass(drum, "cream", shade_below=13)
+    for x in range(11, 15):
+        p.put(x, 11, "cream.shade")
+    end = {(9, 10), (9, 11), (9, 12), (10, 9), (10, 10), (10, 11), (10, 12), (10, 13)}
+    for x, y in end:
+        p.put(x, y, "cream.hi" if (x, y) != (10, 13) else "cream.base")
+    p.put(10, 11, "cream.base")                                     # 끝면 가운데 홈
+    p.put(3, 8, "moss.base")                                        # 틈에 낀 이끼 한 점
+    g = p.grid()
+    return _shadow(g, 15, 1, 15)
+
+
+BROKEN_PILLAR = broken_pillar()
+
+
+# ── 바닥: 떠 있는 낱장 ─────────────────────────────────────────────────────────
+# 낱장(왼쪽 위 x, y, 모양): 바닥 가까이 모여 떠 있다. 아래 3px에 그림자(마루 그늘)
+# 글줄은 가로 2~3px로 그린다(1px 점은 낱장이 얼굴처럼 읽힌다). 위쪽(빈 책장 칸 쪽)으로 갈수록 작고 높이 떠 있다
+_PAGES = [
+    (2, 4, ("HHHHb", "HlllH", "HHHHb", "HllHb", ".bbbb")),
+    (10, 1, (".HH", "HHb", "Hb.")),
+    (8, 9, ("HHHHb", "HllHH", ".bbbb")),
+    (13, 11, ("HH", "bH")),
+]
+
+
+def floating_pages():
+    """마루 위에 멈춘 채 떠 있는 양피지 낱장 넷(글줄은 남색 잉크), 낱장마다 3px 아래 마루에 그림자 줄,
+    한 장 모서리에 청록 서리 한 점. 외곽선 없이 밝은 종이와 그림자 사이 틈으로 '떠 있음'을 읽게 한다."""
+    g = list(LIB_FLOOR)
+    leg = {"H": "cream.hi", "b": "cream.shade", "l": "cloth_indigo.shade"}
+    for x, y, shape in _PAGES:
+        w = max(len(r) for r in shape)
+        for dx in range(w - 1):                                     # 그림자(1px 오른쪽, 3px 아래)
+            _set(g, x + 1 + dx, y + len(shape) + 2, c(f"{FLOOR}.shade"))
+    for x, y, shape in _PAGES:
+        for j, r in enumerate(shape):
+            for i, ch in enumerate(r):
+                if ch != ".":
+                    _set(g, x + i, y + j, c(leg[ch]))
+    _set(g, 12, 1, c("teal.hi"))
+    return g
+
+
+FLOATING_PAGES = floating_pages()
+
 
 LIBRARY_TILES = {
     "lib_floor": LIB_FLOOR,
@@ -331,3 +496,7 @@ LIBRARY_TILES = {
     "floating_pages": FLOATING_PAGES,
     "shelf_gap": SHELF_GAP,
 }
+
+# 미리보기에서 투명 물체 타일 밑에 깔 바닥(게임에서는 맵의 ground 레이어가 깔린다)
+DECO_UNDER = {n: "lib_floor" for n in ("bookshelf_fallen", "book_pile", "reading_desk", "candle_frozen",
+                                       "broken_pillar")}
