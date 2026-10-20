@@ -45,7 +45,7 @@ EMOTIONS = {"neutral", "happy", "worried", "surprised", "serious"}
 WHEN_KEYS = {"outputMatches", "exception", "messageMatches", "verdict", "onlyHiddenFail"}
 RECOMMENDED_KEYS = {"site", "id", "title", "level"}
 # region.json의 ambience(docs/art-overhaul/plan.md §3). src/game/ambience.ts의 GRADE_NAMES·PARTICLE_KINDS와 같아야 한다
-AMBIENCE_GRADES = ["dusty_teal", "forest", "cave", "library", "harbor", "lake"]
+AMBIENCE_GRADES = ["dusty_teal", "forest", "cave", "library", "harbor", "lake", "desert"]
 AMBIENCE_PARTICLES = ["none", "sparkle", "dust", "leaves", "spray", "mist"]
 MAX_DIGITS = 4300
 # 정답으로 인정하는 답안(accepted[])을 보스 시간 결계 테스트에서 돌릴 때 timeLimitMs에 곱하는 배수(judge() 참고)

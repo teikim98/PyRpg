@@ -6,7 +6,7 @@
 import type { RegionAmbience } from "../contracts/content";
 
 /** 색 보정 프리셋 이름. tools/verify_content.py의 AMBIENCE_GRADES와 같아야 한다(단위 테스트가 확인) */
-export const GRADE_NAMES = ["dusty_teal", "forest", "cave", "library", "harbor", "lake"] as const;
+export const GRADE_NAMES = ["dusty_teal", "forest", "cave", "library", "harbor", "lake", "desert"] as const;
 /** 입자 종류. tools/verify_content.py의 AMBIENCE_PARTICLES와 같아야 한다 */
 export const PARTICLE_KINDS = ["none", "sparkle", "dust", "leaves", "spray", "mist"] as const;
 
@@ -85,6 +85,15 @@ export const GRADE_PRESETS: Record<GradeName, GradePreset> = {
     tint: [0.96, 1.0, 1.04],
     lift: [9, 11, 17],
     vignette: { radius: 0.8, strength: 0.25, color: 0x72849a },
+  },
+  // 한낮의 붉은 사막(지역 7): 채도를 거의 그대로 두고 붉은·노랑 쪽으로, 그늘은 따뜻하게 띄우고 비네트는 따뜻한 갈색
+  desert: {
+    saturation: 0.0,
+    contrast: 0.0,
+    brightness: 1.0,
+    tint: [1.04, 1.0, 0.97],
+    lift: [8, 4, 0],
+    vignette: { radius: 0.8, strength: 0.24, color: 0x8c6a4c },
   },
 };
 
