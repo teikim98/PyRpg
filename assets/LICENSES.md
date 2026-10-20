@@ -17,7 +17,7 @@ design.md §9.8의 에셋 정책에 따라 게임에 들어가는 그림과 폰�
 | `sprites/monster_*.png` | 지역 1 몬스터 6종 + 지역 2 몬스터 6종 + 지역 3 몬스터 5종 + 지역 4 몬스터 5종 + 지역 5 몬스터 5종 + 지역 6 몬스터 5종 + 지역 7 몬스터 7종(16×16 × 2프레임) |
 | `sprites/obj_*.png` | 상자·표지판·캠프파이어·비석·문·고장 난 다리(16×16 × 2프레임) |
 | `sprites/boss_stair_mimic.png` | 지역 1 보스 계단 미믹(32×32 × 2프레임) |
-| `sprites/boss_crossroad_tree.png` | 지역 2 보스 갈림길 수호목(32×32 × 2프레임) |
+| `sprites/boss_crossroad_tree.png` | 지역 2 보스 갈림길 수호목(32×32 × 4프레임) |
 | `sprites/boss_goblin_chief.png` | 지역 3 보스 고블린 족장(32×32 × 2프레임) |
 | `sprites/boss_librarian_golem.png` | 지역 4 보스 사서 골렘(32×32 × 2프레임) |
 | `sprites/boss_smuggler_captain.png` | 지역 5 보스 밀수꾼 선장(32×32 × 2프레임) |
