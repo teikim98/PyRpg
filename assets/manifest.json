@@ -775,12 +775,12 @@
     "npc_caravan_guide": {
       "file": "sprites/npc_caravan_guide.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     },
     "npc_hourglass_keeper": {
       "file": "sprites/npc_hourglass_keeper.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     }
   },
   "portraits": {
