@@ -297,7 +297,7 @@
 - 'JavaScript와 비교' 상자 = 테두리·머리 `brass.hi`, 코드 바탕 `sand.spec` `f2e4bc`.
 - 아이템 아이콘·대체 초상화·대체 스프라이트는 같은 재질 램프(물약 `cloth_red`, 얼음 룬 `teal`, 장신구 `lamp`·`brass`, 망토 `cloth_red`, 깃털 `cream`, 염료 손잡이 `wood`).
 - 코드 에디터(양피지): 줄 번호 `hair_ink.base` `5a4c5e`, 줄 번호 칸 경계 `cream.base`, 현재 줄 `brass.base` 알파 0.1, 현재 줄 번호 칸 `sand.hi` `dcc69c`, 선택 `sky.hi` 알파 0.75(초점 없으면 0.45), 짝 괄호 `teal.hi` 알파 0.4, 오류 줄 `cloth_red.base` 알파 0.25, 메아리 횟수 `cloth_purple.shade` `4a3a6a`. 구문 강조는 CodeMirror 기본(`defaultHighlightStyle`, 밝은 바탕용)을 그대로 씁니다.
-- 예외: 상점·장비의 잠긴 품목 실루엣은 `filter: brightness(0)`이라 검게 나옵니다(내용을 감추는 표현).
+- 상점·장비의 잠긴·없는 품목 실루엣은 아이콘 그림(배경 층) 전체를 `hair_ink.shade` `3e3446` 한 색으로 덮어 내용을 감춥니다(테두리 `ink`, 둘레 빛 `hair_ink.hi`). 행이 반투명(0.75)이라 화면에서는 `383040` 근처로 보입니다.
 
 가독성 기준(WCAG 명암비): 본문 글자와 그 바탕 **4.5:1 이상**, 큰 제목(24px)·버튼 글자·테두리 같은 UI 요소 **3:1 이상**. 주요 짝:
 

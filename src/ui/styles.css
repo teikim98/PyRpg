@@ -2152,7 +2152,9 @@
 }
 
 .pyrpg-ui .item-icon.is-silhouette {
-  filter: brightness(0) drop-shadow(0 0 1px #7c6c7c);
+  /* 아이콘 그림(배경 층) 전체를 짙은 갈보라 한 색으로 덮어 내용을 감춘다(hair_ink.shade) */
+  background: #3e3446;
+  filter: drop-shadow(0 0 1px #7c6c7c);
 }
 
 .pyrpg-ui .equip-slots {
