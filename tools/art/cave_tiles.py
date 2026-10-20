@@ -2,7 +2,7 @@
 
 화풍 통일(docs/art-overhaul/style-guide.md §4.4, 기준 구현 forest_tiles.py): 코지 팔레트(cozypal)의 이름 있는 색만 쓴다.
 지역 강조색은 cloth_purple(수정 보라) · teal(얼음 청록) · lamp(횃불)이고 작은 물체에만 쓴다(화면 면적 15% 이하).
-- 바닥(cave_floor)은 공통 램프 soil(먼지빛 분홍 흙)의 기본색. 벽은 청회 돌(stone)을 한 단계씩 내려 칠해 바닥보다
+- 바닥(cave_floor)은 공통 램프 soil(먼지빛 흙)의 그늘색(한 단계 어둑하게, 통합 검토 2026-10-20). 벽은 청회 돌(stone)을 한 단계씩 내려 칠해 바닥보다
   어둡고 차갑다(따뜻한 흙 바닥 ↔ 차가운 돌 벽). 맵의 2/3를 덮는 벽 윗면(cave_wall_top)은 가장 어둡다.
 - ground 레이어 타일(바닥·벽 앞면·벽 윗면·횃불·벽화·바위 틈·웅덩이·레일)은 불투명이고 가장자리가 이어진다
   (무늬는 x % 16, y % 16). 바닥 무늬는 칸 가장자리에 닿지 않는다.
@@ -16,7 +16,8 @@ from monsters import Px, ellipse
 
 T = 16
 
-FLOOR = "soil"     # 바닥: 먼지빛 분홍 흙(공통 램프). 동굴 색 보정(채도 −20%, 푸른 틴트)을 거치면 보랏빛 흙으로 보인다
+FLOOR = "soil"     # 바닥: 먼지빛 흙(공통 램프)을 한 단계 내려 어둑하게. 동굴 색 보정(채도 −20%, 푸른 틴트)을 거치면 어둑한 보랏빛 흙
+FLOOR_BASE, FLOOR_DARK, FLOOR_LIGHT = f"{FLOOR}.shade", f"{FLOOR}.ol", "stone.shade"   # 바탕 · 그늘 점 · 차가운 돌 부스러기 점(흙 밝은 점은 분홍으로 튀어서)
 ROCK = "stone"     # 벽: 청회 돌(공통 램프)을 한 단계 내려서
 
 
@@ -57,27 +58,26 @@ def _under(base, top):
 def cave_floor(seed=311):
     """흙 기본색 + 4×4 칸마다 많아야 하나(그늘 얼룩, 모래알, 작은 돌, 가는 금). 맵 대부분을 덮어서 대비를 낮게,
     spec 없이 둔다. 무늬는 칸 안쪽(1..14)에만 놓아 길게 이어져도 줄무늬가 생기지 않는다."""
-    F = FLOOR
-    g = _names(f"{F}.base")
+    g = _names(FLOOR_BASE)
     for y in range(0, T, 4):
         for x in range(0, T, 4):
             r = noise(x, y, seed)
             ox = x + 1 + int(noise(x, y, seed + 1) * 2)
             oy = y + 1 + int(noise(x, y, seed + 2) * 2)
             if r < 0.30:                                       # 그늘 얼룩(1~2px)
-                _set(g, ox, oy, f"{F}.shade")
+                _set(g, ox, oy, FLOOR_DARK)
                 if noise(x, y, seed + 4) < 0.5:
-                    _set(g, ox + 1, oy, f"{F}.shade")
+                    _set(g, ox + 1, oy, FLOOR_DARK)
             elif r < 0.45:                                     # 모래알(밝음 1px)
-                _set(g, ox, oy, f"{F}.hi")
+                _set(g, ox, oy, FLOOR_LIGHT)
             elif r < 0.55:                                     # 작은 돌(밝은 돌 1 + 기본 1, 아래 흙 그늘)
                 _set(g, ox, oy, f"{ROCK}.hi")
                 _set(g, ox + 1, oy, f"{ROCK}.base")
-                _set(g, ox, oy + 1, f"{F}.shade")
-                _set(g, ox + 1, oy + 1, f"{F}.shade")
+                _set(g, ox, oy + 1, FLOOR_DARK)
+                _set(g, ox + 1, oy + 1, FLOOR_DARK)
             elif r < 0.62:                                     # 가는 금(그늘 대각선 2px)
-                _set(g, ox, oy, f"{F}.shade")
-                _set(g, ox + 1, oy + 1, f"{F}.shade")
+                _set(g, ox, oy, FLOOR_DARK)
+                _set(g, ox + 1, oy + 1, FLOOR_DARK)
     return _chars(g)
 
 
@@ -302,13 +302,13 @@ def minecart_rail():
         put(x0, 4, "wood.hi")
         put(x0 + 1, 4, "wood.hi")
         for x in range(x0, x0 + 3):
-            put(x, 13, f"{FLOOR}.shade")
+            put(x, 13, FLOOR_DARK)
     for y in (5, 10):                                          # 레일(가로로 이어진다): 밝은 윗면 + 그늘 옆면
         for x in range(T):
             put(x, y, "stone.hi")
             put(x, y + 1, "stone.shade")
-            if g[y + 2][x] == c(f"{FLOOR}.base"):
-                put(x, y + 2, f"{FLOOR}.shade")
+            if g[y + 2][x] == c(FLOOR_BASE):
+                put(x, y + 2, FLOOR_DARK)
     for x0 in (3, 11):                                         # 레일을 잡는 못
         put(x0, 5, "stone.spec")
         put(x0, 10, "stone.spec")
