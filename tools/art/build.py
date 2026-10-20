@@ -39,7 +39,7 @@ from characters import CHARACTERS  # noqa: E402
 from forest_boss import FOREST_BOSSES  # noqa: E402
 from forest_monsters import FOREST_MONSTERS  # noqa: E402
 from forest_npcs import FOREST_CHARACTERS  # noqa: E402
-from forest_tiles import FOREST_TILES  # noqa: E402
+from forest_tiles import DECO_UNDER as FOREST_DECO_UNDER, FOREST_TILES  # noqa: E402
 from gridlib import Canvas, sheet  # noqa: E402
 from lake_boss import LAKE_BOSSES  # noqa: E402
 from lake_monsters import LAKE_MONSTERS  # noqa: E402
@@ -56,10 +56,12 @@ from port_monsters import PORT_MONSTERS  # noqa: E402
 from port_npcs import PORT_CHARACTERS  # noqa: E402
 from port_tiles import PORT_TILES  # noqa: E402
 from portraits import PORTRAITS  # noqa: E402
-from tiles import DECO_UNDER, TILE_ANIMATIONS, TILES as R01_TILES  # noqa: E402
+from tiles import DECO_UNDER as R01_DECO_UNDER, TILE_ANIMATIONS, TILES as R01_TILES  # noqa: E402
 from town_objects import TOWN_OBJECTS  # noqa: E402
 
-TILES = {**R01_TILES, **FOREST_TILES, **CAVE_TILES, **LIBRARY_TILES, **PORT_TILES, **LAKE_TILES, **DESERT_TILES}
+# 미리보기에서 투명 물체 타일 밑에 깔 바닥(코지 화풍으로 다시 그린 지역의 물체 타일)
+DECO_UNDER = {**R01_DECO_UNDER, **FOREST_DECO_UNDER}
+TILES ={**R01_TILES, **FOREST_TILES, **CAVE_TILES, **LIBRARY_TILES, **PORT_TILES, **LAKE_TILES, **DESERT_TILES}
 # 지역 2·3·4·5·6·7에서 새로 생긴 에셋(미리보기를 지역별로 나눌 때 쓴다)
 R02_NAMES = set(FOREST_TILES) | set(FOREST_CHARACTERS) | set(FOREST_MONSTERS) | set(FOREST_BOSSES)
 R03_NAMES = set(CAVE_TILES) | set(CAVE_CHARACTERS) | set(CAVE_MONSTERS) | set(CAVE_BOSSES)

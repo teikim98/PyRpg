@@ -525,12 +525,12 @@
     "npc_traveler": {
       "file": "sprites/npc_traveler.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     },
     "npc_woodcutter": {
       "file": "sprites/npc_woodcutter.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     },
     "monster_fork_sprout": {
       "file": "sprites/monster_fork_sprout.png",
