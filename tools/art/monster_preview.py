@@ -112,10 +112,17 @@ REGIONS = {
     },
     "r06": {
         "out": "r06-monsters", "title": "region 6 monsters", "monsters": LAKE_MONSTERS, "bosses": LAKE_BOSSES,
-        "floor": None,
-        "path": None,
-        "notes": {},
-        "boss": None,
+        "floor": lambda: __import__("lake_tiles").ISLAND_GRASS,
+        "path": lambda: __import__("lake_tiles").LAKE_SHORE,
+        "notes": {
+            "monster_call_frog": "sit / crouch / stretch tongue out (call) / tongue back with gold orb (return)",
+            "monster_zip_eel": "body wave flows 2px per frame, heads fixed",
+            "monster_lambda_heron": "stand / duck neck / strike water (splash) / duck",
+            "monster_nesting_lily": "squash / stretch, inner layers move more",
+            "monster_memo_moth": "fly 0 -1 -2 -1, wings open and notes tilt on 1 3",
+        },
+        "boss": [("boss_mirror_twins", "glare / breathe / crack glint moves / threat (eyes glow, crack flashes)"),
+                 ("boss_lake_echo", "glare / rings pulse / clock hand turns / threat (eyes glow, echoes spread)")],
     },
     "r07": {
         "out": "r07-monsters", "title": "region 7 monsters", "monsters": DESERT_MONSTERS, "bosses": DESERT_BOSSES,

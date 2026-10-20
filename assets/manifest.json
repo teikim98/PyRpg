@@ -720,7 +720,7 @@
     "npc_lake_keeper": {
       "file": "sprites/npc_lake_keeper.png",
       "frameWidth": 16,
-      "frameHeight": 16
+      "frameHeight": 24
     },
     "monster_sand_stream": {
       "file": "sprites/monster_sand_stream.png",

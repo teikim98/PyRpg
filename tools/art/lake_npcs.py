@@ -1,107 +1,121 @@
-"""지역 6 NPC 걷기 시트(16×16 × 8프레임: 아래×2, 왼쪽×2, 오른쪽×2, 위×2).
+"""지역 6 NPC 걷기 시트(새 형식 16×24, 6열 × 4행 = 24프레임).
 
-- npc_lake_keeper: 늙은 호수지기. 챙 넓은 밀짚모자(삿갓 모양), 가슴까지 내려오는 흰 수염, 바랜 남청 저고리,
-  한 손에 머리 위까지 올라오는 긴 삿대를 세워 쥐었다.
+화풍 통일(docs/art-overhaul/style-guide.md §5~6, 기준 구현 forest_npcs.py): charrig.Rig에 머리(0행부터)·몸통(12행부터 7행)
+그리드를 아래·오른쪽·위 세 방향만 주면 왼쪽(좌우 반전)·팔·다리·걷기·숨쉬기·깜빡임은 리그가 만든다. 외곽선은 자동.
+NPC는 주인공 일행보다 채도를 한 단계 낮춘 옷을 입힌다(§3.4). 디자인은 옛 그림 그대로다.
 
-characters.py의 character()로 다리를 끼워 8프레임을 만들고, 삿대는 다리를 끼운 뒤 방향마다 같은 자리에 겹친다.
-외곽선 K는 닿은 재질의 색 외곽선으로 바꾼다.
+- npc_lake_keeper: 늙은 호수지기. 챙 넓은 삿갓 모양 밀짚모자(연보라 띠, 지역 강조색), 가슴까지 내려오는 흰 수염,
+  바랜 남청 저고리(denim)와 가죽 허리끈, 머리 위까지 올라오는 긴 삿대를 세워 쥐었다.
+  삿대는 땅에 짚고 서 있는 소품이라 머리·몸통 그리드가 아니라 리그의 extra 단계에서 그린다: 0행부터 22행(땅)까지
+  1px 나무 막대를 캐릭터 뒤(빈칸)에만 긋고, 옆 보기는 막대를 쥔 손을 앞에 둔다. 몸이 걸음마다 1px 내려가도 삿대는
+  땅에 짚은 채 그대로다(§6.1 소품 규칙: 남는 범례 문자 m·Q에 색을 붙임).
 """
-from characters import character
-from gridlib import mirror, overlay
-from lakepal import CH, color_outline, paint, sym
+from charrig import Rig, rows
 
-KEY = {"Y": "y4", "y": "y3", "Z": "y1", "z": "y2", "s": "c3", "S": "c2", "E": "eye", "b": "blush",
-       "W": "a4", "w": "a2", "Q": "q3", "q": "q2", "n": "q1", "G": "a3"}
+# 열 번호 안내: 0123456789abcdef
 
-DOWN = paint(sym("""
-    ........
-    ......KK
-    .....KYy
-    ....KYyy
-    ..KKYyyy
-    .KYYzyyy
-    KZZZZZZZ
-    .KKSssss
-    ..KsEsss
-    ..KsbWWW
-    ..KWWWwW
-    .KQWWWWw
-    KqQQWWQQ
-    .KnqQQQQ
-"""), KEY, 16, 14)
-
-RIGHT = paint("""
-    ................
-    ......KK........
-    .....KYyK.......
-    ....KYyyyK......
-    ...KYYyyyyKK....
-    ..KYzyyyyyyyK...
-    .KZZZZZZZZZZZK..
-    ....KGSsssK.....
-    ....KGsssEsK....
-    ....KGssbWWK....
-    ....KQWWWWWWK...
-    ...KqQQWWwK.....
-    ...KqQQQQQK.....
-    ....KnqQQK......
-""", KEY, 16, 14)
-
-UP = paint(sym("""
-    ........
-    ......KK
-    .....KYy
-    ....KYyy
-    ..KKYyyy
-    .KYYzyyy
-    KZZZZZZZ
-    .KKwGGGG
-    ..KQwwww
-    ..KQQQQQ
-    ..KqQQQQ
-    .KqQQQQQ
-    KqQQQQQQ
-    .KnqQQQQ
-"""), KEY, 16, 14)
-
-POLE_KEY = {"H": "h4", "h": "h3", "d": "h2", "s": "c3", "S": "c2"}
-# 삿대: 세로 막대(빛 받는 쪽 밝게)와 쥔 손. 오른쪽 그림 기준, 다른 방향은 자리를 옮긴다
-_POLE = paint("""
-    Hh
-    Hh
-    Hh
-    Hh
-    Hh
-    Hh
-    Hh
-    Hh
-    Hh
-    Hh
-    sS
-    Hh
-    Hh
-    Hh
-    Hd
-    dd
-""", POLE_KEY, 2, 16)
-
-
-def _with_pole(frames):
-    """프레임 순서: 아래 0,1 · 왼쪽 0,1 · 오른쪽 0,1 · 위 0,1. 아래는 그림 오른쪽, 옆은 앞쪽, 위는 그림 왼쪽에 삿대."""
-    out = []
-    for i, f in enumerate(frames):
-        if i < 2:
-            g = overlay(f, _POLE, 13, 0)
-        elif i < 4:
-            g = overlay(f, mirror(_POLE), 1, 0)
-        elif i < 6:
-            g = overlay(f, _POLE, 13, 0)
-        else:
-            g = overlay(f, mirror(_POLE), 1, 0)
-        out.append(color_outline(g))
-    return out
-
-
-LAKE_CHARACTERS = {
-    "npc_lake_keeper": _with_pole(character(DOWN, RIGHT, UP, CH["q1"], CH["h2"])),
+KEEPER_LEGEND = {
+    "s": "skin.base", "S": "skin.hi", "z": "skin.shade", "p": "blush", "e": "eye",
+    "a": "cloth_white.base", "A": "cloth_white.hi", "q": "cloth_white.shade",    # 흰 머리·수염
+    "r": "sand.base", "R": "sand.hi", "u": "sand.shade",                         # 밀짚모자
+    "g": "cloth_purple.base", "G": "cloth_purple.hi", "k": "cloth_purple.shade",  # 모자 띠(지역 강조색)
+    "t": "denim.base", "T": "denim.hi", "y": "denim.shade",                      # 바랜 남청 저고리
+    "c": "leather.base", "C": "leather.hi", "x": "leather.shade",                # 허리끈
+    "b": "plank.base", "B": "plank.hi", "n": "plank.shade",                      # 바지
+    "f": "leather.shade", "F": "leather.base", "v": "leather.ol",                # 짚신
+    "m": "wood.base", "Q": "wood.hi",                                            # 삿대
 }
+
+_HAT = """
+    ................
+    .......RR.......
+    ......RRru......
+    .....RRrrru.....
+    ....RRgGggku....
+    ..RRRrrrrrrruu..
+    .RRrrrrrrrrrruu.
+"""
+
+
+def _head(face):
+    return rows(_HAT + face)
+
+
+POLE_X = {"down": 13, "right": 12, "left": 3, "up": 2}
+
+
+def _pole(direction, col, g):
+    """땅에 짚은 삿대: 캐릭터 뒤(빈칸)에만 0~22행 막대, 맨 끝 1px 밝음. 옆 보기는 막대를 쥔 손(피부)을 앞에."""
+    x = POLE_X[direction]
+    g = list(g)
+    for y in range(0, 23):
+        if g[y][x] == ".":
+            g[y] = g[y][:x] + ("Q" if y == 0 else "m") + g[y][x + 1:]
+    if direction in ("left", "right"):
+        y = 15 + (1 if col in (1, 3) else 0)
+        g[y] = g[y][:x] + "s" + g[y][x + 1:]
+    return g
+
+
+KEEPER = Rig(
+    KEEPER_LEGEND,
+    heads={
+        "down": _head("""
+            ...aSsssssssa...
+            ...asessssesa...
+            ...asessssesa...
+            ...zpAaaaaApz...
+            ....aAaaaaaq....
+        """),
+        "right": _head("""
+            ....aaaasSsss...
+            ....aaaassseSs..
+            ....aaaasssess..
+            ....qaaasspAaa..
+            .....qqqzAaaaq..
+        """),
+        "up": _head("""
+            ...aAaaaaaaaq...
+            ...aAaaaaaaqq...
+            ...aaaaaaaaqq...
+            ...qaaaaaaqqq...
+            ....qqqqqqqq....
+        """),
+    },
+    torsos={
+        "down": rows("""
+            ....aAaaaaaq....
+            ....taAaaaqy....
+            ....tTaAaqty....
+            ....tTtaqtty....
+            ....cCccccxx....
+            ....bBbbbbnn....
+            ....bbbbbbnn....
+        """),
+        "right": rows("""
+            .....tttaAaq....
+            .....tTttaq.....
+            .....tTttty.....
+            .....tTttty.....
+            .....cCcccx.....
+            .....bBbbbn.....
+            .....bbbbnn.....
+        """),
+        "up": rows("""
+            ....tTttttyy....
+            ....tTttttyy....
+            ....tTttttyy....
+            ....tTttttyy....
+            ....cCccccxx....
+            ....bBbbbbnn....
+            ....bbbbbbnn....
+        """),
+    },
+    arm_front={"sleeve": "t", "sleeve_dark": "y", "hand": "s", "top": 13},
+    arm_side={"sleeve": "T", "sleeve_dark": "t", "hand": "s", "shoulder": (8, 13)},
+    extra=_pole,
+)
+
+RIGS = {"npc_lake_keeper": KEEPER}
+
+LAKE_CHARACTERS = {name: rig.frames() for name, rig in RIGS.items()}
