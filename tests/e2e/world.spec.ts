@@ -482,15 +482,16 @@ test.describe("world animation and ambience (art overhaul)", () => {
     expect(frames.m_P0101).toEqual(new Set([0, 1, 2, 3]));
     expect(frames.chest_shop).toEqual(new Set([0]));
 
-    // 옛 형식 그림(지역 2~7은 아직 2프레임): 2프레임만 돈다
+    // 지역 7도 새 화풍 4프레임(화풍 통일): 몬스터·중간 보스가 4프레임을 모두 돈다
     await bootWith(page, "?map=r07&fx=off");
     frames = await seen();
     objs = (await inspect(page)).objects;
     expect(objs.m_P0701.key).toBe("monster_sand_stream");
-    expect(objs.m_P0701.frames).toBe(2);
-    expect(frames.m_P0701).toEqual(new Set([0, 1]));
+    expect(objs.m_P0701.frames).toBe(4);
+    expect(frames.m_P0701).toEqual(new Set([0, 1, 2, 3]));
     expect(objs.m_P0707.key).toBe("boss_sand_scorpion");
-    expect(frames.m_P0707).toEqual(new Set([0, 1]));
+    expect(objs.m_P0707.frames).toBe(4);
+    expect(frames.m_P0707).toEqual(new Set([0, 1, 2, 3]));
   });
 
   test("tileAnimations swap the painted tile over time without touching map data", async ({ page }) => {
