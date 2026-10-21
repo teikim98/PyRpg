@@ -5,7 +5,7 @@
 전: 기준 커밋의 assets/sprites/{player,nuri}.png(git show로 읽음), 1차: 1차 파일럿 커밋의 같은 파일,
 후: 지금 디스크의 시트(build.py로 다시 만든 것).
 - 위: 캐릭터 × 방향마다 전/1차/후 6프레임(서기·왼발·서기·오른발 = 걷기 4프레임, 숨쉬기, 깜빡임)을 8배로 나란히
-- 가운데: 입 비교안(정면 서기, 8배). 지금 입(2×1 mouth) / 1px 입 / 닫힌 입(2×1 skin.shade). 시트는 지금 입 그대로
+- 가운데: 입 비교안(정면 서기, 8배). 지금 입(2×1 mouth) / 1px 입 / 닫힌 입(2×1 skin.shade). 시트는 닫힌 입(결정 38)
 - 아래: 게임 배율 장면(1배 그림을 4배로). 풀·흙길 타일 위에 네 방향 서기와 걷기 4프레임, 전·1차·후 줄
 build.py/check.py의 산출물이 아니므로 한 번 만들어 커밋해 두는 문서용 그림이다.
 """
@@ -76,7 +76,7 @@ def panel(cv, fr, x, y, s):
 
 
 # 입 비교안: 정면 서기 범례 그리드의 입(m)을 바꿔 칠한다
-MOUTHS = (("open 2x1 (sheet)", None), ("1px", "1px"), ("closed 2x1 shade", "line"))
+MOUTHS = (("open 2x1", "open"), ("1px", "1px"), ("closed 2x1 shade (sheet)", "line"))
 
 
 def mouth_variant(name, kind):
@@ -90,6 +90,8 @@ def mouth_variant(name, kind):
             for x in xs:
                 row[x] = "z"
     table = {".": ".", **{k: c(v) for k, v in rig.legend.items()}}
+    if kind in ("open", "1px"):
+        table["m"] = c("mouth")  # 시트의 m은 닫힌 입(skin.shade, 결정 38)
     painted = auto_outline(["".join(table[ch] for ch in r) for r in g])
     return Canvas(FW, FH).draw(painted)
 
@@ -153,7 +155,7 @@ def main():
                     panel(cv, frame(sheets[n], d, k), x0 + k * cell, yy, S)
             yy += FH * S + 10
         y += char_h
-    build.text(cv, "mouth options (front stand, 8x). the sheet keeps the first one", 16, y, 2, HEAD)
+    build.text(cv, "mouth options (front stand, 8x). the sheet uses the last one", 16, y, 2, HEAD)
     x = 16 + label_w
     for n in NAMES:
         for label, kind in MOUTHS:

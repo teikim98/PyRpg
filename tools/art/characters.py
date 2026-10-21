@@ -66,7 +66,7 @@ LWITW_RIG = {"torso_y": 14, "legs_y": 20, "legs_fn": legs2}
 # ── 주인공: 기억을 잃은 젊은 주문사. 끝이 접혀 늘어진 남색 후드, 앞이 열린 짧은 망토, 청록 룬 걸쇠,
 #    짙은 갈색 앞머리, 크림 셔츠, 가죽 띠 ───────────────────────────────────────────────
 PLAYER_LEGEND = {
-    "s": "skin.base", "S": "skin.hi", "z": "skin.shade", "p": "blush", "e": "eye", "m": "mouth",
+    "s": "skin.base", "S": "skin.hi", "z": "skin.shade", "p": "blush", "e": "eye", "m": "skin.shade",
     "a": "hair_brown.base", "A": "hair_brown.hi", "q": "hair_brown.shade",
     "c": "cloth_indigo.base", "C": "cloth_indigo.hi", "x": "cloth_indigo.shade", "X": "cloth_indigo.ol",
     "t": "cloth_white.base", "T": "cloth_white.hi", "y": "cloth_white.shade",
@@ -191,7 +191,7 @@ PLAYER = Rig(
 # ── 누리: 주황 하이 포니테일(청록 리본), 바보털, 이마의 황동 고글, 초록 눈(eye_green 1px),
 #    짧은 올리브 망토, 등의 지도통(가죽 끈) ────────────────────────────────────────────
 NURI_LEGEND = {
-    "s": "skin.base", "S": "skin.hi", "z": "skin.shade", "p": "blush", "e": "eye_green", "m": "mouth",
+    "s": "skin.base", "S": "skin.hi", "z": "skin.shade", "p": "blush", "e": "eye_green", "m": "skin.shade",
     "a": "hair_ginger.base", "A": "hair_ginger.hi", "q": "hair_ginger.shade", "Q": "hair_ginger.spec",
     "c": "cloth_olive.base", "C": "cloth_olive.hi", "x": "cloth_olive.shade",
     "t": "cloth_white.base", "T": "cloth_white.hi", "y": "cloth_white.shade",
