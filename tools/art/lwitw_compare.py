@@ -1,10 +1,12 @@
 """LWITW 화풍(결정 37) 캐릭터 전후 비교 이미지(docs/art-overhaul/lwitw-chars-compare.png)를 만든다.
 
-    python tools/art/lwitw_compare.py [기준 커밋]   # 기본: c152f60(LWITW 규칙 적용 전)
+    python tools/art/lwitw_compare.py [기준 커밋] [1차 파일럿 커밋]   # 기본: c152f60(적용 전), 99b0a90(1차 파일럿)
 
-전: 기준 커밋의 assets/sprites/{player,nuri}.png(git show로 읽음), 후: 지금 디스크의 시트(build.py로 다시 만든 것).
-- 위: 캐릭터 × 방향마다 전/후 6프레임(서기·왼발·서기·오른발 = 걷기 4프레임, 숨쉬기, 깜빡임)을 8배로 나란히
-- 아래: 게임 배율 장면(1배 그림을 4배로). 풀·흙길 타일 위에 네 방향 서기와 걷기 4프레임, 전 줄/후 줄
+전: 기준 커밋의 assets/sprites/{player,nuri}.png(git show로 읽음), 1차: 1차 파일럿 커밋의 같은 파일,
+후: 지금 디스크의 시트(build.py로 다시 만든 것).
+- 위: 캐릭터 × 방향마다 전/1차/후 6프레임(서기·왼발·서기·오른발 = 걷기 4프레임, 숨쉬기, 깜빡임)을 8배로 나란히
+- 가운데: 입 비교안(정면 서기, 8배). 지금 입(2×1 mouth) / 1px 입 / 닫힌 입(2×1 skin.shade). 시트는 지금 입 그대로
+- 아래: 게임 배율 장면(1배 그림을 4배로). 풀·흙길 타일 위에 네 방향 서기와 걷기 4프레임, 전·1차·후 줄
 build.py/check.py의 산출물이 아니므로 한 번 만들어 커밋해 두는 문서용 그림이다.
 """
 import os
@@ -16,8 +18,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 import build  # noqa: E402
+from characters import RIGS  # noqa: E402
 from charrig import COLS, DIRS  # noqa: E402
-from cozypal import c  # noqa: E402
+from cozypal import auto_outline, c  # noqa: E402
 from gridlib import PALETTE, Canvas  # noqa: E402
 from png import encode_png, read_png  # noqa: E402
 
@@ -72,6 +75,25 @@ def panel(cv, fr, x, y, s):
     cv.paste(fr, x, y, s)
 
 
+# 입 비교안: 정면 서기 범례 그리드의 입(m)을 바꿔 칠한다
+MOUTHS = (("open 2x1 (sheet)", None), ("1px", "1px"), ("closed 2x1 shade", "line"))
+
+
+def mouth_variant(name, kind):
+    rig = RIGS[name]
+    g = [list(r) for r in rig.letter_frames()[0]]
+    for row in g:
+        xs = [x for x, ch in enumerate(row) if ch == "m"]
+        if kind == "1px" and xs:
+            row[xs[-1]] = "s"
+        elif kind == "line":
+            for x in xs:
+                row[x] = "z"
+    table = {".": ".", **{k: c(v) for k, v in rig.legend.items()}}
+    painted = auto_outline(["".join(table[ch] for ch in r) for r in g])
+    return Canvas(FW, FH).draw(painted)
+
+
 def scene(sheets, row_label_w=0):
     """게임 배율 장면(1배): 풀 3줄 + 흙길 1줄. 네 방향 서기, 그 옆에 아래·오른쪽 걷기 4프레임."""
     tiles = build.TILES
@@ -96,45 +118,54 @@ def scene(sheets, row_label_w=0):
 
 def main():
     rev = sys.argv[1] if len(sys.argv) > 1 else "c152f60"
-    before = {n: sheet_before(rev, n) for n in NAMES}
-    after = {n: sheet_after(n) for n in NAMES}
+    rev1 = sys.argv[2] if len(sys.argv) > 2 else "99b0a90"
+    sets = [(f"before ({rev})", {n: sheet_before(rev, n) for n in NAMES}),
+            (f"pilot 1 ({rev1})", {n: sheet_before(rev1, n) for n in NAMES}),
+            ("after (pilot 2)", {n: sheet_after(n) for n in NAMES})]
 
     S = 8
     cell = FW * S + 6
     side_w = 6 * cell
     label_w = 70
     gap = 40
-    W = 16 + label_w + 2 * side_w + gap + 16
+    W = 16 + label_w + len(sets) * side_w + (len(sets) - 1) * gap + 16
     char_h = 30 + 4 * (FH * S + 10)
     SS = 4
     sc_w = 26 * 16 * SS
     sc_h = 4 * 16 * SS
-    H = 16 + 30 + len(NAMES) * char_h + 30 + 2 * (sc_h + 30) + 16
+    mouth_h = 30 + FH * S + 30
+    H = 16 + 30 + len(NAMES) * char_h + mouth_h + 30 + len(sets) * (sc_h + 30) + 16
     W = max(W, 16 + label_w + sc_w + 16)
     cv = Canvas(W, H, BG)
-    build.text(cv, f"lwitw characters  before ({rev}) | after   8x, 1px grid", 16, 16, 2, HEAD)
+    build.text(cv, f"lwitw characters  before ({rev}) | pilot 1 ({rev1}) | after (pilot 2)   8x, 1px grid",
+               16, 16, 2, HEAD)
     y = 46
-    x_before = 16 + label_w
-    x_after = x_before + side_w + gap
+    xs = [16 + label_w + i * (side_w + gap) for i in range(len(sets))]
     for n in NAMES:
         build.text(cv, n, 16, y, 2, HEAD)
-        build.text(cv, "before", x_before, y, 2, TXT)
-        build.text(cv, "after", x_after, y, 2, TXT)
-        for k in range(6):
-            build.text(cv, COLS[k], x_before + k * cell + 60, y + 4, 1, TXT)
-            build.text(cv, COLS[k], x_after + k * cell + 60, y + 4, 1, TXT)
+        for (label, _), x0 in zip(sets, xs):
+            build.text(cv, label, x0, y, 2, TXT)
         yy = y + 30
         for d in range(4):
             build.text(cv, DIRS[d], 16, yy + FH * S // 2, 2, TXT)
-            for k in range(6):
-                panel(cv, frame(before[n], d, k), x_before + k * cell, yy, S)
-                panel(cv, frame(after[n], d, k), x_after + k * cell, yy, S)
+            for (_, sheets), x0 in zip(sets, xs):
+                for k in range(6):
+                    panel(cv, frame(sheets[n], d, k), x0 + k * cell, yy, S)
             yy += FH * S + 10
         y += char_h
+    build.text(cv, "mouth options (front stand, 8x). the sheet keeps the first one", 16, y, 2, HEAD)
+    x = 16 + label_w
+    for n in NAMES:
+        for label, kind in MOUTHS:
+            build.text(cv, f"{n}: {label}", x, y + 18, 1, TXT)
+            panel(cv, mouth_variant(n, kind), x, y + 30, S)
+            x += cell + 40
+        x += 60
+    y += mouth_h
     build.text(cv, "game scale (1x art shown at 4x): 4 directions standing + walk down / walk right", 16, y, 2, HEAD)
     y += 30
-    for label, sheets in (("before", before), ("after", after)):
-        build.text(cv, label, 16, y + sc_h // 2, 2, TXT)
+    for label, sheets in sets:
+        build.text(cv, label.split(" (")[0], 16, y + sc_h // 2, 2, TXT)
         cv.paste(scene(sheets), 16 + label_w, y, SS)
         y += sc_h + 30
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
