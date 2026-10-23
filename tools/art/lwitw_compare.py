@@ -96,7 +96,7 @@ def mouth_variant(name, kind):
     return Canvas(FW, FH).draw(painted)
 
 
-def scene(sheets, row_label_w=0):
+def scene(sheets):
     """게임 배율 장면(1배): 풀 3줄 + 흙길 1줄. 네 방향 서기, 그 옆에 아래·오른쪽 걷기 4프레임."""
     tiles = build.TILES
     cols, rows_n = 26, 4

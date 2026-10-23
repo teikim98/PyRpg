@@ -179,8 +179,7 @@ def arms_front(pose, sleeve="t", sleeve_dark="y", hand="s", x_left=3, x_right=12
     """아래·위 보기의 팔: 몸통 양옆 1px 소매 + 손(길이 length, 손 포함). 발 딛는 프레임에 한쪽 손이 1px 올라가고
     (뒤로) 반대쪽이 1px 내려온다(앞으로). stepA = 화면 왼쪽 발이 들림 → 화면 오른쪽 팔이 앞으로."""
     g = blank()
-    n = length
-    lens = {"stand": (n, n), "stepA": (n - 1, n + 1), "stepB": (n + 1, n - 1)}[pose]
+    lens = {"stand": (length, length), "stepA": (length - 1, length + 1), "stepB": (length + 1, length - 1)}[pose]
     for x, n, sc in ((x_left, lens[0], sleeve), (x_right, lens[1], sleeve_dark)):
         for k in range(n - 1):
             put(g, x, top + k, sc)
