@@ -36,10 +36,17 @@
 
 ## 이 PC(Windows 11) 환경
 
-- Node.js 24, Python 3.12(`C:\Users\teiki\AppData\Local\Programs\Python\Python312`). Git Bash에서 Python이 PATH에 없으면 명령 앞에 `export PATH="/c/Users/teiki/AppData/Local/Programs/Python/Python312:$PATH"`.
+- 이 저장소는 두 PC에서 씁니다. 아래 경로는 PC마다 다르니, 작업 전에 저장소 루트로 어느 PC인지 확인하고 그 PC의 경로를 씁니다(에이전트 프롬프트에도 그 경로를 적습니다).
+
+| | 저장소 루트(node_modules 원본도 여기) | Python |
+|---|---|---|
+| 로컬 PC(progress.md의 '로컬 PC 세션') | `C:\Users\teiki\OneDrive\Desktop\sample\PyRpg` | 3.12, `C:\Users\teiki\AppData\Local\Programs\Python\Python312` |
+| 회사 PC | `C:\Users\simple user\OneDrive\Desktop\김태휘\sample\PyRpg` | 3.13, `C:\Users\simple user\AppData\Local\Programs\Python\Python313`(PATH에 있음) |
+
+- Node.js 24. Git Bash에서 Python이 PATH에 없으면 명령 앞에 `export PATH="<Python 폴더의 Git Bash 경로>:$PATH"`(로컬 PC: `/c/Users/teiki/AppData/Local/Programs/Python/Python312`). 회사 PC 경로에는 공백과 한글이 있어서 셸 명령에서 따옴표로 감쌉니다.
 - 검사: `npm run typecheck`, `npx vitest run`, `npm run verify`(CPython을 스스로 찾고 UTF-8 모드로 실행), `npx playwright test`(전체 E2E 약 20분, 백그라운드로).
 - 줄바꿈은 `.gitattributes`로 LF 고정. 오래된 커밋에서 만든 worktree는 `git rm -r --cached -q . && git reset -q --hard HEAD`로 다시 체크아웃해야 합니다(CRLF면 E2E가 엉뚱하게 실패).
-- worktree에는 node_modules가 없습니다. 설치하지 말고 PowerShell에서 `cmd /c mklink /J node_modules C:\Users\teiki\OneDrive\Desktop\sample\PyRpg\node_modules`로 연결합니다. **worktree를 지울 때는 이 연결부터 `cmd /c rmdir`로 끊은 뒤** `git worktree remove --force`(원본 node_modules 보호).
+- worktree에는 node_modules가 없습니다. 설치하지 말고 PowerShell에서 `cmd /c mklink /J node_modules "<저장소 루트>\node_modules"`로 연결합니다(저장소 루트는 위 표). **worktree를 지울 때는 이 연결부터 `cmd /c rmdir`로 끊은 뒤** `git worktree remove --force`(원본 node_modules 보호).
 - 여러 에이전트가 동시에 Playwright를 돌릴 때는 `PW_PORT`를 서로 다르게 줍니다. 같은 포트에 옛 빌드 서버가 살아 있으면 그 빌드를 다시 쓰니, 코드를 고친 뒤에는 서버를 끄고 다시 돌립니다.
 - 시간 측정 테스트(보스 budgetUnits 보정)는 다른 E2E가 동시에 돌면 흔들립니다. 실패하면 단독으로 다시 돌려 확인합니다.
 - 이 PC에서는 프로그래머스(school.programmers.co.kr)에 접속됩니다. 실전 추천 문제의 제목·레벨은 직접 확인해서 넣습니다. 백준은 서비스 중지 상태라 링크는 비활성으로 둡니다.
